@@ -1,0 +1,20 @@
+# gspm project.yml <https://gitlab.com/godot-stuff/gs-project-manager/wikis/schema>
+name: gs-logger
+path: .
+version: 
+default_type: git
+godot:
+  location: $build$
+  
+project:
+  url: none
+  
+assets:
+
+pre_install:
+
+post_install:
+
+pre_build:
+
+post_build:

@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3 uid="uid://bubspur517ka7"]
+
+[ext_resource type="Script" path="res://game/systems/friction_system.gd" id="1_bxo14"]
+
+[node name="FrictionSystem" type="Node"]
+script = ExtResource("1_bxo14")
+COMPONENTS = "velocity,friction"

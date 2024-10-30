@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3 uid="uid://cqdxmwf5af447"]
+
+[ext_resource type="Script" path="res://game/systems/velocity_system.gd" id="1_hqjth"]
+
+[node name="VelocitySystem" type="Node"]
+script = ExtResource("1_hqjth")
+COMPONENTS = "velocity,transform"

@@ -1,0 +1,74 @@
+class_name ReplToken
+extends Resource
+
+var content:String
+var ttype:TokenType
+
+# From https://github.com/godotengine/godot/blob/master/core/math/expression.h
+enum TokenType {
+	TK_CURLY_BRACKET_OPEN,
+	TK_CURLY_BRACKET_CLOSE,
+	TK_BRACKET_OPEN,
+	TK_BRACKET_CLOSE,
+	TK_PARENTHESIS_OPEN,
+	TK_PARENTHESIS_CLOSE,
+	TK_IDENTIFIER,
+	TK_BUILTIN_FUNC,
+	TK_SELF,
+	TK_CONSTANT,
+	TK_BASIC_TYPE,
+	TK_COLON,
+	TK_COMMA,
+	TK_PERIOD,
+	TK_OP_IN,
+	TK_OP_EQUAL,
+	TK_OP_NOT_EQUAL,
+	TK_OP_LESS,
+	TK_OP_LESS_EQUAL,
+	TK_OP_GREATER,
+	TK_OP_GREATER_EQUAL,
+	TK_OP_AND,
+	TK_OP_OR,
+	TK_OP_NOT,
+	TK_OP_ADD,
+	TK_OP_SUB,
+	TK_OP_MUL,
+	TK_OP_DIV,
+	TK_OP_MOD,
+	TK_OP_POW,
+	TK_OP_SHIFT_LEFT,
+	TK_OP_SHIFT_RIGHT,
+	TK_OP_BIT_AND,
+	TK_OP_BIT_OR,
+	TK_OP_BIT_XOR,
+	TK_OP_BIT_INVERT,
+	TK_INPUT,
+	TK_EOF,
+	TK_ERROR,
+	TK_MAX,
+	
+	# added
+	TK_OP_MUL_EQUAL,
+	TK_OP_POW_EQUAL,
+	TK_OP_SHIFT_RIGHT_EQUAL,
+	TK_OP_SHIFT_LEFT_EQUAL,
+	TK_OP_BIT_OR_EQUAL,
+	TK_OP_BIT_AND_EQUAL,
+	TK_OP_BIT_XOR_EQUAL,
+	TK_OP_ADD_EQUAL,
+	TK_OP_SUB_EQUAL,
+	TK_OP_DIV_EQUAL,
+	TK_OP_MOD_EQUAL,
+	TK_OP_EQUAL_EQUAL,
+	TK_OP_COLON_EQUAL,
+	TK_WHITESPACE,
+	TK_NEWLINE,
+	TK_STR_SQ,
+	TK_STR_TSQ,
+	TK_STR_DQ,
+	TK_STR_TDQ,
+}
+
+func _init(content="", ttype=TokenType.TK_IDENTIFIER):
+	self.content = content
+	self.ttype = ttype

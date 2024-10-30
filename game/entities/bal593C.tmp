@@ -1,0 +1,23 @@
+[gd_scene load_steps=6 format=3 uid="uid://c30ukuyygo3gm"]
+
+[ext_resource type="Script" path="res://game/entities/ball.gd" id="1_sx58v"]
+[ext_resource type="Texture2D" uid="uid://bgq145vfplih8" path="res://icon.svg" id="1_uc1ux"]
+[ext_resource type="PackedScene" uid="uid://cu0mq4yskobdv" path="res://game/components/velocity.tscn" id="2_jfdwd"]
+[ext_resource type="PackedScene" uid="uid://bqbbthruedqey" path="res://game/components/friction.tscn" id="3_3jhr5"]
+[ext_resource type="PackedScene" uid="uid://tm6qtioqa2h6" path="res://game/components/transform.tscn" id="3_tiqct"]
+
+[node name="Ball" type="Node2D"]
+script = ExtResource("1_sx58v")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+scale = Vector2(0.25, 0.25)
+texture = ExtResource("1_uc1ux")
+
+[node name="Components" type="Node" parent="."]
+
+[node name="Transform" parent="Components" instance=ExtResource("3_tiqct")]
+
+[node name="Friction" parent="Components" instance=ExtResource("3_3jhr5")]
+
+[node name="Velocity" parent="Components" instance=ExtResource("2_jfdwd")]
+speed = 100.0

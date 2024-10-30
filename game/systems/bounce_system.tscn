@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3 uid="uid://ck80sfr4yctdo"]
+
+[ext_resource type="Script" path="res://game/systems/bounce_system.gd" id="1_q8crm"]
+
+[node name="BounceSystem" type="Node"]
+script = ExtResource("1_q8crm")
+COMPONENTS = "bounce,velocity"

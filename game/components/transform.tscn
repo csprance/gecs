@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://tm6qtioqa2h6"]
+
+[ext_resource type="Script" path="res://game/components/transform.gd" id="1_wht7m"]
+
+[node name="Transform" type="Node"]
+script = ExtResource("1_wht7m")

@@ -1,0 +1,32 @@
+[gd_scene load_steps=9 format=3 uid="uid://dsfajstavnyam"]
+
+[ext_resource type="Script" path="res://main.gd" id="1_l8t4h"]
+[ext_resource type="PackedScene" uid="uid://c30ukuyygo3gm" path="res://game/entities/ball.tscn" id="1_r2eid"]
+[ext_resource type="PackedScene" uid="uid://b7idne6el03sm" path="res://game/entities/paddle.tscn" id="1_ugw2y"]
+[ext_resource type="PackedScene" uid="uid://bubspur517ka7" path="res://game/systems/friction_system.tscn" id="4_7s8lo"]
+[ext_resource type="PackedScene" uid="uid://b1xqy15cunx4a" path="res://game/systems/player_movement_system.tscn" id="4_cyn1q"]
+[ext_resource type="PackedScene" uid="uid://ck80sfr4yctdo" path="res://game/systems/bounce_system.tscn" id="5_ow63c"]
+[ext_resource type="PackedScene" uid="uid://cqdxmwf5af447" path="res://game/systems/velocity_system.tscn" id="5_p8fc4"]
+[ext_resource type="PackedScene" uid="uid://cld6hmfsvw2yf" path="res://game/systems/transform_system.tscn" id="7_udqie"]
+
+[node name="Main" type="Node2D"]
+script = ExtResource("1_l8t4h")
+
+[node name="Ball" parent="." instance=ExtResource("1_r2eid")]
+position = Vector2(572, 592)
+
+[node name="Paddle" parent="." instance=ExtResource("1_ugw2y")]
+position = Vector2(574, 625)
+
+[node name="Systems" type="Node" parent="."]
+
+[node name="PlayerMovementSystem" parent="Systems" instance=ExtResource("4_cyn1q")]
+COMPONENTS = "velocity,player_movement"
+
+[node name="FrictionSystem" parent="Systems" instance=ExtResource("4_7s8lo")]
+
+[node name="BounceSystem" parent="Systems" instance=ExtResource("5_ow63c")]
+
+[node name="VelocitySystem" parent="Systems" instance=ExtResource("5_p8fc4")]
+
+[node name="TransformSystem" parent="Systems" instance=ExtResource("7_udqie")]

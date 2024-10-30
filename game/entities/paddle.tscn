@@ -1,0 +1,28 @@
+[gd_scene load_steps=7 format=3 uid="uid://b7idne6el03sm"]
+
+[ext_resource type="Script" path="res://game/entities/paddle.gd" id="1_dffm1"]
+[ext_resource type="PackedScene" uid="uid://bqbbthruedqey" path="res://game/components/friction.tscn" id="2_hrj4o"]
+[ext_resource type="PackedScene" uid="uid://6rs66bgd75l2" path="res://game/components/player_movement.tscn" id="2_stcj7"]
+[ext_resource type="PackedScene" uid="uid://tm6qtioqa2h6" path="res://game/components/transform.tscn" id="3_8l3an"]
+[ext_resource type="PackedScene" uid="uid://cu0mq4yskobdv" path="res://game/components/velocity.tscn" id="3_h1j3f"]
+
+[sub_resource type="PlaceholderTexture2D" id="PlaceholderTexture2D_ntc0s"]
+
+[node name="Paddle" type="Node2D"]
+script = ExtResource("1_dffm1")
+
+[node name="Sprite" type="Sprite2D" parent="."]
+scale = Vector2(100, 20)
+texture = SubResource("PlaceholderTexture2D_ntc0s")
+
+[node name="Components" type="Node" parent="."]
+
+[node name="Player_Movement" parent="Components" instance=ExtResource("2_stcj7")]
+
+[node name="Transform" parent="Components" instance=ExtResource("3_8l3an")]
+
+[node name="Friction" parent="Components" instance=ExtResource("2_hrj4o")]
+
+[node name="Velocity" parent="Components" instance=ExtResource("3_h1j3f")]
+direction = Vector2(0, 0)
+speed = 0.0
