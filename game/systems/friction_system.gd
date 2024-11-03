@@ -3,10 +3,12 @@
 class_name FrictionSystem
 extends System
 
+func _init():
+	required_components = [Transform, Velocity, Friction]
 
-func on_process_entity(entity : Entity, delta: float):
-	var velocity: Velocity = entity.get_component("velocity")
-	var friction: Friction = entity.get_component("friction")
-	
+func process(entity: Entity, delta: float) -> void:
+	var velocity: Velocity = entity.get_component(Velocity)
+	var friction: Friction = entity.get_component(Friction)
+
 	# Reduces velocity speed over time based on the friction coefficient
 	velocity.speed = max(0, velocity.speed - (friction.coefficient * delta))

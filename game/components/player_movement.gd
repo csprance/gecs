@@ -1,3 +1,4 @@
+## The Player Movement Controls your paddle
 class_name PlayerMovement
 extends Component
 

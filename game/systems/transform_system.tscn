@@ -1,7 +1,0 @@
-[gd_scene load_steps=2 format=3 uid="uid://cld6hmfsvw2yf"]
-
-[ext_resource type="Script" path="res://game/systems/transform_system.gd" id="1_hqjth"]
-
-[node name="TransformSystem" type="Node"]
-script = ExtResource("1_hqjth")
-COMPONENTS = "transform"

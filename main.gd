@@ -1,4 +1,6 @@
-extends Node2D
+extends Node
 
-func _process(delta: float) -> void:
-	ECS.update()
+@onready var world: World = $World
+
+func _ready() -> void:
+	WorldManager.set_current_world(world)

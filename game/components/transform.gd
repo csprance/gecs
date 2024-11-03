@@ -1,3 +1,5 @@
+## This controls where something exists in the world and is forwarded onto
+## The Entity2D it exists on
 class_name Transform
 extends Component
 

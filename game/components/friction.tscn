@@ -1,6 +1,0 @@
-[gd_scene load_steps=2 format=3 uid="uid://bqbbthruedqey"]
-
-[ext_resource type="Script" path="res://game/components/friction.gd" id="1_vhie6"]
-
-[node name="Friction" type="Node"]
-script = ExtResource("1_vhie6")

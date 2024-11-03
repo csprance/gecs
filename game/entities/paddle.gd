@@ -1,9 +1,6 @@
 class_name Paddle
-extends Entity
+extends Entity2D
 
 
 func _ready() -> void:
-	var trs: Transform = get_component('transform')
-	trs.position = self.position
-	trs.scale = self.scale
-	trs.rotation = self.rotation
+	Utils.sync_transform_2d(self)

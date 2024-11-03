@@ -1,32 +1,38 @@
-[gd_scene load_steps=9 format=3 uid="uid://dsfajstavnyam"]
+[gd_scene load_steps=10 format=3 uid="uid://cgyawfqrsaqdd"]
 
-[ext_resource type="Script" path="res://main.gd" id="1_l8t4h"]
-[ext_resource type="PackedScene" uid="uid://c30ukuyygo3gm" path="res://game/entities/ball.tscn" id="1_r2eid"]
-[ext_resource type="PackedScene" uid="uid://b7idne6el03sm" path="res://game/entities/paddle.tscn" id="1_ugw2y"]
-[ext_resource type="PackedScene" uid="uid://bubspur517ka7" path="res://game/systems/friction_system.tscn" id="4_7s8lo"]
-[ext_resource type="PackedScene" uid="uid://b1xqy15cunx4a" path="res://game/systems/player_movement_system.tscn" id="4_cyn1q"]
-[ext_resource type="PackedScene" uid="uid://ck80sfr4yctdo" path="res://game/systems/bounce_system.tscn" id="5_ow63c"]
-[ext_resource type="PackedScene" uid="uid://cqdxmwf5af447" path="res://game/systems/velocity_system.tscn" id="5_p8fc4"]
-[ext_resource type="PackedScene" uid="uid://cld6hmfsvw2yf" path="res://game/systems/transform_system.tscn" id="7_udqie"]
+[ext_resource type="Script" path="res://main.gd" id="1_2dpkv"]
+[ext_resource type="Script" path="res://addons/qt_ecs/world.gd" id="1_nrddk"]
+[ext_resource type="PackedScene" uid="uid://c30ukuyygo3gm" path="res://game/entities/ball.tscn" id="2_o043a"]
+[ext_resource type="PackedScene" uid="uid://b7idne6el03sm" path="res://game/entities/paddle.tscn" id="3_27hlp"]
+[ext_resource type="Script" path="res://game/systems/bounce_system.gd" id="4_2koxk"]
+[ext_resource type="Script" path="res://game/systems/velocity_system.gd" id="4_hthy6"]
+[ext_resource type="Script" path="res://game/systems/friction_system.gd" id="5_dopap"]
+[ext_resource type="Script" path="res://game/systems/transform_2d_system.gd" id="5_edrrr"]
+[ext_resource type="Script" path="res://game/systems/player_movement_system.gd" id="6_sp4wu"]
 
-[node name="Main" type="Node2D"]
-script = ExtResource("1_l8t4h")
+[node name="Root" type="Node"]
+script = ExtResource("1_2dpkv")
 
-[node name="Ball" parent="." instance=ExtResource("1_r2eid")]
-position = Vector2(572, 592)
+[node name="World" type="Node" parent="."]
+script = ExtResource("1_nrddk")
 
-[node name="Paddle" parent="." instance=ExtResource("1_ugw2y")]
-position = Vector2(574, 625)
+[node name="Ball" parent="World" instance=ExtResource("2_o043a")]
+position = Vector2(834, 868)
 
-[node name="Systems" type="Node" parent="."]
+[node name="Paddle" parent="World" instance=ExtResource("3_27hlp")]
+position = Vector2(860, 1045)
 
-[node name="PlayerMovementSystem" parent="Systems" instance=ExtResource("4_cyn1q")]
-COMPONENTS = "velocity,player_movement"
+[node name="VelocitySystem" type="Node" parent="World"]
+script = ExtResource("4_hthy6")
 
-[node name="FrictionSystem" parent="Systems" instance=ExtResource("4_7s8lo")]
+[node name="FrictionSystem" type="Node" parent="World"]
+script = ExtResource("5_dopap")
 
-[node name="BounceSystem" parent="Systems" instance=ExtResource("5_ow63c")]
+[node name="BounceSystem" type="Node" parent="World"]
+script = ExtResource("4_2koxk")
 
-[node name="VelocitySystem" parent="Systems" instance=ExtResource("5_p8fc4")]
+[node name="Transform2DSystem" type="Node" parent="World"]
+script = ExtResource("5_edrrr")
 
-[node name="TransformSystem" parent="Systems" instance=ExtResource("7_udqie")]
+[node name="PlayerMovementSystem" type="Node" parent="World"]
+script = ExtResource("6_sp4wu")

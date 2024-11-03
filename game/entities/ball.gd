@@ -1,15 +1,7 @@
 class_name Ball
-extends Entity
+extends Entity2D
 
-
-@onready var ball: Ball = $'.'
 
 func _ready() -> void:
-	var trs: Transform = get_component('transform')
-	trs.position = ball.position
-	trs.scale = ball.scale
-	trs.rotation = ball.rotation
-		
-	
+	Utils.sync_transform_2d(self)
 
-	

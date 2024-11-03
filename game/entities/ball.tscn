@@ -1,23 +1,44 @@
-[gd_scene load_steps=6 format=3 uid="uid://c30ukuyygo3gm"]
+[gd_scene load_steps=12 format=3 uid="uid://c30ukuyygo3gm"]
 
 [ext_resource type="Script" path="res://game/entities/ball.gd" id="1_sx58v"]
 [ext_resource type="Texture2D" uid="uid://bgq145vfplih8" path="res://icon.svg" id="1_uc1ux"]
-[ext_resource type="PackedScene" uid="uid://cu0mq4yskobdv" path="res://game/components/velocity.tscn" id="2_jfdwd"]
-[ext_resource type="PackedScene" uid="uid://bqbbthruedqey" path="res://game/components/friction.tscn" id="3_3jhr5"]
-[ext_resource type="PackedScene" uid="uid://tm6qtioqa2h6" path="res://game/components/transform.tscn" id="3_tiqct"]
+[ext_resource type="Script" path="res://game/components/bounce.gd" id="2_hr8yc"]
+[ext_resource type="Script" path="res://game/components/velocity.gd" id="2_nr2d6"]
+[ext_resource type="Script" path="res://game/components/friction.gd" id="3_033e8"]
+[ext_resource type="Script" path="res://game/components/transform.gd" id="3_lwipv"]
+
+[sub_resource type="Resource" id="Resource_0uodx"]
+script = ExtResource("2_hr8yc")
+normal = Vector2(0, 0)
+should_bounce = false
+
+[sub_resource type="Resource" id="Resource_l1qe3"]
+script = ExtResource("3_033e8")
+coefficient = 0.998
+
+[sub_resource type="Resource" id="Resource_iyurm"]
+script = ExtResource("2_nr2d6")
+direction = Vector2(0, 0)
+speed = 0.0
+
+[sub_resource type="Resource" id="Resource_2pjmc"]
+script = ExtResource("3_lwipv")
+position = Vector2(0, 0)
+rotation = 0.0
+scale = Vector2(0, 0)
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_uxnq0"]
+radius = 15.1327
 
 [node name="Ball" type="Node2D"]
 script = ExtResource("1_sx58v")
+component_resources = Array[Resource("res://addons/qt_ecs/component.gd")]([SubResource("Resource_0uodx"), SubResource("Resource_l1qe3"), SubResource("Resource_iyurm"), SubResource("Resource_2pjmc")])
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 scale = Vector2(0.25, 0.25)
 texture = ExtResource("1_uc1ux")
 
-[node name="Components" type="Node" parent="."]
+[node name="Area2D" type="Area2D" parent="."]
 
-[node name="Transform" parent="Components" instance=ExtResource("3_tiqct")]
-
-[node name="Friction" parent="Components" instance=ExtResource("3_3jhr5")]
-
-[node name="Velocity" parent="Components" instance=ExtResource("2_jfdwd")]
-speed = 100.0
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D"]
+shape = SubResource("CircleShape2D_uxnq0")

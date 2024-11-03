@@ -1,3 +1,4 @@
+## Velocity controls the movement in our game.
 class_name Velocity
 extends Component
 

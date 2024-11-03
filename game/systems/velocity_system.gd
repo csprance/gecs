@@ -1,10 +1,14 @@
 class_name VelocitySystem
 extends System
 
-func on_process_entity(entity: Entity, delta: float):
-	var velocity: Velocity = entity.get_component("velocity")
-	var transform: Transform = entity.get_component("transform")
-	
+func _init():
+	required_components = [Velocity, Transform]
+
+func process(entity: Entity, delta: float):
+	print('velocity')
+	var velocity: Velocity = entity.get_component(Velocity)
+	var transform: Transform = entity.get_component(Transform)
+
 	# Calculate velocity as a vector and apply movement
-	var velocity_vector = velocity.direction.normalized() * velocity.speed
+	var velocity_vector: Vector2 = velocity.direction.normalized() * velocity.speed
 	transform.position += velocity_vector * delta

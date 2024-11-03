@@ -1,8 +1,0 @@
-[gd_scene load_steps=2 format=3 uid="uid://cu0mq4yskobdv"]
-
-[ext_resource type="Script" path="res://game/components/velocity.gd" id="1_p8qpw"]
-
-[node name="Velocity" type="Node"]
-script = ExtResource("1_p8qpw")
-direction = Vector2(0, -1)
-speed = 0.1

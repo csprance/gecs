@@ -1,0 +1,9 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Main" type="GodotRunConfiguration" factoryName="GodotRunConfiguration">
+    <option name="debugPaths" value="true" />
+    <option name="debugShapes" value="true" />
+    <option name="godotExe" value="D:\Godot\Godot_v4.3-stable_win64\Godot_v4.3-stable_win64.exe" />
+    <option name="tscn" value="D:\code\breakout\main.tscn" />
+    <method v="2" />
+  </configuration>
+</component>

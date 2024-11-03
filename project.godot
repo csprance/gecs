@@ -17,16 +17,17 @@ config/icon="res://icon.svg"
 
 [autoload]
 
-ECS="*res://addons/gs_ecs/ecs.gd"
-Logger="*res://addons/gs_logger/logger.gd"
+WorldManager="*res://addons/qt_ecs/world_manager.gd"
 
 [display]
 
-window/size/initial_position_type=0
+window/size/viewport_width=1920
+window/size/viewport_height=1080
+window/size/resizable=false
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/gs_ecs/plugin.cfg", "res://addons/gs_logger/plugin.cfg", "res://addons/repl/plugin.cfg")
+enabled=PackedStringArray("res://addons/gut/plugin.cfg", "res://addons/qt_ecs/plugin.cfg", "res://addons/repl/plugin.cfg")
 
 [input]
 
