@@ -27,7 +27,7 @@ window/size/resizable=false
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/gut/plugin.cfg", "res://addons/qt_ecs/plugin.cfg", "res://addons/repl/plugin.cfg")
+enabled=PackedStringArray("res://addons/gut/plugin.cfg", "res://addons/qt_ecs/plugin.cfg")
 
 [input]
 
