@@ -2,35 +2,29 @@
 class_name World
 extends Node
 
-var entities: Array[Entity] = []
-var systems: Array[System]  = []
+var entities: Array = []
+var systems: Array  = []
 
 # Component to Entities Index
 var component_entity_index: Dictionary = {}
 
 func _ready() -> void:
 	# Add entities from the scene tree
-	for child in get_children():
-		var is_class_entity = child.is_class('Entity')
-		var is_class_ = child is Entity
-		
-		var my_class_name = child.get_class()
-		if child.get_class() == 'Entity':
-			add_entity(child)
-		# Add systems from the scene tree to the systems array
-		if child is System:
-			systems.append(child)
+	entities = find_children('*', 'Entity2D') as Array[Entity]
+	for entity in entities:
+		add_entity(entity)
+	systems = find_children('*', 'System') as Array[System]
 			
-func add_entity(entity: Entity) -> void:
-	entities.append(entity)
+func add_entity(entity: Entity2D) -> void:
 	# Update index
+	print(entity)
 	for component_class in entity.components.keys():
 		_add_entity_to_index(entity, component_class)
 		# Connect to component signals
 		entity.component_added.connect(_on_entity_component_removed)
 		entity.component_removed.connect(_on_entity_component_removed)
 
-func remove_entity(entity: Entity) -> void:
+func remove_entity(entity) -> void:
 	entities.erase(entity)
 	# Update index
 	for component_class in entity.components.keys():
@@ -114,14 +108,14 @@ func _difference_entity_arrays(array1, array2) -> Array:
 	return result
 
 # Index Management Functions
-func _add_entity_to_index(entity: Entity, component_class) -> void:
+func _add_entity_to_index(entity, component_class) -> void:
 	if not component_entity_index.has(component_class):
 		component_entity_index[component_class] = []
 	var entity_list = component_entity_index[component_class]
 	if not entity_list.has(entity):
 		entity_list.append(entity)
 
-func _remove_entity_from_index(entity: Entity, component_class) -> void:
+func _remove_entity_from_index(entity, component_class) -> void:
 	if component_entity_index.has(component_class):
 		var entity_list = component_entity_index[component_class]
 		entity_list.erase(entity)
@@ -129,8 +123,8 @@ func _remove_entity_from_index(entity: Entity, component_class) -> void:
 			component_entity_index.erase(component_class)
 
 # Signal Callbacks
-func _on_entity_component_added(component_class, entity: Entity) -> void:
+func _on_entity_component_added(component_class, entity) -> void:
 	_add_entity_to_index(entity, component_class)
 
-func _on_entity_component_removed(component_class, entity: Entity) -> void:
+func _on_entity_component_removed(component_class, entity) -> void:
 	_remove_entity_from_index(entity, component_class)

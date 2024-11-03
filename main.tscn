@@ -1,14 +1,9 @@
-[gd_scene load_steps=10 format=3 uid="uid://cgyawfqrsaqdd"]
+[gd_scene load_steps=5 format=3 uid="uid://cgyawfqrsaqdd"]
 
 [ext_resource type="Script" path="res://main.gd" id="1_2dpkv"]
 [ext_resource type="Script" path="res://addons/qt_ecs/world.gd" id="1_nrddk"]
 [ext_resource type="PackedScene" uid="uid://c30ukuyygo3gm" path="res://game/entities/ball.tscn" id="2_o043a"]
 [ext_resource type="PackedScene" uid="uid://b7idne6el03sm" path="res://game/entities/paddle.tscn" id="3_27hlp"]
-[ext_resource type="Script" path="res://game/systems/bounce_system.gd" id="4_2koxk"]
-[ext_resource type="Script" path="res://game/systems/velocity_system.gd" id="4_hthy6"]
-[ext_resource type="Script" path="res://game/systems/friction_system.gd" id="5_dopap"]
-[ext_resource type="Script" path="res://game/systems/transform_2d_system.gd" id="5_edrrr"]
-[ext_resource type="Script" path="res://game/systems/player_movement_system.gd" id="6_sp4wu"]
 
 [node name="Root" type="Node"]
 script = ExtResource("1_2dpkv")
@@ -21,18 +16,3 @@ position = Vector2(834, 868)
 
 [node name="Paddle" parent="World" instance=ExtResource("3_27hlp")]
 position = Vector2(860, 1045)
-
-[node name="VelocitySystem" type="Node" parent="World"]
-script = ExtResource("4_hthy6")
-
-[node name="FrictionSystem" type="Node" parent="World"]
-script = ExtResource("5_dopap")
-
-[node name="BounceSystem" type="Node" parent="World"]
-script = ExtResource("4_2koxk")
-
-[node name="Transform2DSystem" type="Node" parent="World"]
-script = ExtResource("5_edrrr")
-
-[node name="PlayerMovementSystem" type="Node" parent="World"]
-script = ExtResource("6_sp4wu")

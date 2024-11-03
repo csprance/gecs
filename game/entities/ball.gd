@@ -2,6 +2,6 @@ class_name Ball
 extends Entity2D
 
 
-func _ready() -> void:
+func on_start() -> void:
 	Utils.sync_transform_2d(self)
 

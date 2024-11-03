@@ -20,7 +20,7 @@ func _ready() -> void:
 
 func add_component(component: Variant) -> void:
 	var component_class: String = component.get_class()
-	components[component_class] = component
+	components[component_class] = component.new()
 	emit_signal("component_added", component_class)
 
 func remove_component(component_class: String) -> void:

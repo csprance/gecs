@@ -18,7 +18,7 @@ func _ready() -> void:
 
 	on_start()
 
-func add_component(component: Variant) -> void:
+func add_component(component: Component) -> void:
 	var component_class: String = component.get_class()
 	components[component_class] = component
 	emit_signal("component_added", component_class)
