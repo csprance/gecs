@@ -26,15 +26,16 @@ func add_entity(entity: Entity) -> void:
 	entities.append(entity)
 	for component_key in entity.components.keys():
 		_add_entity_to_index(entity, component_key)
-		# Connect to entity signals for components so we can track global component state
-		entity.component_added.connect(_on_entity_component_added)
-		entity.component_removed.connect(_on_entity_component_removed)
+	
+	# Connect to entity signals for components so we can track global component state
+	entity.component_added.connect(_on_entity_component_added)
+	entity.component_removed.connect(_on_entity_component_removed)
 
 func add_system(system: System) -> void:
 	print('add_system Adding System: ', system)
 	systems.append(system)
-	
-	
+
+
 func remove_entity(entity) -> void:
 	print('remove entitiy', entity)
 	entities.erase(entity)
