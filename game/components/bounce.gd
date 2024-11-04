@@ -6,4 +6,4 @@ extends Component
 ## What what is the surface normal of the bounce
 @export var normal := Vector2.ZERO
 ## Should we bounce?
-@export var should_bounce := false
+@export var should_bounce := true
