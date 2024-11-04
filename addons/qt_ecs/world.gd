@@ -11,7 +11,7 @@ var component_entity_index: Dictionary = {}
 func _ready() -> void:
 	# Add entities from the scene tree
 	var _entities = find_children('*', 'Entity') as Array[Entity]
-	var _systems = find_children('*', 'System') as Array[System]
+	var _systems  = find_children('*', 'System') as Array[System]
 	print('_ready Adding Entities from Scene Tree: ', entities)
 	print('_ready Adding Systems from Scene Tree: ', systems)
 	for entity in _entities:
@@ -31,6 +31,7 @@ func add_entity(entity: Entity) -> void:
 	entity.component_added.connect(_on_entity_component_added)
 	entity.component_removed.connect(_on_entity_component_removed)
 
+
 func add_system(system: System) -> void:
 	print('add_system Adding System: ', system)
 	systems.append(system)
@@ -43,7 +44,6 @@ func remove_entity(entity) -> void:
 	for component_key in entity.components.keys():
 		_remove_entity_from_index(entity, component_key)
 	entity.queue_free()
-
 
 
 func _process(delta: float) -> void:
@@ -59,10 +59,10 @@ func map_resource_path(x) -> String:
 
 # Advanced Query Function
 func query(all_components = [], any_components = [], exclude_components = []) -> Array:
-	var result: Array                      =  []
-	var initialized                        := false
-	var _all_components: Array    =  all_components.map(map_resource_path)
-	var _any_components: Array    =  any_components.map(map_resource_path)
+	var result: Array              =  []
+	var initialized                := false
+	var _all_components: Array     =  all_components.map(map_resource_path)
+	var _any_components: Array     =  any_components.map(map_resource_path)
 	var _exclude_components: Array =  exclude_components.map(map_resource_path)
 
 	# Include entities that have all components in _all_components
@@ -70,7 +70,7 @@ func query(all_components = [], any_components = [], exclude_components = []) ->
 		var first_component_entities = component_entity_index.get(_all_components[0], [])
 		result = first_component_entities.duplicate()
 		for i in range(1, _all_components.size()):
-			var component_key: String         = _all_components[i]
+			var component_key: String   = _all_components[i]
 			var entities_with_component = component_entity_index.get(component_key, [])
 			result = _intersect_entity_arrays(result, entities_with_component)
 		initialized = true

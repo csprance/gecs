@@ -1,8 +1,7 @@
+## The Bounced component is added to something when it bounced
+## It is then removed in the bounce system and represents a single bounce
 extends Component
 class_name Bounced
 
-@export var normal = Vector2.AXIS_Y
-
-func _init(_normal: Vector2):
-	key = get_script().resource_path
-	normal = _normal
+##  What surface normal did we just bounce off
+@export var normal := Vector2.AXIS_Y

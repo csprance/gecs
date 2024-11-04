@@ -4,19 +4,21 @@ extends System
 func _init():
 	required_components = [Transform, Velocity, Bounce, Bounced]
 
-func process(entity : Entity, delta: float):
+
+func process(entity: Entity, delta: float):
 	# Get our bounce and velocity component
-	var bounce_component: Bounce = entity.get_component(Bounce)
-	var bounced_component: Bounced = entity.get_component(Bounced)
+	var bounce  = entity.get_component(Bounce) as Bounce
+	var bounced = entity.get_component(Bounced) as Bounced
+
 	# If it should bounce
-	if bounce_component.should_bounce:
-		# Get the velocity componet and modify it
-		var velocity_component: Velocity = entity.get_component(Velocity)
+	if bounce.should_bounce:
+		# Get the velocity component and modify it
+		var velocity = entity.get_component(Velocity) as Velocity
 		# Reflect the velocity direction over the normal
-		var incoming_direction = velocity_component.direction.normalized()
-		var normal = bounced_component.normal.normalized()
-		var reflected_direction = incoming_direction.bounce(normal)
-		velocity_component.direction = reflected_direction
-	# remove the bounced Component
+		velocity.direction = velocity.direction.bounce(
+			bounced.normal
+		)
+
+	# remove the bounced Component because it's only a one time thing
 	entity.remove_component(Bounced)
 

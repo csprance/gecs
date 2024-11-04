@@ -8,5 +8,6 @@ extends Resource
 ## All Components have a key that is the same across all components of the same type
 var key: String
 
+
 func _init():
-	key = get_script().resource_path
+    key = get_script().resource_path

@@ -5,6 +5,6 @@ class_name Utils
 static func sync_transform(entity: Entity):
 	var trs: Transform = entity.get_component(Transform)
 	if trs:
-		trs.position = entity.position 
-		trs.rotation = entity.rotation 
-		trs.scale = entity.scale    
+		trs.position = entity.position
+		trs.rotation = entity.rotation
+		trs.scale = entity.scale

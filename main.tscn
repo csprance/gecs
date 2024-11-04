@@ -1,41 +1,118 @@
-[gd_scene load_steps=11 format=3 uid="uid://cgyawfqrsaqdd"]
+[gd_scene load_steps=28 format=3 uid="uid://cgyawfqrsaqdd"]
 
 [ext_resource type="Script" path="res://main.gd" id="1_2dpkv"]
 [ext_resource type="Script" path="res://addons/qt_ecs/world.gd" id="1_nrddk"]
+[ext_resource type="Script" path="res://addons/resonate/sound_manager/sound_bank.gd" id="2_sqmfr"]
 [ext_resource type="PackedScene" uid="uid://dgiygx4ouqqsm" path="res://game/entities/bumper.tscn" id="3_584vu"]
+[ext_resource type="Script" path="res://addons/resonate/sound_manager/sound_event_resource.gd" id="3_acroa"]
+[ext_resource type="PackedScene" uid="uid://bxdii1way2qms" path="res://game/entities/active_game.tscn" id="3_kkip8"]
 [ext_resource type="PackedScene" uid="uid://b7idne6el03sm" path="res://game/entities/paddle.tscn" id="3_o0f7x"]
+[ext_resource type="AudioStream" uid="uid://cyp0fedotvaxl" path="res://addons/kenney impact sounds/impact_metal_heavy_001.ogg" id="4_c844j"]
+[ext_resource type="Script" path="res://game/components/game_state.gd" id="4_fsv48"]
+[ext_resource type="AudioStream" uid="uid://dy66i1lwwv1v8" path="res://addons/kenney impact sounds/impact_metal_heavy_003.ogg" id="5_g7wqa"]
 [ext_resource type="PackedScene" uid="uid://c30ukuyygo3gm" path="res://game/entities/ball.tscn" id="5_q4olp"]
 [ext_resource type="Script" path="res://game/systems/bounce_system.gd" id="5_qt40r"]
+[ext_resource type="PackedScene" uid="uid://d8g7nt62qq13" path="res://game/entities/brick.tscn" id="6_hrodl"]
 [ext_resource type="Script" path="res://game/systems/friction_system.gd" id="6_is0xr"]
+[ext_resource type="AudioStream" uid="uid://cjl0h25w035j2" path="res://addons/kenney impact sounds/impact_metal_light_004.ogg" id="6_pke5j"]
 [ext_resource type="Script" path="res://game/systems/player_movement_system.gd" id="7_e2kkx"]
+[ext_resource type="AudioStream" uid="uid://dptuwjwr4wwjf" path="res://addons/kenney impact sounds/footstep_snow_003.ogg" id="7_r0v48"]
 [ext_resource type="Script" path="res://game/systems/transform_2d_system.gd" id="8_payik"]
 [ext_resource type="Script" path="res://game/systems/velocity_system.gd" id="9_j4tdl"]
+[ext_resource type="Script" path="res://game/systems/kill_system.gd" id="12_64ji5"]
+[ext_resource type="Script" path="res://game/systems/damage_system.gd" id="13_yeo7a"]
+[ext_resource type="Script" path="res://game/systems/game_state_system.gd" id="16_splpx"]
+
+[sub_resource type="AudioStreamRandomizer" id="AudioStreamRandomizer_yg1tm"]
+streams_count = 3
+stream_0/stream = ExtResource("4_c844j")
+stream_0/weight = 1.0
+stream_1/stream = ExtResource("5_g7wqa")
+stream_1/weight = 1.0
+stream_2/stream = ExtResource("6_pke5j")
+stream_2/weight = 1.0
+
+[sub_resource type="Resource" id="Resource_qhgwi"]
+script = ExtResource("3_acroa")
+name = "damage"
+bus = ""
+volume = 0.0
+pitch = 1.0
+streams = Array[AudioStream]([SubResource("AudioStreamRandomizer_yg1tm")])
+
+[sub_resource type="AudioStreamRandomizer" id="AudioStreamRandomizer_4ew3m"]
+streams_count = 2
+stream_0/stream = ExtResource("7_r0v48")
+stream_0/weight = 1.0
+stream_1/stream = ExtResource("7_r0v48")
+stream_1/weight = 1.0
+
+[sub_resource type="Resource" id="Resource_ni5bo"]
+script = ExtResource("3_acroa")
+name = "kill"
+bus = ""
+volume = 0.0
+pitch = 1.0
+streams = Array[AudioStream]([SubResource("AudioStreamRandomizer_4ew3m")])
+
+[sub_resource type="Resource" id="Resource_sxd61"]
+script = ExtResource("4_fsv48")
+score = 0
+lives = 3
 
 [node name="Root" type="Node"]
 script = ExtResource("1_2dpkv")
 
+[node name="SoundBank" type="Node" parent="."]
+script = ExtResource("2_sqmfr")
+label = "fx"
+events = Array[ExtResource("3_acroa")]([SubResource("Resource_qhgwi"), SubResource("Resource_ni5bo")])
+
 [node name="World" type="Node" parent="."]
 script = ExtResource("1_nrddk")
 
-[node name="Bumper2" parent="World" instance=ExtResource("3_584vu")]
+[node name="ActiveGame" parent="World" instance=ExtResource("3_kkip8")]
+component_resources = Array[Resource("res://addons/qt_ecs/component.gd")]([SubResource("Resource_sxd61")])
+
+[node name="TopBumper" parent="World" instance=ExtResource("3_584vu")]
 position = Vector2(953, 2)
 scale = Vector2(12, 1)
 
-[node name="Bumper" parent="World" instance=ExtResource("3_584vu")]
+[node name="RightBumper" parent="World" instance=ExtResource("3_584vu")]
 position = Vector2(1921, 542)
 rotation = 1.57079
 scale = Vector2(6.5733, 1)
+normal = Vector2(-1, 0)
 
-[node name="Bumper3" parent="World" instance=ExtResource("3_584vu")]
+[node name="LeftBumper" parent="World" instance=ExtResource("3_584vu")]
 position = Vector2(-5, 542)
 rotation = 1.57079
 scale = Vector2(6.5733, 1)
+normal = Vector2(1, 0)
 
 [node name="Paddle" parent="World" instance=ExtResource("3_o0f7x")]
 position = Vector2(942, 1023)
 
 [node name="Ball" parent="World" instance=ExtResource("5_q4olp")]
 position = Vector2(944, 924)
+
+[node name="Brick" parent="World" instance=ExtResource("6_hrodl")]
+position = Vector2(924, 723)
+rotation = 0.495278
+
+[node name="Brick2" parent="World" instance=ExtResource("6_hrodl")]
+position = Vector2(1169, 738)
+rotation = 0.495278
+
+[node name="Brick3" parent="World" instance=ExtResource("6_hrodl")]
+position = Vector2(613, 728)
+rotation = 0.495278
+
+[node name="DamageSystem" type="Node" parent="World"]
+script = ExtResource("13_yeo7a")
+
+[node name="KillSystem" type="Node" parent="World"]
+script = ExtResource("12_64ji5")
 
 [node name="PlayerMovementSystem" type="Node" parent="World"]
 script = ExtResource("7_e2kkx")
@@ -51,3 +128,6 @@ script = ExtResource("9_j4tdl")
 
 [node name="Transform2DSystem" type="Node" parent="World"]
 script = ExtResource("8_payik")
+
+[node name="GameStateSystem" type="Node" parent="World"]
+script = ExtResource("16_splpx")

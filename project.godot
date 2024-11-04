@@ -15,9 +15,20 @@ run/main_scene="res://main.tscn"
 config/features=PackedStringArray("4.2", "Forward Plus")
 config/icon="res://icon.svg"
 
+[audio]
+
+manager/sound/bus="Sound"
+manager/sound/pool_1D_size=16
+manager/sound/pool_2D_size=16
+manager/sound/pool_3D_size=16
+manager/sound/max_polyphony=32
+manager/music/bus="Music"
+
 [autoload]
 
 WorldManager="*res://addons/qt_ecs/world_manager.gd"
+SoundManager="*res://addons/resonate/sound_manager/sound_manager.gd"
+MusicManager="*res://addons/resonate/music_manager/music_manager.gd"
 
 [display]
 
@@ -27,7 +38,7 @@ window/size/resizable=false
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/gut/plugin.cfg", "res://addons/qt_ecs/plugin.cfg")
+enabled=PackedStringArray("res://addons/gut/plugin.cfg", "res://addons/qt_ecs/plugin.cfg", "res://addons/resonate/plugin.cfg")
 
 [input]
 

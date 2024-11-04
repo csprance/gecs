@@ -5,6 +5,7 @@ extends System
 func _init():
 	required_components = [Transform]
 
+
 func process(entity: Entity, delta):
 	var transform: Transform = entity.get_component(Transform)
 	entity.position = transform.position

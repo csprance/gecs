@@ -23,7 +23,8 @@ coefficient = 0.998
 
 [sub_resource type="Resource" id="Resource_8drjd"]
 script = ExtResource("5_1fh31")
-move_axis = Vector2(0, 0)
+axis = Vector2(0, 0)
+speed = 1000
 
 [sub_resource type="PlaceholderTexture2D" id="PlaceholderTexture2D_ntc0s"]
 

@@ -6,6 +6,7 @@ extends System
 func _init():
 	required_components = [Transform, Velocity, Friction]
 
+
 func process(entity: Entity, delta: float) -> void:
 	var velocity: Velocity = entity.get_component(Velocity)
 	var friction: Friction = entity.get_component(Friction)

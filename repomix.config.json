@@ -3,11 +3,13 @@
     "filePath": "repomix-output.txt",
     "style": "plain",
     "removeComments": false,
-    "removeEmptyLines": false,
+    "removeEmptyLines": true,
     "topFilesLength": 5,
-    "showLineNumbers": false
+    "showLineNumbers": true
   },
-  "include": [],
+  "include": [
+
+  ],
   "ignore": {
     "useGitignore": true,
     "useDefaultPatterns": true,

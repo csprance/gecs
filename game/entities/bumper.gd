@@ -6,8 +6,12 @@ extends Entity
 
 func on_ready() -> void:
 	Utils.sync_transform(self)
-	
+
+
 func _on_area_2d_body_entered(body: Node2D) -> void:
 	if body is Entity:
-		var entity = body as Entity
-		entity.add_component(Bounced.new(normal))
+		var entity  = body as Entity
+		var bounced = Bounced.new()
+		bounced.normal = normal
+
+		entity.add_component(bounced)
