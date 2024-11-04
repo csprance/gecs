@@ -26,7 +26,7 @@ func add_entity(entity: Entity) -> void:
 	entities.append(entity)
 	for component_key in entity.components.keys():
 		_add_entity_to_index(entity, component_key)
-	
+
 	# Connect to entity signals for components so we can track global component state
 	entity.component_added.connect(_on_entity_component_added)
 	entity.component_removed.connect(_on_entity_component_removed)
@@ -135,9 +135,9 @@ func _add_entity_to_index(entity: Entity, component_key: String) -> void:
 
 func _remove_entity_from_index(entity, component_key: String) -> void:
 	if component_entity_index.has(component_key):
-		var entity_list = component_entity_index[component_key]
+		var entity_list: Array = component_entity_index[component_key]
 		entity_list.erase(entity)
-		if entity_list.empty():
+		if entity_list.size() == 0:
 			component_entity_index.erase(component_key)
 
 
