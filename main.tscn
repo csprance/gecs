@@ -37,17 +37,17 @@ position = Vector2(942, 1023)
 [node name="Ball" parent="World" instance=ExtResource("5_q4olp")]
 position = Vector2(944, 924)
 
+[node name="PlayerMovementSystem" type="Node" parent="World"]
+script = ExtResource("7_e2kkx")
+
 [node name="BounceSystem" type="Node" parent="World"]
 script = ExtResource("5_qt40r")
 
 [node name="FrictionSystem" type="Node" parent="World"]
 script = ExtResource("6_is0xr")
 
-[node name="PlayerMovementSystem" type="Node" parent="World"]
-script = ExtResource("7_e2kkx")
+[node name="VelocitySystem" type="Node" parent="World"]
+script = ExtResource("9_j4tdl")
 
 [node name="Transform2DSystem" type="Node" parent="World"]
 script = ExtResource("8_payik")
-
-[node name="VelocitySystem" type="Node" parent="World"]
-script = ExtResource("9_j4tdl")
