@@ -1,5 +1,9 @@
-## The damage system is reponsible for taking in a dmage component doing stuff
-## with it to an entity and reducing the health of an entity
+## DamageSystem.
+##
+## Processes entities that have taken damage.
+## Reduces the entity's health based on the `Damage` component.
+## Plays a sound effect when damage is taken.
+## Removes the `Damage` component after processing.
 class_name DamageSystem
 extends System
 

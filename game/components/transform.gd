@@ -1,5 +1,7 @@
-## This controls where something exists in the world and is forwarded onto
-## The Entity2D it exists on
+## Transform Component.
+##
+## Represents the position, rotation, and scale of an entity.
+## Used by the `Transform2DSystem` to synchronize the entity's transform in the scene.
 class_name Transform
 extends Component
 

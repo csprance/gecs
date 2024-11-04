@@ -1,4 +1,8 @@
-# The transform system handles all the position, rotation and scale changes
+## Transform2DSystem.
+##
+## Synchronizes the `Transform` component with the entity's actual transform in the scene.
+## Updates the entity's position, rotation, and scale based on the `Transform` component.
+## Processes entities with the `Transform` component.
 class_name Transform2DSystem
 extends System
 

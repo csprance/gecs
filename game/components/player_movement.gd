@@ -1,4 +1,7 @@
-## The Player Movement Controls your paddle
+## PlayerMovement Component.
+##
+## Used to control player input for moving the paddle.
+## Stores the movement axis and speed.
 class_name PlayerMovement
 extends Component
 

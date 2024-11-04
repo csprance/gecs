@@ -1,5 +1,8 @@
-## This is the Friction System it is reponsible for reducing the velocity Component
-## based on the Friction Coeffecnient set in the Friction Component
+## FrictionSystem.
+##
+## Applies friction to entities by reducing their velocity over time.
+## Uses the `Friction` component to determine the friction coefficient.
+## Ensures the velocity does not become negative.
 class_name FrictionSystem
 extends System
 

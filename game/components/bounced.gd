@@ -1,5 +1,8 @@
-## The Bounced component is added to something when it bounced
-## It is then removed in the bounce system and represents a single bounce
+## Bounced Component.
+##
+## Added to an entity when it has just bounced off a surface.
+## Stores information about the bounce, such as the surface normal.
+## The `BounceSystem` processes entities with this component and removes it after handling the bounce.
 extends Component
 class_name Bounced
 

@@ -1,3 +1,8 @@
+## Paddle Entity.
+##
+## Represents the player's paddle.
+## Handles player input for movement and bouncing the ball upon collision.
+## When an entity enters its area, it adds a `Bounced` component to that entity with the paddle's normal.
 class_name Paddle
 extends Entity
 

@@ -1,4 +1,8 @@
-## The game state system just runs all the time with the game state entity
+## GameStateSystem.
+##
+## Manages global game state.
+## Currently serves as a placeholder for game state updates.
+## Processes entities with the `GameState` component.
 class_name GameStateSystem
 extends System
 

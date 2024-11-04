@@ -1,5 +1,8 @@
-## The kill system is responsible for killing any entity with health
-## after the health gets to 0 it gets removed by the world
+## KillSystem.
+##
+## Removes entities whose health has dropped to zero or below.
+## Processes entities with the `Health` component.
+## Plays a sound effect upon entity death.
 class_name KillSystem
 extends System
 

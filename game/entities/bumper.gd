@@ -1,3 +1,8 @@
+## Bumper Entity.
+##
+## Represents a bumper that entities can collide with and bounce off.
+## When another entity enters its area, it adds a `Bounced` component to that entity with the bumper's normal.
+## Used to define boundaries or obstacles in the game.
 class_name Bumper
 extends Entity
 

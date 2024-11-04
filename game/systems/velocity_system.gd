@@ -1,3 +1,8 @@
+## VelocitySystem.
+##
+## Updates entities' positions based on their velocity.
+## Processes entities with `Velocity` and `Transform` components.
+## Calculates movement and updates the `Transform` component.
 class_name VelocitySystem
 extends System
 

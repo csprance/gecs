@@ -1,3 +1,8 @@
+## PlayerMovementSystem.
+##
+## Handles player input and updates the player's movement.
+## Processes entities with `Velocity` and `PlayerMovement` components.
+## Reads input actions to move the player entity left or right.
 class_name PlayerMovementSystem
 extends System
 
