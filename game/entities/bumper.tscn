@@ -5,7 +5,7 @@
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_syv4f"]
 size = Vector2(166, 12.5)
 
-[node name="Bumper" type="Node"]
+[node name="Bumper" type="Node2D"]
 script = ExtResource("1_eu2y3")
 
 [node name="Area2D" type="Area2D" parent="."]
