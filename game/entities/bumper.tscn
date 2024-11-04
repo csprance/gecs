@@ -14,7 +14,4 @@ script = ExtResource("1_eu2y3")
 shape = SubResource("RectangleShape2D_syv4f")
 debug_color = Color(0.996078, 0, 0.219608, 1)
 
-[connection signal="area_entered" from="Area2D" to="." method="_on_area_2d_area_entered"]
-[connection signal="area_shape_entered" from="Area2D" to="." method="_on_area_2d_area_shape_entered"]
 [connection signal="body_entered" from="Area2D" to="." method="_on_area_2d_body_entered"]
-[connection signal="body_shape_entered" from="Area2D" to="." method="_on_area_2d_body_shape_entered"]
