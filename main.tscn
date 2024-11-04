@@ -1,7 +1,8 @@
-[gd_scene load_steps=10 format=3 uid="uid://cgyawfqrsaqdd"]
+[gd_scene load_steps=11 format=3 uid="uid://cgyawfqrsaqdd"]
 
 [ext_resource type="Script" path="res://main.gd" id="1_2dpkv"]
 [ext_resource type="Script" path="res://addons/qt_ecs/world.gd" id="1_nrddk"]
+[ext_resource type="PackedScene" uid="uid://dgiygx4ouqqsm" path="res://game/entities/bumper.tscn" id="3_584vu"]
 [ext_resource type="PackedScene" uid="uid://b7idne6el03sm" path="res://game/entities/paddle.tscn" id="3_o0f7x"]
 [ext_resource type="PackedScene" uid="uid://c30ukuyygo3gm" path="res://game/entities/ball.tscn" id="5_q4olp"]
 [ext_resource type="Script" path="res://game/systems/bounce_system.gd" id="5_qt40r"]
@@ -15,6 +16,20 @@ script = ExtResource("1_2dpkv")
 
 [node name="World" type="Node" parent="."]
 script = ExtResource("1_nrddk")
+
+[node name="Bumper2" parent="World" instance=ExtResource("3_584vu")]
+position = Vector2(953, 2)
+scale = Vector2(12, 1)
+
+[node name="Bumper" parent="World" instance=ExtResource("3_584vu")]
+position = Vector2(1921, 542)
+rotation = 1.57079
+scale = Vector2(6.5733, 1)
+
+[node name="Bumper3" parent="World" instance=ExtResource("3_584vu")]
+position = Vector2(-5, 542)
+rotation = 1.57079
+scale = Vector2(6.5733, 1)
 
 [node name="Paddle" parent="World" instance=ExtResource("3_o0f7x")]
 position = Vector2(942, 1023)
