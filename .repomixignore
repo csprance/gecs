@@ -8,3 +8,8 @@ addons/repl/
 addons/gut/
 *.import
 *.svg
+.repomixignore
+.gitignore
+repomix.config.json
+.gitattributes
+export_presets.cfg

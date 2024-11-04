@@ -1,41 +1,40 @@
 @icon('res://addons/qt_ecs/assets/entity.svg')
 class_name Entity
-#extends Node3D
 extends Node2D
 
-signal component_added(component_class)
-signal component_removed(component_class)
+signal component_added(entity: Entity, component_key: String)
+signal component_removed(entity: Entity, component_key: String)
 
-var id: int = 0
 
 @export var component_resources: Array[Component] = []
 
+
 var components: Dictionary = {}
+
 
 func _ready() -> void:
 	# Initialize components from the exported array
 	for component in component_resources:
 		add_component(component)
+		
+	on_ready()
 
-	on_start()
+func add_component(component: Component) -> void:
+	components[component.key] = component
+	component_added.emit(self, component.key)
 
-func add_component(component: Variant) -> void:
-	var component_class: String = component.get_class()
-	components[component_class] = component
-	emit_signal("component_added", component_class)
+func remove_component(component_key: String) -> void:
+	if components.erase(component_key):
+		component_removed.emit(self, component_key)
 
-func remove_component(component_class: String) -> void:
-	if components.erase(component_class):
-		emit_signal("component_removed", component_class)
+func get_component(component: Variant) -> Component:
+	return components.get(component.new().key, null)
 
-func get_component(component_type: Variant) -> Component:
-	return components.get(component_type.get_class(), null)
-
-func has_component(component_class: String) -> bool:
-	return components.has(component_class)
+func has_component(component_key: String) -> bool:
+	return components.has(component_key)
 
 # Lifecycle methods
-func on_start() -> void:
+func on_ready() -> void:
 	pass
 
 func on_update(delta: float) -> void:

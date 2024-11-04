@@ -2,6 +2,6 @@ class_name Ball
 extends Entity
 
 
-func on_start() -> void:
+func on_ready() -> void:
 	Utils.sync_transform(self)
 

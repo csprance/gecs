@@ -4,75 +4,81 @@ extends Node
 
 var entities: Array = []
 var systems: Array  = []
-
 # Component to Entities Index
 var component_entity_index: Dictionary = {}
 
+
 func _ready() -> void:
 	# Add entities from the scene tree
-	entities = find_children('*', 'Entity2D') as Array[Entity]
-	print('_ready self.entities', entities)
-	for entity in entities:
+	var _entities = find_children('*', 'Entity') as Array[Entity]
+	var _systems = find_children('*', 'System') as Array[System]
+	print('_ready Adding Entities from Scene Tree: ', entities)
+	print('_ready Adding Systems from Scene Tree: ', systems)
+	for entity in _entities:
 		add_entity(entity)
-	systems = find_children('*', 'System') as Array[System]
-	print('_ready self.systems', systems)
-			
+	for system in _systems:
+		add_system(system)
+
+
 func add_entity(entity: Entity) -> void:
 	# Update index
-	print('add_entity', entity)
-	for component_class in entity.components.keys():
-		_add_entity_to_index(entity, component_class)
-		# Connect to component signals
-		entity.component_added.connect(_on_entity_component_removed)
+	print('add_entity Adding Entity to World', entity)
+	entities.append(entity)
+	for component_key in entity.components.keys():
+		_add_entity_to_index(entity, component_key)
+		# Connect to entity signals for components so we can track global component state
+		entity.component_added.connect(_on_entity_component_added)
 		entity.component_removed.connect(_on_entity_component_removed)
 
+func add_system(system: System) -> void:
+	print('add_system Adding System: ', system)
+	systems.append(system)
+	
+	
 func remove_entity(entity) -> void:
 	print('remove entitiy', entity)
 	entities.erase(entity)
 	# Update index
-	for component_class in entity.components.keys():
-		_remove_entity_from_index(entity, component_class)
+	for component_key in entity.components.keys():
+		_remove_entity_from_index(entity, component_key)
 	entity.queue_free()
 
-func add_system(system: System) -> void:
-	print('add_system', system)
-	systems.append(system)
-	add_child(system)
+
 
 func _process(delta: float) -> void:
 	for system in systems:
 		var entities_to_process: Array = query(system.required_components)
-		print('_process Processing entities', entities_to_process)
 		for entity in entities_to_process:
-			print('system running', system, entity, delta)
 			system.process(entity, delta)
 
-func entity_has_required_components(entity: Entity, components) -> bool:
-	for component_class in components:
-		if not entity.has_component(component_class):
-			return false
-	return true
+
+func map_resource_path(x) -> String:
+	return x.resource_path
+
 
 # Advanced Query Function
 func query(all_components = [], any_components = [], exclude_components = []) -> Array:
-	var result: Array = []
-	var initialized := false
+	var result: Array                      =  []
+	var initialized                        := false
+	var _all_components: Array    =  all_components.map(map_resource_path)
+	var _any_components: Array    =  any_components.map(map_resource_path)
+	var _exclude_components: Array =  exclude_components.map(map_resource_path)
 
-	# Include entities that have all components in all_components
-	if all_components.size() > 0:
-		var first_component_entities = component_entity_index.get(all_components[0], [])
+	# Include entities that have all components in _all_components
+	if _all_components.size() > 0:
+		var first_component_entities = component_entity_index.get(_all_components[0], [])
 		result = first_component_entities.duplicate()
-		for i in range(1, all_components.size()):
-			var component_class = all_components[i]
-			var entities_with_component = component_entity_index.get(component_class, [])
+		for i in range(1, _all_components.size()):
+			var component_key: String         = _all_components[i]
+			var entities_with_component = component_entity_index.get(component_key, [])
 			result = _intersect_entity_arrays(result, entities_with_component)
 		initialized = true
 
 	# Include entities that have any components in any_components
-	if any_components.size() > 0:
+	if _any_components.size() > 0:
 		var any_result: Array = []
-		for component_class in any_components:
-			var entities_with_component = component_entity_index.get(component_class, [])
+		for component_key in _any_components:
+			var entities_with_component = component_entity_index.get(component_key, [])
 			any_result = _union_entity_arrays(any_result, entities_with_component)
 		if initialized:
 			result = _intersect_entity_arrays(result, any_result)
@@ -85,11 +91,12 @@ func query(all_components = [], any_components = [], exclude_components = []) ->
 		result = entities.duplicate()
 
 	# Exclude entities that have components in exclude_components
-	for component_class in exclude_components:
-		var entities_with_component = component_entity_index.get(component_class, [])
+	for component_key in _exclude_components:
+		var entities_with_component = component_entity_index.get(component_key, [])
 		result = _difference_entity_arrays(result, entities_with_component)
 
 	return result
+
 
 # Helper functions for array operations
 func _intersect_entity_arrays(array1, array2) -> Array:
@@ -99,12 +106,14 @@ func _intersect_entity_arrays(array1, array2) -> Array:
 			result.append(entity)
 	return result
 
+
 func _union_entity_arrays(array1, array2) -> Array:
 	var result = array1.duplicate()
 	for entity in array2:
 		if not result.has(entity):
 			result.append(entity)
 	return result
+
 
 func _difference_entity_arrays(array1, array2) -> Array:
 	var result: Array = []
@@ -113,24 +122,28 @@ func _difference_entity_arrays(array1, array2) -> Array:
 			result.append(entity)
 	return result
 
+
 # Index Management Functions
-func _add_entity_to_index(entity, component_class) -> void:
-	if not component_entity_index.has(component_class):
-		component_entity_index[component_class] = []
-	var entity_list = component_entity_index[component_class]
+func _add_entity_to_index(entity: Entity, component_key: String) -> void:
+	if not component_entity_index.has(component_key):
+		component_entity_index[component_key] = []
+	var entity_list = component_entity_index[component_key]
 	if not entity_list.has(entity):
 		entity_list.append(entity)
 
-func _remove_entity_from_index(entity, component_class) -> void:
-	if component_entity_index.has(component_class):
-		var entity_list = component_entity_index[component_class]
+
+func _remove_entity_from_index(entity, component_key: String) -> void:
+	if component_entity_index.has(component_key):
+		var entity_list = component_entity_index[component_key]
 		entity_list.erase(entity)
 		if entity_list.empty():
-			component_entity_index.erase(component_class)
+			component_entity_index.erase(component_key)
+
 
 # Signal Callbacks
-func _on_entity_component_added(component_class, entity) -> void:
-	_add_entity_to_index(entity, component_class)
+func _on_entity_component_added(entity, component_key: String) -> void:
+	_add_entity_to_index(entity, component_key)
 
-func _on_entity_component_removed(component_class, entity) -> void:
-	_remove_entity_from_index(entity, component_class)
+
+func _on_entity_component_removed(entity, component_key: String) -> void:
+	_remove_entity_from_index(entity, component_key)

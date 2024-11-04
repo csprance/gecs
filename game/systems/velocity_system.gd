@@ -5,7 +5,6 @@ func _init():
 	required_components = [Velocity, Transform]
 
 func process(entity: Entity, delta: float):
-	print('velocity')
 	var velocity: Velocity = entity.get_component(Velocity)
 	var transform: Transform = entity.get_component(Transform)
 
