@@ -8,4 +8,5 @@ var required_components: Array[Variant] = []
 ## The process function is what runs the processing code
 ## for this system on each frame.
 func process(entity: Entity, delta: float) -> void:
-	pass
+	assert(false, "The 'process' method must be overridden in subclasses.")
+
