@@ -18,8 +18,8 @@ coefficient = 0.998
 
 [sub_resource type="Resource" id="Resource_iyurm"]
 script = ExtResource("2_nr2d6")
-direction = Vector2(0, 0)
-speed = 0.0
+direction = Vector2(0, -1)
+speed = 100.0
 
 [sub_resource type="Resource" id="Resource_2pjmc"]
 script = ExtResource("3_lwipv")
