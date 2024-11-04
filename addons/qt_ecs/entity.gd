@@ -19,16 +19,17 @@ func _ready() -> void:
 		
 	on_ready()
 
-func add_component(component: Component) -> void:
+func add_component(component: Variant) -> void:
 	components[component.key] = component
 	component_added.emit(self, component.key)
 
-func remove_component(component_key: String) -> void:
-	if components.erase(component_key):
-		component_removed.emit(self, component_key)
+func remove_component(component: Variant) -> void:
+	var component_key = component.resource_path
+	if components.erase(component.resource_path):
+		component_removed.emit(self, component.resource_path)
 
 func get_component(component: Variant) -> Component:
-	return components.get(component.new().key, null)
+	return components.get(component.resource_path, null)
 
 func has_component(component_key: String) -> bool:
 	return components.has(component_key)
