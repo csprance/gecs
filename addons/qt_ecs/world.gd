@@ -11,13 +11,15 @@ var component_entity_index: Dictionary = {}
 func _ready() -> void:
 	# Add entities from the scene tree
 	entities = find_children('*', 'Entity2D') as Array[Entity]
+	print('_ready self.entities', entities)
 	for entity in entities:
 		add_entity(entity)
 	systems = find_children('*', 'System') as Array[System]
+	print('_ready self.systems', systems)
 			
-func add_entity(entity: Entity2D) -> void:
+func add_entity(entity: Entity) -> void:
 	# Update index
-	print(entity)
+	print('add_entity', entity)
 	for component_class in entity.components.keys():
 		_add_entity_to_index(entity, component_class)
 		# Connect to component signals
@@ -25,6 +27,7 @@ func add_entity(entity: Entity2D) -> void:
 		entity.component_removed.connect(_on_entity_component_removed)
 
 func remove_entity(entity) -> void:
+	print('remove entitiy', entity)
 	entities.erase(entity)
 	# Update index
 	for component_class in entity.components.keys():
@@ -32,13 +35,16 @@ func remove_entity(entity) -> void:
 	entity.queue_free()
 
 func add_system(system: System) -> void:
+	print('add_system', system)
 	systems.append(system)
 	add_child(system)
 
 func _process(delta: float) -> void:
 	for system in systems:
 		var entities_to_process: Array = query(system.required_components)
+		print('_process Processing entities', entities_to_process)
 		for entity in entities_to_process:
+			print('system running', system, entity, delta)
 			system.process(entity, delta)
 
 func entity_has_required_components(entity: Entity, components) -> bool:

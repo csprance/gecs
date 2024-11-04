@@ -1,9 +1,9 @@
 class_name Bumper
-extends Entity2D
+extends Entity
 
 
 func on_start() -> void:
-	Utils.sync_transform_2d(self)
+	Utils.sync_transform(self)
 
 func _on_area_2d_body_entered(body: Node2D) -> void:
 	print(body)

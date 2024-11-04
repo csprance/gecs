@@ -1,7 +1,7 @@
 class_name Ball
-extends Entity2D
+extends Entity
 
 
 func on_start() -> void:
-	Utils.sync_transform_2d(self)
+	Utils.sync_transform(self)
 

@@ -1,6 +1,7 @@
 @icon('res://addons/qt_ecs/assets/entity.svg')
 class_name Entity
-extends Node
+#extends Node3D
+extends Node2D
 
 signal component_added(component_class)
 signal component_removed(component_class)
@@ -20,7 +21,7 @@ func _ready() -> void:
 
 func add_component(component: Variant) -> void:
 	var component_class: String = component.get_class()
-	components[component_class] = component.new()
+	components[component_class] = component
 	emit_signal("component_added", component_class)
 
 func remove_component(component_class: String) -> void:
