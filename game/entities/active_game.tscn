@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://bxdii1way2qms"]
+
+[ext_resource type="Script" path="res://game/entities/active_game.gd" id="1_tyxb8"]
+
+[node name="ActiveGame" type="Node2D"]
+script = ExtResource("1_tyxb8")
