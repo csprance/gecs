@@ -1,11 +1,10 @@
-# Add patterns to ignore here, one per line
-# Example:
-# *.log
-# tmp/
+# Ignore everything in addons except for qt_ecs
+addons/*
+!addons/qt_ecs/
+!addons/qt_ecs/**
+
 .godot/
 .idea/
-addons/repl/
-addons/gut/
 *.import
 *.svg
 .repomixignore
