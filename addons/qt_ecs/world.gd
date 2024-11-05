@@ -22,7 +22,7 @@ func _ready() -> void:
 
 func add_entity(entity: Entity) -> void:
 	# Update index
-	print('add_entity Adding Entity to World', entity)
+	print('add_entity Adding Entity to World: ', entity)
 	entities.append(entity)
 	for component_key in entity.components.keys():
 		_add_entity_to_index(entity, component_key)
@@ -38,7 +38,7 @@ func add_system(system: System) -> void:
 
 
 func remove_entity(entity) -> void:
-	print('remove entitiy', entity)
+	print('remove_entity Removing Entity: ', entity)
 	entities.erase(entity)
 	# Update index
 	for component_key in entity.components.keys():
