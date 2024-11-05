@@ -15,6 +15,6 @@ func process(entity: Entity, delta: float) -> void:
 
 	# If it's health is below 0 remove the entity
 	if health.current <= 0:
-		print('DIED!')
+		Loggie.debug('DIED!', health)
 		SoundManager.play('fx', 'kill')
-		WorldManager.world.remove_entity(entity)
+		ECS.world.remove_entity(entity)

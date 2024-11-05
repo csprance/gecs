@@ -12,3 +12,5 @@ addons/*
 repomix.config.json
 .gitattributes
 export_presets.cfg
+README.md
+LICENSE

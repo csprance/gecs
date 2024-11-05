@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3 uid="uid://c30ukuyygo3gm"]
+[gd_scene load_steps=16 format=3 uid="uid://c30ukuyygo3gm"]
 
 [ext_resource type="Script" path="res://game/entities/ball.gd" id="1_sx58v"]
 [ext_resource type="Texture2D" uid="uid://bgq145vfplih8" path="res://icon.svg" id="1_uc1ux"]
@@ -6,10 +6,11 @@
 [ext_resource type="Script" path="res://game/components/velocity.gd" id="2_nr2d6"]
 [ext_resource type="Script" path="res://game/components/friction.gd" id="3_033e8"]
 [ext_resource type="Script" path="res://game/components/transform.gd" id="3_lwipv"]
+[ext_resource type="Script" path="res://game/components/active_ball.gd" id="6_setqu"]
+[ext_resource type="Script" path="res://game/components/captured.gd" id="7_pmpop"]
 
 [sub_resource type="Resource" id="Resource_0uodx"]
 script = ExtResource("2_hr8yc")
-normal = Vector2(0, 0)
 should_bounce = true
 
 [sub_resource type="Resource" id="Resource_l1qe3"]
@@ -27,12 +28,19 @@ position = Vector2(0, 0)
 rotation = 0.0
 scale = Vector2(0, 0)
 
+[sub_resource type="Resource" id="Resource_kyai6"]
+script = ExtResource("6_setqu")
+
+[sub_resource type="Resource" id="Resource_o30o3"]
+script = ExtResource("7_pmpop")
+
 [sub_resource type="CircleShape2D" id="CircleShape2D_uxnq0"]
-radius = 15.1327
+radius = 15.0
 
 [node name="Ball" type="CharacterBody2D"]
 script = ExtResource("1_sx58v")
-component_resources = Array[Resource("res://addons/qt_ecs/component.gd")]([SubResource("Resource_0uodx"), SubResource("Resource_l1qe3"), SubResource("Resource_iyurm"), SubResource("Resource_2pjmc")])
+ball_speed = 450
+component_resources = Array[Resource("res://addons/qt_ecs/component.gd")]([SubResource("Resource_0uodx"), SubResource("Resource_l1qe3"), SubResource("Resource_iyurm"), SubResource("Resource_2pjmc"), SubResource("Resource_kyai6"), SubResource("Resource_o30o3")])
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 scale = Vector2(0.25, 0.25)

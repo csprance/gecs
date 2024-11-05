@@ -26,19 +26,23 @@ manager/music/bus="Music"
 
 [autoload]
 
-WorldManager="*res://addons/qt_ecs/world_manager.gd"
+ECS="*res://addons/qt_ecs/ecs.gd"
 SoundManager="*res://addons/resonate/sound_manager/sound_manager.gd"
 MusicManager="*res://addons/resonate/music_manager/music_manager.gd"
+Loggie="*res://addons/loggie/loggie.gd"
+
+[debug]
+
+file_logging/enable_file_logging=true
+settings/stdout/verbose_stdout=true
 
 [display]
 
-window/size/viewport_width=1920
-window/size/viewport_height=1080
 window/size/resizable=false
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/gut/plugin.cfg", "res://addons/qt_ecs/plugin.cfg", "res://addons/resonate/plugin.cfg")
+enabled=PackedStringArray("res://addons/easy_velocity_vector_display/plugin.cfg", "res://addons/gut/plugin.cfg", "res://addons/loggie/plugin.cfg", "res://addons/qt_ecs/plugin.cfg", "res://addons/resonate/plugin.cfg", "res://addons/script-tabs/plugin.cfg")
 
 [input]
 
@@ -60,3 +64,7 @@ paddle_bump={
 , Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":87,"key_label":0,"unicode":119,"echo":false,"script":null)
 ]
 }
+
+[loggie]
+
+general/log_level=4

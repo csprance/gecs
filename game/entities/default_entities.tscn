@@ -1,10 +1,11 @@
-[gd_scene load_steps=7 format=3 uid="uid://cx4flkuosdmao"]
+[gd_scene load_steps=8 format=3 uid="uid://cx4flkuosdmao"]
 
 [ext_resource type="PackedScene" uid="uid://bxdii1way2qms" path="res://game/entities/active_game.tscn" id="1_bj67y"]
 [ext_resource type="Script" path="res://game/components/game_state.gd" id="2_580gv"]
 [ext_resource type="PackedScene" uid="uid://dgiygx4ouqqsm" path="res://game/entities/bumper.tscn" id="3_f4fdw"]
 [ext_resource type="PackedScene" uid="uid://b7idne6el03sm" path="res://game/entities/paddle.tscn" id="4_d8yke"]
 [ext_resource type="PackedScene" uid="uid://c30ukuyygo3gm" path="res://game/entities/ball.tscn" id="5_pa150"]
+[ext_resource type="PackedScene" uid="uid://bgg10mnxgskoj" path="res://game/entities/score_ui.tscn" id="6_eh6h8"]
 
 [sub_resource type="Resource" id="Resource_sxd61"]
 script = ExtResource("2_580gv")
@@ -21,7 +22,7 @@ position = Vector2(953, 2)
 scale = Vector2(12, 1)
 
 [node name="RightBumper" parent="." instance=ExtResource("3_f4fdw")]
-position = Vector2(1921, 542)
+position = Vector2(1163, 544)
 rotation = 1.57079
 scale = Vector2(6.5733, 1)
 normal = Vector2(-1, 0)
@@ -33,7 +34,9 @@ scale = Vector2(6.5733, 1)
 normal = Vector2(1, 0)
 
 [node name="Paddle" parent="." instance=ExtResource("4_d8yke")]
-position = Vector2(942, 1023)
+position = Vector2(597, 618)
 
 [node name="Ball" parent="." instance=ExtResource("5_pa150")]
-position = Vector2(944, 924)
+position = Vector2(611, 433)
+
+[node name="ScoreUi" parent="." instance=ExtResource("6_eh6h8")]

@@ -1,10 +1,12 @@
-[gd_scene load_steps=12 format=3 uid="uid://b7idne6el03sm"]
+[gd_scene load_steps=15 format=3 uid="uid://b7idne6el03sm"]
 
 [ext_resource type="Script" path="res://game/entities/paddle.gd" id="1_dffm1"]
 [ext_resource type="Script" path="res://game/components/transform.gd" id="2_i1wmy"]
 [ext_resource type="Script" path="res://game/components/velocity.gd" id="3_j7toh"]
 [ext_resource type="Script" path="res://game/components/friction.gd" id="4_pxefs"]
 [ext_resource type="Script" path="res://game/components/player_movement.gd" id="5_1fh31"]
+[ext_resource type="Script" path="res://game/components/active_paddle.gd" id="6_hk3s5"]
+[ext_resource type="Script" path="res://addons/easy_velocity_vector_display/vectordisplay2D.gd" id="6_p7kc5"]
 
 [sub_resource type="Resource" id="Resource_mdlpm"]
 script = ExtResource("2_i1wmy")
@@ -26,6 +28,9 @@ script = ExtResource("5_1fh31")
 axis = Vector2(0, 0)
 speed = 1000
 
+[sub_resource type="Resource" id="Resource_122mj"]
+script = ExtResource("6_hk3s5")
+
 [sub_resource type="PlaceholderTexture2D" id="PlaceholderTexture2D_ntc0s"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_kl02k"]
@@ -33,7 +38,7 @@ size = Vector2(100, 20)
 
 [node name="Paddle" type="Node2D"]
 script = ExtResource("1_dffm1")
-component_resources = Array[Resource("res://addons/qt_ecs/component.gd")]([SubResource("Resource_mdlpm"), SubResource("Resource_7wast"), SubResource("Resource_haier"), SubResource("Resource_8drjd")])
+component_resources = Array[Resource("res://addons/qt_ecs/component.gd")]([SubResource("Resource_mdlpm"), SubResource("Resource_7wast"), SubResource("Resource_haier"), SubResource("Resource_8drjd"), SubResource("Resource_122mj")])
 
 [node name="Sprite" type="Sprite2D" parent="."]
 scale = Vector2(100, 20)
@@ -43,5 +48,12 @@ texture = SubResource("PlaceholderTexture2D_ntc0s")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D"]
 shape = SubResource("RectangleShape2D_kl02k")
+
+[node name="VectorDisplay2D" type="Node2D" parent="."]
+rotation = -3.14159
+script = ExtResource("6_p7kc5")
+target = NodePath("..")
+target_property = "last_normal"
+vector_scale = 100.0
 
 [connection signal="body_entered" from="Area2D" to="." method="_on_area_2d_body_entered"]

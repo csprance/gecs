@@ -19,7 +19,7 @@ func process(entity: Entity, delta: float):
 	health.current -= damage.amount
 
 	if health.current > 0:
-		print('Damaged')
+		Loggie.debug('Damaged', damage, health)
 		SoundManager.play('fx', 'damage')
 
 	entity.remove_component(Damage)

@@ -1,4 +1,4 @@
-[gd_scene load_steps=16 format=3 uid="uid://cgyawfqrsaqdd"]
+[gd_scene load_steps=20 format=3 uid="uid://cgyawfqrsaqdd"]
 
 [ext_resource type="Script" path="res://main.gd" id="1_2dpkv"]
 [ext_resource type="Script" path="res://addons/qt_ecs/world.gd" id="1_nrddk"]
@@ -9,7 +9,9 @@
 [ext_resource type="PackedScene" uid="uid://d8g7nt62qq13" path="res://game/entities/brick.tscn" id="6_hrodl"]
 [ext_resource type="AudioStream" uid="uid://cjl0h25w035j2" path="res://addons/kenney impact sounds/impact_metal_light_004.ogg" id="6_pke5j"]
 [ext_resource type="AudioStream" uid="uid://dptuwjwr4wwjf" path="res://addons/kenney impact sounds/footstep_snow_003.ogg" id="7_r0v48"]
+[ext_resource type="AudioStream" uid="uid://dn5tq22uvabcv" path="res://addons/kenney impact sounds/footstep_snow_002.ogg" id="8_u3xve"]
 [ext_resource type="PackedScene" uid="uid://cx4flkuosdmao" path="res://game/entities/default_entities.tscn" id="9_8prar"]
+[ext_resource type="AudioStream" uid="uid://bn0mmmtnem0t1" path="res://addons/kenney impact sounds/footstep_snow_004.ogg" id="9_xwrxi"]
 [ext_resource type="PackedScene" uid="uid://b1fu5exk46e0d" path="res://game/systems/default_systems.tscn" id="11_av7gv"]
 
 [sub_resource type="AudioStreamRandomizer" id="AudioStreamRandomizer_yg1tm"]
@@ -44,30 +46,45 @@ volume = 0.0
 pitch = 1.0
 streams = Array[AudioStream]([SubResource("AudioStreamRandomizer_4ew3m")])
 
+[sub_resource type="AudioStreamRandomizer" id="AudioStreamRandomizer_svov3"]
+random_pitch = 2.75
+streams_count = 3
+stream_0/stream = ExtResource("8_u3xve")
+stream_0/weight = 1.0
+stream_1/stream = ExtResource("7_r0v48")
+stream_1/weight = 1.0
+stream_2/stream = ExtResource("9_xwrxi")
+stream_2/weight = 1.0
+
+[sub_resource type="Resource" id="Resource_7mu7w"]
+script = ExtResource("3_acroa")
+name = "bounce"
+bus = ""
+volume = -66.2
+pitch = 1.0
+streams = Array[AudioStream]([SubResource("AudioStreamRandomizer_svov3")])
+
 [node name="Root" type="Node"]
 script = ExtResource("1_2dpkv")
 
 [node name="SoundBank" type="Node" parent="."]
 script = ExtResource("2_sqmfr")
 label = "fx"
-events = Array[ExtResource("3_acroa")]([SubResource("Resource_qhgwi"), SubResource("Resource_ni5bo")])
+events = Array[ExtResource("3_acroa")]([SubResource("Resource_qhgwi"), SubResource("Resource_ni5bo"), SubResource("Resource_7mu7w")])
 
 [node name="World" type="Node" parent="."]
 script = ExtResource("1_nrddk")
 
 [node name="Entities" parent="World" instance=ExtResource("9_8prar")]
 
+[node name="TopBumper" parent="World/Entities" index="1"]
+position = Vector2(619, -4)
+
+[node name="RightBumper" parent="World/Entities" index="2"]
+position = Vector2(1160, 538)
+
 [node name="Brick" parent="World/Entities" instance=ExtResource("6_hrodl")]
-position = Vector2(924, 723)
-rotation = 0.495278
-
-[node name="Brick2" parent="World/Entities" instance=ExtResource("6_hrodl")]
-position = Vector2(1169, 738)
-rotation = 0.495278
-
-[node name="Brick3" parent="World/Entities" instance=ExtResource("6_hrodl")]
-position = Vector2(613, 728)
-rotation = 0.495278
+position = Vector2(612, 331)
 
 [node name="Systems" parent="World" instance=ExtResource("11_av7gv")]
 

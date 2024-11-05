@@ -12,6 +12,7 @@ func _init():
 
 func process(entity: Entity, delta):
 	var transform: Transform = entity.get_component(Transform)
+	# print('Set Entity: ', entity,' Set Position: ', transform.position)
 	entity.position = transform.position
 	entity.rotation = transform.rotation
 	entity.scale = transform.scale

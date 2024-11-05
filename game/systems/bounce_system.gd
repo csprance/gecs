@@ -23,7 +23,7 @@ func process(entity: Entity, delta: float):
 		velocity.direction = velocity.direction.bounce(
 			bounced.normal
 		)
-
+	SoundManager.play('fx', 'bounce')
 	# remove the bounced Component because it's only a one time thing
 	entity.remove_component(Bounced)
 
