@@ -1,0 +1,36 @@
+[gd_scene load_steps=9 format=3 uid="uid://b1fu5exk46e0d"]
+
+[ext_resource type="Script" path="res://game/systems/damage_system.gd" id="1_c43ii"]
+[ext_resource type="Script" path="res://game/systems/kill_system.gd" id="2_akait"]
+[ext_resource type="Script" path="res://game/systems/player_movement_system.gd" id="3_1khav"]
+[ext_resource type="Script" path="res://game/systems/bounce_system.gd" id="4_545b5"]
+[ext_resource type="Script" path="res://game/systems/friction_system.gd" id="5_15w8u"]
+[ext_resource type="Script" path="res://game/systems/velocity_system.gd" id="6_1v0ex"]
+[ext_resource type="Script" path="res://game/systems/transform_2d_system.gd" id="7_ci8o1"]
+[ext_resource type="Script" path="res://game/systems/game_state_system.gd" id="8_rxsqc"]
+
+[node name="Systems" type="Node"]
+
+[node name="DamageSystem" type="Node" parent="."]
+script = ExtResource("1_c43ii")
+
+[node name="KillSystem" type="Node" parent="."]
+script = ExtResource("2_akait")
+
+[node name="PlayerMovementSystem" type="Node" parent="."]
+script = ExtResource("3_1khav")
+
+[node name="BounceSystem" type="Node" parent="."]
+script = ExtResource("4_545b5")
+
+[node name="FrictionSystem" type="Node" parent="."]
+script = ExtResource("5_15w8u")
+
+[node name="VelocitySystem" type="Node" parent="."]
+script = ExtResource("6_1v0ex")
+
+[node name="Transform2DSystem" type="Node" parent="."]
+script = ExtResource("7_ci8o1")
+
+[node name="GameStateSystem" type="Node" parent="."]
+script = ExtResource("8_rxsqc")
