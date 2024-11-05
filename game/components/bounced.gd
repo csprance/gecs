@@ -7,4 +7,4 @@ extends Component
 class_name Bounced
 
 ##  What surface normal did we just bounce off
-@export var normal := Vector2.AXIS_Y
+@export var normal := Vector2.UP
