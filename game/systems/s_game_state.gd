@@ -11,7 +11,7 @@ func query() -> QueryBuilder:
 ## When the lives are lost the game is over.
 ## When the blocks are destroyed the game is won.
 func process(_e, _d) -> void:
-	var game_state = GameStateUtils.get_game_state(q)
+	var game_state = GameStateUtils.get_game_state()
 	var changed = Utils.all([
 		_score == game_state.score,
 		_lives == game_state.lives,

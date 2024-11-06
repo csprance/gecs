@@ -22,7 +22,7 @@ func process(_e, _d) -> void:
 
 
 func spawn_bricks(world: World) -> void:
-	for i in range(GameStateUtils.get_game_state(q).blocks):
+	for i in range(GameStateUtils.get_game_state().blocks):
 		# Instantiate a new brick from the preloaded scene
 		var brick_entity = brick_scene.instantiate() as Brick
 		# Add the brick entity to the ECS world

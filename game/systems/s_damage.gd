@@ -30,4 +30,4 @@ func process(entity: Entity, _delta: float):
 	# give a reward to the player for damage
 	var reward = Reward.new()
 	reward.points = 10
-	GameStateUtils.get_active_game_state_entity(q).add_component(reward)
+	GameStateUtils.get_active_game_state_entity().add_component(reward)
