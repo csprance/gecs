@@ -1,7 +1,7 @@
-## QueryBuilder
-##
+## QueryBuilder[br]
 ## A utility class for constructing and executing queries to retrieve entities based on their components.
-## It supports filtering entities that have all, any, or exclude specific components.
+##
+## The QueryBuilder supports filtering entities that have all, any, or exclude specific components.
 ## [codeblock]
 ##     var query = QueryBuilder.new(world)
 ##     var entities = query

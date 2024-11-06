@@ -39,7 +39,7 @@ func _ready() -> void:
 ## [param delta] The time elapsed since the last frame.
 func process(delta: float) -> void:
 	for system in systems:
-		var entities_to_process: Array = ECS.buildQuery().with_all(system.required_components).execute()
+		var entities_to_process: Array = system.query(ECS.buildQuery()).execute()
 		system.process_entities(entities_to_process, delta)
 
 ## Adds a single [Entity] to the world.[br]
