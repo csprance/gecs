@@ -2,12 +2,12 @@
 class_name RewardSystem
 extends System
 
-func query(q: QueryBuilder) -> QueryBuilder:
+func query() -> QueryBuilder:
 	return q.with_all([Reward])
 
 
-func process(entity: Entity, delta: float):
-	var game_state = GameStateUtils.get_game_state()
+func process(entity: Entity, _delta: float):
+	var game_state = GameStateUtils.get_game_state(q)
 	var reward = entity.get_component(Reward) as Reward
 
 	game_state.score += reward.points

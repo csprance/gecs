@@ -6,11 +6,11 @@
 class_name Transform2DSystem
 extends System
 
-func query(q: QueryBuilder) -> QueryBuilder:
+func query() -> QueryBuilder:
 	return q.with_all([Transform])
 
 
-func process(entity: Entity, delta):
+func process(entity: Entity, _delta):
 	var transform: Transform = entity.get_component(Transform)
 	# print('Set Entity: ', entity,' Set Position: ', transform.position)
 	entity.position = transform.position

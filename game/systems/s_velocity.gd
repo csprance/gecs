@@ -6,7 +6,7 @@
 class_name VelocitySystem
 extends System
 
-func query(q: QueryBuilder) -> QueryBuilder:
+func query() -> QueryBuilder:
 	return q.with_all([Velocity, Transform])
 
 

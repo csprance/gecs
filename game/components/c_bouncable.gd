@@ -2,7 +2,7 @@
 ## Indicates that an entity can bounce off surfaces.[br]
 ## Used by the [BounceSystem] to determine if the [Entity] should bounce upon collision.[br]
 ## When an entity with a [Bounce] [Component] enters a collision area, it may reverse its direction.[br]
-class_name Bounce
+class_name Bouncable
 extends Component
 
 ## If true, the entity will bounce upon collision.

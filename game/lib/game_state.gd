@@ -1,10 +1,16 @@
 class_name GameStateUtils
 
-## A Quick way to get the [GameState] component from the [GameStateEntity]
-static func get_game_state() -> GameState:
-	var game_state_ents = ECS.buildQuery().with_all([GameState]).execute()
-	for game_state_ent in game_state_ents:
+## A Quick way to get the [GameState] component from the [ActiveGameEntity]
+## If entity=true it will get the entity holding game state instead of the component
+static func get_game_state(q: QueryBuilder) -> GameState:
+	var game_state_ent = get_active_game_state_entity(q)
+	if game_state_ent:
 		return game_state_ent.get_component(GameState) as GameState
+	return GameState.new()
+
+static func get_active_game_state_entity(q: QueryBuilder) -> ActiveGameEntity:
+	for game_state_ent in q.with_all([GameState]).execute():
+		return game_state_ent as ActiveGameEntity
 	
-	assert(false, "No GameState entity found")
+	assert(false, "No ActiveGameEntity found")
 	return

@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" path="res://game/entities/e_ball.gd" id="1_sx58v"]
 [ext_resource type="Texture2D" uid="uid://bgq145vfplih8" path="res://icon.svg" id="1_uc1ux"]
-[ext_resource type="Script" path="res://game/components/c_bounce.gd" id="2_hr8yc"]
+[ext_resource type="Script" path="res://game/components/c_bouncable.gd" id="2_hr8yc"]
 [ext_resource type="Script" path="res://game/components/c_velocity.gd" id="2_nr2d6"]
 [ext_resource type="Script" path="res://game/components/c_friction.gd" id="3_033e8"]
 [ext_resource type="Script" path="res://game/components/c_transform.gd" id="3_lwipv"]

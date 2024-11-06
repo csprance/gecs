@@ -6,11 +6,11 @@
 class_name PlayerMovementSystem
 extends System
 
-func query(q: QueryBuilder) -> QueryBuilder:
+func query() -> QueryBuilder:
 	return q.with_all([Velocity, PlayerMovement])
 
 
-func process(entity: Entity, delta: float) -> void:
+func process(entity: Entity, _delta: float) -> void:
 	# Get the velocity component from the entity
 	var velocity = entity.get_component(Velocity) as Velocity
 	var movement = entity.get_component(PlayerMovement) as PlayerMovement

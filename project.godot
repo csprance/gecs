@@ -39,6 +39,7 @@ settings/stdout/verbose_stdout=true
 [display]
 
 window/size/resizable=false
+window/size/always_on_top=true
 
 [editor_plugins]
 
@@ -69,7 +70,6 @@ paddle_bump={
 
 general/log_level=4
 general/show_loggie_specs=2
-timestamps/output_timestamps=true
 preprocessing/output_message_domain=true
 preprocessing/derive_and_display_class_names_from_scripts=true
 preprocessing/nameless_class_name_proxy=1

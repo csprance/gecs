@@ -4,11 +4,11 @@ extends System
 var ball: Ball
 
 
-func query(q: QueryBuilder) -> QueryBuilder:
-	return q.with_all( [Captured, ActiveBall])
+func query() -> QueryBuilder:
+	return q.with_all([Captured, ActiveBall])
 
 
-func process(entity: Entity, delta: float) -> void:
+func process(entity: Entity, _d: float) -> void:
 	if Input.is_action_just_pressed('paddle_bump'):
 		# We know it's a ball
 		ball = entity

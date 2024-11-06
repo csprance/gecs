@@ -1,17 +1,17 @@
 [gd_scene load_steps=8 format=3 uid="uid://d8g7nt62qq13"]
 
-[ext_resource type="Script" path="res://game/entities/e_brick.gd" id="1_ji18f"]
-[ext_resource type="Script" path="res://game/components/c_health.gd" id="2_s2ah8"]
-[ext_resource type="Script" path="res://game/components/c_transform.gd" id="3_0r7fq"]
+[ext_resource type="Script" path="res://game/entities/e_brick.gd" id="1_1ulht"]
+[ext_resource type="Script" path="res://game/components/c_transform.gd" id="2_qnjc8"]
+[ext_resource type="Script" path="res://game/components/c_health.gd" id="3_5qe2q"]
 
 [sub_resource type="Resource" id="Resource_cnt7s"]
-script = ExtResource("3_0r7fq")
+script = ExtResource("2_qnjc8")
 position = Vector2(0, 0)
 rotation = 0.0
 scale = Vector2(0, 0)
 
 [sub_resource type="Resource" id="Resource_as1wj"]
-script = ExtResource("2_s2ah8")
+script = ExtResource("3_5qe2q")
 total = 1
 current = 1
 
@@ -21,7 +21,7 @@ current = 1
 size = Vector2(100, 20)
 
 [node name="Brick" type="Node2D"]
-script = ExtResource("1_ji18f")
+script = ExtResource("1_1ulht")
 component_resources = Array[Resource("res://addons/qt_ecs/component.gd")]([SubResource("Resource_cnt7s"), SubResource("Resource_as1wj")])
 
 [node name="Sprite" type="Sprite2D" parent="."]

@@ -30,7 +30,3 @@ func _on_area_2d_body_entered(body: Node2D) -> void:
 		var damage = Damage.new()
 		damage.amount = 1
 		add_component(damage)
-#
-		## give a reward to the player
-		#var reward = Reward.new(10) as Reward
-		#ball.add_component(reward)

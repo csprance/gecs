@@ -22,15 +22,15 @@ func process(_e, _d) -> void:
 
 
 func spawn_bricks(world: World) -> void:
-	for i in range(GameStateUtils.get_game_state().blocks):
+	for i in range(GameStateUtils.get_game_state(q).blocks):
 		# Instantiate a new brick from the preloaded scene
 		var brick_entity = brick_scene.instantiate() as Brick
 		# Add the brick entity to the ECS world
 		world.add_entity(brick_entity)
 		
 		# Calculate the current row and column based on the brick index
-		var row = i / bricks_per_row
-		var col = i % bricks_per_row
+		var row = float(i) / float(bricks_per_row)
+		var col = float(i % bricks_per_row)
 
 		# Determine the brick's position
 		var x = start_position.x + col * (brick_width + horizontal_spacing)

@@ -1,11 +1,10 @@
-[gd_scene load_steps=17 format=3 uid="uid://b1fu5exk46e0d"]
+[gd_scene load_steps=15 format=3 uid="uid://b1fu5exk46e0d"]
 
 [ext_resource type="Script" path="res://game/systems/s_bounce.gd" id="1_o0xxi"]
 [ext_resource type="Script" path="res://game/systems/s_ball_release.gd" id="2_fo2p1"]
 [ext_resource type="Script" path="res://game/systems/s_ball_capture.gd" id="3_j7mrq"]
 [ext_resource type="Script" path="res://game/systems/s_brick_spawner.gd" id="4_ctc2i"]
 [ext_resource type="Script" path="res://game/systems/s_damage.gd" id="5_15dir"]
-[ext_resource type="Script" path="res://game/systems/s_health.gd" id="6_jii4m"]
 [ext_resource type="Script" path="res://game/systems/s_player_movement.gd" id="7_inffd"]
 [ext_resource type="Script" path="res://game/systems/s_friction.gd" id="8_bkjik"]
 [ext_resource type="Script" path="res://game/systems/s_velocity.gd" id="9_aa06e"]
@@ -13,9 +12,8 @@
 [ext_resource type="Script" path="res://game/systems/s_ui_visiblity.gd" id="11_oxoun"]
 [ext_resource type="Script" path="res://game/systems/s_score_ui.gd" id="12_0f7uf"]
 [ext_resource type="Script" path="res://game/systems/s_reward.gd" id="13_jk33n"]
+[ext_resource type="Script" path="res://game/systems/s_game_state.gd" id="14_5aron"]
 [ext_resource type="Script" path="res://game/systems/s_player_death.gd" id="14_304mj"]
-[ext_resource type="Script" path="res://game/systems/s_game_state.gd" id="15_tq2ri"]
-[ext_resource type="Script" path="res://game/systems/s_death.gd" id="16_3gln1"]
 
 [node name="Systems" type="Node"]
 
@@ -33,9 +31,6 @@ script = ExtResource("4_ctc2i")
 
 [node name="DamageSystem" type="Node" parent="."]
 script = ExtResource("5_15dir")
-
-[node name="HealthSystem" type="Node" parent="."]
-script = ExtResource("6_jii4m")
 
 [node name="PlayerMovementSystem" type="Node" parent="."]
 script = ExtResource("7_inffd")
@@ -61,8 +56,8 @@ script = ExtResource("13_jk33n")
 [node name="PlayerDeathSystem" type="Node" parent="."]
 script = ExtResource("14_304mj")
 
-[node name="GameStateSystem" type="Node" parent="."]
-script = ExtResource("15_tq2ri")
-
 [node name="DeathSystem" type="Node" parent="."]
-script = ExtResource("16_3gln1")
+script = ExtResource("3_j7mrq")
+
+[node name="GameStateSystem" type="Node" parent="."]
+script = ExtResource("14_5aron")

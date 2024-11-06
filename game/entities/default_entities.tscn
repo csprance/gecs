@@ -2,12 +2,12 @@
 
 [ext_resource type="PackedScene" uid="uid://bxdii1way2qms" path="res://game/entities/e_active_game.tscn" id="1_4nval"]
 [ext_resource type="PackedScene" uid="uid://dgiygx4ouqqsm" path="res://game/entities/e_bumper.tscn" id="2_o3tsu"]
-[ext_resource type="PackedScene" uid="uid://b7idne6el03sm" path="res://game/entities/e_paddle.tscn" id="6_ckbhc"]
-[ext_resource type="PackedScene" uid="uid://c30ukuyygo3gm" path="res://game/entities/e_ball.tscn" id="7_cbl8x"]
-[ext_resource type="PackedScene" uid="uid://bgg10mnxgskoj" path="res://game/entities/e_score_ui.tscn" id="8_p38a2"]
 [ext_resource type="Script" path="res://game/components/c_bounced.gd" id="4_v3mtv"]
 [ext_resource type="Script" path="res://game/components/c_player_death.gd" id="5_g4hcd"]
 [ext_resource type="Script" path="res://game/components/c_captured.gd" id="5_kjljl"]
+[ext_resource type="PackedScene" uid="uid://b7idne6el03sm" path="res://game/entities/e_paddle.tscn" id="6_ckbhc"]
+[ext_resource type="PackedScene" uid="uid://c30ukuyygo3gm" path="res://game/entities/e_ball.tscn" id="7_cbl8x"]
+[ext_resource type="PackedScene" uid="uid://bgg10mnxgskoj" path="res://game/entities/e_score_ui.tscn" id="8_p38a2"]
 [ext_resource type="Script" path="res://game/components/c_ui_visibility.gd" id="9_j4hxg"]
 [ext_resource type="Script" path="res://game/components/c_score_ui.gd" id="10_f1erl"]
 

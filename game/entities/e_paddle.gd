@@ -10,7 +10,7 @@ extends Entity
 ## The maximum amonunt the normal is rotated based on the distance from the paddle
 @export var max_rot := 33.0
 
-var paddle_width = 100
+var paddle_width := 100.0
 var last_normal:Vector2
 
 func on_ready() -> void:
@@ -25,7 +25,7 @@ func _on_area_2d_body_entered(body: Node2D) -> void:
 		var paddle_trs = get_component(Transform) as Transform
 
 		# Calculate the delta vector from paddle to ball
-		var half_width = paddle_width / 2
+		var half_width = paddle_width / 2.0
 		var max_rot_rad = deg_to_rad(max_rot)
 		var delta = remap(entity_trs.position.x - paddle_trs.position.x, -half_width, half_width, -max_rot_rad, max_rot_rad)
 
