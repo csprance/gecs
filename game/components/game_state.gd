@@ -1,6 +1,5 @@
-## GameState Component.
-##
-## Stores global game state information, such as score and lives.
+## GameState Component.[br]
+## Stores global game state information, such as score and lives.[br]
 ## Used to keep track of the player's progress in the game.
 class_name GameState
 extends Component

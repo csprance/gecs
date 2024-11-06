@@ -1,3 +1,3 @@
-## A Tag Component that just tags things that should be show in the UI
+## If this exists on an entity, it will be visible in the UI.
 class_name UiVisibility
 extends Component

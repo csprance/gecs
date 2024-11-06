@@ -1,8 +1,7 @@
-## Bounce Component.
-##
-## Indicates that an entity can bounce off surfaces.
-## Used by the `BounceSystem` to determine if the entity should bounce upon collision.
-## When an entity with a `Bounce` component enters a collision area, it may reverse its direction.
+## Bounce [Component].[br]
+## Indicates that an entity can bounce off surfaces.[br]
+## Used by the [BounceSystem] to determine if the [Entity] should bounce upon collision.[br]
+## When an entity with a [Bounce] [Component] enters a collision area, it may reverse its direction.[br]
 class_name Bounce
 extends Component
 
