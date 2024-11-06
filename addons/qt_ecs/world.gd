@@ -36,9 +36,12 @@ var systems: Array[System]  = []
 ## [Component] to [Entity] Index - This stores entities by component for efficient querying.
 var component_entity_index: Dictionary = {}
 
+var _q: QueryBuilder
+
 ## Called when the World node is ready.[br]
 ## Adds [Entity]s and [System]s from the scene tree to the [World].
 func _ready() -> void:
+	_q = QueryBuilder.new(ECS.world)
 	# Add entities from the scene tree
 	var _entities = find_children('*', "Entity") as Array[Entity]
 	add_entities(_entities)

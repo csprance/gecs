@@ -33,21 +33,21 @@ func _init(world: World):
 ## [param components] An [Array] of [Component] classes.[br]
 ## [param returns]: [QueryBuilder] instance for chaining.
 func with_all(components: Array = []) -> QueryBuilder:
-	_all_components += components
+	_all_components = components
 	return self
 
 ## Entities must have at least one of the provided components.[br]
 ## [param components] An [Array] of [Component] classes.[br]
 ## [param reutrns] [QueryBuilder] instance for chaining.
 func with_any(components: Array = []) -> QueryBuilder:
-	_any_components += components
+	_any_components = components
 	return self
 
 ## Entities must not have any of the provided components.[br]
 ## Params: [param components] An [Array] of [Component] classes.[br]
 ## [param reutrns] [QueryBuilder] instance for chaining.
 func with_none(components: Array = []) -> QueryBuilder:
-	_exclude_components += components
+	_exclude_components = components
 	return self
 
 ## Executes the constructed query and retrieves matching entities.[br]
