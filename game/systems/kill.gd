@@ -18,3 +18,9 @@ func process(entity: Entity, delta: float) -> void:
 		Loggie.debug('DIED!', health)
 		SoundManager.play('fx', 'kill')
 		ECS.world.remove_entity(entity)
+		
+		var game_states = ECS.buildQuery().with_all([GameState]).execute()
+		for game_state in game_states:
+			var reward = Reward.new()
+			reward.points = 10
+			game_state.add_component(reward)

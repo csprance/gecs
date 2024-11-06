@@ -1,4 +1,4 @@
-class_name UiSystem
+class_name UiVisibilitySystem
 extends System
 
 

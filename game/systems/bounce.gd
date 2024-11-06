@@ -1,8 +1,7 @@
-## BounceSystem.
-##
-## Processes entities that can bounce off surfaces.
-## Handles the bouncing logic by modifying the entity's velocity based on the bounce normal.
-## Removes the `Bounced` component after processing.
+## BounceSystem.[br]
+## Processes entities that can bounce off surfaces.[br]
+## Handles the bouncing logic by modifying the entity's [Velocity] based on the [Bounced] [member Bounced.normal].[br]
+## Removes the [Bounced] component after processing.
 class_name BounceSystem
 extends System
 

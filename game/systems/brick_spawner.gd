@@ -1,6 +1,5 @@
-## BrickSpawnerSystem
-##
-## Spawns bricks in a Breakout-style grid layout and then removes itself.
+## BrickSpawnerSystem[br]
+## Spawns [Brick] in a Breakout-style grid layout and then removes itself.
 extends System
 class_name BrickSpawnerSystem
 
@@ -16,11 +15,12 @@ class_name BrickSpawnerSystem
 # Preload the brick scene once for efficiency
 var brick_scene = preload('res://game/entities/brick.tscn')
 
-func process(entity: Entity, delta: float) -> void:
+func process(_e, _d) -> void:
 	var world = ECS.world as World
 	spawn_bricks(world)
 	# Remove this system so it only runs once
 	world.remove_system(self)
+
 
 func spawn_bricks(world: World) -> void:
 	for i in range(num_bricks):
