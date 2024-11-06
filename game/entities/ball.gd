@@ -5,7 +5,7 @@
 class_name Ball
 extends Entity
 
-@export var ball_speed = 300
+@export var ball_speed := 300
 
 func on_ready() -> void:
 	Utils.sync_transform(self)

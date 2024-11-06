@@ -8,8 +8,8 @@ func _init():
 
 func process(entity: Entity, delta: float) -> void:
 	# Find all the UI with the visiblity component
-	var visibility = entity.get_component(UiVisibility) as UiVisibility
+	var ui: UiEntity = entity
 	# Show them if it says true otherwise hide them
-	
-	pass # code here....
+	if not ui.canvas_layer.visible:
+		ui.canvas_layer.visible = true
 

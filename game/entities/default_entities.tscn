@@ -1,16 +1,29 @@
-[gd_scene load_steps=8 format=3 uid="uid://cx4flkuosdmao"]
+[gd_scene load_steps=13 format=3 uid="uid://cx4flkuosdmao"]
 
 [ext_resource type="PackedScene" uid="uid://bxdii1way2qms" path="res://game/entities/active_game.tscn" id="1_bj67y"]
 [ext_resource type="Script" path="res://game/components/game_state.gd" id="2_580gv"]
 [ext_resource type="PackedScene" uid="uid://dgiygx4ouqqsm" path="res://game/entities/bumper.tscn" id="3_f4fdw"]
 [ext_resource type="PackedScene" uid="uid://b7idne6el03sm" path="res://game/entities/paddle.tscn" id="4_d8yke"]
+[ext_resource type="Script" path="res://game/components/bounced.gd" id="4_v3mtv"]
+[ext_resource type="Script" path="res://game/components/captured.gd" id="5_kjljl"]
 [ext_resource type="PackedScene" uid="uid://c30ukuyygo3gm" path="res://game/entities/ball.tscn" id="5_pa150"]
-[ext_resource type="PackedScene" uid="uid://bgg10mnxgskoj" path="res://game/entities/score_ui.tscn" id="6_eh6h8"]
+[ext_resource type="PackedScene" uid="uid://bgg10mnxgskoj" path="res://game/entities/ui.tscn" id="6_eh6h8"]
 
 [sub_resource type="Resource" id="Resource_sxd61"]
 script = ExtResource("2_580gv")
 score = 0
 lives = 3
+
+[sub_resource type="Resource" id="Resource_tdnm1"]
+script = ExtResource("5_kjljl")
+
+[sub_resource type="Resource" id="Resource_bjo7u"]
+script = ExtResource("4_v3mtv")
+normal = Vector2(-1, 0)
+
+[sub_resource type="Resource" id="Resource_b14u7"]
+script = ExtResource("4_v3mtv")
+normal = Vector2(-1, 0)
 
 [node name="Entities" type="Node"]
 
@@ -18,20 +31,25 @@ lives = 3
 component_resources = Array[Resource("res://addons/qt_ecs/component.gd")]([SubResource("Resource_sxd61")])
 
 [node name="TopBumper" parent="." instance=ExtResource("3_f4fdw")]
-position = Vector2(953, 2)
+position = Vector2(530, -4)
 scale = Vector2(12, 1)
 
+[node name="BottomBumper" parent="." instance=ExtResource("3_f4fdw")]
+position = Vector2(562, 635)
+scale = Vector2(12, 1)
+components_to_add = Array[Resource("res://addons/qt_ecs/component.gd")]([SubResource("Resource_tdnm1")])
+
 [node name="RightBumper" parent="." instance=ExtResource("3_f4fdw")]
-position = Vector2(1163, 544)
+position = Vector2(1155, 295)
 rotation = 1.57079
 scale = Vector2(6.5733, 1)
-normal = Vector2(-1, 0)
+components_to_add = Array[Resource("res://addons/qt_ecs/component.gd")]([SubResource("Resource_bjo7u")])
 
 [node name="LeftBumper" parent="." instance=ExtResource("3_f4fdw")]
-position = Vector2(-5, 542)
+position = Vector2(-4, 317)
 rotation = 1.57079
 scale = Vector2(6.5733, 1)
-normal = Vector2(1, 0)
+components_to_add = Array[Resource("res://addons/qt_ecs/component.gd")]([SubResource("Resource_b14u7")])
 
 [node name="Paddle" parent="." instance=ExtResource("4_d8yke")]
 position = Vector2(597, 618)

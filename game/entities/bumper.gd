@@ -1,13 +1,12 @@
 ## Bumper Entity.
 ##
-## Represents a bumper that entities can collide with and bounce off.
-## When another entity enters its area, it adds a `Bounced` component to that entity with the bumper's normal.
-## Used to define boundaries or obstacles in the game.
+## Represents a bumper that entities can collide with
+## When another entity enters its area, it adds any number of components specified to the entity
+## Used to define boundaries or obstacles in the game or kill zones
 class_name Bumper
 extends Entity
 
-@export var normal := Vector2(0, -1)  # Adjust based on your bumper's orientation
-
+@export var components_to_add: Array[Component] = []
 
 func on_ready() -> void:
 	Utils.sync_transform(self)
@@ -16,7 +15,5 @@ func on_ready() -> void:
 func _on_area_2d_body_entered(body: Node2D) -> void:
 	if body is Entity:
 		var entity  = body as Entity
-		var bounced = Bounced.new()
-		bounced.normal = normal
-
-		entity.add_component(bounced)
+		for comp in components_to_add:
+			entity.add_component(comp)

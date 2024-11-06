@@ -1,12 +1,18 @@
-[gd_scene load_steps=3 format=3 uid="uid://dgiygx4ouqqsm"]
+[gd_scene load_steps=5 format=3 uid="uid://dgiygx4ouqqsm"]
 
 [ext_resource type="Script" path="res://game/entities/bumper.gd" id="1_eu2y3"]
+[ext_resource type="Script" path="res://game/components/bounced.gd" id="2_k8ssr"]
+
+[sub_resource type="Resource" id="Resource_g34vu"]
+script = ExtResource("2_k8ssr")
+normal = Vector2(0, -1)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_syv4f"]
 size = Vector2(166, 12.5)
 
 [node name="Bumper" type="Node2D"]
 script = ExtResource("1_eu2y3")
+components_to_add = Array[Resource("res://addons/qt_ecs/component.gd")]([SubResource("Resource_g34vu")])
 
 [node name="Area2D" type="Area2D" parent="."]
 

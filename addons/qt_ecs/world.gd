@@ -1,27 +1,29 @@
-## World
+## World[br]
+## Represents the game world in the [_ECS] framework, managing all [Entity]s and [System]s.[br]
 ##
-## Represents the game world in the ECS framework, managing all entities and systems.
-## It handles the addition and removal of entities and systems, and orchestrates the processing of entities through systems each frame.
-##
-## The World class also maintains an index mapping of components to entities for efficient querying.
-##
-## Example:
+## The World class handles the addition and removal of [Entity]s and [System]s, and orchestrates the processing of [Entity]s through [System]s each frame.[br]
+## The World class also maintains an index mapping of components to entities for efficient querying.[br]
+##[br]
+## [b]Example:[/b]
+##[codeblock]
 ##     func _process(delta: float) -> void:
 ##         for system in systems:
 ##             var entities_to_process = ECS.buildQuery().all(system.required_components).execute()
 ##             system.process_entities(entities_to_process, delta)
+##[/codeblock]
 @icon('res://addons/qt_ecs/assets/world.svg')
 class_name World
 extends Node
 
+## All the [Entity]s in the world.
 var entities: Array[Entity] = []
+## All the [System]s in the world.
 var systems: Array[System]  = []
-# Component to Entities Index
+## [Component] to [Entity] Index - This stores entities by component for efficient querying.
 var component_entity_index: Dictionary = {}
 
-## Called when the World node is ready.
-##
-## Adds entities and systems from the scene tree to the world.
+## Called when the World node is ready.[br]
+## Adds [Entity]s and [System]s from the scene tree to the [World].
 func _ready() -> void:
 	# Add entities from the scene tree
 	var _entities = find_children('*', 'Entity') as Array[Entity]
@@ -33,20 +35,17 @@ func _ready() -> void:
 	add_systems(_systems)
 	Loggie.debug('_ready Added Systems from Scene Tree: ', systems)
 
-## Called every frame to process systems.
-##
-## @param delta The time elapsed since the last frame.
+## Called every frame to process [System]s.[br]
+## [param delta] The time elapsed since the last frame.
 func _process(delta: float) -> void:
 	for system in systems:
-		var entities_to_process: Array = ECS.buildQuery().all(system.required_components).execute()
+		var entities_to_process: Array = ECS.buildQuery().with_all(system.required_components).execute()
 		system.process_entities(entities_to_process, delta)
 
-## Adds a single entity to the world.
-##
-## @param entity The entity to add.
-##
-## Example:
-##     world.add_entity(player_entity)
+## Adds a single [Entity] to the world.[br]
+## [param entity] The [Entity] to add.[br]
+## [b]Example:[/b]
+##    [codeblock] world.add_entity(player_entity)[/codeblock]
 func add_entity(entity: Entity) -> void:
 	if not entity.is_inside_tree():
 		add_child(entity)
@@ -64,8 +63,8 @@ func add_entity(entity: Entity) -> void:
 ##
 ## @param _entities An array of entities to add.
 ##
-## Example:
-##     world.add_entities([player_entity, enemy_entity])
+## [b]Example:[/b]
+##      [codeblock]world.add_entities([player_entity, enemy_entity])[/codeblock]
 func add_entities(_entities: Array):
 	for _entity in _entities:
 		add_entity(_entity)
@@ -74,8 +73,8 @@ func add_entities(_entities: Array):
 ##
 ## @param system The system to add.
 ##
-## Example:
-##     world.add_system(movement_system)
+## [b]Example:[/b]
+##      [codeblock]world.add_system(movement_system)[/codeblock]
 func add_system(system: System) -> void:
 	Loggie.debug('add_system Adding System: ', system)
 	systems.append(system)
@@ -84,18 +83,16 @@ func add_system(system: System) -> void:
 ##
 ## @param _systems An array of systems to add.
 ##
-## Example:
-##     world.add_systems([movement_system, render_system])
+## [b]Example:[/b]
+##      [codeblock]world.add_systems([movement_system, render_system])[/codeblock]
 func add_systems(_systems: Array):
 	for _system in _systems:
 		add_system(_system)
 
-## Removes an entity from the world.
-##
-## @param entity The entity to remove.
-##
-## Example:
-##     world.remove_entity(player_entity)
+## Removes an [Entity] from the world.[br]
+## [param entity] The [Entity] to remove.[br]
+## [b]Example:[/b]
+##      [codeblock]world.remove_entity(player_entity)[/codeblock]
 func remove_entity(entity) -> void:
 	Loggie.debug('remove_entity Removing Entity: ', entity)
 	entities.erase(entity)
@@ -109,32 +106,28 @@ func remove_entity(entity) -> void:
 	entity.on_destroy()
 	entity.queue_free()
 
-## Removes a system from the world.
-##
-## @param system The system to remove.
-##
-## Example:
-##     world.remove_system(movement_system)
+## Removes a [System] from the world.[br]
+## [param system] The [System] to remove.[br]
+## [b]Example:[/b]
+##      [codeblock]world.remove_system(movement_system)[/codeblock]
 func remove_system(system) -> void:
 	Loggie.debug('remove_system Removing System: ', system)
 	systems.erase(system)
 	# Update index
 	system.queue_free()
 
-## Maps a component to its resource path.
-##
-## @param x The component to map.
-## @return String The resource path of the component.
+## Maps a [Component] to its [member Resource.resource_path].[br]
+## [param x] The [Component] to map.[br]
+## [param returns] The resource path of the component.
 func map_resource_path(x) -> String:
 	return x.resource_path
 
 
-## Executes a query to retrieve entities based on component criteria.
-##
-## @param all_components Components that entities must have all of.
-## @param any_components Components that entities must have at least one of.
-## @param exclude_components Components that entities must not have.
-## @return Array An array of entities that match the query.
+## Executes a query to retrieve entities based on component criteria.[br]
+## [param all_components] - [Component]s that [Entity]s must have all of.[br]
+## [param any_components] - [Component]s that [Entity]s must have at least one of.[br]
+## [param exclude_components] - [Component]s that [Entity]s must not have.[br]
+## [param returns] An [Array] of [Entity]s that match the query.
 func query(all_components = [], any_components = [], exclude_components = []) -> Array:
 	var result: Array              =  []
 	var initialized                := false
@@ -179,10 +172,9 @@ func query(all_components = [], any_components = [], exclude_components = []) ->
 
 # Helper functions for array operations
 
-## Intersects two arrays of entities.
-##
-## @param array1 The first array.
-## @param array2 The second array.
+## Intersects two arrays of entities.[br]
+## @param array1 The first array.[br]
+## @param array2 The second array.[br]
 ## @return Array The intersection of the two arrays.
 func _intersect_entity_arrays(array1, array2) -> Array:
 	var result: Array = []
@@ -191,10 +183,9 @@ func _intersect_entity_arrays(array1, array2) -> Array:
 			result.append(entity)
 	return result
 
-## Unions two arrays of entities.
-##
-## @param array1 The first array.
-## @param array2 The second array.
+## Unions two arrays of entities.[br]
+## @param array1 The first array.[br]
+## @param array2 The second array.[br]
 ## @return Array The union of the two arrays.
 func _union_entity_arrays(array1, array2) -> Array:
 	var result = array1.duplicate()
@@ -203,10 +194,9 @@ func _union_entity_arrays(array1, array2) -> Array:
 			result.append(entity)
 	return result
 
-## Differences two arrays of entities.
-##
-## @param array1 The first array.
-## @param array2 The second array.
+## Differences two arrays of entities.[br]
+## @param array1 The first array.[br]
+## @param array2 The second array.[br]
 ## @return Array The difference of the two arrays (entities in array1 not in array2).
 func _difference_entity_arrays(array1, array2) -> Array:
 	var result: Array = []
@@ -218,9 +208,8 @@ func _difference_entity_arrays(array1, array2) -> Array:
 
 # Index Management Functions
 
-## Adds an entity to the component index.
-##
-## @param entity The entity to index.
+## Adds an entity to the component index.[br]
+## @param entity The entity to index.[br]
 ## @param component_key The component's resource path.
 func _add_entity_to_index(entity: Entity, component_key: String) -> void:
 	if not component_entity_index.has(component_key):
@@ -229,9 +218,8 @@ func _add_entity_to_index(entity: Entity, component_key: String) -> void:
 	if not entity_list.has(entity):
 		entity_list.append(entity)
 
-## Removes an entity from the component index.
-##
-## @param entity The entity to remove.
+## Removes an entity from the component index.[br]
+## @param entity The entity to remove.[br]
 ## @param component_key The component's resource path.
 func _remove_entity_from_index(entity, component_key: String) -> void:
 	if component_entity_index.has(component_key):
@@ -243,16 +231,14 @@ func _remove_entity_from_index(entity, component_key: String) -> void:
 
 # Signal Callbacks
 
-## Callback when a component is added to an entity.
-##
-## @param entity The entity that had a component added.
+## [signal Entity.component_added] Callback when a component is added to an entity.[br]
+## @param entity The entity that had a component added.[br]
 ## @param component_key The resource path of the added component.
 func _on_entity_component_added(entity, component_key: String) -> void:
 	_add_entity_to_index(entity, component_key)
 
-## Callback when a component is removed from an entity.
-##
-## @param entity The entity that had a component removed.
+## [signal Entity.component_removed] Callback when a component is removed from an entity.[br]
+## @param entity The entity that had a component removed.[br]
 ## @param component_key The resource path of the removed component.
 func _on_entity_component_removed(entity, component_key: String) -> void:
 	_remove_entity_from_index(entity, component_key)

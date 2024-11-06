@@ -80,7 +80,7 @@ script = ExtResource("1_nrddk")
 [node name="TopBumper" parent="World/Entities" index="1"]
 position = Vector2(619, -4)
 
-[node name="RightBumper" parent="World/Entities" index="2"]
+[node name="RightBumper" parent="World/Entities" index="3"]
 position = Vector2(1160, 538)
 
 [node name="Brick" parent="World/Entities" instance=ExtResource("6_hrodl")]

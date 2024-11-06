@@ -2,58 +2,55 @@
 ##
 ## A utility class for constructing and executing queries to retrieve entities based on their components.
 ## It supports filtering entities that have all, any, or exclude specific components.
-##
-## Example:
+## [codeblock]
 ##     var query = QueryBuilder.new(world)
-##     var entities = query.all([Transform, Velocity]).any([Health]).exclude([Inactive]).execute()
-##
+##     var entities = query
+##                    	.with_all([Transform, Velocity])
+##                    	.with_any([Health])
+##                    	.with_none([Inactive])
+##                    	.execute()
+##[/codeblock]
 ## This will retrieve all entities that have both `Transform` and `Velocity` components,
 ## have at least one of the `Health` component,
 ## and do not have the `Inactive` component.
 class_name QueryBuilder
 extends Object
 
-## The world instance to query against.
-var world: World
-## Components that an entity must have all of.
-var all_components: Array = []
-## Components that an entity must have at least one of.
-var any_components: Array = []
-## Components that an entity must not have.
-var exclude_components: Array = []
+# The world instance to query against.
+var _world: World
+# Components that an entity must have all of.
+var _all_components: Array = []
+# Components that an entity must have at least one of.
+var _any_components: Array = []
+# Components that an entity must not have.
+var _exclude_components: Array = []
 
-## Initializes the QueryBuilder with the specified world.
-##
-## @param world The world instance to query.
+## Initializes the QueryBuilder with the specified [param world]
 func _init(world: World):
 	self.world = world
 
-## Specifies that entities must have all of the provided components.
-##
-## @param components An array of component classes.
-## @return QueryBuilder Returns the QueryBuilder instance for chaining.
-func all(components: Array) -> QueryBuilder:
-	all_components += components
+## Finds entities with all of the provided components.[br]
+## [param components] An [Array] of [Component] classes.[br]
+## [param returns]: [QueryBuilder] instance for chaining.
+func with_all(components: Array = []) -> QueryBuilder:
+	_all_components += components
 	return self
 
-## Specifies that entities must have at least one of the provided components.
-##
-## @param components An array of component classes.
-## @return QueryBuilder Returns the QueryBuilder instance for chaining.
-func any(components: Array) -> QueryBuilder:
-	any_components += components
+## Entities must have at least one of the provided components.[br]
+## [param components] An [Array] of [Component] classes.[br]
+## [param reutrns] [QueryBuilder] instance for chaining.
+func with_any(components: Array = []) -> QueryBuilder:
+	_any_components += components
 	return self
 
-## Specifies that entities must not have any of the provided components.
-##
-## @param components An array of component classes.
-## @return QueryBuilder Returns the QueryBuilder instance for chaining.
-func exclude(components: Array) -> QueryBuilder:
-	exclude_components += components
+## Entities must not have any of the provided components.[br]
+## Params: [param components] An [Array] of [Component] classes.[br]
+## [param reutrns] [QueryBuilder] instance for chaining.
+func with_none(components: Array = []) -> QueryBuilder:
+	_exclude_components += components
 	return self
 
-## Executes the constructed query and retrieves matching entities.
-##
-## @return Array An array of entities that match the query criteria.
-func execute() -> Array:
-	return world.query(all_components, any_components, exclude_components)
+## Executes the constructed query and retrieves matching entities.[br]
+## [param returns] -  An [Array] of [Entity] that match the query criteria.
+func execute() -> Array[Entity]:
+	return _world.query(_all_components, _any_components, _exclude_components)

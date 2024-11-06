@@ -4,7 +4,7 @@
 class_name BrickSpawnerSystem
 extends System
 
-const NUM_BRICKS:= 0
+@export var NUM_BRICKS:= 0
 var brick_scene = preload('res://game/entities/brick.tscn')
 
 func _init():
