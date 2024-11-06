@@ -5,6 +5,6 @@ repomix-output.txt
 
 # Ignore everything in addons except for qt_ecs
 addons/*
-!addons/qt_ecs/
-!addons/qt_ecs/**
+!addons/gecs/
+!addons/gecs/**
 
