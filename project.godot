@@ -26,7 +26,7 @@ manager/music/bus="Music"
 
 [autoload]
 
-ECS="*res://addons/qt_ecs/ecs.gd"
+ECS="*res://addons/gecs/ecs.gd"
 SoundManager="*res://addons/resonate/sound_manager/sound_manager.gd"
 MusicManager="*res://addons/resonate/music_manager/music_manager.gd"
 Loggie="*res://addons/loggie/loggie.gd"
