@@ -1,8 +1,8 @@
 [gd_scene load_steps=8 format=3 uid="uid://d8g7nt62qq13"]
 
-[ext_resource type="Script" path="res://game/entities/brick.gd" id="1_ji18f"]
-[ext_resource type="Script" path="res://game/components/health.gd" id="2_s2ah8"]
-[ext_resource type="Script" path="res://game/components/transform.gd" id="3_0r7fq"]
+[ext_resource type="Script" path="res://game/entities/e_brick.gd" id="1_ji18f"]
+[ext_resource type="Script" path="res://game/components/c_health.gd" id="2_s2ah8"]
+[ext_resource type="Script" path="res://game/components/c_transform.gd" id="3_0r7fq"]
 
 [sub_resource type="Resource" id="Resource_cnt7s"]
 script = ExtResource("3_0r7fq")

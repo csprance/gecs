@@ -1,60 +1,68 @@
-[gd_scene load_steps=15 format=3 uid="uid://b1fu5exk46e0d"]
+[gd_scene load_steps=17 format=3 uid="uid://b1fu5exk46e0d"]
 
-[ext_resource type="Script" path="res://game/systems/damage.gd" id="1_c43ii"]
-[ext_resource type="Script" path="res://game/systems/ball_release.gd" id="1_nnxs0"]
-[ext_resource type="Script" path="res://game/systems/kill.gd" id="2_akait"]
-[ext_resource type="Script" path="res://game/systems/player_movement.gd" id="3_1khav"]
-[ext_resource type="Script" path="res://game/systems/bounce.gd" id="4_545b5"]
-[ext_resource type="Script" path="res://game/systems/friction.gd" id="5_15w8u"]
-[ext_resource type="Script" path="res://game/systems/velocity.gd" id="6_1v0ex"]
-[ext_resource type="Script" path="res://game/systems/transform_2d.gd" id="7_ci8o1"]
-[ext_resource type="Script" path="res://game/systems/brick_spawner.gd" id="9_ayn1n"]
-[ext_resource type="Script" path="res://game/systems/ui_visiblity.gd" id="10_5vc1v"]
-[ext_resource type="Script" path="res://game/systems/ball_capture.gd" id="11_6jr81"]
-[ext_resource type="Script" path="res://game/systems/reward.gd" id="13_l50xw"]
-[ext_resource type="Script" path="res://game/systems/score_ui.gd" id="14_o08ja"]
-[ext_resource type="Script" path="res://game/systems/player_death.gd" id="15_oy7ho"]
+[ext_resource type="Script" path="res://game/systems/s_bounce.gd" id="1_o0xxi"]
+[ext_resource type="Script" path="res://game/systems/s_ball_release.gd" id="2_fo2p1"]
+[ext_resource type="Script" path="res://game/systems/s_ball_capture.gd" id="3_j7mrq"]
+[ext_resource type="Script" path="res://game/systems/s_brick_spawner.gd" id="4_ctc2i"]
+[ext_resource type="Script" path="res://game/systems/s_damage.gd" id="5_15dir"]
+[ext_resource type="Script" path="res://game/systems/s_health.gd" id="6_jii4m"]
+[ext_resource type="Script" path="res://game/systems/s_player_movement.gd" id="7_inffd"]
+[ext_resource type="Script" path="res://game/systems/s_friction.gd" id="8_bkjik"]
+[ext_resource type="Script" path="res://game/systems/s_velocity.gd" id="9_aa06e"]
+[ext_resource type="Script" path="res://game/systems/s_transform_2d.gd" id="10_2hs5k"]
+[ext_resource type="Script" path="res://game/systems/s_ui_visiblity.gd" id="11_oxoun"]
+[ext_resource type="Script" path="res://game/systems/s_score_ui.gd" id="12_0f7uf"]
+[ext_resource type="Script" path="res://game/systems/s_reward.gd" id="13_jk33n"]
+[ext_resource type="Script" path="res://game/systems/s_player_death.gd" id="14_304mj"]
+[ext_resource type="Script" path="res://game/systems/s_game_state.gd" id="15_tq2ri"]
+[ext_resource type="Script" path="res://game/systems/s_death.gd" id="16_3gln1"]
 
 [node name="Systems" type="Node"]
 
-[node name="Bounce" type="Node" parent="."]
-script = ExtResource("4_545b5")
+[node name="BounceSystem" type="Node" parent="."]
+script = ExtResource("1_o0xxi")
 
-[node name="BallRelease" type="Node" parent="."]
-script = ExtResource("1_nnxs0")
+[node name="BallReleaseSystem" type="Node" parent="."]
+script = ExtResource("2_fo2p1")
 
-[node name="BallCapture" type="Node" parent="."]
-script = ExtResource("11_6jr81")
+[node name="BallCaptureSystem" type="Node" parent="."]
+script = ExtResource("3_j7mrq")
 
-[node name="BrickSpawner" type="Node" parent="."]
-script = ExtResource("9_ayn1n")
+[node name="BrickSpawnerSystem" type="Node" parent="."]
+script = ExtResource("4_ctc2i")
 
-[node name="Damage" type="Node" parent="."]
-script = ExtResource("1_c43ii")
+[node name="DamageSystem" type="Node" parent="."]
+script = ExtResource("5_15dir")
 
-[node name="Kill" type="Node" parent="."]
-script = ExtResource("2_akait")
+[node name="HealthSystem" type="Node" parent="."]
+script = ExtResource("6_jii4m")
 
-[node name="PlayerMovement" type="Node" parent="."]
-script = ExtResource("3_1khav")
+[node name="PlayerMovementSystem" type="Node" parent="."]
+script = ExtResource("7_inffd")
 
-[node name="Friction" type="Node" parent="."]
-script = ExtResource("5_15w8u")
+[node name="FrictionSystem" type="Node" parent="."]
+script = ExtResource("8_bkjik")
 
-[node name="Velocity" type="Node" parent="."]
-script = ExtResource("6_1v0ex")
+[node name="VelocitySystem" type="Node" parent="."]
+script = ExtResource("9_aa06e")
 
-[node name="Transform2D" type="Node" parent="."]
-script = ExtResource("7_ci8o1")
+[node name="TransformSystem" type="Node" parent="."]
+script = ExtResource("10_2hs5k")
 
-[node name="UiVisibility" type="Node" parent="."]
-script = ExtResource("10_5vc1v")
+[node name="UiVisibilitySystem" type="Node" parent="."]
+script = ExtResource("11_oxoun")
 
-[node name="ScoreUi" type="Node" parent="."]
-script = ExtResource("14_o08ja")
+[node name="ScoreUiSystem" type="Node" parent="."]
+script = ExtResource("12_0f7uf")
 
-[node name="Rewards" type="Node" parent="."]
-script = ExtResource("13_l50xw")
+[node name="RewardsSystem" type="Node" parent="."]
+script = ExtResource("13_jk33n")
 
-[node name="PlayerDeath" type="Node" parent="."]
-script = ExtResource("15_oy7ho")
+[node name="PlayerDeathSystem" type="Node" parent="."]
+script = ExtResource("14_304mj")
+
+[node name="GameStateSystem" type="Node" parent="."]
+script = ExtResource("15_tq2ri")
+
+[node name="DeathSystem" type="Node" parent="."]
+script = ExtResource("16_3gln1")

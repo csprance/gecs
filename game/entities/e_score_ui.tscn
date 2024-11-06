@@ -1,9 +1,9 @@
 [gd_scene load_steps=8 format=3 uid="uid://bgg10mnxgskoj"]
 
-[ext_resource type="Script" path="res://game/entities/score_ui.gd" id="1_yr2lj"]
-[ext_resource type="Script" path="res://game/components/game_state.gd" id="2_v8v7v"]
-[ext_resource type="Script" path="res://game/components/ui_visibility.gd" id="3_gj56c"]
-[ext_resource type="Script" path="res://game/components/score_ui.gd" id="4_66ly3"]
+[ext_resource type="Script" path="res://game/entities/e_score_ui.gd" id="1_yr2lj"]
+[ext_resource type="Script" path="res://game/components/c_game_state.gd" id="2_v8v7v"]
+[ext_resource type="Script" path="res://game/components/c_ui_visibility.gd" id="3_gj56c"]
+[ext_resource type="Script" path="res://game/components/c_score_ui.gd" id="4_66ly3"]
 
 [sub_resource type="Resource" id="Resource_ge1af"]
 script = ExtResource("2_v8v7v")

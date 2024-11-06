@@ -4,7 +4,6 @@ extends System
 class_name BrickSpawnerSystem
 
 # Exported variables for easy configuration in the Godot Editor
-@export var num_bricks: int = 15
 @export var bricks_per_row: int = 5
 @export var brick_width: float = 100.0
 @export var brick_height: float = 32.0
@@ -13,7 +12,7 @@ class_name BrickSpawnerSystem
 @export var start_position: Vector2 = Vector2(300, 300)
 
 # Preload the brick scene once for efficiency
-var brick_scene = preload('res://game/entities/brick.tscn')
+var brick_scene = preload('res://game/entities/e_brick.tscn')
 
 func process(_e, _d) -> void:
 	var world = ECS.world as World
@@ -23,7 +22,7 @@ func process(_e, _d) -> void:
 
 
 func spawn_bricks(world: World) -> void:
-	for i in range(num_bricks):
+	for i in range(GameStateUtils.get_game_state().blocks):
 		# Instantiate a new brick from the preloaded scene
 		var brick_entity = brick_scene.instantiate() as Brick
 		# Add the brick entity to the ECS world
@@ -38,9 +37,9 @@ func spawn_bricks(world: World) -> void:
 		var y = start_position.y + row * (brick_height + vertical_spacing)
 		var position = Vector2(x, y)
 		
-		# Retrieve and update the Transform2D component of the brick
+		# Retrieve and update the Transform component of the brick
 		var transform = brick_entity.get_component(Transform)
 		if transform:
 			transform.position = position
 		else:
-			push_error("Brick entity does not have a Transform2D component.")
+			push_error("Brick entity does not have a Transform component.")

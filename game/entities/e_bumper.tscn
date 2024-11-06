@@ -1,7 +1,7 @@
 [gd_scene load_steps=5 format=3 uid="uid://dgiygx4ouqqsm"]
 
-[ext_resource type="Script" path="res://game/entities/bumper.gd" id="1_eu2y3"]
-[ext_resource type="Script" path="res://game/components/bounced.gd" id="2_k8ssr"]
+[ext_resource type="Script" path="res://game/entities/e_bumper.gd" id="1_eu2y3"]
+[ext_resource type="Script" path="res://game/components/c_bounced.gd" id="2_k8ssr"]
 
 [sub_resource type="Resource" id="Resource_g34vu"]
 script = ExtResource("2_k8ssr")

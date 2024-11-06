@@ -15,6 +15,20 @@
 class_name World
 extends Node
 
+## Emitted when an entity is added
+signal entity_added(entity: Entity)
+## Emitted when an entity is removed
+signal entity_removed(entity: Entity)
+## Emitted when a system is added
+signal system_added(system: System)
+## Emitted when a system is removed
+signal system_removed(system: System)
+
+## Where are all the [Entity] nodes placed in the scene tree?
+@export var entity_nodes_root: NodePath
+## Where are all the [System] nodes placed in the scene tree?
+@export var system_nodes_root: NodePath
+
 ## All the [Entity]s in the world.
 var entities: Array[Entity] = []
 ## All the [System]s in the world.
@@ -26,21 +40,22 @@ var component_entity_index: Dictionary = {}
 ## Adds [Entity]s and [System]s from the scene tree to the [World].
 func _ready() -> void:
 	# Add entities from the scene tree
-	var _entities = find_children('*', 'Entity') as Array[Entity]
+	var _entities = find_children('*', "Entity") as Array[Entity]
 	add_entities(_entities)
-	Loggie.debug('_ready Added Entities from Scene Tree: ', entities)
+	Loggie.debug('_ready Added Entities from Scene Tree: ', _entities)
 
 	# Add systems from scene tree
-	var _systems  = find_children('*', 'System') as Array[System]
+	var _systems  = find_children('*', "System") as Array[System]
 	add_systems(_systems)
-	Loggie.debug('_ready Added Systems from Scene Tree: ', systems)
+	Loggie.debug('_ready Added Systems from Scene Tree: ', _systems)
 
 ## Called every frame by the [method _ECS.process] to process [System]s.[br]
 ## [param delta] The time elapsed since the last frame.
 func process(delta: float) -> void:
 	for system in systems:
-		var entities_to_process: Array = system.query(ECS.buildQuery()).execute()
-		system.process_entities(entities_to_process, delta)
+		system._handle(
+			delta
+		)
 
 ## Adds a single [Entity] to the world.[br]
 ## [param entity] The [Entity] to add.[br]
@@ -52,6 +67,7 @@ func add_entity(entity: Entity) -> void:
 	# Update index
 	Loggie.debug('add_entity Adding Entity to World: ', entity)
 	entities.append(entity)
+	entity_added.emit(entity)
 	for component_key in entity.components.keys():
 		_add_entity_to_index(entity, component_key)
 
@@ -78,6 +94,7 @@ func add_entities(_entities: Array):
 func add_system(system: System) -> void:
 	Loggie.debug('add_system Adding System: ', system)
 	systems.append(system)
+	system_added.emit(system)
 
 ## Adds multiple systems to the world.
 ##
@@ -101,6 +118,7 @@ func remove_entity(entity) -> void:
 		_remove_entity_from_index(entity, component_key)
 
 	entity = entity as Entity
+	entity_removed.emit(entity)
 	entity.component_added.disconnect(_on_entity_component_added)
 	entity.component_removed.disconnect(_on_entity_component_removed)
 	entity.on_destroy()
@@ -113,6 +131,7 @@ func remove_entity(entity) -> void:
 func remove_system(system) -> void:
 	Loggie.debug('remove_system Removing System: ', system)
 	systems.erase(system)
+	system_removed.emit(system)
 	# Update index
 	system.queue_free()
 
@@ -129,6 +148,10 @@ func map_resource_path(x) -> String:
 ## [param exclude_components] - [Component]s that [Entity]s must not have.[br]
 ## [param returns] An [Array] of [Entity]s that match the query.
 func query(all_components = [], any_components = [], exclude_components = []) -> Array:
+	# if they're all empty return an empty array
+	if all_components.size() == 0 and any_components.size() == 0 and exclude_components.size() == 0:
+		return []
+
 	var result: Array              =  []
 	var initialized                := false
 	var _all_components: Array     =  all_components.map(map_resource_path)

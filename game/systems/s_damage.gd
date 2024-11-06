@@ -8,12 +8,15 @@ class_name DamageSystem
 extends System
 
 func query(q: QueryBuilder) -> QueryBuilder:
-		return q.with_all([Damage, Health])
+		return q.with_all([Damage])
 
 
 func process(entity: Entity, delta: float):
 	var damage = entity.get_component(Damage) as Damage
 	var health = entity.get_component(Health) as Health
+	# Can't damage an entity without health
+	if not health:
+		return
 
 	# Damage the Health Component by the damage amount
 	health.current -= damage.amount

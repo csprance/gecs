@@ -23,6 +23,7 @@ extends Node
 ## Determines whether the system should run even when there are no [Entity]s to process.
 var process_empty := false
 
+
 ## Override this method and return a [QueryBuilder] to define the required [Component]s for the system.[br]
 ## If not overridden, the system will run on every update with no entities.
 func query(q: QueryBuilder) -> QueryBuilder:
@@ -37,15 +38,19 @@ func process(entity: Entity, delta: float) -> void:
 	assert(false, "The 'process' method must be overridden in subclasses.")
 
 
-## Processes all [Entity]s that match the system's required [Component]s.[br]
-## [param entities] An [Array] of [Entity] to process.[br]
+## handles the processing of all [Entity]s that match the system's query [Component]s.[br]
 ## [param delta] The time elapsed since the last frame.
-func process_entities(entities: Array, delta: float):
+func _handle(delta: float):
+	# Query for the entities that match the system's query
+	var entities = query(ECS.buildQuery()).execute() as Array[Entity]
+
 	# If we have no entities and we want to process even when empty do it once and return
 	if entities.size() == 0 and process_empty:
 		process(null, delta)
-
-	# otherwise process all the entities (wont happen if empty array)
-	for entity in entities:
-		process(entity, delta)
-		entity.on_update(delta)
+		Loggie.debug('Processed System on NULL: ', self)
+	else:
+		# otherwise process all the entities (wont happen if empty array)
+		for entity in entities:
+			process(entity, delta)
+			entity.on_update(delta)
+		Loggie.debug('Processed System: ', self, ' Entities: ', entities.size())

@@ -1,13 +1,13 @@
 [gd_scene load_steps=16 format=3 uid="uid://c30ukuyygo3gm"]
 
-[ext_resource type="Script" path="res://game/entities/ball.gd" id="1_sx58v"]
+[ext_resource type="Script" path="res://game/entities/e_ball.gd" id="1_sx58v"]
 [ext_resource type="Texture2D" uid="uid://bgq145vfplih8" path="res://icon.svg" id="1_uc1ux"]
-[ext_resource type="Script" path="res://game/components/bounce.gd" id="2_hr8yc"]
-[ext_resource type="Script" path="res://game/components/velocity.gd" id="2_nr2d6"]
-[ext_resource type="Script" path="res://game/components/friction.gd" id="3_033e8"]
-[ext_resource type="Script" path="res://game/components/transform.gd" id="3_lwipv"]
-[ext_resource type="Script" path="res://game/components/active_ball.gd" id="6_setqu"]
-[ext_resource type="Script" path="res://game/components/captured.gd" id="7_pmpop"]
+[ext_resource type="Script" path="res://game/components/c_bounce.gd" id="2_hr8yc"]
+[ext_resource type="Script" path="res://game/components/c_velocity.gd" id="2_nr2d6"]
+[ext_resource type="Script" path="res://game/components/c_friction.gd" id="3_033e8"]
+[ext_resource type="Script" path="res://game/components/c_transform.gd" id="3_lwipv"]
+[ext_resource type="Script" path="res://game/components/c_active_ball.gd" id="6_setqu"]
+[ext_resource type="Script" path="res://game/components/c_captured.gd" id="7_pmpop"]
 
 [sub_resource type="Resource" id="Resource_0uodx"]
 script = ExtResource("2_hr8yc")

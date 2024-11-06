@@ -73,7 +73,12 @@ events = Array[ExtResource("3_acroa")]([SubResource("Resource_qhgwi"), SubResour
 
 [node name="World" type="Node" parent="."]
 script = ExtResource("1_nrddk")
+entity_nodes_root = NodePath("Entities")
+system_nodes_root = NodePath("Systems")
+
+[node name="Systems" parent="World" instance=ExtResource("11_av7gv")]
 
 [node name="Entities" parent="World" instance=ExtResource("9_8prar")]
 
-[node name="Systems" parent="World" instance=ExtResource("11_av7gv")]
+[editable path="World/Systems"]
+[editable path="World/Entities"]

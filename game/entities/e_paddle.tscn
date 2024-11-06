@@ -1,11 +1,11 @@
 [gd_scene load_steps=15 format=3 uid="uid://b7idne6el03sm"]
 
-[ext_resource type="Script" path="res://game/entities/paddle.gd" id="1_dffm1"]
-[ext_resource type="Script" path="res://game/components/transform.gd" id="2_i1wmy"]
-[ext_resource type="Script" path="res://game/components/velocity.gd" id="3_j7toh"]
-[ext_resource type="Script" path="res://game/components/friction.gd" id="4_pxefs"]
-[ext_resource type="Script" path="res://game/components/player_movement.gd" id="5_1fh31"]
-[ext_resource type="Script" path="res://game/components/active_paddle.gd" id="6_hk3s5"]
+[ext_resource type="Script" path="res://game/entities/e_paddle.gd" id="1_dffm1"]
+[ext_resource type="Script" path="res://game/components/c_transform.gd" id="2_i1wmy"]
+[ext_resource type="Script" path="res://game/components/c_velocity.gd" id="3_j7toh"]
+[ext_resource type="Script" path="res://game/components/c_friction.gd" id="4_pxefs"]
+[ext_resource type="Script" path="res://game/components/c_player_movement.gd" id="5_1fh31"]
+[ext_resource type="Script" path="res://game/components/c_active_paddle.gd" id="6_hk3s5"]
 [ext_resource type="Script" path="res://addons/easy_velocity_vector_display/vectordisplay2D.gd" id="6_p7kc5"]
 
 [sub_resource type="Resource" id="Resource_mdlpm"]
