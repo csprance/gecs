@@ -3,9 +3,8 @@ class_name BallCaptureSystem
 extends System
 
 
-func _init():
-	required_components = [ActiveBall, Transform, Captured] # add required components
-	# process_empty = false # Do we want this to run every frame even with no entities?
+func query(q: QueryBuilder):
+	return q.with_all([ActiveBall, Transform, Captured]) # add required components
 
 
 func process(entity: Entity, delta: float) -> void:

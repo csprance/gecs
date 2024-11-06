@@ -6,8 +6,8 @@
 class_name KillSystem
 extends System
 
-func _init() -> void:
-	required_components = [Health]
+func query(q: QueryBuilder) -> QueryBuilder:
+	return q.with_all([Health])
 
 
 func process(entity: Entity, delta: float) -> void:

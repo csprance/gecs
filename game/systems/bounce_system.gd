@@ -6,8 +6,8 @@
 class_name BounceSystem
 extends System
 
-func _init():
-	required_components = [Transform, Velocity, Bounce, Bounced]
+func query(q: QueryBuilder) -> QueryBuilder:
+	return q.with_all([Transform, Velocity, Bounce, Bounced])
 
 
 func process(entity: Entity, delta: float):

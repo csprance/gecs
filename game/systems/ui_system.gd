@@ -2,8 +2,8 @@ class_name UiSystem
 extends System
 
 
-func _init():
-	required_components = [UiVisibility] # add required components
+func query(q: QueryBuilder) -> QueryBuilder:
+	return q.with_all([UiVisibility]) # add required components
 
 
 func process(entity: Entity, delta: float) -> void:

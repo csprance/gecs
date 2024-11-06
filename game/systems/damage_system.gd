@@ -7,8 +7,8 @@
 class_name DamageSystem
 extends System
 
-func _init():
-	required_components = [Damage, Health]
+func query(q: QueryBuilder) -> QueryBuilder:
+		return q.with_all([Damage, Health])
 
 
 func process(entity: Entity, delta: float):

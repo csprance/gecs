@@ -7,10 +7,6 @@ extends System
 @export var NUM_BRICKS:= 0
 var brick_scene = preload('res://game/entities/brick.tscn')
 
-func _init():
-	# We want this system to run even with no components
-	process_empty = true
-
 func process(entity, delta):
 	var world = ECS.world as World
 	spawn_bricks(world)

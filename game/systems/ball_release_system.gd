@@ -3,8 +3,10 @@ extends System
 
 var ball: Ball
 
-func _init():
-	required_components = [Captured, ActiveBall] # add required components
+
+func query(q: QueryBuilder) -> QueryBuilder:
+	return q.with_all( [Captured, ActiveBall])
+
 
 func process(entity: Entity, delta: float) -> void:
 	if Input.is_action_just_pressed('paddle_bump'):

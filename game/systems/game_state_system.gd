@@ -6,8 +6,8 @@
 class_name GameStateSystem
 extends System
 
-func _init():
-	required_components = [GameState]
+func query(q: QueryBuilder) -> QueryBuilder:
+	return q.with_all([GameState])
 
 
 func process(entity: Entity, delta: float):

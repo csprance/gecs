@@ -6,8 +6,8 @@
 class_name PlayerMovementSystem
 extends System
 
-func _init():
-	required_components = [Velocity, PlayerMovement]
+func query(q: QueryBuilder) -> QueryBuilder:
+	return q.with_all([Velocity, PlayerMovement])
 
 
 func process(entity: Entity, delta: float) -> void:

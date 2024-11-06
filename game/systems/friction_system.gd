@@ -6,8 +6,8 @@
 class_name FrictionSystem
 extends System
 
-func _init():
-	required_components = [Transform, Velocity, Friction]
+func query(q: QueryBuilder) -> QueryBuilder:
+	return q.with_all([Transform, Velocity, Friction])
 
 
 func process(entity: Entity, delta: float) -> void:

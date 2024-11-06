@@ -6,8 +6,8 @@
 class_name Transform2DSystem
 extends System
 
-func _init():
-	required_components = [Transform]
+func query(q: QueryBuilder) -> QueryBuilder:
+	return q.with_all([Transform])
 
 
 func process(entity: Entity, delta):

@@ -6,8 +6,8 @@
 class_name VelocitySystem
 extends System
 
-func _init():
-	required_components = [Velocity, Transform]
+func query(q: QueryBuilder) -> QueryBuilder:
+	return q.with_all([Velocity, Transform])
 
 
 func process(entity: Entity, delta: float):
