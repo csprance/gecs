@@ -21,13 +21,5 @@ var world: World:
 	set(value):
 		world = value
 
-var _q:QueryBuilder
-## Builds a new QueryBuilder instance for constructing and executing queries.[br]
-## [param returns] - A new instance of [QueryBuilder] initialized with the current world.
-func buildQuery() -> QueryBuilder:
-	if not _q:
-		_q =  QueryBuilder.new(world)
-	return _q
-
 func process(delta: float) -> void:
 	world.process(delta)

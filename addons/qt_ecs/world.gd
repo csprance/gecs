@@ -36,12 +36,12 @@ var systems: Array[System]  = []
 ## [Component] to [Entity] Index - This stores entities by component for efficient querying.
 var component_entity_index: Dictionary = {}
 
-var _q: QueryBuilder
+## The [QueryBuilder] instance for this world used to build and execute queries
+@onready var query: QueryBuilder = QueryBuilder.new(self)
 
 ## Called when the World node is ready.[br]
 ## Adds [Entity]s and [System]s from the scene tree to the [World].
 func _ready() -> void:
-	_q = QueryBuilder.new(ECS.world)
 	# Add entities from the scene tree
 	var _entities = find_children('*', "Entity") as Array[Entity]
 	add_entities(_entities)
@@ -150,7 +150,7 @@ func map_resource_path(x) -> String:
 ## [param any_components] - [Component]s that [Entity]s must have at least one of.[br]
 ## [param exclude_components] - [Component]s that [Entity]s must not have.[br]
 ## [param returns] An [Array] of [Entity]s that match the query.
-func query(all_components = [], any_components = [], exclude_components = []) -> Array:
+func _query(all_components = [], any_components = [], exclude_components = []) -> Array:
 	# if they're all empty return an empty array
 	if all_components.size() == 0 and any_components.size() == 0 and exclude_components.size() == 0:
 		return []
