@@ -35,9 +35,9 @@ func _ready() -> void:
 	add_systems(_systems)
 	Loggie.debug('_ready Added Systems from Scene Tree: ', systems)
 
-## Called every frame to process [System]s.[br]
+## Called every frame by the [method _ECS.process] to process [System]s.[br]
 ## [param delta] The time elapsed since the last frame.
-func _process(delta: float) -> void:
+func process(delta: float) -> void:
 	for system in systems:
 		var entities_to_process: Array = ECS.buildQuery().with_all(system.required_components).execute()
 		system.process_entities(entities_to_process, delta)

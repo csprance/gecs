@@ -1,4 +1,4 @@
-[gd_scene load_steps=20 format=3 uid="uid://cgyawfqrsaqdd"]
+[gd_scene load_steps=19 format=3 uid="uid://cgyawfqrsaqdd"]
 
 [ext_resource type="Script" path="res://main.gd" id="1_2dpkv"]
 [ext_resource type="Script" path="res://addons/qt_ecs/world.gd" id="1_nrddk"]
@@ -6,7 +6,6 @@
 [ext_resource type="Script" path="res://addons/resonate/sound_manager/sound_event_resource.gd" id="3_acroa"]
 [ext_resource type="AudioStream" uid="uid://cyp0fedotvaxl" path="res://addons/kenney impact sounds/impact_metal_heavy_001.ogg" id="4_c844j"]
 [ext_resource type="AudioStream" uid="uid://dy66i1lwwv1v8" path="res://addons/kenney impact sounds/impact_metal_heavy_003.ogg" id="5_g7wqa"]
-[ext_resource type="PackedScene" uid="uid://d8g7nt62qq13" path="res://game/entities/brick.tscn" id="6_hrodl"]
 [ext_resource type="AudioStream" uid="uid://cjl0h25w035j2" path="res://addons/kenney impact sounds/impact_metal_light_004.ogg" id="6_pke5j"]
 [ext_resource type="AudioStream" uid="uid://dptuwjwr4wwjf" path="res://addons/kenney impact sounds/footstep_snow_003.ogg" id="7_r0v48"]
 [ext_resource type="AudioStream" uid="uid://dn5tq22uvabcv" path="res://addons/kenney impact sounds/footstep_snow_002.ogg" id="8_u3xve"]
@@ -76,15 +75,6 @@ events = Array[ExtResource("3_acroa")]([SubResource("Resource_qhgwi"), SubResour
 script = ExtResource("1_nrddk")
 
 [node name="Entities" parent="World" instance=ExtResource("9_8prar")]
-
-[node name="TopBumper" parent="World/Entities" index="1"]
-position = Vector2(619, -4)
-
-[node name="RightBumper" parent="World/Entities" index="3"]
-position = Vector2(1160, 538)
-
-[node name="Brick" parent="World/Entities" instance=ExtResource("6_hrodl")]
-position = Vector2(612, 331)
 
 [node name="Systems" parent="World" instance=ExtResource("11_av7gv")]
 

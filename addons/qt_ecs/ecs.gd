@@ -25,3 +25,6 @@ var world: World:
 ## [param returns] - A new instance of [QueryBuilder] initialized with the current world.
 func buildQuery() -> QueryBuilder:
 	return QueryBuilder.new(world)
+
+func process(delta: float) -> void:
+	world.process(delta)

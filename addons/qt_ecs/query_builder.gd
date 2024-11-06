@@ -27,7 +27,7 @@ var _exclude_components: Array = []
 
 ## Initializes the QueryBuilder with the specified [param world]
 func _init(world: World):
-	self.world = world
+	_world = world as World
 
 ## Finds entities with all of the provided components.[br]
 ## [param components] An [Array] of [Component] classes.[br]
@@ -52,5 +52,5 @@ func with_none(components: Array = []) -> QueryBuilder:
 
 ## Executes the constructed query and retrieves matching entities.[br]
 ## [param returns] -  An [Array] of [Entity] that match the query criteria.
-func execute() -> Array[Entity]:
-	return _world.query(_all_components, _any_components, _exclude_components)
+func execute() -> Array:
+	return _world.query(_all_components, _any_components, _exclude_components) as Array[Entity]
