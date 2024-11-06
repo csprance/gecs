@@ -32,7 +32,7 @@ var components: Dictionary = {}
 
 
 func _ready() -> void:
-	Loggie.debug('_ready Entity Initializing Components: ', self)
+	Loggie.msg('_ready Entity Initializing Components: ', self).domain('ecs').debug()
 	# Initialize components from the exported array
 	add_components(component_resources)
 	on_ready()
@@ -45,7 +45,7 @@ func add_component(component: Variant) -> void:
 	 # Make sure to duplicate the resource or we'll share the same component
 	components[component.get_script().resource_path] = component.duplicate()
 	component_added.emit(self, component.get_script().resource_path)
-	Loggie.debug('Added Component: ', component.resource_path)
+	Loggie.msg('Added Component: ', component.resource_path).domain('ecs').debug()
 
 
 ## Adds multiple components to the entity.[br]
@@ -64,7 +64,7 @@ func add_components(_components: Array):
 func remove_component(component: Variant) -> void:
 	var component_key = component.resource_path
 	if components.erase(component.resource_path):
-		Loggie.debug('Removed Component: ', component.resource_path)
+		Loggie.msg('Removed Component: ', component.resource_path).domain('ecs').debug()
 		component_removed.emit(self, component.resource_path)
 
 ## Removes multiple components from the entity.[br]

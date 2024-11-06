@@ -42,12 +42,12 @@ func _ready() -> void:
 	# Add entities from the scene tree
 	var _entities = find_children('*', "Entity") as Array[Entity]
 	add_entities(_entities)
-	Loggie.debug('_ready Added Entities from Scene Tree: ', _entities)
+	Loggie.msg('_ready Added Entities from Scene Tree: ', _entities).domain('ecs').debug()
 
 	# Add systems from scene tree
 	var _systems  = find_children('*', "System") as Array[System]
 	add_systems(_systems)
-	Loggie.debug('_ready Added Systems from Scene Tree: ', _systems)
+	Loggie.msg('_ready Added Systems from Scene Tree: ', _systems).domain('ecs').debug()
 
 ## Called every frame by the [method _ECS.process] to process [System]s.[br]
 ## [param delta] The time elapsed since the last frame.
@@ -65,7 +65,7 @@ func add_entity(entity: Entity) -> void:
 	if not entity.is_inside_tree():
 		add_child(entity)
 	# Update index
-	Loggie.debug('add_entity Adding Entity to World: ', entity)
+	Loggie.msg('add_entity Adding Entity to World: ', entity).domain('ecs').debug()
 	entities.append(entity)
 	entity_added.emit(entity)
 	for component_key in entity.components.keys():
@@ -92,7 +92,7 @@ func add_entities(_entities: Array):
 ## [b]Example:[/b]
 ##      [codeblock]world.add_system(movement_system)[/codeblock]
 func add_system(system: System) -> void:
-	Loggie.debug('add_system Adding System: ', system)
+	Loggie.msg('add_system Adding System: ', system).domain('ecs').debug()
 	systems.append(system)
 	system_added.emit(system)
 
@@ -111,7 +111,7 @@ func add_systems(_systems: Array):
 ## [b]Example:[/b]
 ##      [codeblock]world.remove_entity(player_entity)[/codeblock]
 func remove_entity(entity) -> void:
-	Loggie.debug('remove_entity Removing Entity: ', entity)
+	Loggie.msg('remove_entity Removing Entity: ', entity).domain('ecs').debug()
 	entities.erase(entity)
 	# Update index
 	for component_key in entity.components.keys():
@@ -129,7 +129,7 @@ func remove_entity(entity) -> void:
 ## [b]Example:[/b]
 ##      [codeblock]world.remove_system(movement_system)[/codeblock]
 func remove_system(system) -> void:
-	Loggie.debug('remove_system Removing System: ', system)
+	Loggie.msg('remove_system Removing System: ', system).domain('ecs').debug()
 	systems.erase(system)
 	system_removed.emit(system)
 	# Update index

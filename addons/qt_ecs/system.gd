@@ -47,10 +47,10 @@ func _handle(delta: float):
 	# If we have no entities and we want to process even when empty do it once and return
 	if entities.size() == 0 and process_empty:
 		process(null, delta)
-		Loggie.debug('Processed System on NULL: ', self)
+		Loggie.msg('Processed System on NULL: ', self).domain('ecs').debug()
 	else:
 		# otherwise process all the entities (wont happen if empty array)
 		for entity in entities:
 			process(entity, delta)
 			entity.on_update(delta)
-		Loggie.debug('Processed System: ', self, ' Entities: ', entities.size())
+		Loggie.msg('Processed System: ', self, ' Entities: ', entities.size()).domain('ecs').debug()
