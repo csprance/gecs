@@ -77,6 +77,3 @@ script = ExtResource("1_nrddk")
 [node name="Entities" parent="World" instance=ExtResource("9_8prar")]
 
 [node name="Systems" parent="World" instance=ExtResource("11_av7gv")]
-
-[editable path="World/Entities"]
-[editable path="World/Systems"]

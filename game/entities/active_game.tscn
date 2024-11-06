@@ -1,6 +1,13 @@
-[gd_scene load_steps=2 format=3 uid="uid://bxdii1way2qms"]
+[gd_scene load_steps=4 format=3 uid="uid://bxdii1way2qms"]
 
 [ext_resource type="Script" path="res://game/entities/active_game.gd" id="1_tyxb8"]
+[ext_resource type="Script" path="res://game/components/game_state.gd" id="2_osl1i"]
+
+[sub_resource type="Resource" id="Resource_ektji"]
+script = ExtResource("2_osl1i")
+score = 0
+lives = 3
 
 [node name="ActiveGame" type="Node2D"]
 script = ExtResource("1_tyxb8")
+component_resources = Array[Resource("res://addons/qt_ecs/component.gd")]([SubResource("Resource_ektji")])

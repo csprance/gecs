@@ -1,0 +1,77 @@
+[gd_scene load_steps=8 format=3 uid="uid://bgg10mnxgskoj"]
+
+[ext_resource type="Script" path="res://game/entities/score_ui.gd" id="1_yr2lj"]
+[ext_resource type="Script" path="res://game/components/game_state.gd" id="2_v8v7v"]
+[ext_resource type="Script" path="res://game/components/ui_visibility.gd" id="3_gj56c"]
+[ext_resource type="Script" path="res://game/components/score_ui.gd" id="4_66ly3"]
+
+[sub_resource type="Resource" id="Resource_ge1af"]
+script = ExtResource("2_v8v7v")
+score = 0
+lives = 3
+
+[sub_resource type="Resource" id="Resource_wts21"]
+script = ExtResource("3_gj56c")
+
+[sub_resource type="Resource" id="Resource_ind1x"]
+script = ExtResource("4_66ly3")
+
+[node name="ScoreUi" type="Node2D"]
+script = ExtResource("1_yr2lj")
+component_resources = Array[Resource("res://addons/qt_ecs/component.gd")]([SubResource("Resource_ge1af"), SubResource("Resource_wts21"), SubResource("Resource_ind1x")])
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+follow_viewport_enabled = true
+
+[node name="MarginContainer" type="MarginContainer" parent="CanvasLayer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 15
+theme_override_constants/margin_top = 15
+theme_override_constants/margin_right = 15
+theme_override_constants/margin_bottom = 15
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/MarginContainer"]
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="CanvasLayer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="ScoreText" type="RichTextLabel" parent="CanvasLayer/MarginContainer/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 0.09
+theme_override_font_sizes/normal_font_size = 29
+text = "Score:"
+fit_content = true
+
+[node name="ScoreValue" type="RichTextLabel" parent="CanvasLayer/MarginContainer/VBoxContainer/HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/normal_font_size = 29
+text = "0"
+fit_content = true
+
+[node name="HBoxContainer2" type="HBoxContainer" parent="CanvasLayer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="LivesText" type="RichTextLabel" parent="CanvasLayer/MarginContainer/VBoxContainer/HBoxContainer2"]
+clip_contents = false
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 0.09
+theme_override_font_sizes/normal_font_size = 29
+text = "Lives:"
+fit_content = true
+
+[node name="LivesValue" type="RichTextLabel" parent="CanvasLayer/MarginContainer/VBoxContainer/HBoxContainer2"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/normal_font_size = 29
+text = "3"
+fit_content = true

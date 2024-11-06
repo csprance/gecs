@@ -16,7 +16,7 @@ func on_ready() -> void:
 
 func _on_area_2d_body_entered(body: Node2D) -> void:
 	if body is Ball:
-		var entity = body as Entity
+		var ball = body as Ball
 
 		# Determine the impact point and direction for the bounce
 		var normal = global_transform.y.normalized()
@@ -24,9 +24,13 @@ func _on_area_2d_body_entered(body: Node2D) -> void:
 		# Create and add the bounce component to the Ball with the calculated normal
 		var bounced = Bounced.new()
 		bounced.normal = normal
-		entity.add_component(bounced)
+		ball.add_component(bounced)
 
 		# Do damage to the brick
 		var damage = Damage.new()
 		damage.amount = 1
 		add_component(damage)
+#
+		## give a reward to the player
+		#var reward = Reward.new(10) as Reward
+		#ball.add_component(reward)
