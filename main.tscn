@@ -1,7 +1,6 @@
-[gd_scene load_steps=19 format=3 uid="uid://cgyawfqrsaqdd"]
+[gd_scene load_steps=17 format=3 uid="uid://cgyawfqrsaqdd"]
 
 [ext_resource type="Script" path="res://main.gd" id="1_2dpkv"]
-[ext_resource type="Script" path="res://addons/gecs/world.gd" id="1_nrddk"]
 [ext_resource type="Script" path="res://addons/resonate/sound_manager/sound_bank.gd" id="2_sqmfr"]
 [ext_resource type="Script" path="res://addons/resonate/sound_manager/sound_event_resource.gd" id="3_acroa"]
 [ext_resource type="AudioStream" uid="uid://cyp0fedotvaxl" path="res://addons/kenney impact sounds/impact_metal_heavy_001.ogg" id="4_c844j"]
@@ -9,9 +8,8 @@
 [ext_resource type="AudioStream" uid="uid://cjl0h25w035j2" path="res://addons/kenney impact sounds/impact_metal_light_004.ogg" id="6_pke5j"]
 [ext_resource type="AudioStream" uid="uid://dptuwjwr4wwjf" path="res://addons/kenney impact sounds/footstep_snow_003.ogg" id="7_r0v48"]
 [ext_resource type="AudioStream" uid="uid://dn5tq22uvabcv" path="res://addons/kenney impact sounds/footstep_snow_002.ogg" id="8_u3xve"]
-[ext_resource type="PackedScene" uid="uid://cx4flkuosdmao" path="res://game/worlds/test/default_entities.tscn" id="9_8prar"]
 [ext_resource type="AudioStream" uid="uid://bn0mmmtnem0t1" path="res://addons/kenney impact sounds/footstep_snow_004.ogg" id="9_xwrxi"]
-[ext_resource type="PackedScene" uid="uid://b1fu5exk46e0d" path="res://game/worlds/test/default_systems.tscn" id="11_av7gv"]
+[ext_resource type="PackedScene" uid="uid://ufd6cbokkb25" path="res://game/worlds/test/w_test.tscn" id="10_7hc81"]
 
 [sub_resource type="AudioStreamRandomizer" id="AudioStreamRandomizer_yg1tm"]
 streams_count = 3
@@ -71,14 +69,4 @@ script = ExtResource("2_sqmfr")
 label = "fx"
 events = Array[ExtResource("3_acroa")]([SubResource("Resource_qhgwi"), SubResource("Resource_ni5bo"), SubResource("Resource_7mu7w")])
 
-[node name="World" type="Node" parent="."]
-script = ExtResource("1_nrddk")
-entity_nodes_root = NodePath("Entities")
-system_nodes_root = NodePath("Systems")
-
-[node name="Systems" parent="World" instance=ExtResource("11_av7gv")]
-
-[node name="Entities" parent="World" instance=ExtResource("9_8prar")]
-
-[editable path="World/Systems"]
-[editable path="World/Entities"]
+[node name="World" parent="." instance=ExtResource("10_7hc81")]

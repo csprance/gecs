@@ -22,11 +22,11 @@ func _on_area_2d_body_entered(body: Node2D) -> void:
 		var normal = global_transform.y.normalized()
 
 		# Create and add the bounce component to the Ball with the calculated normal
-		var bounced = Bounced.new()
+		var bounced = C_Bounced.new()
 		bounced.normal = normal
 		ball.add_component(bounced)
 
 		# Do damage to the brick
-		var damage = Damage.new()
+		var damage = C_Damage.new()
 		damage.amount = 1
 		add_component(damage)

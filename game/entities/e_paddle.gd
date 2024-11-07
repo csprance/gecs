@@ -20,9 +20,9 @@ func on_ready() -> void:
 func _on_area_2d_body_entered(body: Node2D) -> void:
 	if body is Ball:
 		var entity  = body as Ball
-		var bounced = Bounced.new()
-		var entity_trs = entity.get_component(Transform) as Transform
-		var paddle_trs = get_component(Transform) as Transform
+		var bounced = C_Bounced.new()
+		var entity_trs = entity.get_component(C_Transform) as C_Transform
+		var paddle_trs = get_component(C_Transform) as C_Transform
 
 		# Calculate the delta vector from paddle to ball
 		var half_width = paddle_width / 2.0
