@@ -1,5 +1,6 @@
-[gd_scene load_steps=15 format=3 uid="uid://b1fu5exk46e0d"]
+[gd_scene load_steps=16 format=3 uid="uid://b1fu5exk46e0d"]
 
+[ext_resource type="Script" path="res://game/systems/s_death.gd" id="1_2ym3q"]
 [ext_resource type="Script" path="res://game/systems/s_bounce.gd" id="1_o0xxi"]
 [ext_resource type="Script" path="res://game/systems/s_ball_release.gd" id="2_fo2p1"]
 [ext_resource type="Script" path="res://game/systems/s_ball_capture.gd" id="3_j7mrq"]
@@ -56,8 +57,8 @@ script = ExtResource("13_jk33n")
 [node name="PlayerDeathSystem" type="Node" parent="."]
 script = ExtResource("14_304mj")
 
-[node name="DeathSystem" type="Node" parent="."]
-script = ExtResource("3_j7mrq")
-
 [node name="GameStateSystem" type="Node" parent="."]
 script = ExtResource("14_5aron")
+
+[node name="DeathSystem" type="Node" parent="."]
+script = ExtResource("1_2ym3q")
