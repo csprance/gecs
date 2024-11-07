@@ -3,8 +3,7 @@
 ##
 ## The QueryBuilder supports filtering entities that have all, any, or exclude specific components.
 ## [codeblock]
-##     var query = QueryBuilder.new(world)
-##     var entities = query
+##     var entities = ECS.world.query
 ##                    	.with_all([Transform, Velocity])
 ##                    	.with_any([Health])
 ##                    	.with_none([Inactive])

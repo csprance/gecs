@@ -5,10 +5,24 @@
 ##[br]
 ## This singleton allows any part of the game to interact with the ECS system seamlessly.
 ## [codeblock]
-##     var entities = ECS.buildQuery().with_all([Transform, Velocity]).execute()
+##     var entities = ECS.world.query.with_all([Transform, Velocity]).execute()
 ##     for entity in entities:
 ##         entity.get_component(Transform).position += entity.get_component(Velocity).direction * delta
 ## [/codeblock]
+## This is also where you control the setup of the world and process loop of the ECS system.
+##[codeblock]
+##
+##   func _read(delta):
+##       ECS.world = world
+##       
+##	 func _process(delta):
+##	     ECS.process(delta)
+##[/codeblock]
+## or in the physics loop
+##[codeblock]
+##	 func _physics_process(delta):
+##	     ECS.process(delta)
+##[/codeblock]
 class_name _ECS
 extends Node
 

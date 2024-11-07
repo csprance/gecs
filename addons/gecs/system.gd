@@ -1,15 +1,16 @@
 ## System[br]
-## The base class for all systems within the ECS framework.
+## The base class for all systems within the ECS framework.[br]
 ##
 ## Systems contain the core logic and behavior, processing [Entity]s that have specific [Component]s.[br]
-## Each system defines the [Component]s required for it to process an [Entity] and implements the `[method System.process]` method.[br][br]
+## Each system overrides the [method System.query] and returns a query using the [QueryBuilder] [br]
+## exposed as [member System.q] required for it to process an [Entity] and implements the [method System.process] method.[br][br]
 ## [b]Example:[/b]
 ##[codeblock]
 ##     class_name MovementSystem
 ##     extends System
 ##
-##     func _init():
-##         required_components = [Transform, Velocity]
+##     func query():
+##         return q.with_all([Transform, Velocity])
 ##
 ##     func process(entity: Entity, delta: float) -> void:
 ##         var transform = entity.get_component(Transform)
@@ -23,6 +24,7 @@ extends Node
 ## Determines whether the system should run even when there are no [Entity]s to process.
 var process_empty := false
 
+## The [QueryBuilder] object exposed for conveinence to use in the system and to create the query.
 var q: QueryBuilder
 
 

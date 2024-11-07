@@ -3,14 +3,6 @@
 ##
 ## The World class handles the addition and removal of [Entity]s and [System]s, and orchestrates the processing of [Entity]s through [System]s each frame.[br]
 ## The World class also maintains an index mapping of components to entities for efficient querying.[br]
-##[br]
-## [b]Example:[/b]
-##[codeblock]
-##     func _process(delta: float) -> void:
-##         for system in systems:
-##             var entities_to_process = ECS.buildQuery().all(system.required_components).execute()
-##             system.process_entities(entities_to_process, delta)
-##[/codeblock]
 @icon('res://addons/gecs/assets/world.svg')
 class_name World
 extends Node
