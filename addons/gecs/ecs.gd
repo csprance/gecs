@@ -26,14 +26,15 @@
 class_name _ECS
 extends Node
 
-## The Current active [World] Instance
-##
-## Holds a reference to the currently active world, allowing access to all [Entity]s and [System]s within it.
+## The Current active [World] Instance[br]
+## Holds a reference to the currently active [World], allowing access to the [member World.query] instance and any [Entity]s and [System]s within it.
 var world: World:
 	get:
 		return world
 	set(value):
 		world = value
 
+## This is called to process the current active [World] instance and the [System]s within it.
+## You would call this in _process or _physics_process to update the [_ECS] system.
 func process(delta: float) -> void:
 	world.process(delta)
