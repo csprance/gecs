@@ -1,13 +1,13 @@
-## VelocitySystem.
+## PhysicsSystem.(Simple Physics)
 ##
 ## Updates entities' positions based on their velocity.
 ## Processes entities with `Velocity` and `Transform` components.
 ## Calculates movement and updates the `Transform` component.
-class_name VelocitySystem
+class_name PhysicsSystem
 extends System
 
 func query() -> QueryBuilder:
-	return q.with_all([C_Velocity, C_Transform])
+	return q.with_all([C_Velocity, C_Transform, C_Physics]).with_none([C_CharacterBody2D])
 
 
 func process(entity: Entity, delta: float):

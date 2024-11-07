@@ -1,0 +1,63 @@
+[gd_scene load_steps=17 format=3 uid="uid://b7idne6el03sm"]
+
+[ext_resource type="Script" path="res://game/entities/gameplay/e_paddle.gd" id="1_0yl36"]
+[ext_resource type="Script" path="res://game/components/gameplay/c_transform.gd" id="2_8apye"]
+[ext_resource type="Script" path="res://game/components/physics/c_velocity.gd" id="3_cd1t1"]
+[ext_resource type="Script" path="res://game/components/physics/c_friction.gd" id="4_g7dnf"]
+[ext_resource type="Script" path="res://game/components/gameplay/c_player_movement.gd" id="5_5dw7q"]
+[ext_resource type="Script" path="res://game/components/gameplay/c_active_paddle.gd" id="6_0v5bj"]
+[ext_resource type="Script" path="res://game/components/physics/c_physics.gd" id="7_hcs2v"]
+[ext_resource type="Script" path="res://addons/easy_velocity_vector_display/vectordisplay2D.gd" id="8_02gyr"]
+
+[sub_resource type="Resource" id="Resource_mdlpm"]
+script = ExtResource("2_8apye")
+position = Vector2(0, 0)
+rotation = 0.0
+scale = Vector2(0, 0)
+
+[sub_resource type="Resource" id="Resource_7wast"]
+script = ExtResource("3_cd1t1")
+direction = Vector2(0, 0)
+speed = 0.0
+
+[sub_resource type="Resource" id="Resource_haier"]
+script = ExtResource("4_g7dnf")
+coefficient = 0.998
+
+[sub_resource type="Resource" id="Resource_8drjd"]
+script = ExtResource("5_5dw7q")
+axis = Vector2(0, 0)
+speed = 1000
+
+[sub_resource type="Resource" id="Resource_122mj"]
+script = ExtResource("6_0v5bj")
+
+[sub_resource type="Resource" id="Resource_58s41"]
+script = ExtResource("7_hcs2v")
+
+[sub_resource type="PlaceholderTexture2D" id="PlaceholderTexture2D_ntc0s"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_kl02k"]
+size = Vector2(100, 20)
+
+[node name="Paddle" type="Node2D"]
+script = ExtResource("1_0yl36")
+component_resources = Array[Resource("res://addons/gecs/component.gd")]([SubResource("Resource_mdlpm"), SubResource("Resource_7wast"), SubResource("Resource_haier"), SubResource("Resource_8drjd"), SubResource("Resource_122mj"), SubResource("Resource_58s41")])
+
+[node name="Sprite" type="Sprite2D" parent="."]
+scale = Vector2(100, 20)
+texture = SubResource("PlaceholderTexture2D_ntc0s")
+
+[node name="Area2D" type="Area2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D"]
+shape = SubResource("RectangleShape2D_kl02k")
+
+[node name="VectorDisplay2D" type="Node2D" parent="."]
+rotation = -3.14159
+script = ExtResource("8_02gyr")
+target = NodePath("..")
+target_property = "last_normal"
+vector_scale = 100.0
+
+[connection signal="body_entered" from="Area2D" to="." method="_on_area_2d_body_entered"]

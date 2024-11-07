@@ -1,7 +1,7 @@
 [gd_scene load_steps=4 format=3 uid="uid://bxdii1way2qms"]
 
-[ext_resource type="Script" path="res://game/entities/e_active_game.gd" id="1_tyxb8"]
-[ext_resource type="Script" path="res://game/components/c_game_state.gd" id="2_osl1i"]
+[ext_resource type="Script" path="res://game/entities/gameplay/e_active_game.gd" id="1_tyxb8"]
+[ext_resource type="Script" path="res://game/components/gameplay/c_game_state.gd" id="2_osl1i"]
 
 [sub_resource type="Resource" id="Resource_ektji"]
 script = ExtResource("2_osl1i")

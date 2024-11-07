@@ -1,17 +1,17 @@
 [gd_scene load_steps=8 format=3 uid="uid://d8g7nt62qq13"]
 
-[ext_resource type="Script" path="res://game/entities/e_brick.gd" id="1_1ulht"]
-[ext_resource type="Script" path="res://game/components/c_transform.gd" id="2_qnjc8"]
-[ext_resource type="Script" path="res://game/components/c_health.gd" id="3_5qe2q"]
+[ext_resource type="Script" path="res://game/entities/gameplay/e_brick.gd" id="1_8cyj6"]
+[ext_resource type="Script" path="res://game/components/gameplay/c_transform.gd" id="2_485iu"]
+[ext_resource type="Script" path="res://game/components/gameplay/c_health.gd" id="3_sj01c"]
 
 [sub_resource type="Resource" id="Resource_cnt7s"]
-script = ExtResource("2_qnjc8")
+script = ExtResource("2_485iu")
 position = Vector2(0, 0)
 rotation = 0.0
 scale = Vector2(0, 0)
 
 [sub_resource type="Resource" id="Resource_as1wj"]
-script = ExtResource("3_5qe2q")
+script = ExtResource("3_sj01c")
 total = 1
 current = 1
 
@@ -20,17 +20,14 @@ current = 1
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_onj2i"]
 size = Vector2(100, 20)
 
-[node name="Brick" type="Node2D"]
-script = ExtResource("1_1ulht")
+[node name="Brick" type="AnimatableBody2D"]
+sync_to_physics = false
+script = ExtResource("1_8cyj6")
 component_resources = Array[Resource("res://addons/gecs/component.gd")]([SubResource("Resource_cnt7s"), SubResource("Resource_as1wj")])
 
 [node name="Sprite" type="Sprite2D" parent="."]
 scale = Vector2(100, 20)
 texture = SubResource("PlaceholderTexture2D_dl1rh")
 
-[node name="Area2D" type="Area2D" parent="."]
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("RectangleShape2D_onj2i")
-
-[connection signal="body_entered" from="Area2D" to="." method="_on_area_2d_body_entered"]

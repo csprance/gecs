@@ -9,6 +9,11 @@ static func sync_transform(entity: Entity):
 		trs.rotation = entity.rotation
 		trs.scale = entity.scale
 
+static func sync_from_transform(entity: Entity):
+	var trs: C_Transform = entity.get_component(C_Transform)
+	entity.position = trs.position
+	entity.rotation = trs.rotation
+	entity.scale = trs.scale
 
 static func all(arr: Array) -> bool:
 	for element in arr:

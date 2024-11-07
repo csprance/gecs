@@ -19,6 +19,6 @@ func test_system_processes_entities_with_required_components():
 	entity_with_component.add_component(comp)
 	var entity_without_component = Entity.new()
 	var entities = [entity_with_component, entity_without_component]
-	system.process_entities(entities, 0.1)
+	system._handle(0.1)
 	assert_eq(system.processed_entities.size(), 2, "System should process entities fed into it.")
 	assert_eq(system.processed_entities, entities, "System should process the correct entity.")

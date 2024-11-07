@@ -1,0 +1,58 @@
+[gd_scene load_steps=18 format=3 uid="uid://c30ukuyygo3gm"]
+
+[ext_resource type="Script" path="res://game/entities/gameplay/e_ball.gd" id="1_cm2qx"]
+[ext_resource type="Script" path="res://game/components/gameplay/c_transform.gd" id="2_xpgly"]
+[ext_resource type="Script" path="res://game/components/physics/c_friction.gd" id="3_241ge"]
+[ext_resource type="Script" path="res://game/components/physics/c_velocity.gd" id="4_chnsr"]
+[ext_resource type="Script" path="res://game/components/gameplay/c_active_ball.gd" id="5_xr6mu"]
+[ext_resource type="Script" path="res://game/components/gameplay/c_captured.gd" id="6_mbwy8"]
+[ext_resource type="Script" path="res://game/components/physics/c_character_body_2d.gd" id="7_t10sc"]
+[ext_resource type="Script" path="res://game/components/physics/c_bouncable.gd" id="8_fp118"]
+[ext_resource type="Texture2D" uid="uid://bgq145vfplih8" path="res://icon.svg" id="9_wtx2e"]
+
+[sub_resource type="Resource" id="Resource_2pjmc"]
+script = ExtResource("2_xpgly")
+position = Vector2(0, 0)
+rotation = 0.0
+scale = Vector2(0, 0)
+
+[sub_resource type="Resource" id="Resource_l1qe3"]
+script = ExtResource("3_241ge")
+coefficient = 0.998
+
+[sub_resource type="Resource" id="Resource_iyurm"]
+script = ExtResource("4_chnsr")
+direction = Vector2(0, -1)
+speed = 300.0
+
+[sub_resource type="Resource" id="Resource_kyai6"]
+script = ExtResource("5_xr6mu")
+
+[sub_resource type="Resource" id="Resource_o30o3"]
+script = ExtResource("6_mbwy8")
+
+[sub_resource type="Resource" id="Resource_xsgxo"]
+script = ExtResource("7_t10sc")
+
+[sub_resource type="Resource" id="Resource_r5gfu"]
+script = ExtResource("8_fp118")
+should_bounce = true
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_uxnq0"]
+radius = 15.0
+
+[node name="Ball" type="CharacterBody2D"]
+collision_layer = 3
+collision_mask = 3
+motion_mode = 1
+platform_wall_layers = 7
+script = ExtResource("1_cm2qx")
+ball_speed = 450
+component_resources = Array[Resource("res://addons/gecs/component.gd")]([SubResource("Resource_2pjmc"), SubResource("Resource_l1qe3"), SubResource("Resource_iyurm"), SubResource("Resource_kyai6"), SubResource("Resource_o30o3"), SubResource("Resource_xsgxo"), SubResource("Resource_r5gfu")])
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+scale = Vector2(0.25, 0.25)
+texture = ExtResource("9_wtx2e")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_uxnq0")
