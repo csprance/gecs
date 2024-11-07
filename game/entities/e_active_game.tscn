@@ -11,4 +11,4 @@ blocks = 12
 
 [node name="ActiveGame" type="Node2D"]
 script = ExtResource("1_tyxb8")
-component_resources = Array[Resource("res://addons/qt_ecs/component.gd")]([SubResource("Resource_ektji")])
+component_resources = Array[Resource("res://addons/gecs/component.gd")]([SubResource("Resource_ektji")])

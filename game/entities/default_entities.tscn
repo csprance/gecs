@@ -42,19 +42,19 @@ scale = Vector2(12, 1)
 [node name="BottomBumper" parent="." instance=ExtResource("2_o3tsu")]
 position = Vector2(562, 635)
 scale = Vector2(12, 1)
-components_to_add = Array[Resource("res://addons/qt_ecs/component.gd")]([SubResource("Resource_tdnm1"), SubResource("Resource_cy141")])
+components_to_add = Array[Resource("res://addons/gecs/component.gd")]([SubResource("Resource_tdnm1"), SubResource("Resource_cy141")])
 
 [node name="RightBumper" parent="." instance=ExtResource("2_o3tsu")]
 position = Vector2(1155, 295)
 rotation = 1.57079
 scale = Vector2(6.5733, 1)
-components_to_add = Array[Resource("res://addons/qt_ecs/component.gd")]([SubResource("Resource_bjo7u")])
+components_to_add = Array[Resource("res://addons/gecs/component.gd")]([SubResource("Resource_bjo7u")])
 
 [node name="LeftBumper" parent="." instance=ExtResource("2_o3tsu")]
 position = Vector2(-4, 317)
 rotation = 1.57079
 scale = Vector2(6.5733, 1)
-components_to_add = Array[Resource("res://addons/qt_ecs/component.gd")]([SubResource("Resource_b14u7")])
+components_to_add = Array[Resource("res://addons/gecs/component.gd")]([SubResource("Resource_b14u7")])
 
 [node name="Paddle" parent="." instance=ExtResource("6_ckbhc")]
 position = Vector2(597, 618)
@@ -63,4 +63,4 @@ position = Vector2(597, 618)
 position = Vector2(611, 433)
 
 [node name="ScoreUi" parent="." instance=ExtResource("8_p38a2")]
-component_resources = Array[Resource("res://addons/qt_ecs/component.gd")]([SubResource("Resource_wts21"), SubResource("Resource_ind1x")])
+component_resources = Array[Resource("res://addons/gecs/component.gd")]([SubResource("Resource_wts21"), SubResource("Resource_ind1x")])

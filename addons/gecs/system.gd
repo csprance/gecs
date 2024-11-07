@@ -16,7 +16,7 @@
 ##         var velocity = entity.get_component(Velocity)
 ##         transform.position += velocity.direction * velocity.speed * delta
 ##[/codeblock]
-@icon('res://addons/qt_ecs/assets/system.svg')
+@icon('res://addons/gecs/assets/system.svg')
 class_name System
 extends Node
 

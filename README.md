@@ -10,7 +10,7 @@ This repo is made up of two different projects:
 ## GECS Documentation
 > Godot Entity Component System
 
-### [GECS Documentation](./addons/qt_ecs/README.md)
+### [GECS Documentation](./addons/gecs/README.md)
 
 ## Breakout Documentation
 > A Breakout clone made using GECS

@@ -16,7 +16,7 @@
 ##     func _on_component_added(entity: Entity, component_key: String) -> void:
 ##         print("Component added:", component_key)
 ##[/codeblock]	
-@icon('res://addons/qt_ecs/assets/entity.svg')
+@icon('res://addons/gecs/assets/entity.svg')
 class_name Entity
 extends Node2D
 

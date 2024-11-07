@@ -40,7 +40,7 @@ radius = 15.0
 [node name="Ball" type="CharacterBody2D"]
 script = ExtResource("1_sx58v")
 ball_speed = 450
-component_resources = Array[Resource("res://addons/qt_ecs/component.gd")]([SubResource("Resource_0uodx"), SubResource("Resource_l1qe3"), SubResource("Resource_iyurm"), SubResource("Resource_2pjmc"), SubResource("Resource_kyai6"), SubResource("Resource_o30o3")])
+component_resources = Array[Resource("res://addons/gecs/component.gd")]([SubResource("Resource_0uodx"), SubResource("Resource_l1qe3"), SubResource("Resource_iyurm"), SubResource("Resource_2pjmc"), SubResource("Resource_kyai6"), SubResource("Resource_o30o3")])
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 scale = Vector2(0.25, 0.25)

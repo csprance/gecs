@@ -3,7 +3,7 @@
 /android/
 repomix-output.txt
 
-# Ignore everything in addons except for qt_ecs
+# Ignore everything in addons except for gecs
 addons/*
 !addons/gecs/
 !addons/gecs/**

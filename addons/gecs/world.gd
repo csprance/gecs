@@ -11,7 +11,7 @@
 ##             var entities_to_process = ECS.buildQuery().all(system.required_components).execute()
 ##             system.process_entities(entities_to_process, delta)
 ##[/codeblock]
-@icon('res://addons/qt_ecs/assets/world.svg')
+@icon('res://addons/gecs/assets/world.svg')
 class_name World
 extends Node
 

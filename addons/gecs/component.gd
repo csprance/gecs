@@ -13,6 +13,6 @@
 ##
 ##  @export var velocity: Vector2 = Vector2.ZERO
 ##[/codeblock]    
-@icon('res://addons/qt_ecs/assets/component.svg')
+@icon('res://addons/gecs/assets/component.svg')
 class_name Component
 extends Resource
