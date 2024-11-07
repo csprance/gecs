@@ -28,6 +28,12 @@ var _exclude_components: Array = []
 func _init(world: World):
 	_world = world as World
 
+func clear():
+	_all_components = []
+	_any_components = []
+	_exclude_components = []
+	return self
+
 ## Finds entities with all of the provided components.[br]
 ## [param components] An [Array] of [Component] classes.[br]
 ## [param returns]: [QueryBuilder] instance for chaining.
