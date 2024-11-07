@@ -1,3 +1,5 @@
+<img src="./addons/gecs/assets/logo.png" height="256" align="center">
+
 # GECS
 > Godot Entity Component System - Monorepo
 
