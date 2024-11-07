@@ -1,9 +1,9 @@
-## Transform2DSystem.
+## TransformSystem.
 ##
 ## Synchronizes the `Transform` component with the entity's actual transform in the scene.
 ## Updates the entity's position, rotation, and scale based on the `Transform` component.
 ## Processes entities with the `Transform` component.
-class_name Transform2DSystem
+class_name TransformSystem
 extends System
 
 func query() -> QueryBuilder:
