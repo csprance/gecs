@@ -63,7 +63,7 @@ func process(delta: float) -> void:
 ##    [codeblock] world.add_entity(player_entity)[/codeblock]
 func add_entity(entity: Entity) -> void:
 	if not entity.is_inside_tree():
-		add_child(entity)
+		get_node(entity_nodes_root).add_child(entity)
 	# Update index
 	Loggie.msg('add_entity Adding Entity to World: ', entity).domain('ecs').debug()
 	entities.append(entity)
@@ -92,6 +92,8 @@ func add_entities(_entities: Array):
 ## [b]Example:[/b]
 ##      [codeblock]world.add_system(movement_system)[/codeblock]
 func add_system(system: System) -> void:
+	if not system.is_inside_tree():
+		get_node(system_nodes_root).add_child(system)
 	Loggie.msg('add_system Adding System: ', system).domain('ecs').debug()
 	systems.append(system)
 	system_added.emit(system)
