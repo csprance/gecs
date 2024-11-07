@@ -34,7 +34,8 @@ var components: Dictionary = {}
 func _ready() -> void:
 	Loggie.msg('_ready Entity Initializing Components: ', self).domain('ecs').debug()
 	# Initialize components from the exported array
-	add_components(component_resources)
+	for res in component_resources:
+		add_component(res.duplicate(true))
 	on_ready()
 
 ## Adds a single component to the entity.[br]
@@ -43,7 +44,7 @@ func _ready() -> void:
 ## [codeblock]entity.add_component(HealthComponent)[/codeblock]
 func add_component(component: Variant) -> void:
 	 # Make sure to duplicate the resource or we'll share the same component
-	components[component.get_script().resource_path] = component.duplicate()
+	components[component.get_script().resource_path] = component
 	component_added.emit(self, component.get_script().resource_path)
 	Loggie.msg('Added Component: ', component.resource_path).domain('ecs').debug()
 
