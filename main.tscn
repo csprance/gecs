@@ -9,9 +9,9 @@
 [ext_resource type="AudioStream" uid="uid://cjl0h25w035j2" path="res://addons/kenney impact sounds/impact_metal_light_004.ogg" id="6_pke5j"]
 [ext_resource type="AudioStream" uid="uid://dptuwjwr4wwjf" path="res://addons/kenney impact sounds/footstep_snow_003.ogg" id="7_r0v48"]
 [ext_resource type="AudioStream" uid="uid://dn5tq22uvabcv" path="res://addons/kenney impact sounds/footstep_snow_002.ogg" id="8_u3xve"]
-[ext_resource type="PackedScene" uid="uid://cx4flkuosdmao" path="res://game/entities/default_entities.tscn" id="9_8prar"]
+[ext_resource type="PackedScene" uid="uid://cx4flkuosdmao" path="res://game/worlds/test/default_entities.tscn" id="9_8prar"]
 [ext_resource type="AudioStream" uid="uid://bn0mmmtnem0t1" path="res://addons/kenney impact sounds/footstep_snow_004.ogg" id="9_xwrxi"]
-[ext_resource type="PackedScene" uid="uid://b1fu5exk46e0d" path="res://game/systems/default_systems.tscn" id="11_av7gv"]
+[ext_resource type="PackedScene" uid="uid://b1fu5exk46e0d" path="res://game/worlds/test/default_systems.tscn" id="11_av7gv"]
 
 [sub_resource type="AudioStreamRandomizer" id="AudioStreamRandomizer_yg1tm"]
 streams_count = 3

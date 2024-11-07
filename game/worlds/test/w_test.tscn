@@ -1,0 +1,17 @@
+[gd_scene load_steps=4 format=3 uid="uid://ufd6cbokkb25"]
+
+[ext_resource type="Script" path="res://addons/gecs/world.gd" id="1_iiq70"]
+[ext_resource type="PackedScene" uid="uid://b1fu5exk46e0d" path="res://game/worlds/test/default_systems.tscn" id="2_ftuvw"]
+[ext_resource type="PackedScene" uid="uid://cx4flkuosdmao" path="res://game/worlds/test/default_entities.tscn" id="3_nfqli"]
+
+[node name="World" type="Node"]
+script = ExtResource("1_iiq70")
+entity_nodes_root = NodePath("Entities")
+system_nodes_root = NodePath("Systems")
+
+[node name="Systems" parent="." instance=ExtResource("2_ftuvw")]
+
+[node name="Entities" parent="." instance=ExtResource("3_nfqli")]
+
+[editable path="Systems"]
+[editable path="Entities"]
