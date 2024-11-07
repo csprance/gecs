@@ -20,3 +20,13 @@ static func all(arr: Array) -> bool:
 		if not element:
 			return false
 	return true
+
+
+## An event entity is an entity with the event component and other components attached to it that describe an event[br]
+## Systems should clean up the event entity after processing the event
+## [param components] - An array of extra components to attach to the event entity
+static func create_ecs_event(extra_components = []):
+	var entity = Entity.new()
+	ECS.world.add_entity(entity)
+	entity.add_components([C_Event.new()] + extra_components)
+	
