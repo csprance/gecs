@@ -29,7 +29,11 @@ var systems: Array[System]  = []
 var component_entity_index: Dictionary = {}
 
 ## The [QueryBuilder] instance for this world used to build and execute queries
-@onready var query: QueryBuilder = QueryBuilder.new(self)
+var query: QueryBuilder:
+	get:
+		if query == null:
+			return QueryBuilder.new(self)
+		return query.clear()
 
 ## Called when the World node is ready.[br]
 ## Adds [Entity]s and [System]s from the scene tree to the [World].
@@ -48,6 +52,7 @@ func _ready() -> void:
 ## [param delta] The time elapsed since the last frame.
 func process(delta: float) -> void:
 	for system in systems:
+		query.clear()
 		system._handle(
 			delta
 		)
