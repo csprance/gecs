@@ -23,7 +23,6 @@ extends Node
 
 ## Determines whether the system should run even when there are no [Entity]s to process.
 var process_empty := false
-
 ## The [QueryBuilder] object exposed for conveinence to use in the system and to create the query.
 var q: QueryBuilder
 
