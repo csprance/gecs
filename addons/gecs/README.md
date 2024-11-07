@@ -39,11 +39,12 @@ This documentation will guide you through the setup and usage of the GECS addon,
 
 2. **Enable the Addon**: In the Godot editor, go to `Project > Project Settings > Plugins`, and enable the `GECS` plugin.
 
-3. **Autoload WorldManager**: The addon requires the `ECS` to be autoloaded. This should be handled automatically when you enable the plugin. If not, go to `Project > Project Settings > Autoload`, and add `WorldManager` pointing to `res://addons/gecs/ecs.gd`.
+3. **Autoload ECS**: The addon requires the `ECS` to be autoloaded. This should be handled automatically when you enable the plugin. If not, go to `Project > Project Settings > Autoload`, and add `ECS` pointing to `res://addons/gecs/ecs.gd`.
 
 ## Getting Started
 
 ### Basic Concepts
+> Each class has a full set of in-editor Godot Documentation check there as well!
 
 Before diving into the usage of the gecs addon, it's important to understand the basic concepts of an Entity Component System (ECS):
 
@@ -54,6 +55,8 @@ Before diving into the usage of the gecs addon, it's important to understand the
 - **System**: A system contains the logic that operates on entities with specific components.
 
 - **World**: The context in which entities and systems exist and interact.
+
+- **Query**: A way to query for specific entities in the world based on the components they contain.
 
 ## Creating Components
 
@@ -104,8 +107,8 @@ Systems in GECS are nodes that extend the `System` class. They contain the logic
 class_name BounceSystem
 extends System
 
-func _init():
-    required_components = [Transform, Velocity, Bounce]
+func query():
+    return q.with_all([Transform, Velocity, Bounce])
 
 func process(entity: Entity, delta: float):
     var bounce_component: Bounce = entity.get_component(Bounce)
@@ -115,15 +118,15 @@ func process(entity: Entity, delta: float):
         bounce_component.should_bounce = false
 ```
 
-2. **Define Required Components**: In the `_init()` function, specify the components that entities must have for the system to process them.
+2. **Override query function to define the Query**: In the `query()` function, specify the components that entities must have for the system to process them. This uses the QueryBuilder class to build this
 
 3. **Implement the Process Function**: The `process()` function contains the logic to be applied to each relevant entity.
 
-## The World and WorldManager
+## The World and ECS Singleton
 
 The `World` class manages all entities and systems in your game. It processes systems and handles entity queries.
 
-- **WorldManager**: A singleton autoloaded to provide access to the current `World`.
+- **ECS**: A singleton autoloaded to provide access to the current `World`.
 
 - **Setting Up the World**: In your main scene, add a node extending `World` and add your entities and systems as children.
 
@@ -134,7 +137,7 @@ extends Node
 @onready var world: World = $World
 
 func _ready() -> void:
-    WorldManager.set_current_world(world)
+    ECS.world = world
 ```
 
 ## Example Project
@@ -214,8 +217,8 @@ Includes `PlayerMovement`, `Velocity`, `Transform`, and `Friction` components.
 class_name BounceSystem
 extends System
 
-func _init():
-    required_components = [Transform, Velocity, Bounce]
+func query():
+    return q.with_all([Transform, Velocity, Bounce])
 
 func process(entity: Entity, delta: float):
     var bounce_component: Bounce = entity.get_component(Bounce)
@@ -232,8 +235,8 @@ func process(entity: Entity, delta: float):
 class_name VelocitySystem
 extends System
 
-func _init():
-    required_components = [Velocity, Transform]
+func query():
+    return q.with_all([Velocity, Transform])
 
 func process(entity: Entity, delta: float):
     var velocity: Velocity = entity.get_component(Velocity)
@@ -249,8 +252,8 @@ func process(entity: Entity, delta: float):
 class_name Transform2DSystem
 extends System
 
-func _init():
-    required_components = [Transform]
+func query():
+    return q.with_all([Transform])
 
 func process(entity: Entity, delta):
     var transform: Transform = entity.get_component(Transform)
@@ -263,88 +266,26 @@ func process(entity: Entity, delta):
 
 ### Querying Entities
 
-The `World` class provides an advanced query function to retrieve entities based on their components.
-
+The `QueryBuilder` class provides an advanced query function to retrieve entities based on their components.
+In classes extending System it is exposed in the `q` variable
 ```gdscript
-func query(all_components = [], any_components = [], exclude_components = []) -> Array
+q
+    .with_all([]) # Find entities that have all these components
+    .with_any([]) # Find entities that have any of these components
+    .with_none([]) # Exclude entities that have these components
 ```
 
-- **all_components**: Entities must have all of these components.
-- **any_components**: Entities must have at least one of these components.
-- **exclude_components**: Entities must not have any of these components.
+- **with_all**: Entities must have all of these components.
+- **with_any**: Entities must have at least one of these components.
+- **with_none**: Entities must not have any of these components.
 
 **Example**:
 
 ```gdscript
-var entities_with_velocity = world.query(all_components=[Velocity])
+var entities_with_velocity_and_not_captured = q.with_all([Velocity]).with_none([Captured])
 ```
-
-## API Reference
-
-### Component
-
-**Description**: A data container extending `Resource`.
-
-**Properties**:
-
-- `var key`: Unique identifier for the component, derived from its script path.
-
-### Entity
-
-**Description**: Represents an object in the game world. Extends `Node2D`.
-
-**Signals**:
-
-- `signal component_added(entity: Entity, component_key: String)`
-- `signal component_removed(entity: Entity, component_key: String)`
-
-**Methods**:
-
-- `func add_component(component: Component) -> void`
-- `func remove_component(component_key: String) -> void`
-- `func get_component(component: Variant) -> Component`
-- `func has_component(component_key: String) -> bool`
-
-**Lifecycle Methods**:
-
-- `func on_ready() -> void`
-- `func on_update(delta: float) -> void`
-- `func on_destroy() -> void`
-
-### System
-
-**Description**: Contains logic that operates on entities with specific components. Extends `Node`.
-
-**Properties**:
-
-- `var required_components: Array[Variant]`: Components an entity must have to be processed.
-
-**Methods**:
-
-- `func process(entity: Entity, delta: float) -> void`
-
-### World
-
-**Description**: Manages entities and systems. Extends `Node`.
-
-**Methods**:
-
-- `func add_entity(entity: Entity) -> void`
-- `func add_system(system: System) -> void`
-- `func remove_entity(entity) -> void`
-- `func query(all_components = [], any_components = [], exclude_components = []) -> Array`
-
-### WorldManager
-
-**Description**: Autoload singleton providing access to the current `World`.
-
-**Methods**:
-
-- `func set_current_world(world: World)`
-- `func get_current_world() -> World`
-
 ## Conclusion
 
 The GECS addon provides a flexible and efficient way to implement the ECS pattern in your Godot projects. By separating data (components) from logic (systems), you can create reusable and maintainable game code.
 
-Feel free to explore and expand upon the example project provided, and refer to this documentation as you integrate GECS into your own games.
+Feel free to explore and expand upon the example project provided, and refer to this documentation and especially the in editor documentation as you integrate GECS into your own games.
