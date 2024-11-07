@@ -12,21 +12,13 @@ func query() -> QueryBuilder:
 ## When the blocks are destroyed the game is won.
 func process(_e, _d) -> void:
 	var game_state = GameStateUtils.get_game_state()
-	var changed = Utils.all([
-		_score == game_state.score,
-		_lives == game_state.lives,
-		_blocks == game_state.blocks
-	])
-	if not changed:
-		return
 
-	_score = game_state.score
-	_lives = game_state.lives
-	_blocks = game_state.blocks
-
-	
+	if _blocks != game_state.blocks:
+		Loggie.debug('Blocks:', game_state.blocks)
+		_blocks = game_state.blocks
+		
 	if game_state.lives <= 0:
 		get_tree().quit()
 	
-	Loggie.debug('Blocks:', game_state.blocks)
+	
 
