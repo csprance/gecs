@@ -40,7 +40,8 @@ script = ExtResource("7_hcs2v")
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_kl02k"]
 size = Vector2(100, 20)
 
-[node name="Paddle" type="Node2D"]
+[node name="Paddle" type="AnimatableBody2D"]
+sync_to_physics = false
 script = ExtResource("1_0yl36")
 component_resources = Array[Resource("res://addons/gecs/component.gd")]([SubResource("Resource_mdlpm"), SubResource("Resource_7wast"), SubResource("Resource_haier"), SubResource("Resource_8drjd"), SubResource("Resource_122mj"), SubResource("Resource_58s41")])
 
@@ -48,9 +49,7 @@ component_resources = Array[Resource("res://addons/gecs/component.gd")]([SubReso
 scale = Vector2(100, 20)
 texture = SubResource("PlaceholderTexture2D_ntc0s")
 
-[node name="Area2D" type="Area2D" parent="."]
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("RectangleShape2D_kl02k")
 
 [node name="VectorDisplay2D" type="Node2D" parent="."]
@@ -59,5 +58,3 @@ script = ExtResource("8_02gyr")
 target = NodePath("..")
 target_property = "last_normal"
 vector_scale = 100.0
-
-[connection signal="body_entered" from="Area2D" to="." method="_on_area_2d_body_entered"]

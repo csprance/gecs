@@ -1,13 +1,15 @@
-[gd_scene load_steps=17 format=3 uid="uid://b1fu5exk46e0d"]
+[gd_scene load_steps=19 format=3 uid="uid://b1fu5exk46e0d"]
 
 [ext_resource type="Script" path="res://game/systems/physics/s_bounce.gd" id="1_hjti1"]
 [ext_resource type="Script" path="res://game/systems/gameplay/s_ball_release.gd" id="2_jk2er"]
 [ext_resource type="Script" path="res://game/systems/gameplay/s_ball_capture.gd" id="3_ruwyp"]
 [ext_resource type="Script" path="res://game/systems/gameplay/s_brick_spawner.gd" id="4_kgn36"]
+[ext_resource type="PackedScene" uid="uid://d8g7nt62qq13" path="res://game/entities/gameplay/e_brick.tscn" id="5_gwja5"]
 [ext_resource type="Script" path="res://game/systems/gameplay/s_damage.gd" id="5_nqraj"]
 [ext_resource type="Script" path="res://game/systems/gameplay/s_player_movement.gd" id="6_x068w"]
 [ext_resource type="Script" path="res://game/systems/physics/s_friction.gd" id="7_wffnw"]
 [ext_resource type="Script" path="res://game/systems/physics/s_physics.gd" id="8_e3okl"]
+[ext_resource type="Script" path="res://game/systems/physics/s_collision.gd" id="8_oul5f"]
 [ext_resource type="Script" path="res://game/systems/physics/s_character_body_2d.gd" id="9_r4f2w"]
 [ext_resource type="Script" path="res://game/systems/gameplay/s_transform.gd" id="10_2hs5k"]
 [ext_resource type="Script" path="res://game/systems/ui/s_ui_visiblity.gd" id="11_4eqv3"]
@@ -19,9 +21,6 @@
 
 [node name="Systems" type="Node"]
 
-[node name="BounceSystem" type="Node" parent="."]
-script = ExtResource("1_hjti1")
-
 [node name="BallReleaseSystem" type="Node" parent="."]
 script = ExtResource("2_jk2er")
 
@@ -30,6 +29,7 @@ script = ExtResource("3_ruwyp")
 
 [node name="BrickSpawnerSystem" type="Node" parent="."]
 script = ExtResource("4_kgn36")
+brick_scene = ExtResource("5_gwja5")
 
 [node name="DamageSystem" type="Node" parent="."]
 script = ExtResource("5_nqraj")
@@ -40,11 +40,17 @@ script = ExtResource("6_x068w")
 [node name="FrictionSystem" type="Node" parent="."]
 script = ExtResource("7_wffnw")
 
+[node name="BounceSystem" type="Node" parent="."]
+script = ExtResource("1_hjti1")
+
 [node name="PhysicsSystem" type="Node" parent="."]
 script = ExtResource("8_e3okl")
 
 [node name="CharacterBody2DSystem" type="Node" parent="."]
 script = ExtResource("9_r4f2w")
+
+[node name="CollisionSystem" type="Node" parent="."]
+script = ExtResource("8_oul5f")
 
 [node name="TransformSystem" type="Node" parent="."]
 script = ExtResource("10_2hs5k")

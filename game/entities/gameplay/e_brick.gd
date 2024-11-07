@@ -12,21 +12,3 @@ extends Entity
 # Assuming the Brick has a CollisionShape2D for collision
 func on_ready() -> void:
 	Utils.sync_transform(self)
-
-
-func _on_area_2d_body_entered(body: Node2D) -> void:
-	if body is Ball:
-		var ball = body as Ball
-
-		# Determine the impact point and direction for the bounce
-		var normal = global_transform.y.normalized()
-
-		# Create and add the bounce component to the Ball with the calculated normal
-		var bounced = C_Bounced.new()
-		bounced.normal = normal
-		ball.add_component(bounced)
-
-		# Do damage to the brick
-		var damage = C_Damage.new()
-		damage.amount = 1
-		add_component(damage)

@@ -11,8 +11,8 @@ class_name BrickSpawnerSystem
 @export var vertical_spacing: float = 10.0
 @export var start_position: Vector2 = Vector2(300, 300)
 
-# Preload the brick scene once for efficiency
-var brick_scene = preload('res://game/entities/e_brick.tscn')
+# what brick scene should we spawn?
+@export var brick_scene: PackedScene
 
 func process(_e, _d) -> void:
 	var world = ECS.world as World
@@ -24,10 +24,10 @@ func process(_e, _d) -> void:
 func spawn_bricks(world: World) -> void:
 	for i in range(GameStateUtils.get_game_state().blocks):
 		# Instantiate a new brick from the preloaded scene
-		var brick_entity = brick_scene.instantiate() as Brick
+		var brick_entity = brick_scene.duplicate(true).instantiate() as Brick
+		
 		# Add the brick entity to the ECS world
 		world.add_entity(brick_entity)
-		
 		# Calculate the current row and column based on the brick index
 		var row = float(i) / float(bricks_per_row)
 		var col = float(i % bricks_per_row)
@@ -43,3 +43,4 @@ func spawn_bricks(world: World) -> void:
 			transform.position = position
 		else:
 			push_error("Brick entity does not have a Transform component.")
+
