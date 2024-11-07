@@ -2,7 +2,7 @@ class_name DeathSystem
 extends System
 
 func query() -> QueryBuilder:
-	return q.with_all([Death]) # add required components
+	return q.with_any([Death]) # add required components
 
 
 func process(entity: Entity, _delta: float) -> void:
@@ -10,7 +10,7 @@ func process(entity: Entity, _delta: float) -> void:
 	SoundManager.play('fx', 'kill')
 	
 	# Add a reward to the game state
-	var game_state_ent = GameStateUtils.get_active_game_state_entity(q)
+	var game_state_ent = GameStateUtils.get_active_game_state_entity()
 	var reward = Reward.new()
 	reward.points = 10
 	game_state_ent.add_component(reward)
