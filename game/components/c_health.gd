@@ -3,7 +3,7 @@
 ## Stores both the total and current health values.
 ## Used by systems to determine if an entity should be destroyed when health reaches zero.
 ## Affected by the [Damage] Component.
-class_name Health
+class_name C_Health
 extends Component
 
 ## How much total health this has

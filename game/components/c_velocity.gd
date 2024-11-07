@@ -1,7 +1,7 @@
 ## Velocity Component.[br]
 ## Represents the velocity of an entity, including its direction and speed.
 ## Used by the [VelocitySystem] to move entities each frame.
-class_name Velocity
+class_name C_Velocity
 extends Component
 
 # The Direction the entity is travelling

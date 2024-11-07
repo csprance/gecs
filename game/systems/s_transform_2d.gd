@@ -7,11 +7,11 @@ class_name TransformSystem
 extends System
 
 func query() -> QueryBuilder:
-	return q.with_all([Transform])
+	return q.with_all([C_Transform])
 
 
 func process(entity: Entity, _delta):
-	var transform: Transform = entity.get_component(Transform)
+	var transform: C_Transform = entity.get_component(C_Transform)
 	# print('Set Entity: ', entity,' Set Position: ', transform.position)
 	entity.position = transform.position
 	entity.rotation = transform.rotation

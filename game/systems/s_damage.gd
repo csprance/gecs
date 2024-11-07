@@ -8,12 +8,12 @@ class_name DamageSystem
 extends System
 
 func query() -> QueryBuilder:
-	return q.with_all([Damage, Health]).with_none([Death])
+	return q.with_all([C_Damage, C_Health]).with_none([C_Death])
 
 
 func process(entity: Entity, _delta: float):
-	var damage = entity.get_component(Damage) as Damage
-	var health = entity.get_component(Health) as Health
+	var damage = entity.get_component(C_Damage) as C_Damage
+	var health = entity.get_component(C_Health) as C_Health
 
 	# Damage the Health Component by the damage amount
 	health.current -= damage.amount
@@ -22,12 +22,12 @@ func process(entity: Entity, _delta: float):
 		Loggie.debug('Damaged', damage, health)
 		SoundManager.play('fx', 'damage')
 		# give a reward to the player for damage
-		var reward = Reward.new()
+		var reward = C_Reward.new()
 		reward.points = 10
 		GameStateUtils.get_active_game_state_entity().add_component(reward)
 	
-	entity.remove_component(Damage)
+	entity.remove_component(C_Damage)
 	
 	if health.current <= 0:
-		entity.add_component(Death.new())
+		entity.add_component(C_Death.new())
 

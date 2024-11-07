@@ -6,7 +6,7 @@ var _lives = 0
 var _blocks = 0
 
 func query() -> QueryBuilder:
-	return q.with_all([GameState]) 
+	return q.with_all([C_GameState]) 
 
 ## When the lives are lost the game is over.
 ## When the blocks are destroyed the game is won.

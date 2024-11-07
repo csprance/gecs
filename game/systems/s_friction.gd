@@ -7,12 +7,12 @@ class_name FrictionSystem
 extends System
 
 func query() -> QueryBuilder:
-	return q.with_all([Transform, Velocity, Friction])
+	return q.with_all([C_Transform, C_Velocity, C_Friction])
 
 
 func process(entity: Entity, delta: float) -> void:
-	var velocity: Velocity = entity.get_component(Velocity)
-	var friction: Friction = entity.get_component(Friction)
+	var velocity = entity.get_component(C_Velocity) as C_Velocity
+	var friction = entity.get_component(C_Friction) as C_Friction
 
 	# Reduces velocity speed over time based on the friction coefficient
 	velocity.speed = max(0, velocity.speed - (friction.coefficient * delta))

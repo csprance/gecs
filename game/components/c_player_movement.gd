@@ -1,7 +1,7 @@
 ## PlayerMovement Component.[br]
 ## Used to control player input for moving the [Paddle].
 ## Stores the movement axis and speed.
-class_name PlayerMovement
+class_name C_PlayerMovement
 extends Component
 
 ## What direction we have been directed to move in

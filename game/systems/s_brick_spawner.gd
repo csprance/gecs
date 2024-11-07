@@ -38,7 +38,7 @@ func spawn_bricks(world: World) -> void:
 		var position = Vector2(x, y)
 		
 		# Retrieve and update the Transform component of the brick
-		var transform = brick_entity.get_component(Transform)
+		var transform = brick_entity.get_component(C_Transform) as C_Transform
 		if transform:
 			transform.position = position
 		else:

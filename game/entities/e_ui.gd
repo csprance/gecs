@@ -1,4 +1,4 @@
-class_name UiEntity
+class_name Ui
 extends Entity
 
 @onready var canvas_layer: CanvasLayer = $CanvasLayer

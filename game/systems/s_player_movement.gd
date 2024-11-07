@@ -7,13 +7,13 @@ class_name PlayerMovementSystem
 extends System
 
 func query() -> QueryBuilder:
-	return q.with_all([Velocity, PlayerMovement])
+	return q.with_all([C_Velocity, C_PlayerMovement])
 
 
 func process(entity: Entity, _delta: float) -> void:
 	# Get the velocity component from the entity
-	var velocity = entity.get_component(Velocity) as Velocity
-	var movement = entity.get_component(PlayerMovement) as PlayerMovement
+	var velocity = entity.get_component(C_Velocity) as C_Velocity
+	var movement = entity.get_component(C_PlayerMovement) as C_PlayerMovement
 
 	# Reset our movement
 	movement.axis = Vector2.ZERO

@@ -3,7 +3,7 @@ class_name PlayerDeathSystem
 extends System
 
 func query() -> QueryBuilder:
-	return q.with_all([PlayerDeath])
+	return q.with_all([C_PlayerDeath])
 
 
 func process(entity: Entity, _delta: float):
@@ -11,4 +11,4 @@ func process(entity: Entity, _delta: float):
 	game_state.lives -= 1
 	
 	Loggie.debug("PlayerDeathSystem", "Player died. Lives remaining: " + str(game_state.lives))
-	entity.remove_component(PlayerDeath)
+	entity.remove_component(C_PlayerDeath)

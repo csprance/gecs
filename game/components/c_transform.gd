@@ -1,7 +1,7 @@
 ## Transform Component.[br]
 ## Represents the position, rotation, and scale of an entity.
 ## Used by the `TransformSystem` to synchronize the entity's transform in the scene.
-class_name Transform
+class_name C_Transform
 extends Component
 
 @export var position := Vector2.ZERO

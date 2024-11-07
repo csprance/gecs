@@ -5,7 +5,7 @@ var ball: Ball
 
 
 func query() -> QueryBuilder:
-	return q.with_all([Captured, ActiveBall])
+	return q.with_all([C_Captured, C_ActiveBall])
 
 
 func process(entity: Entity, _d: float) -> void:
@@ -13,10 +13,10 @@ func process(entity: Entity, _d: float) -> void:
 		# We know it's a ball
 		ball = entity
 		# remove our captured component
-		ball.remove_component(Captured)
+		ball.remove_component(C_Captured)
 		# Create a new velocity that uses the balls default speed
-		var velocity = Velocity.new()
+		var velocity = C_Velocity.new()
 		velocity.speed = ball.ball_speed
 		velocity.direction = Vector2.UP
 		# Add those components in and send it on it's way
-		ball.add_components([velocity, Friction.new()])
+		ball.add_components([velocity, C_Friction.new()])

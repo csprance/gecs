@@ -1,6 +1,6 @@
 ## When this component is added to [GameState] it will be processed by the [GameStateSystem]
 ## and a point added
-class_name Reward
+class_name C_Reward
 extends Component
 
 ## How many points this reward is worth
