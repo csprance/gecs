@@ -41,6 +41,8 @@ script = ExtResource("7_hcs2v")
 size = Vector2(100, 20)
 
 [node name="Paddle" type="AnimatableBody2D"]
+collision_layer = 3
+collision_mask = 3
 sync_to_physics = false
 script = ExtResource("1_0yl36")
 component_resources = Array[Resource("res://addons/gecs/component.gd")]([SubResource("Resource_mdlpm"), SubResource("Resource_7wast"), SubResource("Resource_haier"), SubResource("Resource_8drjd"), SubResource("Resource_122mj"), SubResource("Resource_58s41")])

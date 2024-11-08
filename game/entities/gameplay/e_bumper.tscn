@@ -10,14 +10,10 @@ normal = Vector2(0, -1)
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_syv4f"]
 size = Vector2(166, 12.5)
 
-[node name="Bumper" type="Node2D"]
+[node name="Bumper" type="StaticBody2D"]
 script = ExtResource("1_ub51d")
 components_to_add = Array[Resource("res://addons/gecs/component.gd")]([SubResource("Resource_g34vu")])
 
-[node name="Area2D" type="Area2D" parent="."]
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("RectangleShape2D_syv4f")
 debug_color = Color(0.996078, 0, 0.219608, 1)
-
-[connection signal="body_entered" from="Area2D" to="." method="_on_area_2d_body_entered"]
