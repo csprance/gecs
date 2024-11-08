@@ -3,7 +3,7 @@ extends System
 
 var _score = 0
 var _lives = 0
-var _blocks = 0
+var _blocks = -1
 
 func query() -> QueryBuilder:
 	return q.with_all([C_GameState]) 
@@ -16,6 +16,9 @@ func process(_e, _d) -> void:
 	if _blocks != game_state.blocks:
 		Loggie.debug('Blocks:', game_state.blocks)
 		_blocks = game_state.blocks
+	if _blocks == 0:
+		Loggie.debug('Game Won')
+		get_tree().paused = true
 		
 	if game_state.lives <= 0:
 		get_tree().quit()
