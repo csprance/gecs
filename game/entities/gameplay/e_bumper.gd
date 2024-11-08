@@ -10,10 +10,3 @@ extends Entity
 
 func on_ready() -> void:
 	Utils.sync_transform(self)
-
-
-func _on_area_2d_body_entered(body: Node2D) -> void:
-	if body is Entity:
-		var entity  = body as Entity
-		for comp in components_to_add:
-			entity.add_component(comp)
