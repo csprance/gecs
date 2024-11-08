@@ -73,3 +73,4 @@ general/show_loggie_specs=2
 preprocessing/output_message_domain=true
 preprocessing/derive_and_display_class_names_from_scripts=true
 preprocessing/nameless_class_name_proxy=1
+general/terminal_mode=1
