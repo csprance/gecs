@@ -7,13 +7,12 @@ class_name PhysicsSystem
 extends System
 
 func query() -> QueryBuilder:
-	return q.with_all([C_Velocity, C_Transform, C_Physics]).with_none([C_CharacterBody2D])
+    return q.with_all([C_Velocity, C_Transform, C_Physics]).with_none([C_CharacterBody2D])
 
 
 func process(entity: Entity, delta: float):
-	var velocity: C_Velocity   = entity.get_component(C_Velocity)
-	var transform: C_Transform = entity.get_component(C_Transform)
+    var velocity: C_Velocity   = entity.get_component(C_Velocity)
+    var transform: C_Transform = entity.get_component(C_Transform)
 
-	# Calculate velocity as a vector and apply movement
-	var velocity_vector: Vector2 = velocity.direction.normalized() * velocity.speed
-	transform.position += velocity_vector * delta
+      # Normalize direction to prevent speed inconsistencies
+    transform.position += velocity.direction.normalized() * velocity.speed * delta

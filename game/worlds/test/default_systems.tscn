@@ -21,54 +21,77 @@
 
 [node name="Systems" type="Node"]
 
-[node name="BallReleaseSystem" type="Node" parent="."]
-script = ExtResource("2_jk2er")
+[node name="Gameplay" type="Node" parent="."]
 
-[node name="BallCaptureSystem" type="Node" parent="."]
-script = ExtResource("3_ruwyp")
+[node name="GameStateSystem" type="Node" parent="Gameplay"]
+script = ExtResource("15_jstll")
+group = "gameplay"
 
-[node name="BrickSpawnerSystem" type="Node" parent="."]
+[node name="BrickSpawnerSystem" type="Node" parent="Gameplay"]
 script = ExtResource("4_kgn36")
 brick_scene = ExtResource("5_gwja5")
+group = "gameplay"
 
-[node name="DamageSystem" type="Node" parent="."]
-script = ExtResource("5_nqraj")
+[node name="BallReleaseSystem" type="Node" parent="Gameplay"]
+script = ExtResource("2_jk2er")
+group = "gameplay"
 
-[node name="PlayerMovementSystem" type="Node" parent="."]
+[node name="BallCaptureSystem" type="Node" parent="Gameplay"]
+script = ExtResource("3_ruwyp")
+group = "gameplay"
+
+[node name="PlayerMovementSystem" type="Node" parent="Gameplay"]
 script = ExtResource("6_x068w")
+group = "gameplay"
 
-[node name="FrictionSystem" type="Node" parent="."]
-script = ExtResource("7_wffnw")
+[node name="DamageSystem" type="Node" parent="Gameplay"]
+script = ExtResource("5_nqraj")
+group = "gameplay"
 
-[node name="BounceSystem" type="Node" parent="."]
-script = ExtResource("1_hjti1")
-
-[node name="PhysicsSystem" type="Node" parent="."]
-script = ExtResource("8_e3okl")
-
-[node name="CharacterBody2DSystem" type="Node" parent="."]
-script = ExtResource("9_r4f2w")
-
-[node name="CollisionSystem" type="Node" parent="."]
-script = ExtResource("8_oul5f")
-
-[node name="TransformSystem" type="Node" parent="."]
-script = ExtResource("10_2hs5k")
-
-[node name="UiVisibilitySystem" type="Node" parent="."]
-script = ExtResource("11_4eqv3")
-
-[node name="ScoreUiSystem" type="Node" parent="."]
-script = ExtResource("12_knfts")
-
-[node name="RewardsSystem" type="Node" parent="."]
+[node name="RewardsSystem" type="Node" parent="Gameplay"]
 script = ExtResource("13_oeskp")
+group = "gameplay"
 
-[node name="PlayerDeathSystem" type="Node" parent="."]
+[node name="PlayerDeathSystem" type="Node" parent="Gameplay"]
 script = ExtResource("14_fyfwl")
+group = "gameplay"
 
-[node name="GameStateSystem" type="Node" parent="."]
-script = ExtResource("15_jstll")
-
-[node name="DeathSystem" type="Node" parent="."]
+[node name="DeathSystem" type="Node" parent="Gameplay"]
 script = ExtResource("16_328kt")
+group = "gameplay"
+
+[node name="Physics" type="Node" parent="."]
+
+[node name="FrictionSystem" type="Node" parent="Physics"]
+script = ExtResource("7_wffnw")
+group = "physics"
+
+[node name="CollisionSystem" type="Node" parent="Physics"]
+script = ExtResource("8_oul5f")
+group = "physics"
+
+[node name="BounceSystem" type="Node" parent="Physics"]
+script = ExtResource("1_hjti1")
+group = "physics"
+
+[node name="PhysicsSystem" type="Node" parent="Physics"]
+script = ExtResource("8_e3okl")
+group = "physics"
+
+[node name="CharacterBody2DSystem" type="Node" parent="Physics"]
+script = ExtResource("9_r4f2w")
+group = "physics"
+
+[node name="TransformSystem" type="Node" parent="Physics"]
+script = ExtResource("10_2hs5k")
+group = "physics"
+
+[node name="UI" type="Node" parent="."]
+
+[node name="UiVisibilitySystem" type="Node" parent="UI"]
+script = ExtResource("11_4eqv3")
+group = "ui"
+
+[node name="ScoreUiSystem" type="Node" parent="UI"]
+script = ExtResource("12_knfts")
+group = "ui"

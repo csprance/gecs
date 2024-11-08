@@ -9,7 +9,7 @@ func query() -> QueryBuilder:
 func process(entity, _delta: float):
     var collision = entity.get_component(C_Collision).collision
     var collider = collision.get_collider()
-
+    Loggie.debug("Collision Detected: ", collision, entity, collider)
     # Default collision just adds a bounce and other collisons can modify that
     var c_bounced = C_Bounced.new()
     c_bounced.normal = collision.get_normal()
@@ -47,7 +47,7 @@ func paddle_collision(entity, collider, collision):
     var delta = remap(entity_trs.position.x - paddle_trs.position.x, -half_width, half_width, -max_rot_rad, max_rot_rad)
 
     # Rotate the normal vector by the calculated angle
-    collider.last_normal = collision.get_normal().rotated(delta)
+    collider.last_normal = collision.get_normal().rotated(delta).normalized()
     c_bounced.normal = collider.last_normal
     entity.add_component(c_bounced)
 

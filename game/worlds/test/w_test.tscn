@@ -12,6 +12,3 @@ system_nodes_root = NodePath("Systems")
 [node name="Systems" parent="." instance=ExtResource("2_ftuvw")]
 
 [node name="Entities" parent="." instance=ExtResource("3_nfqli")]
-
-[editable path="Systems"]
-[editable path="Entities"]

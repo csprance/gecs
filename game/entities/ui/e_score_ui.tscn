@@ -9,6 +9,7 @@
 script = ExtResource("2_v8v7v")
 score = 0
 lives = 3
+blocks = 12
 
 [sub_resource type="Resource" id="Resource_wts21"]
 script = ExtResource("3_gj56c")

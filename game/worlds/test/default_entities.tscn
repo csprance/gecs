@@ -1,4 +1,4 @@
-[gd_scene load_steps=17 format=3 uid="uid://cx4flkuosdmao"]
+[gd_scene load_steps=19 format=3 uid="uid://cx4flkuosdmao"]
 
 [ext_resource type="PackedScene" uid="uid://bxdii1way2qms" path="res://game/entities/gameplay/e_active_game.tscn" id="1_4nval"]
 [ext_resource type="PackedScene" uid="uid://dgiygx4ouqqsm" path="res://game/entities/gameplay/e_bumper.tscn" id="2_o3tsu"]
@@ -8,7 +8,9 @@
 [ext_resource type="PackedScene" uid="uid://b7idne6el03sm" path="res://game/entities/gameplay/e_paddle.tscn" id="6_ckbhc"]
 [ext_resource type="PackedScene" uid="uid://c30ukuyygo3gm" path="res://game/entities/gameplay/e_ball.tscn" id="7_cbl8x"]
 [ext_resource type="PackedScene" uid="uid://bgg10mnxgskoj" path="res://game/entities/ui/e_score_ui.tscn" id="8_p38a2"]
+[ext_resource type="PackedScene" uid="uid://cc5d7nbyb6uia" path="res://game/entities/ui/e_lose_ui.tscn" id="8_x4e38"]
 [ext_resource type="Script" path="res://game/components/ui/c_ui_visibility.gd" id="9_j4hxg"]
+[ext_resource type="PackedScene" uid="uid://2mtpjpko3lnn" path="res://game/entities/ui/e_win_ui.tscn" id="9_lyrei"]
 [ext_resource type="Script" path="res://game/components/ui/c_score_ui.gd" id="10_f1erl"]
 
 [sub_resource type="Resource" id="Resource_tdnm1"]
@@ -40,7 +42,7 @@ position = Vector2(530, -4)
 scale = Vector2(12, 1)
 
 [node name="BottomBumper" parent="." instance=ExtResource("2_o3tsu")]
-position = Vector2(562, 635)
+position = Vector2(562, 654)
 scale = Vector2(12, 1)
 components_to_add = Array[Resource("res://addons/gecs/component.gd")]([SubResource("Resource_tdnm1"), SubResource("Resource_cy141")])
 
@@ -61,6 +63,10 @@ position = Vector2(597, 618)
 
 [node name="Ball" parent="." instance=ExtResource("7_cbl8x")]
 position = Vector2(611, 433)
+
+[node name="ELoseUi" parent="." instance=ExtResource("8_x4e38")]
+
+[node name="EWinUi" parent="." instance=ExtResource("9_lyrei")]
 
 [node name="ScoreUi" parent="." instance=ExtResource("8_p38a2")]
 component_resources = Array[Resource("res://addons/gecs/component.gd")]([SubResource("Resource_wts21"), SubResource("Resource_ind1x")])
