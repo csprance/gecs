@@ -54,7 +54,6 @@ func _ready() -> void:
 ## [param delta] The time elapsed since the last frame.
 func process(delta: float) -> void:
 	for system in systems:
-		query.clear()
 		system._handle(
 			delta
 		)
