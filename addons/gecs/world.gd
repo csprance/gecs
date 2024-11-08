@@ -28,12 +28,14 @@ var systems: Array[System]  = []
 ## [Component] to [Entity] Index - This stores entities by component for efficient querying.
 var component_entity_index: Dictionary = {}
 
+## The private query builder. Otherwise it creates new each time and doesn't clean itself
+var _q: QueryBuilder
 ## The [QueryBuilder] instance for this world used to build and execute queries
 var query: QueryBuilder:
 	get:
-		if query == null:
-			return QueryBuilder.new(self)
-		return query.clear()
+		if _q == null:
+			_q = QueryBuilder.new(self)
+		return _q.clear()
 
 ## Called when the World node is ready.[br]
 ## Adds [Entity]s and [System]s from the scene tree to the [World].
