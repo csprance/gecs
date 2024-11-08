@@ -35,6 +35,7 @@ var world: World:
 		world = value
 
 ## This is called to process the current active [World] instance and the [System]s within it.
-## You would call this in _process or _physics_process to update the [_ECS] system.
-func process(delta: float) -> void:
-	world.process(delta)
+## You would call this in _process or _physics_process to update the [_ECS] system.[br]
+## If you provide a group name it will run just that group otherwise it runs all groups
+func process(delta: float, group: String = '') -> void:
+	world.process(delta, group)
