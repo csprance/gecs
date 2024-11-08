@@ -11,6 +11,8 @@ func process(entity: Entity, _delta: float) -> void:
 	# remove the velocity component
 	entity.remove_component(C_Velocity)
 	entity.remove_component(C_Friction)
+	entity.remove_component(C_Bounced)
+	
 
 	# Put the ball above the paddles transform
 	var ball_trs = entity.get_component(C_Transform) as C_Transform
