@@ -13,13 +13,16 @@ func query() -> QueryBuilder:
 func process(_e, _d) -> void:
 	var game_state = GameStateUtils.get_game_state()
 
+	# Score Changed
 	if _blocks != game_state.blocks:
 		Loggie.debug('Blocks:', game_state.blocks)
 		_blocks = game_state.blocks
+	
+	# Win State
 	if _blocks == 0:
 		Loggie.debug('Game Won')
 		get_tree().paused = true
-		
+	# Lose State		
 	if game_state.lives <= 0:
 		get_tree().quit()
 	
