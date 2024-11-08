@@ -45,10 +45,8 @@ func process(entity: Entity, delta: float) -> void:
 ## handles the processing of all [Entity]s that match the system's query [Component]s.[br]
 ## [param delta] The time elapsed since the last frame.
 func _handle(delta: float):
-	# Build our single QueryBuilder object
-	if q == null:
-		q = ECS.world.query
-	q.clear()
+	# Set our QueryBuilder RefCounted Object
+	q = ECS.world.query
 	var did_run := false
 	# Query for the entities that match the system's query
 	var entities = query().execute() as Array[Entity]

@@ -13,7 +13,7 @@
 ## have at least one of the `Health` component,
 ## and do not have the `Inactive` component.
 class_name QueryBuilder
-extends Object
+extends RefCounted
 
 # The world instance to query against.
 var _world: World

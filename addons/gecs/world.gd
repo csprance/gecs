@@ -30,14 +30,10 @@ var systems_by_group: Dictionary = {}
 ## [Component] to [Entity] Index - This stores entities by component for efficient querying.
 var component_entity_index: Dictionary = {}
 
-## The private query builder. Otherwise it creates new each time and doesn't clean itself
-var _q: QueryBuilder
 ## The [QueryBuilder] instance for this world used to build and execute queries
 var query: QueryBuilder:
 	get:
-		if _q == null:
-			_q = QueryBuilder.new(self)
-		return _q.clear()
+		return QueryBuilder.new(self)
 
 ## Called when the World node is ready.[br]
 ## Adds [Entity]s and [System]s from the scene tree to the [World].
@@ -179,7 +175,7 @@ func _query(all_components = [], any_components = [], exclude_components = []) -
 		for i in range(1, _all_components.size()):
 			var component_key: String   = _all_components[i]
 			var entities_with_component = component_entity_index.get(component_key, [])
-			result = _intersect_entity_arrays(result, entities_with_component)
+			result = ArrayExtensions.intersect(result, entities_with_component)
 		initialized = true
 
 	# Include entities that have any components in any_components
@@ -187,9 +183,9 @@ func _query(all_components = [], any_components = [], exclude_components = []) -
 		var any_result: Array = []
 		for component_key in _any_components:
 			var entities_with_component = component_entity_index.get(component_key, [])
-			any_result = _union_entity_arrays(any_result, entities_with_component)
+			any_result = ArrayExtensions.union(any_result, entities_with_component)
 		if initialized:
-			result = _intersect_entity_arrays(result, any_result)
+			result = ArrayExtensions.intersect(result, any_result)
 		else:
 			result = any_result.duplicate()
 			initialized = true
@@ -201,45 +197,9 @@ func _query(all_components = [], any_components = [], exclude_components = []) -
 	# Exclude entities that have components in exclude_components
 	for component_key in _exclude_components:
 		var entities_with_component = component_entity_index.get(component_key, [])
-		result = _difference_entity_arrays(result, entities_with_component)
+		result = ArrayExtensions.difference(result, entities_with_component)
 
 	#Loggie.debug('Query Result: ', result)
-	return result
-
-
-# Helper functions for array operations
-
-## Intersects two arrays of entities.[br]
-## @param array1 The first array.[br]
-## @param array2 The second array.[br]
-## @return Array The intersection of the two arrays.
-func _intersect_entity_arrays(array1, array2) -> Array:
-	var result: Array = []
-	for entity in array1:
-		if array2.has(entity):
-			result.append(entity)
-	return result
-
-## Unions two arrays of entities.[br]
-## @param array1 The first array.[br]
-## @param array2 The second array.[br]
-## @return Array The union of the two arrays.
-func _union_entity_arrays(array1, array2) -> Array:
-	var result = array1.duplicate()
-	for entity in array2:
-		if not result.has(entity):
-			result.append(entity)
-	return result
-
-## Differences two arrays of entities.[br]
-## @param array1 The first array.[br]
-## @param array2 The second array.[br]
-## @return Array The difference of the two arrays (entities in array1 not in array2).
-func _difference_entity_arrays(array1, array2) -> Array:
-	var result: Array = []
-	for entity in array1:
-		if not array2.has(entity):
-			result.append(entity)
 	return result
 
 
