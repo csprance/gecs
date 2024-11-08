@@ -1,9 +1,14 @@
-[gd_scene load_steps=2 format=3 uid="uid://bsogbfdlxgp6b"]
+[gd_scene load_steps=4 format=3 uid="uid://bsogbfdlxgp6b"]
 
 [ext_resource type="Script" path="res://game/entities/ui/e_ui.gd" id="1_o7jol"]
+[ext_resource type="Script" path="res://game/components/ui/c_lose_ui.gd" id="2_gin3d"]
+
+[sub_resource type="Resource" id="Resource_1bqfn"]
+script = ExtResource("2_gin3d")
 
 [node name="ELoseUi" type="Node2D"]
 script = ExtResource("1_o7jol")
+component_resources = Array[Resource("res://addons/gecs/component.gd")]([SubResource("Resource_1bqfn")])
 
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
 
