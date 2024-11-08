@@ -48,6 +48,7 @@ func _handle(delta: float):
 	# Build our single QueryBuilder object
 	if q == null:
 		q = ECS.world.query
+	q.clear()
 	var did_run := false
 	# Query for the entities that match the system's query
 	var entities = query().execute() as Array[Entity]
