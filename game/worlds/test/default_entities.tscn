@@ -8,9 +8,9 @@
 [ext_resource type="PackedScene" uid="uid://b7idne6el03sm" path="res://game/entities/gameplay/e_paddle.tscn" id="6_ckbhc"]
 [ext_resource type="PackedScene" uid="uid://c30ukuyygo3gm" path="res://game/entities/gameplay/e_ball.tscn" id="7_cbl8x"]
 [ext_resource type="PackedScene" uid="uid://bgg10mnxgskoj" path="res://game/entities/ui/e_score_ui.tscn" id="8_p38a2"]
-[ext_resource type="PackedScene" uid="uid://cc5d7nbyb6uia" path="res://game/entities/ui/e_lose_ui.tscn" id="8_x4e38"]
+[ext_resource type="PackedScene" uid="uid://bsogbfdlxgp6b" path="res://game/entities/ui/e_lose_ui.tscn" id="8_x4e38"]
 [ext_resource type="Script" path="res://game/components/ui/c_ui_visibility.gd" id="9_j4hxg"]
-[ext_resource type="PackedScene" uid="uid://2mtpjpko3lnn" path="res://game/entities/ui/e_win_ui.tscn" id="9_lyrei"]
+[ext_resource type="PackedScene" uid="uid://dygj3jnbealkt" path="res://game/entities/ui/e_win_ui.tscn" id="9_lyrei"]
 [ext_resource type="Script" path="res://game/components/ui/c_score_ui.gd" id="10_f1erl"]
 
 [sub_resource type="Resource" id="Resource_tdnm1"]
