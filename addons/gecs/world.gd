@@ -25,6 +25,8 @@ signal system_removed(system: System)
 var entities: Array[Entity] = []
 ## All the [System]s in the world.
 var systems: Array[System]  = []
+## All the systems by group
+var systems_by_group: Dictionary = {}
 ## [Component] to [Entity] Index - This stores entities by component for efficient querying.
 var component_entity_index: Dictionary = {}
 
@@ -50,12 +52,17 @@ func _ready() -> void:
 
 ## Called every frame by the [method _ECS.process] to process [System]s.[br]
 ## [param delta] The time elapsed since the last frame.
-func process(delta: float) -> void:
-	for system in systems:
-		query.clear()
-		system._handle(
-			delta
-		)
+## [param group] The string for the group we should run. If empty runs all
+func process(delta: float, group: String='' ) -> void:
+	if group == '':
+		for system in systems:
+			query.clear()
+			system._handle(delta)
+	else:
+		if systems_by_group.has(group):
+			for system in systems_by_group[group]:
+				query.clear()
+				system._handle(delta)
 
 ## Adds a single [Entity] to the world.[br]
 ## [param entity] The [Entity] to add.[br]
@@ -96,6 +103,9 @@ func add_system(system: System) -> void:
 		get_node(system_nodes_root).add_child(system)
 	Loggie.msg('add_system Adding System: ', system).domain('ecs').debug()
 	systems.append(system)
+	if not systems_by_group.has(system.group):
+		systems_by_group[system.group] = []
+	systems_by_group[system.group].push_back(system)
 	system_added.emit(system)
 
 ## Adds multiple systems to the world.
@@ -133,6 +143,7 @@ func remove_entity(entity) -> void:
 func remove_system(system) -> void:
 	Loggie.msg('remove_system Removing System: ', system).domain('ecs').debug()
 	systems.erase(system)
+	systems_by_group[system.group].erase(system)
 	system_removed.emit(system)
 	# Update index
 	system.queue_free()
