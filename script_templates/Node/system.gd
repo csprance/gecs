@@ -5,8 +5,9 @@ extends System
 # themselves or add other systems etc. System order matters.
 
 func query() -> QueryBuilder:
-	return q.with_all([]) # add required components
 	# process_empty = false # Do we want this to run every frame even with no entities?
+	return q.with_all([]) # return the query here
+	
 
 
 func process(entity: Entity, delta: float) -> void:
