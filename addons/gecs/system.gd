@@ -50,7 +50,6 @@ func _handle(delta: float):
 	var did_run := false
 	# Query for the entities that match the system's query
 	var entities = query().execute() as Array[Entity]
-
 	# If we have no entities and we want to process even when empty do it once and return
 	if entities.size() == 0 and process_empty:
 		process(null, delta)

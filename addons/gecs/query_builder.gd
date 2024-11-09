@@ -58,4 +58,6 @@ func with_none(components: Array = []) -> QueryBuilder:
 ## Executes the constructed query and retrieves matching entities.[br]
 ## [param returns] -  An [Array] of [Entity] that match the query criteria.
 func execute() -> Array:
-	return _world._query(_all_components, _any_components, _exclude_components) as Array[Entity]
+	var result = _world._query(_all_components, _any_components, _exclude_components) as Array[Entity]
+	clear()
+	return result
