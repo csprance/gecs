@@ -13,6 +13,8 @@ func query() -> QueryBuilder:
 func process(entity: Entity, delta: float):
     var velocity: C_Velocity   = entity.get_component(C_Velocity)
     var transform: C_Transform = entity.get_component(C_Transform)
-
-      # Normalize direction to prevent speed inconsistencies
+    var rot_vel = entity.get_component(C_Rotvel) as C_Rotvel
+    # Normalize direction to prevent speed inconsistencies
     transform.position += velocity.direction.normalized() * velocity.speed * delta
+    if rot_vel:
+        transform.rotation += rot_vel.angular_velocity * delta

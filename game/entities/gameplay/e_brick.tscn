@@ -1,8 +1,10 @@
-[gd_scene load_steps=8 format=3 uid="uid://d8g7nt62qq13"]
+[gd_scene load_steps=10 format=3 uid="uid://d8g7nt62qq13"]
 
 [ext_resource type="Script" path="res://game/entities/gameplay/e_brick.gd" id="1_8cyj6"]
 [ext_resource type="Script" path="res://game/components/gameplay/c_transform.gd" id="2_phvma"]
 [ext_resource type="Script" path="res://game/components/gameplay/c_health.gd" id="3_sj01c"]
+[ext_resource type="Texture2D" uid="uid://mtu3le0qvdp1" path="res://assets/brick.png" id="4_4tnpf"]
+[ext_resource type="Shader" path="res://game/shaders/brick.gdshader" id="4_bebjc"]
 
 [sub_resource type="Resource" id="Resource_cnt7s"]
 script = ExtResource("2_phvma")
@@ -12,10 +14,12 @@ scale = Vector2(0, 0)
 
 [sub_resource type="Resource" id="Resource_as1wj"]
 script = ExtResource("3_sj01c")
-total = 1
-current = 1
+total = 3
+current = 3
 
-[sub_resource type="PlaceholderTexture2D" id="PlaceholderTexture2D_dl1rh"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_85bdq"]
+shader = ExtResource("4_bebjc")
+shader_parameter/brick_color = null
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_onj2i"]
 size = Vector2(100, 20)
@@ -23,11 +27,15 @@ size = Vector2(100, 20)
 [node name="Brick" type="AnimatableBody2D"]
 sync_to_physics = false
 script = ExtResource("1_8cyj6")
+color = Color(0.964706, 0.690196, 0.858824, 1)
 component_resources = Array[Resource("res://addons/gecs/component.gd")]([SubResource("Resource_cnt7s"), SubResource("Resource_as1wj")])
 
 [node name="Sprite" type="Sprite2D" parent="."]
-scale = Vector2(100, 20)
-texture = SubResource("PlaceholderTexture2D_dl1rh")
+unique_name_in_owner = true
+texture_filter = 1
+material = SubResource("ShaderMaterial_85bdq")
+texture = ExtResource("4_4tnpf")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+visible = false
 shape = SubResource("RectangleShape2D_onj2i")

@@ -4,12 +4,14 @@ class_name CharacterBody2DSystem
 extends System
 
 func query() -> QueryBuilder:
-	return q.with_all([C_Velocity, C_CharacterBody2D]).with_none([C_Captured])
+	return q.with_all([C_Velocity, C_CharacterBody2D, C_Transform]).with_none([C_Captured])
 
 
-func process(entity, _delta: float):
+func process(entity, delta: float):
 	if entity is CharacterBody2D:
 		var velocity = entity.get_component(C_Velocity) as C_Velocity
+		var rot_vel = entity.get_component(C_Rotvel) as C_Rotvel
+		var transform = entity.get_component(C_Transform) as C_Transform
 		# Set the velocity from the velocity component
 		entity.velocity = velocity.direction.normalized() * velocity.speed
 		# Move the entity
@@ -22,4 +24,7 @@ func process(entity, _delta: float):
 		velocity = entity.velocity
 		# Sync the transform back to the entity
 		Utils.sync_transform(entity)
+		# Update rotation based on angular velocity
+		if rot_vel:
+			transform.rotation += rot_vel.angular_velocity * delta
 

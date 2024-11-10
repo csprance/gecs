@@ -1,4 +1,4 @@
-[gd_scene load_steps=19 format=3 uid="uid://b1fu5exk46e0d"]
+[gd_scene load_steps=20 format=3 uid="uid://b1fu5exk46e0d"]
 
 [ext_resource type="Script" path="res://game/systems/physics/s_bounce.gd" id="1_hjti1"]
 [ext_resource type="Script" path="res://game/systems/gameplay/s_ball_release.gd" id="2_jk2er"]
@@ -7,8 +7,10 @@
 [ext_resource type="PackedScene" uid="uid://d8g7nt62qq13" path="res://game/entities/gameplay/e_brick.tscn" id="5_gwja5"]
 [ext_resource type="Script" path="res://game/systems/gameplay/s_damage.gd" id="5_nqraj"]
 [ext_resource type="Script" path="res://game/systems/gameplay/s_player_movement.gd" id="6_x068w"]
+[ext_resource type="Script" path="res://game/systems/gameplay/s_bullet_shoot.gd" id="7_qvkxl"]
 [ext_resource type="Script" path="res://game/systems/physics/s_friction.gd" id="7_wffnw"]
 [ext_resource type="Script" path="res://game/systems/physics/s_physics.gd" id="8_e3okl"]
+[ext_resource type="PackedScene" uid="uid://c5yaqs13o2roo" path="res://game/entities/gameplay/e_bullet.tscn" id="8_g076e"]
 [ext_resource type="Script" path="res://game/systems/physics/s_collision.gd" id="8_oul5f"]
 [ext_resource type="Script" path="res://game/systems/physics/s_character_body_2d.gd" id="9_r4f2w"]
 [ext_resource type="Script" path="res://game/systems/gameplay/s_transform.gd" id="10_2hs5k"]
@@ -16,16 +18,11 @@
 [ext_resource type="Script" path="res://game/systems/ui/s_score_ui.gd" id="12_knfts"]
 [ext_resource type="Script" path="res://game/systems/gameplay/s_reward.gd" id="13_oeskp"]
 [ext_resource type="Script" path="res://game/systems/gameplay/s_player_death.gd" id="14_fyfwl"]
-[ext_resource type="Script" path="res://game/systems/gameplay/s_game_state.gd" id="15_jstll"]
 [ext_resource type="Script" path="res://game/systems/gameplay/s_death.gd" id="16_328kt"]
 
 [node name="Systems" type="Node"]
 
 [node name="Gameplay" type="Node" parent="."]
-
-[node name="GameStateSystem" type="Node" parent="Gameplay"]
-script = ExtResource("15_jstll")
-group = "gameplay"
 
 [node name="BrickSpawnerSystem" type="Node" parent="Gameplay"]
 script = ExtResource("4_kgn36")
@@ -42,6 +39,11 @@ group = "gameplay"
 
 [node name="PlayerMovementSystem" type="Node" parent="Gameplay"]
 script = ExtResource("6_x068w")
+group = "gameplay"
+
+[node name="BulletShootSystem" type="Node" parent="Gameplay"]
+script = ExtResource("7_qvkxl")
+bullet_scene = ExtResource("8_g076e")
 group = "gameplay"
 
 [node name="DamageSystem" type="Node" parent="Gameplay"]

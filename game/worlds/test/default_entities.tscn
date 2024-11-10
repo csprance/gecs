@@ -1,6 +1,5 @@
-[gd_scene load_steps=19 format=3 uid="uid://cx4flkuosdmao"]
+[gd_scene load_steps=18 format=3 uid="uid://cx4flkuosdmao"]
 
-[ext_resource type="PackedScene" uid="uid://bxdii1way2qms" path="res://game/entities/gameplay/e_active_game.tscn" id="1_4nval"]
 [ext_resource type="PackedScene" uid="uid://dgiygx4ouqqsm" path="res://game/entities/gameplay/e_bumper.tscn" id="2_o3tsu"]
 [ext_resource type="Script" path="res://game/components/physics/c_bounced.gd" id="4_v3mtv"]
 [ext_resource type="Script" path="res://game/components/gameplay/c_player_death.gd" id="5_g4hcd"]
@@ -22,10 +21,12 @@ script = ExtResource("5_g4hcd")
 [sub_resource type="Resource" id="Resource_bjo7u"]
 script = ExtResource("4_v3mtv")
 normal = Vector2(-1, 0)
+speed_increment = 1.0
 
 [sub_resource type="Resource" id="Resource_b14u7"]
 script = ExtResource("4_v3mtv")
 normal = Vector2(-1, 0)
+speed_increment = 1.0
 
 [sub_resource type="Resource" id="Resource_wts21"]
 script = ExtResource("9_j4hxg")
@@ -34,8 +35,6 @@ script = ExtResource("9_j4hxg")
 script = ExtResource("10_f1erl")
 
 [node name="Entities" type="Node"]
-
-[node name="ActiveGame" parent="." instance=ExtResource("1_4nval")]
 
 [node name="TopBumper" parent="." instance=ExtResource("2_o3tsu")]
 position = Vector2(530, -4)

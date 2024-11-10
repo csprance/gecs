@@ -6,7 +6,11 @@
 class_name Brick
 extends Entity
 
+@onready var sprite: Sprite2D = %Sprite
+@export var color: Color
 
 # Assuming the Brick has a CollisionShape2D for collision
 func on_ready() -> void:
-	Utils.sync_transform(self)
+    Utils.sync_transform(self)
+    sprite.material = sprite.material.duplicate()
+    sprite.material.set_shader_parameter("brick_color", color)

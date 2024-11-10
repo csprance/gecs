@@ -7,3 +7,5 @@ extends Component
 
 ##  What surface normal did we just bounce off
 @export var normal := Vector2.UP
+## The speed increment to add to the velocity upon bouncing
+@export var speed_increment := 1.0

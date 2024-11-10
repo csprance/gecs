@@ -7,7 +7,7 @@ class_name FrictionSystem
 extends System
 
 func query() -> QueryBuilder:
-	return q.with_all([C_Velocity, C_Friction])
+	return q.with_all([C_Velocity, C_Friction]).with_any([C_Rotvel])
 
 
 func process(entity: Entity, delta: float) -> void:

@@ -18,10 +18,19 @@ func process(entity: Entity, _d: float):
     if bouncable.should_bounce:
         # Get the velocity component and modify it
         var velocity = entity.get_component(C_Velocity) as C_Velocity
+        var rot_vel = entity.get_component(C_Rotvel) as C_Rotvel
         # Reflect the velocity direction over the normal
         velocity.direction = velocity.direction.bounce(
             bounced.normal
         ).normalized()
+        # Add the speed increment to the velocity
+        velocity.speed += bounced.speed_increment
+
+        # Update rotational velocity based on the bounce
+        if rot_vel:
+            var angular_impulse = velocity.direction.cross(bounced.normal) * bouncable.bounciness
+            # Clamp the total angular velocity
+            rot_vel.angular_velocity += clamp(angular_impulse, -18, 18)
 
         # Reposition the ball to prevent overlapping
         var transform = entity.get_component(C_Transform) as C_Transform

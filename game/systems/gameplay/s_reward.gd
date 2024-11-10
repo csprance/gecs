@@ -7,8 +7,7 @@ func query() -> QueryBuilder:
 
 
 func process(entity: Entity, _delta: float):
-	var game_state = GameStateUtils.get_game_state()
 	var reward = entity.get_component(C_Reward) as C_Reward
 
-	game_state.score += reward.points
+	GameState.score += reward.points
 	entity.remove_component(C_Reward)

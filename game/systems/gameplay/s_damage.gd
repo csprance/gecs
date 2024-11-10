@@ -22,9 +22,7 @@ func process(entity: Entity, _delta: float):
 		Loggie.debug('Damaged', damage, health)
 		SoundManager.play('fx', 'damage')
 		# give a reward to the player for damage
-		var reward = C_Reward.new()
-		reward.points = 10
-		GameStateUtils.get_active_game_state_entity().add_component(reward)
+		GameState.score += 10
 	
 	entity.remove_component(C_Damage)
 	

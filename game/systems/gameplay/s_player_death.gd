@@ -7,8 +7,7 @@ func query() -> QueryBuilder:
 
 
 func process(entity: Entity, _delta: float):
-	var game_state = GameStateUtils.get_game_state()
-	game_state.lives -= 1
+	GameState.lives -= 1
 	
-	Loggie.debug("PlayerDeathSystem", "Player died. Lives remaining: " + str(game_state.lives))
+	Loggie.debug("PlayerDeathSystem", "Player died. Lives remaining: " + str(GameState.lives))
 	entity.remove_component(C_PlayerDeath)

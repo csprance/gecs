@@ -1,16 +1,37 @@
-class_name GameStateUtils
+# GameState Autoload
+extends Node
 
-## A Quick way to get the [GameState] component from the [ActiveGameEntity]
-## If entity=true it will get the entity holding game state instead of the component
-static func get_game_state() -> C_GameState:
-	var game_state_ent = get_active_game_state_entity()
-	if game_state_ent:
-		return game_state_ent.get_component(C_GameState) as C_GameState
-	return C_GameState.new()
+var score :int = 0:
+	get:
+		return score
+	set(v):
+		score = v
 
-static func get_active_game_state_entity() -> ActiveGame:
-	for game_state_ent in ECS.world.query.with_all([C_GameState]).execute():
-		return game_state_ent as ActiveGame
-	
-	assert(false, "No ActiveGameEntity found")
-	return
+var bricks  :int = 15 :
+	get:
+		return bricks
+	set(v):
+		bricks = v
+		if bricks == 0:
+			show_game_won()
+
+var lives :int = 3 :
+	get:
+		return lives
+	set(v):
+		lives = v
+		if lives == 0:
+			show_game_lost()
+
+
+func show_game_won():
+	Loggie.debug('Game Won')
+	for ui in ECS.world.query.with_all([C_WinUi]).with_none([C_UiVisibility]).execute():
+		ui.add_component(C_UiVisibility.new())
+	get_tree().paused = true
+
+func show_game_lost():	
+	Loggie.debug('Game Lost')
+	for ui in ECS.world.query.with_all([C_LoseUi]).with_none([C_UiVisibility]).execute():
+		ui.add_component(C_UiVisibility.new())
+	get_tree().paused = true

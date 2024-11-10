@@ -1,4 +1,4 @@
-[gd_scene load_steps=18 format=3 uid="uid://c30ukuyygo3gm"]
+[gd_scene load_steps=20 format=3 uid="uid://c30ukuyygo3gm"]
 
 [ext_resource type="Script" path="res://game/entities/gameplay/e_ball.gd" id="1_cm2qx"]
 [ext_resource type="Script" path="res://game/components/gameplay/c_transform.gd" id="2_xpgly"]
@@ -8,7 +8,8 @@
 [ext_resource type="Script" path="res://game/components/gameplay/c_captured.gd" id="6_mbwy8"]
 [ext_resource type="Script" path="res://game/components/physics/c_character_body_2d.gd" id="7_t10sc"]
 [ext_resource type="Script" path="res://game/components/physics/c_bouncable.gd" id="8_fp118"]
-[ext_resource type="Texture2D" uid="uid://bgq145vfplih8" path="res://icon.svg" id="9_wtx2e"]
+[ext_resource type="Texture2D" uid="uid://lrh2w7rvyi3i" path="res://assets/ball.png" id="9_tcmg4"]
+[ext_resource type="Script" path="res://game/components/physics/c_rotvel.gd" id="9_u4gr4"]
 
 [sub_resource type="Resource" id="Resource_2pjmc"]
 script = ExtResource("2_xpgly")
@@ -37,6 +38,11 @@ script = ExtResource("7_t10sc")
 [sub_resource type="Resource" id="Resource_r5gfu"]
 script = ExtResource("8_fp118")
 should_bounce = true
+bounciness = 1.0
+
+[sub_resource type="Resource" id="Resource_fuvb7"]
+script = ExtResource("9_u4gr4")
+angular_velocity = 0.1
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_uxnq0"]
 radius = 15.0
@@ -45,14 +51,14 @@ radius = 15.0
 collision_layer = 3
 collision_mask = 3
 motion_mode = 1
+platform_on_leave = 1
 platform_wall_layers = 7
 script = ExtResource("1_cm2qx")
 ball_speed = 450
-component_resources = Array[Resource("res://addons/gecs/component.gd")]([SubResource("Resource_2pjmc"), SubResource("Resource_l1qe3"), SubResource("Resource_iyurm"), SubResource("Resource_kyai6"), SubResource("Resource_o30o3"), SubResource("Resource_xsgxo"), SubResource("Resource_r5gfu")])
+component_resources = Array[Resource("res://addons/gecs/component.gd")]([SubResource("Resource_2pjmc"), SubResource("Resource_l1qe3"), SubResource("Resource_iyurm"), SubResource("Resource_kyai6"), SubResource("Resource_o30o3"), SubResource("Resource_xsgxo"), SubResource("Resource_r5gfu"), SubResource("Resource_fuvb7")])
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
-scale = Vector2(0.25, 0.25)
-texture = ExtResource("9_wtx2e")
+texture = ExtResource("9_tcmg4")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("CircleShape2D_uxnq0")

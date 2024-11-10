@@ -14,6 +14,8 @@ class_name BrickSpawnerSystem
 # what brick scene should we spawn?
 @export var brick_scene: PackedScene
 
+var rng = RandomNumberGenerator.new()
+
 func process(_e, _d) -> void:
 	var world = ECS.world as World
 	spawn_bricks(world)
@@ -22,10 +24,13 @@ func process(_e, _d) -> void:
 
 
 func spawn_bricks(world: World) -> void:
-	for i in range(GameStateUtils.get_game_state().blocks):
+	for i in range(GameState.bricks):
 		# Instantiate a new brick from the preloaded scene
 		var brick_entity = brick_scene.duplicate(true).instantiate() as Brick
-		
+		rng.randomize()
+		brick_entity.color = ColorUtils.randomColor(rng)
+		Loggie.debug(brick_entity.color)
+
 		# Add the brick entity to the ECS world
 		world.add_entity(brick_entity)
 		# Calculate the current row and column based on the brick index

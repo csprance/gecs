@@ -30,6 +30,7 @@ SoundManager="*res://addons/resonate/sound_manager/sound_manager.gd"
 MusicManager="*res://addons/resonate/music_manager/music_manager.gd"
 Loggie="*res://addons/loggie/loggie.gd"
 ECS="*res://addons/gecs/ecs.gd"
+GameState="*res://game/lib/game_state.gd"
 
 [debug]
 

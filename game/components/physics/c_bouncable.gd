@@ -7,3 +7,5 @@ extends Component
 
 ## If true, the entity will bounce upon collision.
 @export var should_bounce := true
+## How bouncy is this thing?
+@export var bounciness := 1.0  # Increased from 0.1 to 1.0
