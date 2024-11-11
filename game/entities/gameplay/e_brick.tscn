@@ -1,10 +1,11 @@
-[gd_scene load_steps=10 format=3 uid="uid://d8g7nt62qq13"]
+[gd_scene load_steps=11 format=3 uid="uid://d8g7nt62qq13"]
 
 [ext_resource type="Script" path="res://game/entities/gameplay/e_brick.gd" id="1_8cyj6"]
 [ext_resource type="Script" path="res://game/components/gameplay/c_transform.gd" id="2_phvma"]
 [ext_resource type="Script" path="res://game/components/gameplay/c_health.gd" id="3_sj01c"]
 [ext_resource type="Texture2D" uid="uid://mtu3le0qvdp1" path="res://assets/brick.png" id="4_4tnpf"]
 [ext_resource type="Shader" path="res://game/shaders/brick.gdshader" id="4_bebjc"]
+[ext_resource type="Texture2D" uid="uid://f7cm0ihux7a1" path="res://assets/shatter.png" id="5_ahnhd"]
 
 [sub_resource type="Resource" id="Resource_cnt7s"]
 script = ExtResource("2_phvma")
@@ -19,7 +20,9 @@ current = 3
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_85bdq"]
 shader = ExtResource("4_bebjc")
-shader_parameter/brick_color = null
+shader_parameter/brick_color = Vector4(1, 1, 1, 1)
+shader_parameter/cracked_amt = 0.0
+shader_parameter/crack_texture = ExtResource("5_ahnhd")
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_onj2i"]
 size = Vector2(100, 20)

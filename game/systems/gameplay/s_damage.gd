@@ -17,6 +17,8 @@ func process(entity: Entity, _delta: float):
 
 	# Damage the Health Component by the damage amount
 	health.current -= damage.amount
+	# Determin the cracked amount
+	entity.cracked_amt =  1 - (float(health.current) / float(health.total))
 
 	if health.current > 0:
 		Loggie.debug('Damaged', damage, health)
