@@ -55,17 +55,25 @@ func _ready() -> void:
 func process(delta: float, group: String='' ) -> void:
 	if group == '':
 		for system in systems:
-			system._handle(delta)
+			if system.active:
+				system._handle(delta)
 	else:
 		if systems_by_group.has(group):
 			for system in systems_by_group[group]:
-				system._handle(delta)
+				if system.active:
+					system._handle(delta)
 
 ## Adds a single [Entity] to the world.[br]
 ## [param entity] The [Entity] to add.[br]
+## [param components] The optional list of [Component] to add to the entity.[br]
 ## [b]Example:[/b]
-##    [codeblock] world.add_entity(player_entity)[/codeblock]
-func add_entity(entity: Entity) -> void:
+## [codeblock] 
+## # add just an entity
+## world.add_entity(player_entity)
+## # add an entity with some components
+## world.add_entity(other_entity, [component_a, component_b])
+## [/codeblock]
+func add_entity(entity: Entity, components = null) -> void:
 	if not entity.is_inside_tree():
 		get_node(entity_nodes_root).add_child(entity)
 	# Update index
@@ -78,6 +86,9 @@ func add_entity(entity: Entity) -> void:
 	# Connect to entity signals for components so we can track global component state
 	entity.component_added.connect(_on_entity_component_added)
 	entity.component_removed.connect(_on_entity_component_removed)
+
+	if components:
+		entity.add_components(components)
 
 ## Adds multiple entities to the world.
 ##
@@ -104,6 +115,7 @@ func add_system(system: System) -> void:
 		systems_by_group[system.group] = []
 	systems_by_group[system.group].push_back(system)
 	system_added.emit(system)
+	system.setup()
 
 ## Adds multiple systems to the world.
 ##
@@ -156,50 +168,78 @@ func map_resource_path(x) -> String:
 ## [param all_components] - [Component]s that [Entity]s must have all of.[br]
 ## [param any_components] - [Component]s that [Entity]s must have at least one of.[br]
 ## [param exclude_components] - [Component]s that [Entity]s must not have.[br]
-## [param returns] An [Array] of [Entity]s that match the query.
+## [param returns] An [Array] of [Entity]s that match the query.[br]
+## [br]
+## Performance Optimization:[br]
+## When checking for all_components, the system first identifies the component with the smallest[br]
+## set of entities and starts with that set. This significantly reduces the number of comparisons needed,[br]
+## as we only need to check the smallest possible set of entities against other components.
 func _query(all_components = [], any_components = [], exclude_components = []) -> Array:
-	# if they're all empty return an empty array
-	if all_components.size() == 0 and any_components.size() == 0 and exclude_components.size() == 0:
+	# Early return if no components specified
+	if all_components.is_empty() and any_components.is_empty() and exclude_components.is_empty():
 		return []
-
-	var result: Array              =  []
-	var initialized                := false
-	var _all_components: Array     =  all_components.map(map_resource_path)
-	var _any_components: Array     =  any_components.map(map_resource_path)
-	var _exclude_components: Array =  exclude_components.map(map_resource_path)
-
-	# Include entities that have all components in _all_components
-	if _all_components.size() > 0:
-		var first_component_entities = component_entity_index.get(_all_components[0], [])
-		result = first_component_entities.duplicate()
-		for i in range(1, _all_components.size()):
-			var component_key: String   = _all_components[i]
-			var entities_with_component = component_entity_index.get(component_key, [])
-			result = ArrayExtensions.intersect(result, entities_with_component)
-		initialized = true
-
-	# Include entities that have any components in any_components
-	if _any_components.size() > 0:
-		var any_result: Array = []
-		for component_key in _any_components:
-			var entities_with_component = component_entity_index.get(component_key, [])
-			any_result = ArrayExtensions.union(any_result, entities_with_component)
-		if initialized:
-			result = ArrayExtensions.intersect(result, any_result)
-		else:
-			result = any_result.duplicate()
-			initialized = true
-
-	if not initialized:
-		# If no components specified, return all entities
-		result = entities.duplicate()
-
-	# Exclude entities that have components in exclude_components
-	for component_key in _exclude_components:
-		var entities_with_component = component_entity_index.get(component_key, [])
-		result = ArrayExtensions.difference(result, entities_with_component)
-
-	#Loggie.debug('Query Result: ', result)
+	
+	# Convert all component arrays to resource paths
+	var _all := all_components.map(map_resource_path)
+	var _any := any_components.map(map_resource_path)
+	var _exclude := exclude_components.map(map_resource_path)
+	
+	var result: Array
+	
+	# If we have all or any components, process those
+	if not _all.is_empty() or not _any.is_empty():
+		# Handle all_components first if present
+		if not _all.is_empty():
+			# Performance Optimization: Start with the smallest component set to minimize iterations
+			# Get the smallest component set first for better performance
+			var smallest_size := INF
+			var smallest_component_key := ""
+			
+			for component in _all:
+				var component_entities = component_entity_index.get(component, [])
+				var size = component_entities.size()
+				if size < smallest_size:
+					smallest_size = size
+					smallest_component_key = component
+			
+			# Start with the smallest set and intersect others
+			result = component_entity_index.get(smallest_component_key, []).duplicate()
+			for component in _all:
+				if component != smallest_component_key:
+					result = ArrayExtensions.intersect(result, component_entity_index.get(component, []))
+					# Early exit if result is empty
+					if result.is_empty():
+						return []
+		
+		# Handle any_components
+		if not _any.is_empty():
+			var any_result := []
+			for component in _any:
+				any_result.append_array(component_entity_index.get(component, []))
+				
+			# Remove duplicates
+			any_result = Array(any_result.duplicate().reduce(func(accum, item): 
+				if not accum.has(item): accum.append(item)
+				return accum
+			, []))
+			
+			if result:
+				result = ArrayExtensions.intersect(result, any_result)
+			else:
+				result = any_result
+	else:
+		# Only if we have no inclusive filters but have exclusions,
+		# start with all entities
+		if not _exclude.is_empty():
+			result = entities.duplicate()
+	
+	# Handle exclude_components
+	if not _exclude.is_empty():
+		for component in _exclude:
+			var excluded = component_entity_index.get(component, [])
+			if not excluded.is_empty():
+				result = ArrayExtensions.difference(result, excluded)
+	
 	return result
 
 

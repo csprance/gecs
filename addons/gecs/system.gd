@@ -25,6 +25,8 @@ extends Node
 @export var group: String = ''
 ## Determines whether the system should run even when there are no [Entity]s to process.
 @export var process_empty := false
+## Is this system active. (Will be skipped if false)
+@export var active:= true
 ## The [QueryBuilder] object exposed for conveinence to use in the system and to create the query.
 var q: QueryBuilder
 
@@ -34,6 +36,10 @@ var q: QueryBuilder
 func query() -> QueryBuilder:
 	process_empty = true
 	return q
+
+## Runs once after the system has been added to the [World] to setup anything on the system one time[br]
+func setup():
+	pass
 
 ## The main processing function for the system.[br]
 ## This method should be overridden by subclasses to define the system's behavior.[br]
