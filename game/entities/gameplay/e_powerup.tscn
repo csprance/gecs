@@ -1,0 +1,39 @@
+[gd_scene load_steps=10 format=3 uid="uid://c8vtt3gfdfqw0"]
+
+[ext_resource type="Script" path="res://game/entities/gameplay/e_powerup.gd" id="1_c3h5x"]
+[ext_resource type="Script" path="res://game/components/gameplay/c_transform.gd" id="3_cxgq1"]
+[ext_resource type="Script" path="res://game/components/physics/c_velocity.gd" id="4_lciy1"]
+[ext_resource type="Script" path="res://game/components/physics/c_physics.gd" id="5_3p3li"]
+[ext_resource type="Texture2D" uid="uid://bgq145vfplih8" path="res://icon.svg" id="6_4o7n0"]
+
+[sub_resource type="Resource" id="Resource_oep6p"]
+script = ExtResource("3_cxgq1")
+position = Vector2(0, 0)
+rotation = 0.0
+scale = Vector2(0, 0)
+
+[sub_resource type="Resource" id="Resource_jlcki"]
+script = ExtResource("4_lciy1")
+direction = Vector2(0, 1)
+speed = 80.0
+
+[sub_resource type="Resource" id="Resource_4vhl1"]
+script = ExtResource("5_3p3li")
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_tq2gr"]
+radius = 13.1529
+
+[node name="Powerup" type="Node2D"]
+script = ExtResource("1_c3h5x")
+component_resources = Array[Resource("res://addons/gecs/component.gd")]([SubResource("Resource_oep6p"), SubResource("Resource_jlcki"), SubResource("Resource_4vhl1")])
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+scale = Vector2(0.2, 0.2)
+texture = ExtResource("6_4o7n0")
+
+[node name="Area2D" type="Area2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D"]
+shape = SubResource("CircleShape2D_tq2gr")
+
+[connection signal="body_entered" from="Area2D" to="." method="_on_area_2d_body_entered"]

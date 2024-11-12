@@ -1,6 +1,7 @@
-[gd_scene load_steps=20 format=3 uid="uid://b1fu5exk46e0d"]
+[gd_scene load_steps=22 format=3 uid="uid://b1fu5exk46e0d"]
 
 [ext_resource type="Script" path="res://game/systems/physics/s_bounce.gd" id="1_hjti1"]
+[ext_resource type="Script" path="res://game/systems/gameplay/s_powerup.gd" id="1_iql7j"]
 [ext_resource type="Script" path="res://game/systems/gameplay/s_ball_release.gd" id="2_jk2er"]
 [ext_resource type="Script" path="res://game/systems/gameplay/s_ball_capture.gd" id="3_ruwyp"]
 [ext_resource type="Script" path="res://game/systems/gameplay/s_brick_spawner.gd" id="4_kgn36"]
@@ -16,6 +17,7 @@
 [ext_resource type="Script" path="res://game/systems/gameplay/s_transform.gd" id="10_2hs5k"]
 [ext_resource type="Script" path="res://game/systems/ui/s_ui_visiblity.gd" id="11_4eqv3"]
 [ext_resource type="Script" path="res://game/systems/ui/s_score_ui.gd" id="12_knfts"]
+[ext_resource type="PackedScene" uid="uid://c8vtt3gfdfqw0" path="res://game/entities/gameplay/e_powerup.tscn" id="13_jho2g"]
 [ext_resource type="Script" path="res://game/systems/gameplay/s_reward.gd" id="13_oeskp"]
 [ext_resource type="Script" path="res://game/systems/gameplay/s_player_death.gd" id="14_fyfwl"]
 [ext_resource type="Script" path="res://game/systems/gameplay/s_death.gd" id="16_328kt"]
@@ -23,6 +25,10 @@
 [node name="Systems" type="Node"]
 
 [node name="Gameplay" type="Node" parent="."]
+
+[node name="PowerupSystem" type="Node" parent="Gameplay"]
+script = ExtResource("1_iql7j")
+group = "gameplay"
 
 [node name="BrickSpawnerSystem" type="Node" parent="Gameplay"]
 script = ExtResource("4_kgn36")
@@ -60,6 +66,7 @@ group = "gameplay"
 
 [node name="DeathSystem" type="Node" parent="Gameplay"]
 script = ExtResource("16_328kt")
+powerup_pickup_scene = ExtResource("13_jho2g")
 group = "gameplay"
 
 [node name="Physics" type="Node" parent="."]

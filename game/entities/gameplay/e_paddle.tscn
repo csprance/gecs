@@ -8,6 +8,7 @@
 [ext_resource type="Script" path="res://game/components/gameplay/c_active_paddle.gd" id="6_0v5bj"]
 [ext_resource type="Script" path="res://game/components/physics/c_physics.gd" id="7_hcs2v"]
 [ext_resource type="Script" path="res://addons/easy_velocity_vector_display/vectordisplay2D.gd" id="8_02gyr"]
+[ext_resource type="Texture2D" uid="uid://bpmrt1kbkx5dj" path="res://assets/paddle.png" id="8_uo4gw"]
 
 [sub_resource type="Resource" id="Resource_mdlpm"]
 script = ExtResource("2_8apye")
@@ -35,8 +36,6 @@ script = ExtResource("6_0v5bj")
 [sub_resource type="Resource" id="Resource_58s41"]
 script = ExtResource("7_hcs2v")
 
-[sub_resource type="PlaceholderTexture2D" id="PlaceholderTexture2D_ntc0s"]
-
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_kl02k"]
 size = Vector2(100, 20)
 
@@ -46,13 +45,15 @@ script = ExtResource("1_0yl36")
 component_resources = Array[Resource("res://addons/gecs/component.gd")]([SubResource("Resource_mdlpm"), SubResource("Resource_7wast"), SubResource("Resource_haier"), SubResource("Resource_8drjd"), SubResource("Resource_122mj"), SubResource("Resource_58s41")])
 
 [node name="Sprite" type="Sprite2D" parent="."]
-scale = Vector2(100, 20)
-texture = SubResource("PlaceholderTexture2D_ntc0s")
+texture_filter = 1
+scale = Vector2(1.425, 1)
+texture = ExtResource("8_uo4gw")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("RectangleShape2D_kl02k")
 
 [node name="VectorDisplay2D" type="Node2D" parent="."]
+visible = false
 rotation = -3.14159
 script = ExtResource("8_02gyr")
 target = NodePath("..")

@@ -1,4 +1,4 @@
-[gd_scene load_steps=20 format=3 uid="uid://c30ukuyygo3gm"]
+[gd_scene load_steps=21 format=3 uid="uid://c30ukuyygo3gm"]
 
 [ext_resource type="Script" path="res://game/entities/gameplay/e_ball.gd" id="1_cm2qx"]
 [ext_resource type="Script" path="res://game/components/gameplay/c_transform.gd" id="2_xpgly"]
@@ -47,11 +47,17 @@ angular_velocity = 0.1
 [sub_resource type="CircleShape2D" id="CircleShape2D_uxnq0"]
 radius = 15.0
 
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_o743l"]
+particle_flag_disable_z = true
+orbit_velocity_min = -0.306
+orbit_velocity_max = 0.422
+gravity = Vector3(0, 98, 0)
+
 [node name="Ball" type="CharacterBody2D"]
 collision_layer = 3
 collision_mask = 3
 motion_mode = 1
-platform_on_leave = 1
+platform_on_leave = 2
 platform_wall_layers = 7
 script = ExtResource("1_cm2qx")
 ball_speed = 450
@@ -61,6 +67,10 @@ component_resources = Array[Resource("res://addons/gecs/component.gd")]([SubReso
 texture = ExtResource("9_tcmg4")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+visible = false
 shape = SubResource("CircleShape2D_uxnq0")
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+
+[node name="GPUParticles2D" type="GPUParticles2D" parent="."]
+process_material = SubResource("ParticleProcessMaterial_o743l")
