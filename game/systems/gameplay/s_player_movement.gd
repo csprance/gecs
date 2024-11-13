@@ -10,7 +10,7 @@ func query() -> QueryBuilder:
     return q.with_all([C_Velocity, C_PlayerMovement])
 
 
-func process(entity, delta: float) -> void:
+func process(entity: Entity, delta: float) -> void:
     var paddle = entity as Paddle
     # Get the velocity component from the entity
     var velocity = entity.get_component(C_Velocity) as C_Velocity

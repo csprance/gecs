@@ -4,11 +4,14 @@ extends System
 
 @export var powerup_pickup_scene: PackedScene
 
+var rng = RandomNumberGenerator.new()
+
 func query() -> QueryBuilder:
 	return q.with_any([C_Death]) # add required components
 
 
 func process(entity: Entity, _delta: float) -> void:
+	rng.randomize()
 	Loggie.debug('Death!', self)
 	SoundManager.play('fx', 'kill')
 	
@@ -20,7 +23,7 @@ func process(entity: Entity, _delta: float) -> void:
 
 	# Randomyly Create a powerup entity
 	# TODO: Random thought what if we had a Luck factor here? lol
-	if randf_range(0.0, 1.0) > 0.8:
+	if rng.randf_range(0.0, 1.0) > 0.8:
 		# Create the pickup
 		var powerup_pickup = powerup_pickup_scene.duplicate(true).instantiate()
 		# Add the pickup to the world

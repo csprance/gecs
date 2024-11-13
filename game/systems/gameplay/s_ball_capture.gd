@@ -13,7 +13,7 @@ func process(entity: Entity, _delta: float) -> void:
 
 	# Put the ball above the paddles transform
 	var ball_trs = entity.get_component(C_Transform) as C_Transform
-	var active_paddles = q.with_all([C_ActivePaddle]).execute() as Array[Entity]
+	var active_paddles = ECS.world.query.with_all([C_ActivePaddle]).execute() as Array[Entity]
 	if active_paddles.size() > 0:
 		var paddle_trs = active_paddles[0].get_component(C_Transform) as C_Transform
 		ball_trs.position = paddle_trs.position + (Vector2.UP * 50.2)
