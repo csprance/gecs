@@ -84,15 +84,6 @@ func remove_components(_components: Array):
 func get_component(component: Variant) -> Component:
 	return components.get(component.resource_path, null)
 
-## Checks if the entity has a specific [Component].[br]
-## [param component_key] The [member Resource.resource_path] of the [Component] to check.[br]
-## [param returns] `true` if the [Component] exists, otherwise `false`.[br]
-## [b]Example:[/b]
-##     [codeblock]if entity.has_component(Transform.resource_path):
-##         print("Entity has a Transform component.")[/codeblock]
-func has_component(component_key: String) -> bool:
-	return components.has(component_key)
-
 
 # Lifecycle methods
 
