@@ -8,47 +8,42 @@
 1. [Introduction](#introduction)
 2. [Installation](#installation)
 3. [Getting Started](#getting-started)
-    - [Basic Concepts](#basic-concepts)
+   - [Basic Concepts](#basic-concepts)
 4. [Creating Components](#creating-components)
 5. [Creating Entities](#creating-entities)
 6. [Creating Systems](#creating-systems)
-7. [The World and WorldManager](#the-world-and-worldmanager)
+7. [The World and ECS Singleton](#the-world-and-ecs-singleton)
 8. [Example Project](#example-project)
-    - [Components](#components)
-    - [Entities](#entities)
-    - [Systems](#systems)
+   - [Components](#components)
+   - [Entities](#entities)
+   - [Systems](#systems)
 9. [Advanced Usage](#advanced-usage)
-    - [Querying Entities](#querying-entities)
-10. [API Reference](#api-reference)
-    - [Component](#component)
-    - [Entity](#entity)
-    - [System](#system)
-    - [World](#world)
-    - [WorldManager](#worldmanager)
-11. [Conclusion](#conclusion)
+   - [Querying Entities](#querying-entities)
+10. [Conclusion](#conclusion)
 
 ## Introduction
 
-GECS is an Entity Component System framework designed for the Godot Engine. It provides a simple yet powerful way to organize your game logic using the ECS pattern, allowing for better code organization, reusability, and scalability.
+GECS is an Entity Component System (ECS) framework designed for the Godot Engine. It provides a simple yet powerful way to organize your game logic using the ECS pattern, allowing for better code organization, reusability, and scalability.
 
 This documentation will guide you through the setup and usage of the GECS addon, providing examples from a sample game project to illustrate key concepts.
 
 ## Installation
 
-1. **Download the Addon**: Clone or download the gecs addon and place it in your project's `addons` folder.
+1. **Download the Addon**: Clone or download the GECS addon and place it in your project's `addons` folder.
 
 2. **Enable the Addon**: In the Godot editor, go to `Project > Project Settings > Plugins`, and enable the `GECS` plugin.
 
-3. **Autoload ECS**: The addon requires the `ECS` to be autoloaded. This should be handled automatically when you enable the plugin. If not, go to `Project > Project Settings > Autoload`, and add `ECS` pointing to `res://addons/gecs/ecs.gd`.
+3. **Autoload ECS**: The addon requires the `ECS` singleton to be autoloaded. This should be handled automatically when you enable the plugin. If not, go to `Project > Project Settings > Autoload`, and add `ECS` pointing to `res://addons/gecs/ecs.gd`.
 
 ## Getting Started
 
 ### Basic Concepts
-> Each class has a full set of in-editor Godot Documentation check there as well!
 
-Before diving into the usage of the gecs addon, it's important to understand the basic concepts of an Entity Component System (ECS):
+> Each class has a full set of in-editor Godot documentation. Check there as well!
 
-- **Entity**: A container or placeholder that represents an object in your game. Entities themselves are often empty and only gain behavior when components are added to them.
+Before diving into the usage of the GECS addon, it's important to understand the basic concepts of an Entity Component System (ECS):
+
+- **Entity**: A container or placeholder that represents an object in your game. Entities can have multiple components added to them to define their behavior and properties.
 
 - **Component**: A data container that holds specific attributes or properties. Components do not contain game logic.
 
@@ -57,6 +52,8 @@ Before diving into the usage of the gecs addon, it's important to understand the
 - **World**: The context in which entities and systems exist and interact.
 
 - **Query**: A way to query for specific entities in the world based on the components they contain.
+
+- **ECS Singleton**: Provides global access to the current `World` instance and offers utility functions for processing.
 
 ## Creating Components
 
@@ -118,9 +115,9 @@ func process(entity: Entity, delta: float):
         bounce_component.should_bounce = false
 ```
 
-2. **Override query function to define the Query**: In the `query()` function, specify the components that entities must have for the system to process them. This uses the QueryBuilder class to build this
+2. **Override the `query()` Function**: In the `query()` function, specify the components that entities must have for the system to process them. Use the provided `q` (QueryBuilder) to build the query.
 
-3. **Implement the Process Function**: The `process()` function contains the logic to be applied to each relevant entity.
+3. **Implement the `process()` Function**: The `process()` function contains the logic to be applied to each relevant entity. It is called for each entity that matches the query.
 
 ## The World and ECS Singleton
 
@@ -130,6 +127,8 @@ The `World` class manages all entities and systems in your game. It processes sy
 
 - **Setting Up the World**: In your main scene, add a node extending `World` and add your entities and systems as children.
 
+_ **Executing the systems in the world**: Make sure to call ECS.process(delta, group) to run your systems. To process all active systems regardless of their group, omit the `group` parameter
+
 ```gdscript
 # main.gd
 extends Node
@@ -138,6 +137,10 @@ extends Node
 
 func _ready() -> void:
     ECS.world = world
+
+func _process(delta):
+    # Process only systems in the "physics" group
+    ECS.process(delta, "physics")
 ```
 
 ## Example Project
@@ -284,6 +287,25 @@ q
 ```gdscript
 var entities_with_velocity_and_not_captured = q.with_all([Velocity]).with_none([Captured])
 ```
+
+Systems have properties that allow for customizing their execution:
+
+* active: Determines whether the system runs during processing. If false, the system will be skipped.
+* group: Assigns the system to a specific group. This allows you to control the execution of systems in groups. You can process systems of a specific group by providing the group name to the ECS.process(delta, group) function.
+
+Example:
+```gdscript
+func _physics_process(delta):
+    ECS.process(delta, "physics")
+
+func _process(delta):
+    ECS.process(delta, "gameplay")
+```
+This will only process systems that are in the "physics" group in the physics process function and gameplay system in the _process function
+
+To process all active systems regardless of their group, omit the `group` parameter:
+
+
 ## Conclusion
 
 The GECS addon provides a flexible and efficient way to implement the ECS pattern in your Godot projects. By separating data (components) from logic (systems), you can create reusable and maintainable game code.
