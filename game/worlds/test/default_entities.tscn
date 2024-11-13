@@ -1,6 +1,6 @@
 [gd_scene load_steps=19 format=3 uid="uid://cx4flkuosdmao"]
 
-[ext_resource type="PackedScene" uid="uid://c8vtt3gfdfqw0" path="res://game/entities/gameplay/e_powerup.tscn" id="1_h6wk2"]
+[ext_resource type="PackedScene" uid="uid://c8vtt3gfdfqw0" path="res://game/entities/gameplay/e_powerup_pickup.tscn" id="1_h6wk2"]
 [ext_resource type="PackedScene" uid="uid://dgiygx4ouqqsm" path="res://game/entities/gameplay/e_bumper.tscn" id="2_o3tsu"]
 [ext_resource type="Script" path="res://game/components/physics/c_bounced.gd" id="4_v3mtv"]
 [ext_resource type="Script" path="res://game/components/gameplay/c_player_death.gd" id="5_g4hcd"]

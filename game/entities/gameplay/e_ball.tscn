@@ -1,4 +1,4 @@
-[gd_scene load_steps=21 format=3 uid="uid://c30ukuyygo3gm"]
+[gd_scene load_steps=23 format=3 uid="uid://c30ukuyygo3gm"]
 
 [ext_resource type="Script" path="res://game/entities/gameplay/e_ball.gd" id="1_cm2qx"]
 [ext_resource type="Script" path="res://game/components/gameplay/c_transform.gd" id="2_xpgly"]
@@ -10,6 +10,7 @@
 [ext_resource type="Script" path="res://game/components/physics/c_bouncable.gd" id="8_fp118"]
 [ext_resource type="Texture2D" uid="uid://lrh2w7rvyi3i" path="res://assets/ball.png" id="9_tcmg4"]
 [ext_resource type="Script" path="res://game/components/physics/c_rotvel.gd" id="9_u4gr4"]
+[ext_resource type="Script" path="res://game/components/gameplay/c_damage_output.gd" id="10_3r41d"]
 
 [sub_resource type="Resource" id="Resource_2pjmc"]
 script = ExtResource("2_xpgly")
@@ -44,6 +45,10 @@ bounciness = 1.0
 script = ExtResource("9_u4gr4")
 angular_velocity = 0.1
 
+[sub_resource type="Resource" id="Resource_r4i2u"]
+script = ExtResource("10_3r41d")
+value = 1
+
 [sub_resource type="CircleShape2D" id="CircleShape2D_uxnq0"]
 radius = 15.0
 
@@ -61,7 +66,7 @@ platform_on_leave = 2
 platform_wall_layers = 7
 script = ExtResource("1_cm2qx")
 ball_speed = 450
-component_resources = Array[Resource("res://addons/gecs/component.gd")]([SubResource("Resource_2pjmc"), SubResource("Resource_l1qe3"), SubResource("Resource_iyurm"), SubResource("Resource_kyai6"), SubResource("Resource_o30o3"), SubResource("Resource_xsgxo"), SubResource("Resource_r5gfu"), SubResource("Resource_fuvb7")])
+component_resources = Array[Resource("res://addons/gecs/component.gd")]([SubResource("Resource_2pjmc"), SubResource("Resource_l1qe3"), SubResource("Resource_iyurm"), SubResource("Resource_kyai6"), SubResource("Resource_o30o3"), SubResource("Resource_xsgxo"), SubResource("Resource_r5gfu"), SubResource("Resource_fuvb7"), SubResource("Resource_r4i2u")])
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 texture = ExtResource("9_tcmg4")

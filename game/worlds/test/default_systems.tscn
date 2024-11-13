@@ -1,8 +1,9 @@
-[gd_scene load_steps=22 format=3 uid="uid://b1fu5exk46e0d"]
+[gd_scene load_steps=26 format=3 uid="uid://b1fu5exk46e0d"]
 
 [ext_resource type="Script" path="res://game/systems/physics/s_bounce.gd" id="1_hjti1"]
-[ext_resource type="Script" path="res://game/systems/gameplay/s_powerup.gd" id="1_iql7j"]
+[ext_resource type="Script" path="res://game/systems/gameplay/powerups/s_powerup_mega.gd" id="1_nmjqc"]
 [ext_resource type="Script" path="res://game/systems/gameplay/s_ball_release.gd" id="2_jk2er"]
+[ext_resource type="Script" path="res://game/systems/gameplay/powerups/s_powerup_speed.gd" id="2_pnjnj"]
 [ext_resource type="Script" path="res://game/systems/gameplay/s_ball_capture.gd" id="3_ruwyp"]
 [ext_resource type="Script" path="res://game/systems/gameplay/s_brick_spawner.gd" id="4_kgn36"]
 [ext_resource type="PackedScene" uid="uid://d8g7nt62qq13" path="res://game/entities/gameplay/e_brick.tscn" id="5_gwja5"]
@@ -17,17 +18,24 @@
 [ext_resource type="Script" path="res://game/systems/gameplay/s_transform.gd" id="10_2hs5k"]
 [ext_resource type="Script" path="res://game/systems/ui/s_ui_visiblity.gd" id="11_4eqv3"]
 [ext_resource type="Script" path="res://game/systems/ui/s_score_ui.gd" id="12_knfts"]
-[ext_resource type="PackedScene" uid="uid://c8vtt3gfdfqw0" path="res://game/entities/gameplay/e_powerup.tscn" id="13_jho2g"]
+[ext_resource type="PackedScene" uid="uid://c8vtt3gfdfqw0" path="res://game/entities/gameplay/e_powerup_pickup.tscn" id="13_jho2g"]
 [ext_resource type="Script" path="res://game/systems/gameplay/s_reward.gd" id="13_oeskp"]
 [ext_resource type="Script" path="res://game/systems/gameplay/s_player_death.gd" id="14_fyfwl"]
 [ext_resource type="Script" path="res://game/systems/gameplay/s_death.gd" id="16_328kt"]
+[ext_resource type="Script" path="res://game/systems/physics/s_brick_collision.gd" id="17_opo1r"]
+[ext_resource type="Script" path="res://game/systems/physics/s_paddle_collision.gd" id="18_o1r8n"]
+[ext_resource type="Script" path="res://game/systems/physics/s_bumper_collision.gd" id="19_e17xj"]
 
 [node name="Systems" type="Node"]
 
 [node name="Gameplay" type="Node" parent="."]
 
-[node name="PowerupSystem" type="Node" parent="Gameplay"]
-script = ExtResource("1_iql7j")
+[node name="PowerupMegaSystem" type="Node" parent="Gameplay"]
+script = ExtResource("1_nmjqc")
+group = "gameplay"
+
+[node name="PowerupSpeedSystem" type="Node" parent="Gameplay"]
+script = ExtResource("2_pnjnj")
 group = "gameplay"
 
 [node name="BrickSpawnerSystem" type="Node" parent="Gameplay"]
@@ -68,6 +76,8 @@ group = "gameplay"
 script = ExtResource("16_328kt")
 powerup_pickup_scene = ExtResource("13_jho2g")
 group = "gameplay"
+process_empty = null
+active = null
 
 [node name="Physics" type="Node" parent="."]
 
@@ -77,6 +87,18 @@ group = "physics"
 
 [node name="CollisionSystem" type="Node" parent="Physics"]
 script = ExtResource("8_oul5f")
+group = "physics"
+
+[node name="BrickCollisionSystem" type="Node" parent="Physics"]
+script = ExtResource("17_opo1r")
+group = "physics"
+
+[node name="PaddleCollisionSystem" type="Node" parent="Physics"]
+script = ExtResource("18_o1r8n")
+group = "physics"
+
+[node name="BumperCollisionSystem" type="Node" parent="Physics"]
+script = ExtResource("19_e17xj")
 group = "physics"
 
 [node name="BounceSystem" type="Node" parent="Physics"]

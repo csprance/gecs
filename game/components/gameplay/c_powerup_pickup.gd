@@ -3,7 +3,5 @@
 class_name C_PowerupPickup
 extends Component
 
-## What powerup pickup does this component contain
-@export var type: C_Powerup.PowerupType
-## How long does the powerup last when picked up
-@export var time: float = 5.0
+## What powerup does this pickup contain
+@export var type: Component
