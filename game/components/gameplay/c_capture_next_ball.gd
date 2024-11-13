@@ -1,3 +1,3 @@
-## Indicates that the paddle will capture the next ball that collides with it.
+## Indicates that the [Paddle] will capture the next [Ball] that collides with it.
 class_name C_CaptureNextBall
 extends Component

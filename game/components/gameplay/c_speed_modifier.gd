@@ -1,4 +1,4 @@
-
+## This component is added to things and it will increase the speed of whatever it is attached to
 class_name C_SpeedModifier
 extends Component
 

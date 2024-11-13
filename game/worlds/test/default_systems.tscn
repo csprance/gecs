@@ -1,7 +1,8 @@
-[gd_scene load_steps=26 format=3 uid="uid://b1fu5exk46e0d"]
+[gd_scene load_steps=27 format=3 uid="uid://b1fu5exk46e0d"]
 
 [ext_resource type="Script" path="res://game/systems/physics/s_bounce.gd" id="1_hjti1"]
 [ext_resource type="Script" path="res://game/systems/gameplay/powerups/s_powerup_mega.gd" id="1_nmjqc"]
+[ext_resource type="Script" path="res://game/systems/gameplay/powerups/s_powerup_picked_up.gd" id="1_yibl1"]
 [ext_resource type="Script" path="res://game/systems/gameplay/s_ball_release.gd" id="2_jk2er"]
 [ext_resource type="Script" path="res://game/systems/gameplay/powerups/s_powerup_speed.gd" id="2_pnjnj"]
 [ext_resource type="Script" path="res://game/systems/gameplay/s_ball_capture.gd" id="3_ruwyp"]
@@ -29,6 +30,10 @@
 [node name="Systems" type="Node"]
 
 [node name="Gameplay" type="Node" parent="."]
+
+[node name="PowerupPickedUpSystem" type="Node" parent="Gameplay"]
+script = ExtResource("1_yibl1")
+group = "gameplay"
 
 [node name="PowerupMegaSystem" type="Node" parent="Gameplay"]
 script = ExtResource("1_nmjqc")

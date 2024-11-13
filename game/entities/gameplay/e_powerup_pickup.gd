@@ -10,13 +10,14 @@ func on_ready():
 
 ## 
 func _on_area_2d_body_entered(body: Node2D) -> void:
-	# Only paddles can pick up powerups
+	# Only paddles can pickup powerups
 	if body is Paddle:
 		# Get a random powerup from the list of powerups and add it to the entity
-		var res =  powerups[randi_range(0, powerups.size()-1)]
-		var powerup = res.duplicate()
+		var powerup = powerups[randi_range(0, powerups.size()-1)].duplicate()
 		Loggie.debug('Adding powerup %s' % powerup.get_script().resource_path)
-		body.add_component(powerup)
+		
+		# Create an event entity to handle the logic of pickup
+		Utils.create_ecs_event([C_PowerupPickedUp.new(powerup)])
 
 		# Remove the powerup pickup entity
 		ECS.world.remove_entity(self)

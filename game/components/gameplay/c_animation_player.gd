@@ -1,3 +1,4 @@
+## Plays an Animation on an Animation Player
 class_name C_AnimationPlayer
 extends Component
 

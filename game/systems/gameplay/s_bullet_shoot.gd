@@ -1,7 +1,7 @@
 class_name BulletShootSystem
 extends System
 
-# what brick scene should we spawn?
+## what brick scene should we spawn?
 @export var bullet_scene: PackedScene
 
 func query():

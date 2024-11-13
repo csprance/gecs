@@ -60,8 +60,8 @@ static func add_components_to_active_paddles(components: Array[Component]):
         components
     )
 
-static func get_active_balls() -> Array[C_ActiveBall]:
+static func get_active_balls() -> Array:
     return ECS.world.query.with_all([C_ActiveBall]).execute()
 
-static func get_active_paddles() -> Array[C_ActivePaddle]:
+static func get_active_paddles() -> Array:
     return ECS.world.query.with_all([C_ActivePaddle]).execute()
