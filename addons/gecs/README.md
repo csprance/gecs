@@ -3,6 +3,16 @@
 # GECS
 > Godot Entity Component System
 
+A lightweight, performant ECS framework for Godot 4.x that integrates seamlessly with Godot's node system.
+
+## Features
+
+- 🎯 Full integration with Godot's node system
+- 🚀 Query-based entity filtering with optimized component indexing
+- 🔧 System groups for organized processing
+- 📦 Component resources that work in the editor
+- 🎮 Easy setup with automatic node management
+
 ## Table of Contents
 
 1. [Introduction](#introduction)
