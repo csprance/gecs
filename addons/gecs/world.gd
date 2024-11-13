@@ -50,7 +50,6 @@ func _ready() -> void:
 
 ## Called every frame by the [method _ECS.process] to process [System]s.[br]
 ## [param delta] The time elapsed since the last frame.
-
 ## [param group] The string for the group we should run. If empty runs all
 func process(delta: float, group: String='' ) -> void:
 	if group == '':
@@ -90,15 +89,14 @@ func add_entity(entity: Entity, components = null) -> void:
 	if components:
 		entity.add_components(components)
 
-## Adds multiple entities to the world.
-##
-## @param _entities An array of entities to add.
-##
+## Adds multiple entities to the world.[br]
+## @param _entities An array of entities to add.[br]
+## [param components] The optional list of [Component] to add to the entity.[br]
 ## [b]Example:[/b]
-##      [codeblock]world.add_entities([player_entity, enemy_entity])[/codeblock]
-func add_entities(_entities: Array):
+##      [codeblock]world.add_entities([player_entity, enemy_entity], [component_a])[/codeblock]
+func add_entities(_entities: Array, components = null):
 	for _entity in _entities:
-		add_entity(_entity)
+		add_entity(_entity, components)
 
 ## Adds a single system to the world.
 ##
