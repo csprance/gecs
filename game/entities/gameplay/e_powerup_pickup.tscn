@@ -14,7 +14,7 @@ script = ExtResource("2_4fs7o")
 
 [sub_resource type="Resource" id="Resource_6usu1"]
 script = ExtResource("3_1lcv8")
-time = 10.0
+time = 5.0
 damage = 99
 
 [sub_resource type="Resource" id="Resource_2uh37"]
