@@ -43,7 +43,6 @@ func _ready() -> void:
 ## [b]Example[/b]:
 ## [codeblock]entity.add_component(HealthComponent)[/codeblock]
 func add_component(component: Variant) -> void:
-	 # Make sure to duplicate the resource or we'll share the same component
 	components[component.get_script().resource_path] = component
 	component_added.emit(self, component.get_script().resource_path)
 	Loggie.msg('Added Component: ', component.resource_path).domain('ecs').debug()
