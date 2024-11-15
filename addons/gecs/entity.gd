@@ -21,9 +21,9 @@ class_name Entity
 extends Node2D
 
 ## Emitted when a [Component] is added to the entity.
-signal component_added(entity: Entity, component_key: String)
+signal component_added(entity: Entity, component: Variant)
 ## Emitted when a [Component] is removed from the entity.
-signal component_removed(entity: Entity, component_key: String)
+signal component_removed(entity: Entity, component: Variant)
 
 ## [Component]s to be attached to the entity set in the editor. These will be loaded for you and added to the [Entity]
 @export var component_resources: Array[Component] = []
@@ -44,7 +44,7 @@ func _ready() -> void:
 ## [codeblock]entity.add_component(HealthComponent)[/codeblock]
 func add_component(component: Variant) -> void:
 	components[component.get_script().resource_path] = component
-	component_added.emit(self, component.get_script().resource_path)
+	component_added.emit(self, component)
 	Loggie.msg('Added Component: ', component.resource_path).domain('ecs').debug()
 
 
@@ -65,7 +65,7 @@ func remove_component(component: Variant) -> void:
 	var component_key = component.resource_path
 	if components.erase(component.resource_path):
 		Loggie.msg('Removed Component: ', component.resource_path).domain('ecs').debug()
-		component_removed.emit(self, component.resource_path)
+		component_removed.emit(self, component)
 
 ## Removes multiple components from the entity.[br]
 ## [param _components] An array of components to remove.[br]

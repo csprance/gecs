@@ -1,0 +1,17 @@
+[gd_scene load_steps=2 format=3 uid="uid://df7cvyauir2uh"]
+
+[ext_resource type="Script" path="res://addons/gecs/ecs_debug.gd" id="1_8dl00"]
+
+[node name="ECSDebug" type="CanvasLayer"]
+layer = 2
+script = ExtResource("1_8dl00")
+
+[node name="Tree" type="Tree" parent="."]
+unique_name_in_owner = true
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = -935.0
+offset_bottom = -323.0
+grow_horizontal = 2
+grow_vertical = 2

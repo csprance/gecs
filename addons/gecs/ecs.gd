@@ -33,9 +33,22 @@ var world: World:
 		return world
 	set(value):
 		world = value
+		_show_debug()
+
+## Are we in debug mode?
+var debug := true
 
 ## This is called to process the current active [World] instance and the [System]s within it.
 ## You would call this in _process or _physics_process to update the [_ECS] system.[br]
-## If you provide a group name it will run just that group otherwise it runs all groups
+## If you provide a group name it will run just that group otherwise it runs all groups[br]
+## Example:
+## 	[codeblock]ECS.world.process(world, 'my-system-group')[/codeblock]
 func process(delta: float, group: String = '') -> void:
 	world.process(delta, group)
+
+## Called after the world is set to show the debug menu that has all entities and components if ECS.debug === True
+func _show_debug():
+	if ECS.debug:
+		var debug_window_scene = preload('res://addons/gecs/ecs_debug.tscn').instantiate()
+		add_child(debug_window_scene)
+		debug_window_scene.create_debug_window()

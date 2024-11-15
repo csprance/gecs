@@ -15,6 +15,10 @@ signal entity_removed(entity: Entity)
 signal system_added(system: System)
 ## Emitted when a system is removed
 signal system_removed(system: System)
+## Emitted when a component is added to an entity
+signal component_added(entity: Entity, component: Variant)
+## Emitted when a component is removed from an entity
+signal component_removed(entity: Entity, component: Variant)
 
 ## Where are all the [Entity] nodes placed in the scene tree?
 @export var entity_nodes_root: NodePath
@@ -29,7 +33,6 @@ var systems: Array[System]  = []
 var systems_by_group: Dictionary = {}
 ## [Component] to [Entity] Index - This stores entities by component for efficient querying.
 var component_entity_index: Dictionary = {}
-
 ## The [QueryBuilder] instance for this world used to build and execute queries
 var query: QueryBuilder:
 	get:
@@ -269,11 +272,15 @@ func _remove_entity_from_index(entity, component_key: String) -> void:
 ## [signal Entity.component_added] Callback when a component is added to an entity.[br]
 ## @param entity The entity that had a component added.[br]
 ## @param component_key The resource path of the added component.
-func _on_entity_component_added(entity, component_key: String) -> void:
-	_add_entity_to_index(entity, component_key)
+func _on_entity_component_added(entity, component: Variant) -> void:
+	# We have to get the script here then resource because we're using an instantiated resource
+	_add_entity_to_index(entity, component.get_script().resource_path)
+	component_added.emit(entity, component)
 
 ## [signal Entity.component_removed] Callback when a component is removed from an entity.[br]
 ## @param entity The entity that had a component removed.[br]
 ## @param component_key The resource path of the removed component.
-func _on_entity_component_removed(entity, component_key: String) -> void:
-	_remove_entity_from_index(entity, component_key)
+func _on_entity_component_removed(entity, component: Variant) -> void:
+	 # We just use resource path here because we pass in a component type
+	_remove_entity_from_index(entity, component.resource_path)
+	component_removed.emit(entity, component)

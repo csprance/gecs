@@ -77,4 +77,4 @@ func _log_handle(entities, q):
 [%s]
   -> Query: %s
   -> Entities: %s
-""" % [self, self.query(), entities]).domain('ecs').debug()
+""" % [self, self.query(), entities]).domain('ecs-system').debug()
