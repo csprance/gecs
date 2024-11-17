@@ -45,6 +45,8 @@ This documentation will guide you through the setup and usage of the GECS addon,
 
 3. **Autoload ECS**: The addon requires the `ECS` singleton to be autoloaded. This should be handled automatically when you enable the plugin. If not, go to `Project > Project Settings > Autoload`, and add `ECS` pointing to `res://addons/gecs/ecs.gd`.
 
+4. **Configure Entity Base Type**: GECS allows you to set the base type for entities. In `Project > Project Settings > GECS`, set `Entity Base Type` to `Node2D` or `Node3D` depending on your project's requirements.
+
 ## Getting Started
 
 ### Basic Concepts
@@ -315,6 +317,24 @@ This will only process systems that are in the "physics" group in the physics pr
 
 To process all active systems regardless of their group, omit the `group` parameter:
 
+### Configuring Entity Base Type
+
+GECS provides flexibility in choosing the base class for your entities, allowing you to work seamlessly with both 2D and 3D nodes.
+
+To set the base type for entities:
+
+1. Open `Project > Project Settings > GECS`.
+2. Set `Entity Base Type` to either `Node2D` or `Node3D`.
+
+This setting updates the base class of the `Entity` to match your selection, ensuring compatibility with your project's node structure.
+
+### Processing Systems by Group
+
+Systems can be assigned to specific groups, enabling you to control when and how they are processed. This is particularly useful for separating logic that should run at different times or frequencies.
+
+**Assigning Systems to Groups**:
+
+In your system script, set the `group` property to specify which group the system belongs to.
 
 ## Conclusion
 
