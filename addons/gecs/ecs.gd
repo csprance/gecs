@@ -36,7 +36,7 @@ var world: World:
 		_show_debug()
 
 ## Are we in debug mode?
-var debug := true
+var debug := false
 
 ## This is called to process the current active [World] instance and the [System]s within it.
 ## You would call this in _process or _physics_process to update the [_ECS] system.[br]
