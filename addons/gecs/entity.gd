@@ -18,6 +18,7 @@
 ##[/codeblock]	
 @icon('res://addons/gecs/assets/entity.svg')
 class_name Entity
+## This can be either Node2D or Node3D and this is Set in The GECS Project Settings
 extends Node2D
 
 ## Emitted when a [Component] is added to the entity.
