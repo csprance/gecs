@@ -9,6 +9,5 @@ func query() -> QueryBuilder:
 	return q.with_all([]) # return the query here
 	
 
-
 func process(entity: Entity, delta: float) -> void:
 	pass # code here....
