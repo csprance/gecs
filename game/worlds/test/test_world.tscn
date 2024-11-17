@@ -1,0 +1,14 @@
+[gd_scene load_steps=2 format=3 uid="uid://4u0saigxk6ds"]
+
+[ext_resource type="Script" path="res://addons/gecs/world.gd" id="1_q7jtq"]
+
+[node name="World" type="Node"]
+script = ExtResource("1_q7jtq")
+entity_nodes_root = NodePath("Entities")
+system_nodes_root = NodePath("Systems")
+
+[node name="Entities" type="Node" parent="."]
+
+[node name="Systems" type="Node" parent="."]
+
+[node name="Props" type="Node" parent="."]
