@@ -38,18 +38,20 @@ var query: QueryBuilder:
 	get:
 		return QueryBuilder.new(self)
 
+var worldLogger =  GECSLogger.new().domain('World')
+
 ## Called when the World node is ready.[br]
 ## Adds [Entity]s and [System]s from the scene tree to the [World].
 func _ready() -> void:
 	# Add entities from the scene tree
 	var _entities = find_children('*', "Entity") as Array[Entity]
 	add_entities(_entities)
-	Loggie.msg('_ready Added Entities from Scene Tree: ', _entities).domain('ecs').debug()
+	worldLogger.trace('_ready Added Entities from Scene Tree: ', _entities)
 
 	# Add systems from scene tree
 	var _systems  = find_children('*', "System") as Array[System]
 	add_systems(_systems)
-	Loggie.msg('_ready Added Systems from Scene Tree: ', _systems).domain('ecs').debug()
+	worldLogger.trace('_ready Added Systems from Scene Tree: ', _systems)
 
 ## Called every frame by the [method _ECS.process] to process [System]s.[br]
 ## [param delta] The time elapsed since the last frame.
@@ -79,7 +81,7 @@ func add_entity(entity: Entity, components = null) -> void:
 	if not entity.is_inside_tree():
 		get_node(entity_nodes_root).add_child(entity)
 	# Update index
-	Loggie.msg('add_entity Adding Entity to World: ', entity).domain('ecs').debug()
+	worldLogger.trace('add_entity Adding Entity to World: ', entity)
 	entities.append(entity)
 	entity_added.emit(entity)
 	for component_key in entity.components.keys():
@@ -110,7 +112,7 @@ func add_entities(_entities: Array, components = null):
 func add_system(system: System) -> void:
 	if not system.is_inside_tree():
 		get_node(system_nodes_root).add_child(system)
-	Loggie.msg('add_system Adding System: ', system).domain('ecs').debug()
+	worldLogger.trace('add_system Adding System: ', system)
 	systems.append(system)
 	if not systems_by_group.has(system.group):
 		systems_by_group[system.group] = []
@@ -133,7 +135,7 @@ func add_systems(_systems: Array):
 ## [b]Example:[/b]
 ##      [codeblock]world.remove_entity(player_entity)[/codeblock]
 func remove_entity(entity) -> void:
-	Loggie.msg('remove_entity Removing Entity: ', entity).domain('ecs').debug()
+	worldLogger.trace('remove_entity Removing Entity: ', entity)
 	entities.erase(entity)
 	# Update index
 	for component_key in entity.components.keys():
@@ -151,7 +153,7 @@ func remove_entity(entity) -> void:
 ## [b]Example:[/b]
 ##      [codeblock]world.remove_system(movement_system)[/codeblock]
 func remove_system(system) -> void:
-	Loggie.msg('remove_system Removing System: ', system).domain('ecs').debug()
+	worldLogger.trace('remove_system Removing System: ', system)
 	systems.erase(system)
 	systems_by_group[system.group].erase(system)
 	system_removed.emit(system)
