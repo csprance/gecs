@@ -100,7 +100,7 @@ class_name Ball
 extends Entity
 
 func on_ready() -> void:
-    Utils.sync_transform(self)
+	Utils.sync_transform(self)
 ```
 
 3. **Initialize Components**: In the `_ready()` function, components listed in `component_resources` are automatically added to the entity.
@@ -117,14 +117,14 @@ class_name BounceSystem
 extends System
 
 func query():
-    return q.with_all([Transform, Velocity, Bounce])
+	return q.with_all([Transform, Velocity, Bounce])
 
 func process(entity: Entity, delta: float):
-    var bounce_component: Bounce = entity.get_component(Bounce)
-    if bounce_component.should_bounce:
-        var velocity_component: Velocity = entity.get_component(Velocity)
-        velocity_component.direction = bounce_component.normal
-        bounce_component.should_bounce = false
+	var bounce_component: Bounce = entity.get_component(Bounce)
+	if bounce_component.should_bounce:
+		var velocity_component: Velocity = entity.get_component(Velocity)
+		velocity_component.direction = bounce_component.normal
+		bounce_component.should_bounce = false
 ```
 
 2. **Override the `query()` Function**: In the `query()` function, specify the components that entities must have for the system to process them. Use the provided `q` (QueryBuilder) to build the query.
@@ -148,11 +148,11 @@ extends Node
 @onready var world: World = $World
 
 func _ready() -> void:
-    ECS.world = world
+	ECS.world = world
 
 func _process(delta):
-    # Process only systems in the "physics" group
-    ECS.process(delta, "physics")
+	# Process only systems in the "physics" group
+	ECS.process(delta, "physics")
 ```
 
 ## Example Project
@@ -205,7 +205,7 @@ class_name Ball
 extends Entity
 
 func on_ready() -> void:
-    Utils.sync_transform(self)
+	Utils.sync_transform(self)
 ```
 
 In the scene, the `Ball` entity includes `Bounce`, `Velocity`, and `Transform` components.
@@ -218,7 +218,7 @@ class_name Paddle
 extends Entity
 
 func on_ready() -> void:
-    Utils.sync_transform(self)
+	Utils.sync_transform(self)
 ```
 
 Includes `PlayerMovement`, `Velocity`, `Transform`, and `Friction` components.
@@ -233,14 +233,14 @@ class_name BounceSystem
 extends System
 
 func query():
-    return q.with_all([Transform, Velocity, Bounce])
+	return q.with_all([Transform, Velocity, Bounce])
 
 func process(entity: Entity, delta: float):
-    var bounce_component: Bounce = entity.get_component(Bounce)
-    if bounce_component.should_bounce:
-        var velocity_component: Velocity = entity.get_component(Velocity)
-        velocity_component.direction = bounce_component.normal
-        bounce_component.should_bounce = false
+	var bounce_component: Bounce = entity.get_component(Bounce)
+	if bounce_component.should_bounce:
+		var velocity_component: Velocity = entity.get_component(Velocity)
+		velocity_component.direction = bounce_component.normal
+		bounce_component.should_bounce = false
 ```
 
 - **VelocitySystem**: Updates entity positions based on their velocity.
@@ -251,13 +251,13 @@ class_name VelocitySystem
 extends System
 
 func query():
-    return q.with_all([Velocity, Transform])
+	return q.with_all([Velocity, Transform])
 
 func process(entity: Entity, delta: float):
-    var velocity: Velocity = entity.get_component(Velocity)
-    var transform: Transform = entity.get_component(Transform)
-    var velocity_vector: Vector2 = velocity.direction.normalized() * velocity.speed
-    transform.position += velocity_vector * delta
+	var velocity: Velocity = entity.get_component(Velocity)
+	var transform: Transform = entity.get_component(Transform)
+	var velocity_vector: Vector2 = velocity.direction.normalized() * velocity.speed
+	transform.position += velocity_vector * delta
 ```
 
 - **Transform2DSystem**: Synchronizes the `Transform` component with the entity's actual transform.
@@ -268,13 +268,13 @@ class_name Transform2DSystem
 extends System
 
 func query():
-    return q.with_all([Transform])
+	return q.with_all([Transform])
 
 func process(entity: Entity, delta):
-    var transform: Transform = entity.get_component(Transform)
-    entity.position = transform.position
-    entity.rotation = transform.rotation
-    entity.scale = transform.scale
+	var transform: Transform = entity.get_component(Transform)
+	entity.position = transform.position
+	entity.rotation = transform.rotation
+	entity.scale = transform.scale
 ```
 
 ## Advanced Usage
@@ -285,9 +285,9 @@ The `QueryBuilder` class provides an advanced query function to retrieve entitie
 In classes extending System it is exposed in the `q` variable
 ```gdscript
 q
-    .with_all([]) # Find entities that have all these components
-    .with_any([]) # Find entities that have any of these components
-    .with_none([]) # Exclude entities that have these components
+	.with_all([]) # Find entities that have all these components
+	.with_any([]) # Find entities that have any of these components
+	.with_none([]) # Exclude entities that have these components
 ```
 
 - **with_all**: Entities must have all of these components.
@@ -308,10 +308,10 @@ Systems have properties that allow for customizing their execution:
 Example:
 ```gdscript
 func _physics_process(delta):
-    ECS.process(delta, "physics")
+	ECS.process(delta, "physics")
 
 func _process(delta):
-    ECS.process(delta, "gameplay")
+	ECS.process(delta, "gameplay")
 ```
 This will only process systems that are in the "physics" group in the physics process function and gameplay system in the _process function
 

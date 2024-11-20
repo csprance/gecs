@@ -1,6 +1,13 @@
-[gd_scene load_steps=2 format=3 uid="uid://4u0saigxk6ds"]
+[gd_scene load_steps=9 format=3 uid="uid://dmwx5l6qp3hgj"]
 
 [ext_resource type="Script" path="res://addons/gecs/world.gd" id="1_q7jtq"]
+[ext_resource type="PackedScene" uid="uid://cjnq2w3wyxi1f" path="res://game/entities/gameplay/e_player.tscn" id="2_3jqhy"]
+[ext_resource type="PackedScene" uid="uid://x548ueo7udx1" path="res://game/entities/gameplay/e_aim_point.tscn" id="3_d5cy8"]
+[ext_resource type="PackedScene" uid="uid://cganbyuy0jce" path="res://game/assets/levels/level-one.gltf" id="3_njsrj"]
+[ext_resource type="Script" path="res://game/systems/gameplay/s_aim_point.gd" id="4_fqw2y"]
+[ext_resource type="Script" path="res://game/systems/gameplay/s_player_movement.gd" id="5_rtsvs"]
+[ext_resource type="Script" path="res://game/systems/physics/s_character_body_3d.gd" id="6_pn3lx"]
+[ext_resource type="Script" path="res://game/systems/gameplay/s_player_direction.gd" id="6_y6j48"]
 
 [node name="World" type="Node"]
 script = ExtResource("1_q7jtq")
@@ -9,6 +16,37 @@ system_nodes_root = NodePath("Systems")
 
 [node name="Entities" type="Node" parent="."]
 
+[node name="EPlayer" parent="Entities" instance=ExtResource("2_3jqhy")]
+
+[node name="EAimPoint" parent="Entities" instance=ExtResource("3_d5cy8")]
+
 [node name="Systems" type="Node" parent="."]
 
+[node name="gameplay" type="Node" parent="Systems"]
+
+[node name="AimPointSystem" type="Node" parent="Systems/gameplay"]
+script = ExtResource("4_fqw2y")
+group = "gameplay"
+
+[node name="PlayerMovementSystem" type="Node" parent="Systems/gameplay"]
+script = ExtResource("5_rtsvs")
+group = "gameplay"
+
+[node name="PlayerDirectionSystem" type="Node" parent="Systems/gameplay"]
+script = ExtResource("6_y6j48")
+group = "gameplay"
+
+[node name="physics" type="Node" parent="Systems"]
+
+[node name="CharacterBody3DSystem" type="Node" parent="Systems/physics"]
+script = ExtResource("6_pn3lx")
+group = "physics"
+
+[node name="ui" type="Node" parent="Systems"]
+
 [node name="Props" type="Node" parent="."]
+
+[node name="level-one" parent="Props" instance=ExtResource("3_njsrj")]
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="Props"]
+transform = Transform3D(0.15095, 0.748929, -0.645228, 0, 0.652707, 0.757611, 0.988541, -0.114362, 0.0985263, 0, 5.4899, 3.30209)

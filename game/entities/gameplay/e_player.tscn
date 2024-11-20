@@ -1,0 +1,72 @@
+[gd_scene load_steps=19 format=3 uid="uid://cjnq2w3wyxi1f"]
+
+[ext_resource type="Script" path="res://game/entities/gameplay/e_player.gd" id="1_tt02t"]
+[ext_resource type="Script" path="res://game/components/gameplay/c_player.gd" id="2_c0i32"]
+[ext_resource type="Script" path="res://game/components/physics/c_velocity.gd" id="3_01fnx"]
+[ext_resource type="Script" path="res://game/components/gameplay/c_transform.gd" id="4_1iiu1"]
+[ext_resource type="Script" path="res://game/components/physics/c_character_body_3d.gd" id="5_xne1k"]
+[ext_resource type="Script" path="res://game/components/gameplay/c_player_movement.gd" id="6_ukqv2"]
+[ext_resource type="Script" path="res://game/components/gameplay/c_animation_player.gd" id="7_ha3ux"]
+[ext_resource type="Script" path="res://game/components/gameplay/c_player_direction.gd" id="8_fqkey"]
+
+[sub_resource type="Resource" id="Resource_w7h0e"]
+script = ExtResource("2_c0i32")
+
+[sub_resource type="Resource" id="Resource_m0ng3"]
+script = ExtResource("3_01fnx")
+direction = Vector3(0, 0, 0)
+speed = 0.0
+
+[sub_resource type="Resource" id="Resource_j1swe"]
+script = ExtResource("4_1iiu1")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+
+[sub_resource type="Resource" id="Resource_l36gj"]
+script = ExtResource("5_xne1k")
+
+[sub_resource type="Resource" id="Resource_qysxq"]
+script = ExtResource("6_ukqv2")
+direction = Vector3(0, 0, 0)
+speed = 10.0
+
+[sub_resource type="Resource" id="Resource_d0axv"]
+script = ExtResource("7_ha3ux")
+anim_player = NodePath("AnimationPlayer")
+anim_name = ""
+anim_speed = ""
+
+[sub_resource type="Resource" id="Resource_el2pk"]
+script = ExtResource("8_fqkey")
+direction = Vector3(0, 0, 0)
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_yda8i"]
+radius = 0.395
+height = 1.7
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_k6h10"]
+radius = 0.4
+height = 1.7
+
+[sub_resource type="BoxMesh" id="BoxMesh_encht"]
+
+[node name="EPlayer" type="CharacterBody3D"]
+script = ExtResource("1_tt02t")
+component_resources = Array[Resource("res://addons/gecs/component.gd")]([SubResource("Resource_w7h0e"), SubResource("Resource_m0ng3"), SubResource("Resource_j1swe"), SubResource("Resource_l36gj"), SubResource("Resource_qysxq"), SubResource("Resource_d0axv"), SubResource("Resource_el2pk")])
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.85, 0)
+mesh = SubResource("CapsuleMesh_yda8i")
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.461052, 0.887373, 0, -0.887373, 0.461052, 0, 11.099, 4.506)
+top_level = true
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.85, 0)
+shape = SubResource("CapsuleShape3D_k6h10")
+
+[node name="Gun" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.264835, 0, 0, 0, 0.377546, 0, 0, 0, 1, -0.478552, 0.959723, 0.438493)
+mesh = SubResource("BoxMesh_encht")

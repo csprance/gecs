@@ -11,9 +11,6 @@ func query() -> QueryBuilder:
 
 
 func process(entity: Entity, _delta):
-	var transform: C_Transform = entity.get_component(C_Transform)
-	# print('Set Entity: ', entity,' Set Position: ', transform.position)
-	entity.position = transform.position
-	entity.rotation = transform.rotation
-	entity.scale = transform.scale
+	var transform: C_Transform = entity.get_component(C_Transform) as C_Transform
+	entity.global_transform = transform.transform
 

@@ -5,8 +5,8 @@ class_name C_PlayerMovement
 extends Component
 
 ## What direction we have been directed to move in
-@export var axis := Vector2.ZERO
+@export var direction := Vector3.ZERO
 ## How fast the player moves
-@export var speed := 1000
+@export var speed := 10.
 
 

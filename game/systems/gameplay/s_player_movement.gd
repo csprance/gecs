@@ -7,28 +7,31 @@ class_name PlayerMovementSystem
 extends System
 
 func query() -> QueryBuilder:
-    return q.with_all([C_Velocity, C_PlayerMovement])
+	return q.with_all([C_Velocity, C_PlayerMovement, C_Player])
 
 
-func process(entity: Entity, delta: float) -> void:
-    var paddle = entity as Paddle
-    # Get the velocity component from the entity
-    var velocity = entity.get_component(C_Velocity) as C_Velocity
-    var movement = entity.get_component(C_PlayerMovement) as C_PlayerMovement
-    var trs = entity.get_component(C_Transform) as C_Transform
+func process(entity: Entity, _delta: float) -> void:
+	var player = entity as Player
+	# Get the velocity component from the entity
+	var velocity = player.get_component(C_Velocity) as C_Velocity
+	var movement = player.get_component(C_PlayerMovement) as C_PlayerMovement
 
-    # Reset our movement
-    movement.axis = Vector2.ZERO
+	# Reset our movement
+	movement.direction = Vector3.ZERO
 
-    # Determine the move axis
-    if Input.is_action_pressed('paddle_left'):
-        movement.axis = Vector2.LEFT
-    elif Input.is_action_pressed('paddle_right'):
-        movement.axis = Vector2.RIGHT
+	# Determine the move axis
+	if Input.is_action_pressed('move_left'):
+		movement.direction += Vector3.LEFT
+	if Input.is_action_pressed('move_right'):
+		movement.direction += Vector3.RIGHT
+	if Input.is_action_pressed('move_up'):
+		movement.direction += Vector3.FORWARD
+	if Input.is_action_pressed('move_down'):
+		movement.direction += Vector3.BACK
 
-    # if we collide with the wall, we stop moving
-    if paddle.test_move(Transform2D(trs.rotation, trs.position), movement.axis * movement.speed * delta):
-        movement.axis = Vector2.ZERO
-    # Update velocity based the move axis and speed
-    velocity.direction = movement.axis
-    velocity.speed = movement.speed if movement.axis != Vector2.ZERO else 0.0
+	if movement.direction != Vector3.ZERO:
+		movement.direction = movement.direction.normalized()
+
+	# Update velocity based on the move axis and speed
+	velocity.direction = movement.direction
+	velocity.speed = movement.speed if movement.direction != Vector3.ZERO else 0.0

@@ -45,28 +45,6 @@ static func add_components_to_query_results(query: QueryBuilder, components: Arr
         entity.add_components(components)
 
 
-## Add components to all the active balls
-static func add_components_to_active_balls(components: Array[Component]):
-    add_components_to_query_results(
-        ECS.world.query.with_all([C_ActiveBall]),
-        components
-    )
-
-
-## Add components to all the active paddles
-static func add_components_to_active_paddles(components: Array[Component]):
-    add_components_to_query_results(
-        ECS.world.query.with_all([C_ActivePaddle]),
-        components
-    )
-
-static func get_active_balls() -> Array:
-    return ECS.world.query.with_all([C_ActiveBall]).execute()
-
-static func get_active_paddles() -> Array:
-    return ECS.world.query.with_all([C_ActivePaddle]).execute()
-
-
 ## Just like pythons Zip function, takes two sequences and zips them together
 static func zip(sequence_x, sequence_y):
     var result = []
@@ -74,36 +52,4 @@ static func zip(sequence_x, sequence_y):
         for x in sequence_x:
             result.append(Vector2(x, y))
     return result
-
-
-class BrickData:
-    var color
-    var pos
-    func _init(_color: Color, _pos: Vector2) -> void:    
-        color = _color
-        pos = _pos
-
-
-static func brick_data_from_image(image_path: String):
-    var results = []
-    # Load the image resource
-    var texture: CompressedTexture2D = load(image_path)
-    var image: Image = texture.get_image()
-
-    # Get image dimensions
-    var width = image.get_width()
-    var height = image.get_height()
-    var coordinates = Utils.zip(range(width), range(height))
-    
-    # Iterate over each pixel
-    for coord in coordinates:
-        var x = coord[0]
-        var y = coord[1]
-        var color = image.get_pixel(x, y)
-        if color.a < 0.1:
-            continue
-        results.append(BrickData.new(color, Vector2(x, y)))
-    
-    return results
-        
 

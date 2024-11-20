@@ -1,4 +1,4 @@
-## This is how much damage the [Ball] can do on each hit
+## This is how much damage any entity can do
 class_name C_DamageOutput
 extends Component
 

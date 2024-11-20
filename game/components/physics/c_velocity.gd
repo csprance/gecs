@@ -4,7 +4,7 @@
 class_name C_Velocity
 extends Component
 
-# The Direction the entity is travelling
-@export var direction := Vector2.ZERO
+# The Normalized Direction the entity is travelling
+@export var direction := Vector3.ZERO
 # The Speed the entity is travelling
 @export var speed := 0.0
