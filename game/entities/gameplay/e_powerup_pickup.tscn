@@ -7,7 +7,7 @@
 [ext_resource type="Script" path="res://game/components/physics/c_velocity.gd" id="4_lciy1"]
 [ext_resource type="Script" path="res://game/components/gameplay/c_speed_modifier.gd" id="4_uwhf2"]
 [ext_resource type="Script" path="res://game/components/physics/c_physics.gd" id="5_3p3li"]
-[ext_resource type="Texture2D" uid="uid://bgq145vfplih8" path="res://icon.svg" id="6_4o7n0"]
+[ext_resource type="Texture2D" uid="uid://bgq145vfplih8" path="res://game/icon.svg" id="6_4o7n0"]
 
 [sub_resource type="Resource" id="Resource_npiw2"]
 script = ExtResource("2_4fs7o")

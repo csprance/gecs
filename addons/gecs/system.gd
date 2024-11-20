@@ -30,6 +30,8 @@ extends Node
 ## The [QueryBuilder] object exposed for conveinence to use in the system and to create the query.
 var q: QueryBuilder
 
+var systemLogger = GECSLogger.new().domain('System')
+
 
 ## Override this method and return a [QueryBuilder] to define the required [Component]s for the system.[br]
 ## If not overridden, the system will run on every update with no entities.
@@ -73,8 +75,8 @@ func _handle(delta: float):
 
 
 func _log_handle(entities, q):
-	Loggie.msg("""
+	systemLogger.trace("""
 [%s]
   -> Query: %s
   -> Entities: %s
-""" % [self, self.query(), entities]).domain('ecs-system').debug()
+""" % [self, self.query(), entities])

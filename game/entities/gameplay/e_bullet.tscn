@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" path="res://game/entities/gameplay/e_bullet.gd" id="1_fe8wn"]
 [ext_resource type="Script" path="res://game/components/physics/c_physics.gd" id="2_8xi7d"]
-[ext_resource type="Texture2D" uid="uid://bgq145vfplih8" path="res://icon.svg" id="2_fopli"]
+[ext_resource type="Texture2D" uid="uid://bgq145vfplih8" path="res://game/icon.svg" id="2_fopli"]
 [ext_resource type="Script" path="res://game/components/gameplay/c_transform.gd" id="3_qfr5d"]
 [ext_resource type="Script" path="res://game/components/physics/c_velocity.gd" id="4_n7m56"]
 
