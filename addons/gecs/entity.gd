@@ -19,7 +19,7 @@
 @icon('res://addons/gecs/assets/entity.svg')
 class_name Entity
 ## This can be either Node2D or Node3D and this is Set in The GECS Project Settings
-extends Node2D
+extends Node3D
 
 ## Emitted when a [Component] is added to the entity.
 signal component_added(entity: Entity, component: Variant)

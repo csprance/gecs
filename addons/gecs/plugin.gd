@@ -5,29 +5,11 @@ var setting_name = 'gecs/entity_base_type'
 
 func _enter_tree():
 	add_autoload_singleton("ECS", "res://addons/gecs/ecs.gd")
-	# Add the editor setting
-	if !ProjectSettings.has_setting(setting_name):
-		ProjectSettings.set_setting(setting_name, 'Node2D')
-	ProjectSettings.set_initial_value(setting_name, 'Node2D')
-	ProjectSettings.add_property_info({
-		"name": setting_name,
-		"type": TYPE_STRING,
-		"hint": PROPERTY_HINT_ENUM,
-		"hint_string": "Node2D,Node3D",
-	})
-	ProjectSettings.set_as_basic(setting_name, true)
-	# Connect to setting changed signal
-	ProjectSettings.settings_changed.connect(_on_settings_changed)
-	ProjectSettings.save()
-	# Apply the current setting
-	_apply_entity_base_type(ProjectSettings.get(setting_name))
+	add_gecs_project_settings()
 
 func _exit_tree():
 	remove_autoload_singleton("ECS")
-	# Disconnect the signal
-	ProjectSettings.settings_changed.disconnect(_on_settings_changed)
-	ProjectSettings.set_setting(setting_name, null)
-	ProjectSettings.save()
+	# remove_gecs_project_setings()
 
 func _on_settings_changed():
 	var base_type = ProjectSettings.get(setting_name)
@@ -45,3 +27,34 @@ func _apply_entity_base_type(base_type):
 		file.seek(0)
 		file.store_string('\n'.join(lines))
 		file.close()
+
+## Adds a new project setting to Godot.
+## TODO: Figure out how to also add the documentation to the ProjectSetting so that it shows up 
+## in the Godot Editor tooltip when the setting is hovered over.
+func add_project_setting(setting_name: String, default_value : Variant, value_type: int, type_hint: int = PROPERTY_HINT_NONE, hint_string: String = "", documentation : String = ""):
+	if !ProjectSettings.has_setting(setting_name):
+		ProjectSettings.set_setting(setting_name, default_value)
+		
+	ProjectSettings.set_initial_value(setting_name, default_value)
+	ProjectSettings.add_property_info({	"name": setting_name, "type": value_type, "hint": type_hint, "hint_string": hint_string})
+	ProjectSettings.set_as_basic(setting_name, true)
+
+	var error: int = ProjectSettings.save()
+	if error: 
+		push_error("GECS - Encountered error %d while saving project settings." % error)
+
+## Adds new Loggie related ProjectSettings to Godot.
+func add_gecs_project_settings():
+	ProjectSettings.settings_changed.connect(_on_settings_changed)
+	for setting in GecsSettings.project_settings.values():
+		add_project_setting(setting["path"], setting["default_value"], setting["type"], setting["hint"], setting["hint_string"], setting["doc"])
+
+## Removes Loggie related ProjectSettings from Godot.
+func remove_gecs_project_setings():
+	ProjectSettings.settings_changed.disconnect(_on_settings_changed)
+	for setting in GecsSettings.project_settings.values():
+		ProjectSettings.set_setting(setting["path"], null)
+	
+	var error: int = ProjectSettings.save()
+	if error != OK: 
+		push_error("GECS - Encountered error %d while saving project settings." % error)
