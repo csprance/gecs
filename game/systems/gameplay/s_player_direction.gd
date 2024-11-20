@@ -14,12 +14,12 @@ func process(entity: Entity, _delta: float) -> void:
     # Get the camera
     var camera = get_viewport().get_camera_3d()
     if not camera:
-        return
+        return # no camera bail
 
     # Get the aim point
     var aim_point = ECS.world.query.with_any([C_AimPoint]).execute()[0] as AimPoint
     if not aim_point:
-        return
+        return # no aim point bail
     
     var player = entity as Player
     var player_transform = (player.get_component(C_Transform) as C_Transform).transform
@@ -34,7 +34,13 @@ func process(entity: Entity, _delta: float) -> void:
     var aim_at = ray_origin + ray_direction * t
 
     var aim_from: Vector3 = player_transform.origin + AIM_OFFSET
-    
-    player.visuals.look_at(aim_at)
 
-    DebugDraw3D.draw_arrow(aim_from, aim_at, Color.RED, 0.1, true)
+    # Compute direction in XZ plane
+    var direction = aim_at - aim_from
+    direction.y = 0
+
+    # Set rotation around Y-axis
+    player.visuals.rotation.y = atan2(direction.x, direction.z)
+
+    # Debug draw the direction
+    DebugDraw3D.draw_arrow(aim_from, aim_at, Color.RED, 1.0, true)
