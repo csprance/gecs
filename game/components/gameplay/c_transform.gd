@@ -9,7 +9,7 @@ extends Component
 
 var position := Vector3.ZERO :
     set(v):
-        transform = transform.translated(v)
+        transform.origin = v
     get:
         return transform.origin
 

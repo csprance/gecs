@@ -1,4 +1,4 @@
-[gd_scene load_steps=19 format=3 uid="uid://cjnq2w3wyxi1f"]
+[gd_scene load_steps=24 format=3 uid="uid://cjnq2w3wyxi1f"]
 
 [ext_resource type="Script" path="res://game/entities/gameplay/e_player.gd" id="1_tt02t"]
 [ext_resource type="Script" path="res://game/components/gameplay/c_player.gd" id="2_c0i32"]
@@ -8,6 +8,8 @@
 [ext_resource type="Script" path="res://game/components/gameplay/c_player_movement.gd" id="6_ukqv2"]
 [ext_resource type="Script" path="res://game/components/gameplay/c_animation_player.gd" id="7_ha3ux"]
 [ext_resource type="Script" path="res://game/components/gameplay/c_player_direction.gd" id="8_fqkey"]
+[ext_resource type="Script" path="res://addons/phantom_camera/scripts/phantom_camera/phantom_camera_3d.gd" id="9_jx5cx"]
+[ext_resource type="Script" path="res://addons/phantom_camera/scripts/resources/camera_3d_resource.gd" id="11_e803a"]
 
 [sub_resource type="Resource" id="Resource_w7h0e"]
 script = ExtResource("2_c0i32")
@@ -43,29 +45,70 @@ direction = Vector3(0, 0, 0)
 radius = 0.395
 height = 1.7
 
+[sub_resource type="BoxMesh" id="BoxMesh_encht"]
+
+[sub_resource type="Animation" id="Animation_7ev53"]
+resource_name = "idle"
+loop_mode = 1
+tracks/0/type = "scale_3d"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("MeshInstance3D")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = PackedFloat32Array(0, 1, 1, 1, 1, 0.5, 1, 1.1, 0.9, 1.2, 1, 1, 1, 1, 1)
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_ug0p1"]
+_data = {
+"idle": SubResource("Animation_7ev53")
+}
+
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_k6h10"]
 radius = 0.4
 height = 1.7
 
-[sub_resource type="BoxMesh" id="BoxMesh_encht"]
+[sub_resource type="Resource" id="Resource_4bwhh"]
+script = ExtResource("11_e803a")
+cull_mask = 1048575
+h_offset = 0.0
+v_offset = 0.0
+projection = 0
+fov = 75.0
+size = 1.0
+frustum_offset = Vector2(0, 0)
+near = 0.05
+far = 4000.0
 
 [node name="EPlayer" type="CharacterBody3D"]
 script = ExtResource("1_tt02t")
 component_resources = Array[Resource("res://addons/gecs/component.gd")]([SubResource("Resource_w7h0e"), SubResource("Resource_m0ng3"), SubResource("Resource_j1swe"), SubResource("Resource_l36gj"), SubResource("Resource_qysxq"), SubResource("Resource_d0axv"), SubResource("Resource_el2pk")])
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+unique_name_in_owner = true
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.85, 0)
 mesh = SubResource("CapsuleMesh_yda8i")
 
-[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+[node name="Gun" type="MeshInstance3D" parent="MeshInstance3D"]
+transform = Transform3D(0.264835, 0, 0, 0, 0.377546, 0, 0, 0, 1, 0.413699, 0.109723, -0.342497)
+mesh = SubResource("BoxMesh_encht")
+skeleton = NodePath("../..")
 
-[node name="Camera3D" type="Camera3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 0.461052, 0.887373, 0, -0.887373, 0.461052, 0, 11.099, 4.506)
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+libraries = {
+"": SubResource("AnimationLibrary_ug0p1")
+}
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.85, 0)
 shape = SubResource("CapsuleShape3D_k6h10")
 
-[node name="Gun" type="MeshInstance3D" parent="."]
-transform = Transform3D(0.264835, 0, 0, 0, 0.377546, 0, 0, 0, 1, -0.478552, 0.959723, 0.438493)
-mesh = SubResource("BoxMesh_encht")
+[node name="PhantomCamera3D" type="Node3D" parent="." node_paths=PackedStringArray("follow_target", "look_at_target")]
+transform = Transform3D(0.999609, 0.0243971, -0.0135793, 0, 0.486335, 0.873772, 0.0279216, -0.873431, 0.486146, -0.0135793, 11.8738, 5.48615)
+top_level = true
+script = ExtResource("9_jx5cx")
+follow_mode = 5
+follow_target = NodePath("..")
+look_at_target = NodePath("../CollisionShape3D")
+tween_on_load = false
+camera_3d_resource = SubResource("Resource_4bwhh")
+follow_offset = Vector3(0, 11, 5)

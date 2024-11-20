@@ -4,20 +4,18 @@ class_name Utils
 ## This is usually run from _ready to sync node and component transforms together
 ## This is the opposite of [method Utils.sync_from_transform]
 static func sync_transform(entity: Entity):
-    var trs: C_Transform = entity.get_component(C_Transform)
+    var trs: C_Transform = entity.get_component(C_Transform) as C_Transform
     if trs:
-        trs.position = entity.position
-        trs.rotation = entity.rotation
-        trs.scale = entity.scale
+        trs.transform = entity.global_transform
 
 
 ## Synchronize a transfrorm from the component to the entity
 ## This is the opposite of [method Utils.sync_transform]
 static func sync_from_transform(entity: Entity):
     var trs: C_Transform = entity.get_component(C_Transform)
-    entity.position = trs.position
-    entity.rotation = trs.rotation
-    entity.scale = trs.scale
+    if trs:
+        entity.global_transform = trs.transform
+    
 
 
 ## Python like all function. Goes through an array and if any of the values are nothing it's false
