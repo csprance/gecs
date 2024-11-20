@@ -1,13 +1,15 @@
-[gd_scene load_steps=9 format=3 uid="uid://dmwx5l6qp3hgj"]
+[gd_scene load_steps=11 format=3 uid="uid://dmwx5l6qp3hgj"]
 
 [ext_resource type="Script" path="res://addons/gecs/world.gd" id="1_q7jtq"]
 [ext_resource type="PackedScene" uid="uid://cjnq2w3wyxi1f" path="res://game/entities/gameplay/e_player.tscn" id="2_3jqhy"]
 [ext_resource type="PackedScene" uid="uid://x548ueo7udx1" path="res://game/entities/gameplay/e_aim_point.tscn" id="3_d5cy8"]
 [ext_resource type="PackedScene" uid="uid://cganbyuy0jce" path="res://game/assets/levels/level-one.gltf" id="3_njsrj"]
 [ext_resource type="Script" path="res://game/systems/gameplay/s_aim_point.gd" id="4_fqw2y"]
+[ext_resource type="PackedScene" uid="uid://cudyrj1egdocg" path="res://game/entities/ui/e_hud.tscn" id="4_y7ehf"]
 [ext_resource type="Script" path="res://game/systems/gameplay/s_player_movement.gd" id="5_rtsvs"]
 [ext_resource type="Script" path="res://game/systems/physics/s_character_body_3d.gd" id="6_pn3lx"]
 [ext_resource type="Script" path="res://game/systems/gameplay/s_player_direction.gd" id="6_y6j48"]
+[ext_resource type="Script" path="res://game/systems/ui/s_ui_visiblity.gd" id="9_h3i20"]
 
 [node name="World" type="Node"]
 script = ExtResource("1_q7jtq")
@@ -19,6 +21,8 @@ system_nodes_root = NodePath("Systems")
 [node name="EPlayer" parent="Entities" instance=ExtResource("2_3jqhy")]
 
 [node name="EAimPoint" parent="Entities" instance=ExtResource("3_d5cy8")]
+
+[node name="EHud" parent="Entities" instance=ExtResource("4_y7ehf")]
 
 [node name="Systems" type="Node" parent="."]
 
@@ -35,6 +39,7 @@ group = "gameplay"
 [node name="PlayerDirectionSystem" type="Node" parent="Systems/gameplay"]
 script = ExtResource("6_y6j48")
 group = "gameplay"
+active = false
 
 [node name="physics" type="Node" parent="Systems"]
 
@@ -43,6 +48,10 @@ script = ExtResource("6_pn3lx")
 group = "physics"
 
 [node name="ui" type="Node" parent="Systems"]
+
+[node name="UiVisibilitySystem" type="Node" parent="Systems/ui"]
+script = ExtResource("9_h3i20")
+group = "ui"
 
 [node name="Props" type="Node" parent="."]
 

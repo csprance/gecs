@@ -61,7 +61,6 @@ mesh = SubResource("CapsuleMesh_yda8i")
 
 [node name="Camera3D" type="Camera3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 0.461052, 0.887373, 0, -0.887373, 0.461052, 0, 11.099, 4.506)
-top_level = true
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.85, 0)
