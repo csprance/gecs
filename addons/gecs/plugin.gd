@@ -9,7 +9,7 @@ func _enter_tree():
 
 func _exit_tree():
 	remove_autoload_singleton("ECS")
-	remove_gecs_project_setings()
+	# remove_gecs_project_setings()
 
 func _on_settings_changed():
 	var base_type = ProjectSettings.get(setting_name)
