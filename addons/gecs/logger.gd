@@ -4,7 +4,7 @@ extends RefCounted
 
 enum LogLevel { TRACE, DEBUG, INFO, WARNING, ERROR }
 
-var current_level: LogLevel = LogLevel.TRACE
+var current_level: LogLevel = LogLevel.DEBUG
 var current_domain: String = ""
 
 func set_level(level: LogLevel):
