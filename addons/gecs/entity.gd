@@ -19,7 +19,7 @@
 @icon('res://addons/gecs/assets/entity.svg')
 class_name Entity
 ## This can be either Node2D or Node3D and this is Set in The GECS Project Settings
-extends Node2D
+extends Node3D
 
 ## Emitted when a [Component] is added to the entity.
 signal component_added(entity: Entity, component: Variant)
@@ -48,7 +48,7 @@ func _ready() -> void:
 func add_component(component: Variant) -> void:
 	components[component.get_script().resource_path] = component
 	component_added.emit(self, component)
-	entityLogger.trace('Added Component: ', component.resource_path)
+	entityLogger.trace('Added Component: ', component.get_script().resource_path)
 
 
 ## Adds multiple components to the entity.[br]

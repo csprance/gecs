@@ -46,12 +46,12 @@ func _ready() -> void:
 	# Add entities from the scene tree
 	var _entities = find_children('*', "Entity") as Array[Entity]
 	add_entities(_entities)
-	worldLogger.trace('_ready Added Entities from Scene Tree: ', _entities)
+	worldLogger.debug('_ready Added Entities from Scene Tree: ', _entities)
 
 	# Add systems from scene tree
 	var _systems  = find_children('*', "System") as Array[System]
 	add_systems(_systems)
-	worldLogger.trace('_ready Added Systems from Scene Tree: ', _systems)
+	worldLogger.debug('_ready Added Systems from Scene Tree: ', _systems)
 
 ## Called every frame by the [method _ECS.process] to process [System]s.[br]
 ## [param delta] The time elapsed since the last frame.
@@ -81,7 +81,7 @@ func add_entity(entity: Entity, components = null) -> void:
 	if not entity.is_inside_tree():
 		get_node(entity_nodes_root).add_child(entity)
 	# Update index
-	worldLogger.trace('add_entity Adding Entity to World: ', entity)
+	worldLogger.debug('add_entity Adding Entity to World: ', entity)
 	entities.append(entity)
 	entity_added.emit(entity)
 	for component_key in entity.components.keys():
@@ -135,7 +135,7 @@ func add_systems(_systems: Array):
 ## [b]Example:[/b]
 ##      [codeblock]world.remove_entity(player_entity)[/codeblock]
 func remove_entity(entity) -> void:
-	worldLogger.trace('remove_entity Removing Entity: ', entity)
+	worldLogger.debug('remove_entity Removing Entity: ', entity)
 	entities.erase(entity)
 	# Update index
 	for component_key in entity.components.keys():
@@ -153,7 +153,7 @@ func remove_entity(entity) -> void:
 ## [b]Example:[/b]
 ##      [codeblock]world.remove_system(movement_system)[/codeblock]
 func remove_system(system) -> void:
-	worldLogger.trace('remove_system Removing System: ', system)
+	worldLogger.debug('remove_system Removing System: ', system)
 	systems.erase(system)
 	systems_by_group[system.group].erase(system)
 	system_removed.emit(system)
