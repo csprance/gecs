@@ -6,7 +6,8 @@ var setting_name = 'gecs/entity_base_type'
 func _enter_tree():
 	add_autoload_singleton("ECS", "res://addons/gecs/ecs.gd")
 	# Add the editor setting
-	ProjectSettings.set_setting(setting_name, 'Node2D')
+	if !ProjectSettings.has_setting(setting_name):
+		ProjectSettings.set_setting(setting_name, 'Node2D')
 	ProjectSettings.set_initial_value(setting_name, 'Node2D')
 	ProjectSettings.add_property_info({
 		"name": setting_name,
