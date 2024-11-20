@@ -1,6 +1,6 @@
 [gd_scene load_steps=17 format=3 uid="uid://cgyawfqrsaqdd"]
 
-[ext_resource type="Script" path="res://main.gd" id="1_2dpkv"]
+[ext_resource type="Script" path="res://game/main.gd" id="1_2dpkv"]
 [ext_resource type="Script" path="res://addons/resonate/sound_manager/sound_bank.gd" id="2_sqmfr"]
 [ext_resource type="Script" path="res://addons/resonate/sound_manager/sound_event_resource.gd" id="3_acroa"]
 [ext_resource type="AudioStream" uid="uid://cyp0fedotvaxl" path="res://addons/kenney impact sounds/impact_metal_heavy_001.ogg" id="4_c844j"]

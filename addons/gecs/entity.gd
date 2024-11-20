@@ -31,9 +31,11 @@ signal component_removed(entity: Entity, component: Variant)
 ## [Component]s attached to the [Entity]
 var components: Dictionary = {}
 
+var entityLogger = GECSLogger.new().domain('Entity')
+
 
 func _ready() -> void:
-	Loggie.msg('_ready Entity Initializing Components: ', self).domain('ecs').debug()
+	entityLogger.trace('_ready Entity Initializing Components: ', self)
 	# Initialize components from the exported array
 	for res in component_resources:
 		add_component(res.duplicate(true))
@@ -46,7 +48,7 @@ func _ready() -> void:
 func add_component(component: Variant) -> void:
 	components[component.get_script().resource_path] = component
 	component_added.emit(self, component)
-	Loggie.msg('Added Component: ', component.resource_path).domain('ecs').debug()
+	entityLogger.trace('Added Component: ', component.resource_path)
 
 
 ## Adds multiple components to the entity.[br]
@@ -65,7 +67,7 @@ func add_components(_components: Array):
 func remove_component(component: Variant) -> void:
 	var component_key = component.resource_path
 	if components.erase(component.resource_path):
-		Loggie.msg('Removed Component: ', component.resource_path).domain('ecs').debug()
+		entityLogger.trace('Removed Component: ', component.resource_path)
 		component_removed.emit(self, component)
 
 ## Removes multiple components from the entity.[br]

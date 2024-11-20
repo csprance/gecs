@@ -47,8 +47,6 @@ This documentation will guide you through the setup and usage of the GECS addon,
 
 4. **Configure Entity Base Type**: GECS allows you to set the base type for entities. In `Project > Project Settings > GECS`, set `Entity Base Type` to `Node2D` or `Node3D` depending on your project's requirements.
 
-5. **Install Loggie Addon**: GECS Currently required the Godot addon Loggie, to help with logging. Install that as well through the Godot Asset Library. [Godot Asset Library: Loggie](https://godotengine.org/asset-library/asset/3382)
-
 ## Getting Started
 
 ### Basic Concepts

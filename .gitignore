@@ -8,3 +8,4 @@ addons/*
 !addons/gecs/
 !addons/gecs/**
 
+game/bin/*
