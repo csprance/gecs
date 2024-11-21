@@ -1,0 +1,78 @@
+[gd_scene load_steps=19 format=3 uid="uid://byix5rvnpuyem"]
+
+[ext_resource type="Script" path="res://game/entities/gameplay/e_enemy.gd" id="1_k0hdh"]
+[ext_resource type="Script" path="res://game/components/gameplay/c_animation_player.gd" id="2_ee2ni"]
+[ext_resource type="Script" path="res://game/components/physics/c_character_body_3d.gd" id="3_tiohx"]
+[ext_resource type="Script" path="res://game/components/gameplay/c_health.gd" id="4_seq5a"]
+[ext_resource type="Script" path="res://game/components/physics/c_velocity.gd" id="5_oxxxc"]
+[ext_resource type="Script" path="res://game/components/gameplay/c_enemy.gd" id="6_n5rg4"]
+[ext_resource type="Script" path="res://game/components/gameplay/c_interest_range.gd" id="7_7beir"]
+
+[sub_resource type="Resource" id="Resource_iixki"]
+script = ExtResource("2_ee2ni")
+anim_player = NodePath("")
+anim_name = ""
+anim_speed = ""
+
+[sub_resource type="Resource" id="Resource_ypv7w"]
+script = ExtResource("3_tiohx")
+
+[sub_resource type="Resource" id="Resource_itu4t"]
+script = ExtResource("4_seq5a")
+total = 1
+current = 1
+
+[sub_resource type="Resource" id="Resource_05cb1"]
+script = ExtResource("5_oxxxc")
+direction = Vector3(0, 0, 0)
+speed = 0.0
+
+[sub_resource type="Resource" id="Resource_6kqax"]
+script = ExtResource("6_n5rg4")
+
+[sub_resource type="Resource" id="Resource_apar3"]
+script = ExtResource("7_7beir")
+value = 55.0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_kfvov"]
+albedo_color = Color(0.392157, 1, 0.360784, 1)
+
+[sub_resource type="PrismMesh" id="PrismMesh_s4jlr"]
+material = SubResource("StandardMaterial3D_kfvov")
+
+[sub_resource type="Animation" id="Animation_7ev53"]
+resource_name = "idle"
+loop_mode = 1
+tracks/0/type = "scale_3d"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("MeshInstance3D")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = PackedFloat32Array(0, 1, 1, 1, 1, 0.5, 1, 1.1, 0.9, 1.2, 1, 1, 1, 1, 1)
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_ug0p1"]
+_data = {
+"idle": SubResource("Animation_7ev53")
+}
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_pjpad"]
+radius = 0.537181
+height = 1.7
+
+[node name="Enemy" type="CharacterBody3D"]
+script = ExtResource("1_k0hdh")
+component_resources = Array[Resource("res://addons/gecs/component.gd")]([SubResource("Resource_iixki"), SubResource("Resource_ypv7w"), SubResource("Resource_itu4t"), SubResource("Resource_05cb1"), SubResource("Resource_6kqax"), SubResource("Resource_apar3")])
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.873071, 0, 0, 0, -1.71286, 5.61675e-08, 0, -1.49743e-07, -0.642481, 0, 0.82865, 0)
+mesh = SubResource("PrismMesh_s4jlr")
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+libraries = {
+"": SubResource("AnimationLibrary_ug0p1")
+}
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.85, 0)
+shape = SubResource("CapsuleShape3D_pjpad")

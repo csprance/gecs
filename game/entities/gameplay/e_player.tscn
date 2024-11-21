@@ -1,4 +1,4 @@
-[gd_scene load_steps=24 format=3 uid="uid://cjnq2w3wyxi1f"]
+[gd_scene load_steps=30 format=3 uid="uid://cjnq2w3wyxi1f"]
 
 [ext_resource type="Script" path="res://game/entities/gameplay/e_player.gd" id="1_tt02t"]
 [ext_resource type="Script" path="res://game/components/gameplay/c_player.gd" id="2_c0i32"]
@@ -8,7 +8,9 @@
 [ext_resource type="Script" path="res://game/components/gameplay/c_player_movement.gd" id="6_ukqv2"]
 [ext_resource type="Script" path="res://game/components/gameplay/c_animation_player.gd" id="7_ha3ux"]
 [ext_resource type="Script" path="res://game/components/gameplay/c_player_direction.gd" id="8_fqkey"]
+[ext_resource type="Script" path="res://game/components/gameplay/c_health.gd" id="9_ckw1g"]
 [ext_resource type="Script" path="res://addons/phantom_camera/scripts/phantom_camera/phantom_camera_3d.gd" id="9_jx5cx"]
+[ext_resource type="Script" path="res://addons/phantom_camera/scripts/resources/tween_resource.gd" id="10_4iumm"]
 [ext_resource type="Script" path="res://addons/phantom_camera/scripts/resources/camera_3d_resource.gd" id="11_e803a"]
 
 [sub_resource type="Resource" id="Resource_w7h0e"]
@@ -41,11 +43,26 @@ anim_speed = ""
 script = ExtResource("8_fqkey")
 direction = Vector3(0, 0, 0)
 
+[sub_resource type="Resource" id="Resource_4axd2"]
+script = ExtResource("9_ckw1g")
+total = 10
+current = 10
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_0svhy"]
+albedo_color = Color(1, 0, 0, 1)
+
 [sub_resource type="CapsuleMesh" id="CapsuleMesh_yda8i"]
+material = SubResource("StandardMaterial3D_0svhy")
 radius = 0.395
 height = 1.7
 
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_8hktb"]
+albedo_color = Color(0.423529, 0.521569, 0.65098, 1)
+metallic = 1.0
+roughness = 0.4
+
 [sub_resource type="BoxMesh" id="BoxMesh_encht"]
+material = SubResource("StandardMaterial3D_8hktb")
 
 [sub_resource type="Animation" id="Animation_7ev53"]
 resource_name = "idle"
@@ -67,6 +84,12 @@ _data = {
 radius = 0.4
 height = 1.7
 
+[sub_resource type="Resource" id="Resource_rjka7"]
+script = ExtResource("10_4iumm")
+duration = 1.0
+transition = 0
+ease = 2
+
 [sub_resource type="Resource" id="Resource_4bwhh"]
 script = ExtResource("11_e803a")
 cull_mask = 1048575
@@ -81,7 +104,7 @@ far = 4000.0
 
 [node name="EPlayer" type="CharacterBody3D"]
 script = ExtResource("1_tt02t")
-component_resources = Array[Resource("res://addons/gecs/component.gd")]([SubResource("Resource_w7h0e"), SubResource("Resource_m0ng3"), SubResource("Resource_j1swe"), SubResource("Resource_l36gj"), SubResource("Resource_qysxq"), SubResource("Resource_d0axv"), SubResource("Resource_el2pk")])
+component_resources = Array[Resource("res://addons/gecs/component.gd")]([SubResource("Resource_w7h0e"), SubResource("Resource_m0ng3"), SubResource("Resource_j1swe"), SubResource("Resource_l36gj"), SubResource("Resource_qysxq"), SubResource("Resource_d0axv"), SubResource("Resource_el2pk"), SubResource("Resource_4axd2")])
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="."]
 unique_name_in_owner = true
@@ -102,13 +125,13 @@ libraries = {
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.85, 0)
 shape = SubResource("CapsuleShape3D_k6h10")
 
-[node name="PhantomCamera3D" type="Node3D" parent="." node_paths=PackedStringArray("follow_target", "look_at_target")]
+[node name="PhantomCamera3D" type="Node3D" parent="." node_paths=PackedStringArray("follow_target")]
 transform = Transform3D(0.999609, 0.0243971, -0.0135793, 0, 0.486335, 0.873772, 0.0279216, -0.873431, 0.486146, -0.0135793, 11.8738, 5.48615)
 top_level = true
 script = ExtResource("9_jx5cx")
 follow_mode = 5
 follow_target = NodePath("..")
-look_at_target = NodePath("../CollisionShape3D")
+tween_resource = SubResource("Resource_rjka7")
 tween_on_load = false
 camera_3d_resource = SubResource("Resource_4bwhh")
 follow_offset = Vector3(0, 11, 5)

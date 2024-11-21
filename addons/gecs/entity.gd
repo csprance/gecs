@@ -36,6 +36,7 @@ var entityLogger = GECSLogger.new().domain('Entity')
 
 func _ready() -> void:
 	entityLogger.trace('_ready Entity Initializing Components: ', self)
+	component_resources.append_array(define_components())
 	# Initialize components from the exported array
 	for res in component_resources:
 		add_component(res.duplicate(true))
@@ -105,3 +106,8 @@ func on_update(delta: float) -> void:
 ## Override this method to perform any necessary cleanup before the entity is destroyed.
 func on_destroy() -> void:
 	pass
+
+## Define the default components in code to use (Instead of in the editor)[br]
+## This should return a list of components to add by default when the entity is created
+func define_components() -> Array:
+	return []

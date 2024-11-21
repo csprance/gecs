@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="C_Item" load_steps=4 format=3 uid="uid://bfpi3fqtjk6df"]
+
+[ext_resource type="Texture2D" uid="uid://drxkltn2e1umx" path="res://game/assets/healthkit_icon.svg" id="1_wbeom"]
+[ext_resource type="Script" path="res://game/components/gameplay/c_item.gd" id="1_xx5tp"]
+[ext_resource type="PackedScene" uid="uid://bqkylo8gdhvtu" path="res://game/items/healthkit_visuals.tscn" id="2_twy18"]
+
+[resource]
+script = ExtResource("1_xx5tp")
+icon = ExtResource("1_wbeom")
+name = "Medkit"
+description = "This medkit refills your health!"
+visuals = ExtResource("2_twy18")
