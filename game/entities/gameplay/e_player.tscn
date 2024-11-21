@@ -1,4 +1,4 @@
-[gd_scene load_steps=30 format=3 uid="uid://cjnq2w3wyxi1f"]
+[gd_scene load_steps=28 format=3 uid="uid://cjnq2w3wyxi1f"]
 
 [ext_resource type="Script" path="res://game/entities/gameplay/e_player.gd" id="1_tt02t"]
 [ext_resource type="Script" path="res://game/components/gameplay/c_player.gd" id="2_c0i32"]
@@ -56,14 +56,6 @@ material = SubResource("StandardMaterial3D_0svhy")
 radius = 0.395
 height = 1.7
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_8hktb"]
-albedo_color = Color(0.423529, 0.521569, 0.65098, 1)
-metallic = 1.0
-roughness = 0.4
-
-[sub_resource type="BoxMesh" id="BoxMesh_encht"]
-material = SubResource("StandardMaterial3D_8hktb")
-
 [sub_resource type="Animation" id="Animation_7ev53"]
 resource_name = "idle"
 loop_mode = 1
@@ -110,11 +102,6 @@ component_resources = Array[Resource("res://addons/gecs/component.gd")]([SubReso
 unique_name_in_owner = true
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.85, 0)
 mesh = SubResource("CapsuleMesh_yda8i")
-
-[node name="Gun" type="MeshInstance3D" parent="MeshInstance3D"]
-transform = Transform3D(0.264835, 0, 0, 0, 0.377546, 0, 0, 0, 1, 0.413699, 0.109723, -0.342497)
-mesh = SubResource("BoxMesh_encht")
-skeleton = NodePath("../..")
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="."]
 libraries = {

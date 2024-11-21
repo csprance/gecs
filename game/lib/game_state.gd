@@ -14,3 +14,15 @@ var lives :int = 3 :
 		lives = v
 		if lives == 0:
 			print('Game Lost')
+
+var active_weapon :
+	get:
+		return active_weapon
+	set(v):
+		active_weapon = v
+
+var active_item:
+	get:
+		return active_item
+	set(v):
+		active_item = v
