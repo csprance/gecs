@@ -9,7 +9,7 @@ func on_ready():
 	Utils.sync_transform(self)
 
 ## 
-func _on_area_2d_body_entered(body: Node2D) -> void:
+func _on_area_2d_body_entered(body) -> void:
 	# Only paddles can pickup powerups
 	if body is Paddle:
 		# Get a random powerup from the list of powerups and add it to the entity
