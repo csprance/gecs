@@ -2,5 +2,4 @@
 class_name C_InInventory
 extends Component
 
-## The entity that owns this item
-@export var owner: Entity
+@export var player_index: int = -1

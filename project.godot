@@ -28,10 +28,10 @@ manager/music/bus="Music"
 
 GameState="*res://game/lib/game_state.gd"
 Loggie="*res://addons/loggie/loggie.gd"
-ECS="*res://addons/gecs/ecs.gd"
 SoundManager="*res://addons/resonate/sound_manager/sound_manager.gd"
 MusicManager="*res://addons/resonate/music_manager/music_manager.gd"
 PhantomCameraManager="*res://addons/phantom_camera/scripts/managers/phantom_camera_manager.gd"
+ECS="*res://addons/gecs/ecs.gd"
 
 [debug]
 
@@ -49,7 +49,7 @@ enabled=PackedStringArray("res://addons/easy_velocity_vector_display/plugin.cfg"
 
 [gecs]
 
-entity_base_type="Node3D"
+log_level=2
 
 [input]
 

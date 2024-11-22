@@ -51,3 +51,8 @@ static func zip(sequence_x, sequence_y):
             result.append(Vector2(x, y))
     return result
 
+static func add_inventory_item(item: C_Item, quantity: int = 1):
+    Loggie.debug('Adding item to inventory: ', item.name, ' Quantity: ', quantity)
+    var new_item = Item.new()
+    new_item.add_components([item, C_InInventory.new(), C_Quantity.new(quantity)])
+    ECS.world.add_entity(new_item)

@@ -24,10 +24,7 @@
 [ext_resource type="Script" path="res://game/components/gameplay/c_interested.gd" id="13_c4avn"]
 [ext_resource type="Script" path="res://game/components/gameplay/c_transform.gd" id="14_rnyja"]
 [ext_resource type="Script" path="res://game/systems/gameplay/s_transform.gd" id="20_1nfj2"]
-
-[sub_resource type="Resource" id="Resource_bys3g"]
-script = ExtResource("14_rnyja")
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+[ext_resource type="Script" path="res://game/systems/gameplay/s_item_picked_up.gd" id="21_0mnel"]
 
 [sub_resource type="Resource" id="Resource_iixki"]
 script = ExtResource("7_1c1gc")
@@ -71,20 +68,8 @@ system_nodes_root = NodePath("Systems")
 [node name="Entities" type="Node" parent="."]
 
 [node name="Pickup" parent="Entities" instance=ExtResource("2_8fx5w")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.47451, 0, 1.78183)
-component_resources = Array[Resource("res://addons/gecs/component.gd")]([SubResource("Resource_bys3g"), ExtResource("4_yqphg")])
-
-[node name="Pickup2" parent="Entities" instance=ExtResource("2_8fx5w")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.56585, 0, 7.7913)
-
-[node name="Pickup3" parent="Entities" instance=ExtResource("2_8fx5w")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.88685, -4.76837e-07, 3.05088)
-
-[node name="Pickup4" parent="Entities" instance=ExtResource("2_8fx5w")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.40227, 0, 14.955)
-
-[node name="Pickup5" parent="Entities" instance=ExtResource("2_8fx5w")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.86438, 0, 10.5564)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.94403, 0.045001, 11.7421)
+item_resource = ExtResource("4_yqphg")
 
 [node name="EPlayer" parent="Entities" instance=ExtResource("2_3jqhy")]
 
@@ -116,6 +101,10 @@ group = "gameplay"
 
 [node name="EnemyPathingSystem" type="Node" parent="Systems/gameplay"]
 script = ExtResource("9_0axn7")
+group = "gameplay"
+
+[node name="ItemPickedUpSystem" type="Node" parent="Systems/gameplay"]
+script = ExtResource("21_0mnel")
 group = "gameplay"
 
 [node name="physics" type="Node" parent="Systems"]

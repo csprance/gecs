@@ -1,24 +1,37 @@
-[gd_scene load_steps=6 format=3 uid="uid://ds8h6cbnqm15w"]
+[gd_scene load_steps=8 format=3 uid="uid://ds8h6cbnqm15w"]
 
 [ext_resource type="Script" path="res://game/entities/gameplay/e_pickup.gd" id="1_jt4xy"]
 [ext_resource type="Script" path="res://game/components/gameplay/c_transform.gd" id="2_yl6ch"]
-[ext_resource type="Resource" uid="uid://bx7u7wpmcac6v" path="res://game/items/i_key.tres" id="3_mnmh6"]
+[ext_resource type="Script" path="res://game/components/gameplay/c_pick_up.gd" id="3_57gcc"]
 
 [sub_resource type="Resource" id="Resource_bys3g"]
 script = ExtResource("2_yl6ch")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 
+[sub_resource type="Resource" id="Resource_n8wo3"]
+script = ExtResource("3_57gcc")
+
 [sub_resource type="SphereShape3D" id="SphereShape3D_q7v5x"]
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_adocy"]
+top_radius = 0.2
+bottom_radius = 0.0
+height = 1.0
+radial_segments = 12
+rings = 2
 
 [node name="Pickup" type="Node3D"]
 script = ExtResource("1_jt4xy")
-component_resources = Array[Resource("res://addons/gecs/component.gd")]([SubResource("Resource_bys3g"), ExtResource("3_mnmh6")])
+component_resources = Array[Resource("res://addons/gecs/component.gd")]([SubResource("Resource_bys3g"), SubResource("Resource_n8wo3")])
 
 [node name="Area3D" type="Area3D" parent="."]
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Area3D"]
 shape = SubResource("SphereShape3D_q7v5x")
 
-[node name="Visuals" type="Node3D" parent="."]
+[node name="SpawnCone" type="MeshInstance3D" parent="."]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+mesh = SubResource("CylinderMesh_adocy")
 
 [connection signal="body_shape_entered" from="Area3D" to="." method="_on_area_3d_body_shape_entered"]
