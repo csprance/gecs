@@ -2,12 +2,12 @@ class_name GecsSettings
 extends Node
 
 const project_settings = {
-    'entity_base_type': {
-		"path": "gecs/entity_base_type",
-		"default_value" : 'Node2D',
-		"type" : TYPE_STRING,
+    'log_level': {
+		"path": "gecs/log_level",
+		"default_value" : GECSLogger.LogLevel.DEBUG,
+		"type" : TYPE_INT,
 		"hint" : PROPERTY_HINT_ENUM,
-		"hint_string" : "Node2D,Node3D",
-		"doc" : "What should the Entity base type be.",
+		"hint_string" : "TRACE,DEBUG,INFO,WARNING,ERROR",
+		"doc" : "What log level the ECS system should log at.",
 	}
 }

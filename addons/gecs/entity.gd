@@ -18,8 +18,7 @@
 ##[/codeblock]	
 @icon('res://addons/gecs/assets/entity.svg')
 class_name Entity
-## This can be either Node2D or Node3D and this is Set in The GECS Project Settings
-extends Node3D
+extends Node
 
 ## Emitted when a [Component] is added to the entity.
 signal component_added(entity: Entity, component: Variant)
@@ -36,6 +35,7 @@ var entityLogger = GECSLogger.new().domain('Entity')
 
 func _ready() -> void:
 	entityLogger.trace('_ready Entity Initializing Components: ', self)
+	component_resources.append_array(define_components())
 	# Initialize components from the exported array
 	for res in component_resources:
 		add_component(res.duplicate(true))
@@ -87,6 +87,12 @@ func remove_components(_components: Array):
 func get_component(component: Variant) -> Component:
 	return components.get(component.resource_path, null)
 
+## Check to see if an entity has a  specific component on it.[br]
+## This is useful when you're checking to see if it has a component and not going to use the component itself.[br]
+## If you plan on getting and using the component, use [method get_component] instead.
+func has_component(component: Variant) -> bool:
+	return components.has(component.resource_path)
+
 
 # Lifecycle methods
 
@@ -105,3 +111,8 @@ func on_update(delta: float) -> void:
 ## Override this method to perform any necessary cleanup before the entity is destroyed.
 func on_destroy() -> void:
 	pass
+
+## Define the default components in code to use (Instead of in the editor)[br]
+## This should return a list of components to add by default when the entity is created
+func define_components() -> Array:
+	return []
