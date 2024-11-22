@@ -18,8 +18,7 @@
 ##[/codeblock]	
 @icon('res://addons/gecs/assets/entity.svg')
 class_name Entity
-## This can be either Node2D or Node3D and this is Set in The GECS Project Settings
-extends Node3D
+extends Node
 
 ## Emitted when a [Component] is added to the entity.
 signal component_added(entity: Entity, component: Variant)
@@ -87,6 +86,12 @@ func remove_components(_components: Array):
 ##     [codeblock]var transform = entity.get_component(Transform)[/codeblock]
 func get_component(component: Variant) -> Component:
 	return components.get(component.resource_path, null)
+
+## Check to see if an entity has a  specific component on it.[br]
+## This is useful when you're checking to see if it has a component and not going to use the component itself.[br]
+## If you plan on getting and using the component, use [method get_component] instead.
+func has_component(component: Variant) -> bool:
+	return components.has(component.resource_path)
 
 
 # Lifecycle methods
