@@ -160,6 +160,15 @@ func remove_system(system) -> void:
 	# Update index
 	system.queue_free()
 
+## Removes all [Entity]s and [System]s from the world.
+func purge():
+	for entity in entities:
+		remove_entity(entity)
+	for system in systems:
+		remove_system(system)
+	# remove itself
+	queue_free()
+
 ## Maps a [Component] to its [member Resource.resource_path].[br]
 ## [param x] The [Component] to map.[br]
 ## [param returns] The resource path of the component.
