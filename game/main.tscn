@@ -1,6 +1,7 @@
 [gd_scene load_steps=17 format=3 uid="uid://cgyawfqrsaqdd"]
 
 [ext_resource type="Script" path="res://game/main.gd" id="1_2dpkv"]
+[ext_resource type="PackedScene" uid="uid://ufipo5bjo0f8" path="res://game/assets/worlds/main_menu/world_main_menu.tscn" id="2_jfvff"]
 [ext_resource type="Script" path="res://addons/resonate/sound_manager/sound_bank.gd" id="2_sqmfr"]
 [ext_resource type="Script" path="res://addons/resonate/sound_manager/sound_event_resource.gd" id="3_acroa"]
 [ext_resource type="AudioStream" uid="uid://cyp0fedotvaxl" path="res://addons/kenney impact sounds/impact_metal_heavy_001.ogg" id="4_c844j"]
@@ -9,7 +10,6 @@
 [ext_resource type="AudioStream" uid="uid://dptuwjwr4wwjf" path="res://addons/kenney impact sounds/footstep_snow_003.ogg" id="7_r0v48"]
 [ext_resource type="AudioStream" uid="uid://dn5tq22uvabcv" path="res://addons/kenney impact sounds/footstep_snow_002.ogg" id="8_u3xve"]
 [ext_resource type="AudioStream" uid="uid://bn0mmmtnem0t1" path="res://addons/kenney impact sounds/footstep_snow_004.ogg" id="9_xwrxi"]
-[ext_resource type="PackedScene" uid="uid://dmwx5l6qp3hgj" path="res://game/assets/worlds/level_one/world_level_one.tscn" id="10_i5jtb"]
 
 [sub_resource type="AudioStreamRandomizer" id="AudioStreamRandomizer_yg1tm"]
 streams_count = 3
@@ -64,9 +64,9 @@ streams = Array[AudioStream]([SubResource("AudioStreamRandomizer_svov3")])
 [node name="Root" type="Node"]
 script = ExtResource("1_2dpkv")
 
+[node name="World" parent="." instance=ExtResource("2_jfvff")]
+
 [node name="SoundBank" type="Node" parent="."]
 script = ExtResource("2_sqmfr")
 label = "fx"
 events = Array[ExtResource("3_acroa")]([SubResource("Resource_qhgwi"), SubResource("Resource_ni5bo"), SubResource("Resource_7mu7w")])
-
-[node name="World" parent="." instance=ExtResource("10_i5jtb")]
