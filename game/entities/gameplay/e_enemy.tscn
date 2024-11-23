@@ -91,9 +91,10 @@ libraries = {
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.85, 0)
 shape = SubResource("CapsuleShape3D_pjpad")
 
-[node name="InterestDome" type="Area3D" parent="."]
+[node name="InterestArea" type="Area3D" parent="."]
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="InterestDome"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="InterestArea"]
 shape = SubResource("CylinderShape3D_sb42d")
 
-[connection signal="body_shape_entered" from="InterestDome" to="." method="_on_interest_dome_body_shape_entered"]
+[connection signal="body_shape_entered" from="InterestArea" to="." method="_on_interest_dome_body_shape_entered"]
+[connection signal="body_shape_exited" from="InterestArea" to="." method="_on_interest_dome_body_shape_exited"]

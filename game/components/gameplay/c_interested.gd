@@ -2,7 +2,7 @@ class_name C_Interested
 extends Component
 
 ## What location is interesting
-@export var target: Vector3
+@export var target: Vector3 = Vector3.ZERO
 ## How long should they entity be interested in the target before getting bored and losing interest
 @export var bored_timer: float = 5.0
 

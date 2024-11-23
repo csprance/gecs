@@ -21,6 +21,10 @@
 script = ExtResource("2_8njdu")
 group = "gameplay"
 
+[node name="ZombieBehaviorSystem" type="Node" parent="gameplay"]
+script = ExtResource("1_a57uo")
+group = "gameplay"
+
 [node name="CommandsSystem" type="Node" parent="gameplay"]
 script = ExtResource("1_o3q20")
 group = "gameplay"
@@ -43,10 +47,6 @@ group = "gameplay"
 
 [node name="UseItemSystem" type="Node" parent="gameplay"]
 script = ExtResource("7_50mn1")
-group = "gameplay"
-
-[node name="ZombieBehaviorSystem" type="Node" parent="gameplay"]
-script = ExtResource("1_a57uo")
 group = "gameplay"
 
 [node name="AimPointSystem" type="Node" parent="gameplay"]

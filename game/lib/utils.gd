@@ -58,8 +58,9 @@ static func add_inventory_item(c_item: C_Item, quantity: int = 1):
 	Loggie.debug('Added item to inventory: ', new_item.name, ' Quantity: ', quantity)
 
 static func has_los(from: Vector3, to: Vector3) -> bool:
-	var ray = RayCast3D.new()
-	ray.transform.origin = from
-	ray.target_position = to
-	ray.force_raycast_update()
-	return ray.is_colliding()
+	var scene_tree = Engine.get_main_loop()
+	if not scene_tree is SceneTree:
+		return false
+	var space_state = scene_tree.root.get_world_3d().direct_space_state
+	var result = space_state.intersect_ray(PhysicsRayQueryParameters3D.create(from, to))
+	return result.has('collider')
