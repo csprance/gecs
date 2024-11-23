@@ -61,17 +61,3 @@ func execute() -> Array:
 	var result = _world._query(_all_components, _any_components, _exclude_components) as Array[Entity]
 	clear()
 	return result
-
-func as_query_array() -> Array:
-	return [
-		_all_components,
-		_any_components,
-		_exclude_components
-	]
-
-func from_query_array(query_array: Array):
-	clear()
-	_all_components = query_array[0]
-	_any_components = query_array[1]
-	_exclude_components = query_array[2]
-	return self

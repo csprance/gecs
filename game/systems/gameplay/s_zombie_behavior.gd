@@ -10,12 +10,12 @@ func sub_systems():
 	return [
 		## Idle
 		[
-			q.with_all([C_ZombieBehavior, C_Transform, C_Enemy, C_Velocity, C_InterestRange]).with_none([C_Chasing, C_Interested, C_Death]).as_query_array(),
+			ECS.world.query.with_all([C_ZombieBehavior, C_Transform, C_Enemy, C_Velocity, C_InterestRange]).with_none([C_Chasing, C_Interested, C_Death]),
 			idle_subsystem
 		],
 		## Chase
 		[
-			q.with_all([C_ZombieBehavior, C_Transform, C_Enemy, C_Velocity, C_InterestRange]).with_any([C_Chasing, C_Interested]).with_none([C_Death]).as_query_array(), 
+			ECS.world.query.with_all([C_ZombieBehavior, C_Transform, C_Enemy, C_Velocity, C_InterestRange]).with_any([C_Chasing, C_Interested]).with_none([C_Death]), 
 			chase_subsystem
 		]
 	]
@@ -24,7 +24,7 @@ func idle_subsystem(entity, _delta):
 	# Pick a random spot to go to every 5 seconds
 	var c_velocity = entity.get_component(C_Velocity) as C_Velocity
 	c_velocity.speed = 0
-	c_velocity.direction = Vector3.ZERO
+	c_velocity.direction = Vector3.RIGHT
 
 func chase_subsystem(entity, _delta):
 	var c_velocity = entity.get_component(C_Velocity) as C_Velocity

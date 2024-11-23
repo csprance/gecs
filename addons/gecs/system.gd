@@ -86,7 +86,7 @@ func _handle_subsystems(delta: float):
 	for sub_sys_tuple in sub_systems():
 		var did_run = false
 		sub_systems_ran = true
-		var query = q.from_query_array(sub_sys_tuple[0])
+		var query = sub_sys_tuple[0]
 		var entities = query.execute() as Array[Entity]
 		var sub_sys_process = sub_sys_tuple[1] as Callable
 		for entity in entities:
