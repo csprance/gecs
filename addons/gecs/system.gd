@@ -39,6 +39,10 @@ func query() -> QueryBuilder:
 	process_empty = true
 	return q
 
+## Override this method to define any sub-systems that should be processed by this system.[br]
+func sub_systems():
+	return []
+
 ## Runs once after the system has been added to the [World] to setup anything on the system one time[br]
 func setup():
 	pass
@@ -48,11 +52,14 @@ func setup():
 ## [param entity] The [Entity] being processed.[br]
 ## [param delta] The time elapsed since the last frame.
 func process(entity: Entity, delta: float) -> void:
-	assert(false, "The 'process' method must be overridden in subclasses.")
+	if not sub_systems():
+		assert(false, "The 'process' method must be overridden in subclasses if it is not using sub systems.")
 
 ## handles the processing of all [Entity]s that match the system's query [Component]s.[br]
 ## [param delta] The time elapsed since the last frame.
 func _handle(delta: float):
+	if _handle_subsystems(delta):
+		return
 	# Set our QueryBuilder RefCounted Object
 	q = ECS.world.query
 	var did_run := false
@@ -71,12 +78,29 @@ func _handle(delta: float):
 	
 	if did_run:
 		# Log the whole thing
-		_log_handle(entities, q)
+		_log_handle(entities)
 
+func _handle_subsystems(delta: float):
+	q = ECS.world.query
+	var sub_systems_ran = false
+	for sub_sys_tuple in sub_systems():
+		var did_run = false
+		sub_systems_ran = true
+		var query = q.from_query_array(sub_sys_tuple[0])
+		var entities = query.execute() as Array[Entity]
+		var sub_sys_process = sub_sys_tuple[1] as Callable
+		for entity in entities:
+			did_run = true
+			sub_sys_process.call(entity, delta)
+			entity.on_update(delta)
+		if did_run:
+			# Log the whole thing
+			_log_handle(entities)
+	return sub_systems_ran
 
-func _log_handle(entities, q):
+func _log_handle(entities):
 	systemLogger.trace("""
 [%s]
   -> Query: %s
   -> Entities: %s
-""" % [self, self.query(), entities])
+""" % [self, q, entities])
