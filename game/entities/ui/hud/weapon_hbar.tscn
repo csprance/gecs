@@ -1,7 +1,7 @@
 [gd_scene load_steps=3 format=3 uid="uid://ces5ax6ygno3w"]
 
 [ext_resource type="Script" path="res://game/entities/ui/hud/weapon_hbar.gd" id="1_820no"]
-[ext_resource type="Texture2D" uid="uid://b4ueuif8f8npe" path="res://game/assets/icon.svg" id="1_c3n4s"]
+[ext_resource type="Texture2D" uid="uid://b4ueuif8f8npe" path="res://game/assets/icons/icon.svg" id="1_c3n4s"]
 
 [node name="WeaponHbar" type="VBoxContainer"]
 anchors_preset = 15

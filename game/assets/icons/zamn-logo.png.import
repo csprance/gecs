@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cpome3d7x5eg8"
-path="res://.godot/imported/crosshair.svg-75f469208d3f7ba2c5e2956882c1aec5.ctex"
+uid="uid://bsxa4oxuc76ii"
+path="res://.godot/imported/zamn-logo.png-7cb2812a7347fdc70810c03d35575e3e.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://game/assets/crosshair.svg"
-dest_files=["res://.godot/imported/crosshair.svg-75f469208d3f7ba2c5e2956882c1aec5.ctex"]
+source_file="res://game/assets/icons/zamn-logo.png"
+dest_files=["res://.godot/imported/zamn-logo.png-7cb2812a7347fdc70810c03d35575e3e.ctex"]
 
 [params]
 
@@ -32,6 +32,3 @@ process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
 detect_3d/compress_to=1
-svg/scale=1.0
-editor/scale_with_editor_scale=false
-editor/convert_colors_with_editor_theme=false

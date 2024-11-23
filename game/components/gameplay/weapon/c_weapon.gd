@@ -1,3 +1,4 @@
+## The base weapon component
 class_name C_Weapon
 extends Component
 

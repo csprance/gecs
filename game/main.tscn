@@ -9,7 +9,7 @@
 [ext_resource type="AudioStream" uid="uid://dptuwjwr4wwjf" path="res://addons/kenney impact sounds/footstep_snow_003.ogg" id="7_r0v48"]
 [ext_resource type="AudioStream" uid="uid://dn5tq22uvabcv" path="res://addons/kenney impact sounds/footstep_snow_002.ogg" id="8_u3xve"]
 [ext_resource type="AudioStream" uid="uid://bn0mmmtnem0t1" path="res://addons/kenney impact sounds/footstep_snow_004.ogg" id="9_xwrxi"]
-[ext_resource type="PackedScene" uid="uid://dmwx5l6qp3hgj" path="res://game/worlds/test/test_world.tscn" id="10_i5jtb"]
+[ext_resource type="PackedScene" uid="uid://dmwx5l6qp3hgj" path="res://game/assets/worlds/level_one/world_level_one.tscn" id="10_i5jtb"]
 
 [sub_resource type="AudioStreamRandomizer" id="AudioStreamRandomizer_yg1tm"]
 streams_count = 3

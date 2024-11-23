@@ -2,8 +2,8 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://drxkltn2e1umx"
-path.s3tc="res://.godot/imported/healthkit_icon.svg-b8c1da3b3bca30c86a406fbdc4118ffa.s3tc.ctex"
+uid="uid://bplgxin3rk2nr"
+path.s3tc="res://.godot/imported/keys.svg-c2e4d2c66131d1c74aead845617f1abb.s3tc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc"],
 "vram_texture": true
@@ -11,8 +11,8 @@ metadata={
 
 [deps]
 
-source_file="res://game/assets/healthkit_icon.svg"
-dest_files=["res://.godot/imported/healthkit_icon.svg-b8c1da3b3bca30c86a406fbdc4118ffa.s3tc.ctex"]
+source_file="res://game/assets/icons/keys.svg"
+dest_files=["res://.godot/imported/keys.svg-c2e4d2c66131d1c74aead845617f1abb.s3tc.ctex"]
 
 [params]
 

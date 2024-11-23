@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="C_Weapon" load_steps=3 format=3 uid="uid://c2njvh8tdqqem"]
+
+[ext_resource type="Script" path="res://game/components/gameplay/weapon/c_weapon.gd" id="1_4my2w"]
+[ext_resource type="PackedScene" uid="uid://bkowq6t404w7y" path="res://game/assets/weapons/water_pistol_visuals.tscn" id="2_uapeg"]
+
+[resource]
+script = ExtResource("1_4my2w")
+damage = 100
+weapon_visuals = ExtResource("2_uapeg")

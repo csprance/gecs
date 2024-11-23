@@ -1,8 +1,8 @@
 [gd_resource type="Resource" script_class="C_Item" load_steps=4 format=3 uid="uid://bx7u7wpmcac6v"]
 
 [ext_resource type="Script" path="res://game/components/gameplay/c_item.gd" id="1_2trlm"]
-[ext_resource type="Texture2D" uid="uid://bplgxin3rk2nr" path="res://game/assets/keys.svg" id="1_70cro"]
-[ext_resource type="PackedScene" uid="uid://bhxsx3bpl2v5" path="res://game/items/key_visuals.tscn" id="3_iwa4v"]
+[ext_resource type="Texture2D" uid="uid://bplgxin3rk2nr" path="res://game/assets/icons/keys.svg" id="1_70cro"]
+[ext_resource type="PackedScene" uid="uid://bhxsx3bpl2v5" path="res://game/assets/items/key_visuals.tscn" id="3_iwa4v"]
 
 [resource]
 script = ExtResource("1_2trlm")
