@@ -1,4 +1,4 @@
-class_name UseItemSystem
+class_name UseWeaponSystem
 extends System
 
 func query():

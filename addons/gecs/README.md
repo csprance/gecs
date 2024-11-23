@@ -12,6 +12,8 @@ A lightweight, performant ECS framework for Godot 4.x that integrates seamlessly
 - 🔧 System groups for organized processing
 - 📦 Component resources that work in the editor
 - 🎮 Easy setup with automatic node management
+- 🛠️ **Built-in Logging System**: Easy logging with configurable log levels
+- 🐞 **Debug Window**: Optional in-game debug window for inspecting entities and components
 
 ## Table of Contents
 
@@ -29,6 +31,11 @@ A lightweight, performant ECS framework for Godot 4.x that integrates seamlessly
    - [Systems](#systems)
 9. [Advanced Usage](#advanced-usage)
    - [Querying Entities](#querying-entities)
+   - [Configuring Entity Base Type](#configuring-entity-base-type)
+   - [Processing Systems by Group](#processing-systems-by-group)
+   - [Built-in Logging System](#built-in-logging-system)
+   - [Debug Window](#debug-window)
+   - [Project Settings](#project-settings)
 10. [Conclusion](#conclusion)
 
 ## Introduction
@@ -336,8 +343,8 @@ Systems can be assigned to specific groups, enabling you to control when and how
 
 In your system script, set the `group` property to specify which group the system belongs to.
 
-## Conclusion
+### Built-in Logging System
 
-The GECS addon provides a flexible and efficient way to implement the ECS pattern in your Godot projects. By separating data (components) from logic (systems), you can create reusable and maintainable game code.
+GECS includes a simple logging utility, `GECSLogger`, that allows you to log messages with different severity levels. This aids in debugging and monitoring your ECS-based game.
 
 Feel free to explore and expand upon the example project provided, and refer to this documentation and especially the in editor documentation as you integrate GECS into your own games.

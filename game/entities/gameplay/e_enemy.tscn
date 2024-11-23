@@ -1,4 +1,4 @@
-[gd_scene load_steps=19 format=3 uid="uid://byix5rvnpuyem"]
+[gd_scene load_steps=24 format=3 uid="uid://bv4lxxnenah0s"]
 
 [ext_resource type="Script" path="res://game/entities/gameplay/e_enemy.gd" id="1_k0hdh"]
 [ext_resource type="Script" path="res://game/components/gameplay/c_animation_player.gd" id="2_ee2ni"]
@@ -7,6 +7,8 @@
 [ext_resource type="Script" path="res://game/components/physics/c_velocity.gd" id="5_oxxxc"]
 [ext_resource type="Script" path="res://game/components/gameplay/c_enemy.gd" id="6_n5rg4"]
 [ext_resource type="Script" path="res://game/components/gameplay/c_interest_range.gd" id="7_7beir"]
+[ext_resource type="Script" path="res://game/components/gameplay/c_zombie_behavior.gd" id="8_qtxyq"]
+[ext_resource type="Script" path="res://game/components/gameplay/c_transform.gd" id="9_3pnkh"]
 
 [sub_resource type="Resource" id="Resource_iixki"]
 script = ExtResource("2_ee2ni")
@@ -34,6 +36,13 @@ script = ExtResource("6_n5rg4")
 script = ExtResource("7_7beir")
 value = 55.0
 
+[sub_resource type="Resource" id="Resource_5elb1"]
+script = ExtResource("8_qtxyq")
+
+[sub_resource type="Resource" id="Resource_x5chr"]
+script = ExtResource("9_3pnkh")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_kfvov"]
 albedo_color = Color(0.392157, 1, 0.360784, 1)
 
@@ -60,9 +69,14 @@ _data = {
 radius = 0.537181
 height = 1.7
 
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_sb42d"]
+height = 4.96175
+radius = 6.3143
+
 [node name="Enemy" type="CharacterBody3D"]
+motion_mode = 1
 script = ExtResource("1_k0hdh")
-component_resources = Array[Resource("res://addons/gecs/component.gd")]([SubResource("Resource_iixki"), SubResource("Resource_ypv7w"), SubResource("Resource_itu4t"), SubResource("Resource_05cb1"), SubResource("Resource_6kqax"), SubResource("Resource_apar3")])
+component_resources = Array[Resource("res://addons/gecs/component.gd")]([SubResource("Resource_iixki"), SubResource("Resource_ypv7w"), SubResource("Resource_itu4t"), SubResource("Resource_05cb1"), SubResource("Resource_6kqax"), SubResource("Resource_apar3"), SubResource("Resource_5elb1"), SubResource("Resource_x5chr")])
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="."]
 transform = Transform3D(0.873071, 0, 0, 0, -1.71286, 5.61675e-08, 0, -1.49743e-07, -0.642481, 0, 0.82865, 0)
@@ -76,3 +90,10 @@ libraries = {
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.85, 0)
 shape = SubResource("CapsuleShape3D_pjpad")
+
+[node name="InterestDome" type="Area3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="InterestDome"]
+shape = SubResource("CylinderShape3D_sb42d")
+
+[connection signal="body_shape_entered" from="InterestDome" to="." method="_on_interest_dome_body_shape_entered"]

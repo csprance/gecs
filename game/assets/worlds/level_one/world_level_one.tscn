@@ -1,56 +1,15 @@
-[gd_scene load_steps=26 format=3 uid="uid://dmwx5l6qp3hgj"]
+[gd_scene load_steps=11 format=3 uid="uid://dmwx5l6qp3hgj"]
 
 [ext_resource type="Script" path="res://addons/gecs/world.gd" id="1_q7jtq"]
 [ext_resource type="PackedScene" path="res://game/entities/gameplay/e_player.tscn" id="2_3jqhy"]
 [ext_resource type="PackedScene" path="res://game/entities/gameplay/e_pickup.tscn" id="2_8fx5w"]
 [ext_resource type="PackedScene" uid="uid://x548ueo7udx1" path="res://game/entities/gameplay/e_aim_point.tscn" id="3_d5cy8"]
+[ext_resource type="Resource" uid="uid://bfpi3fqtjk6df" path="res://game/data/items/i_healthkit.tres" id="3_jg4rd"]
 [ext_resource type="PackedScene" uid="uid://cganbyuy0jce" path="res://game/assets/worlds/level_one/level-one.gltf" id="3_njsrj"]
 [ext_resource type="PackedScene" uid="uid://cudyrj1egdocg" path="res://game/entities/ui/hud/e_hud.tscn" id="4_y7ehf"]
 [ext_resource type="PackedScene" path="res://game/entities/gameplay/e_camera.tscn" id="5_xr84t"]
-[ext_resource type="PackedScene" path="res://game/entities/gameplay/e_enemy.tscn" id="6_2sg1q"]
-[ext_resource type="Script" path="res://game/components/gameplay/c_animation_player.gd" id="7_1c1gc"]
-[ext_resource type="Script" path="res://game/components/physics/c_character_body_3d.gd" id="8_0ejei"]
-[ext_resource type="Script" path="res://game/components/gameplay/c_health.gd" id="9_vjxex"]
-[ext_resource type="Script" path="res://game/components/physics/c_velocity.gd" id="10_axr0e"]
-[ext_resource type="Script" path="res://game/components/gameplay/c_enemy.gd" id="11_0n4ec"]
-[ext_resource type="Script" path="res://game/components/gameplay/c_interest_range.gd" id="12_a8gr6"]
-[ext_resource type="Script" path="res://game/components/gameplay/c_interested.gd" id="13_c4avn"]
-[ext_resource type="Script" path="res://game/components/gameplay/c_transform.gd" id="14_rnyja"]
+[ext_resource type="PackedScene" uid="uid://bv4lxxnenah0s" path="res://game/entities/gameplay/e_enemy.tscn" id="6_2sg1q"]
 [ext_resource type="PackedScene" uid="uid://ex2wx8kwwjjx" path="res://game/systems/default_systems.tscn" id="16_2mwmf"]
-
-[sub_resource type="Resource" id="Resource_iixki"]
-script = ExtResource("7_1c1gc")
-anim_player = NodePath("")
-anim_name = ""
-anim_speed = ""
-
-[sub_resource type="Resource" id="Resource_ypv7w"]
-script = ExtResource("8_0ejei")
-
-[sub_resource type="Resource" id="Resource_itu4t"]
-script = ExtResource("9_vjxex")
-total = 1
-current = 1
-
-[sub_resource type="Resource" id="Resource_05cb1"]
-script = ExtResource("10_axr0e")
-direction = Vector3(0, 0, 0)
-speed = 0.0
-
-[sub_resource type="Resource" id="Resource_6kqax"]
-script = ExtResource("11_0n4ec")
-
-[sub_resource type="Resource" id="Resource_apar3"]
-script = ExtResource("12_a8gr6")
-value = 55.0
-
-[sub_resource type="Resource" id="Resource_ruod3"]
-script = ExtResource("13_c4avn")
-target = Vector3(0, 0, 0)
-
-[sub_resource type="Resource" id="Resource_4g2a0"]
-script = ExtResource("14_rnyja")
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 
 [node name="World" type="Node"]
 script = ExtResource("1_q7jtq")
@@ -59,8 +18,12 @@ system_nodes_root = NodePath("Systems")
 
 [node name="Entities" type="Node" parent="."]
 
+[node name="Enemy" parent="Entities" instance=ExtResource("6_2sg1q")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 9.89956)
+
 [node name="Pickup" parent="Entities" instance=ExtResource("2_8fx5w")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.94403, 0.045001, 11.7421)
+item_resource = ExtResource("3_jg4rd")
 
 [node name="EPlayer" parent="Entities" instance=ExtResource("2_3jqhy")]
 
@@ -69,10 +32,6 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.94403, 0.045001, 11.7421)
 [node name="EHud" parent="Entities" instance=ExtResource("4_y7ehf")]
 
 [node name="ECamera" parent="Entities" instance=ExtResource("5_xr84t")]
-
-[node name="Enemy" parent="Entities" instance=ExtResource("6_2sg1q")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.536863, 0, 6.68926)
-component_resources = Array[Resource("res://addons/gecs/component.gd")]([SubResource("Resource_iixki"), SubResource("Resource_ypv7w"), SubResource("Resource_itu4t"), SubResource("Resource_05cb1"), SubResource("Resource_6kqax"), SubResource("Resource_apar3"), SubResource("Resource_ruod3"), SubResource("Resource_4g2a0")])
 
 [node name="Systems" parent="." instance=ExtResource("16_2mwmf")]
 

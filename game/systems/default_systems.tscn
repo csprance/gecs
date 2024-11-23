@@ -1,11 +1,12 @@
-[gd_scene load_steps=12 format=3 uid="uid://ex2wx8kwwjjx"]
+[gd_scene load_steps=13 format=3 uid="uid://ex2wx8kwwjjx"]
 
+[ext_resource type="Script" path="res://game/systems/gameplay/s_zombie_behavior.gd" id="1_a57uo"]
 [ext_resource type="Script" path="res://game/systems/gameplay/s_commands.gd" id="1_o3q20"]
 [ext_resource type="Script" path="res://game/systems/gameplay/s_aim_point.gd" id="1_wvq8n"]
+[ext_resource type="Script" path="res://game/systems/gameplay/s_interest_system.gd" id="2_8njdu"]
 [ext_resource type="Script" path="res://game/systems/gameplay/s_player_movement.gd" id="2_alg2f"]
 [ext_resource type="Script" path="res://game/systems/gameplay/s_events.gd" id="2_byjij"]
 [ext_resource type="Script" path="res://game/systems/gameplay/s_player_direction.gd" id="3_0qnug"]
-[ext_resource type="Script" path="res://game/systems/gameplay/s_enemy_pathing.gd" id="4_ru7sy"]
 [ext_resource type="Script" path="res://game/systems/gameplay/s_item_picked_up.gd" id="5_02wam"]
 [ext_resource type="Script" path="res://game/systems/physics/s_character_body_3d.gd" id="6_n8p4l"]
 [ext_resource type="Script" path="res://game/systems/gameplay/s_transform.gd" id="7_5veey"]
@@ -16,12 +17,17 @@
 
 [node name="gameplay" type="Node" parent="."]
 
+[node name="InterestSystem" type="Node" parent="gameplay"]
+script = ExtResource("2_8njdu")
+group = "gameplay"
+
 [node name="CommandsSystem" type="Node" parent="gameplay"]
 script = ExtResource("1_o3q20")
 group = "gameplay"
 
 [node name="EventSystem" type="Node" parent="gameplay"]
 script = ExtResource("2_byjij")
+group = "gameplay"
 
 [node name="PlayerMovementSystem" type="Node" parent="gameplay"]
 script = ExtResource("2_alg2f")
@@ -29,10 +35,6 @@ group = "gameplay"
 
 [node name="PlayerDirectionSystem" type="Node" parent="gameplay"]
 script = ExtResource("3_0qnug")
-group = "gameplay"
-
-[node name="EnemyPathingSystem" type="Node" parent="gameplay"]
-script = ExtResource("4_ru7sy")
 group = "gameplay"
 
 [node name="ItemPickedUpSystem" type="Node" parent="gameplay"]
@@ -43,8 +45,13 @@ group = "gameplay"
 script = ExtResource("7_50mn1")
 group = "gameplay"
 
+[node name="ZombieBehaviorSystem" type="Node" parent="gameplay"]
+script = ExtResource("1_a57uo")
+group = "gameplay"
+
 [node name="AimPointSystem" type="Node" parent="gameplay"]
 script = ExtResource("1_wvq8n")
+group = "gameplay"
 
 [node name="physics" type="Node" parent="."]
 

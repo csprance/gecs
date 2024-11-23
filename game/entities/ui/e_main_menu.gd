@@ -4,7 +4,7 @@ extends Ui
 @export var worlds : Array[PackedScene]
 
 
-func _on_start_clicked(meta:Variant) -> void:
+func _on_start_clicked(_meta:Variant) -> void:
 	# Purge the current world
 	ECS.world.purge()
 
@@ -18,4 +18,5 @@ func _on_start_clicked(meta:Variant) -> void:
 
 
 func _on_password_clicked(meta:Variant) -> void:
-	pass # Replace with function body.
+	# For now just start the first world
+	_on_start_clicked(meta)
