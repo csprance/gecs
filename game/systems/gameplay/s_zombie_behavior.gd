@@ -25,20 +25,22 @@ func sub_systems():
 		],
 		## Attack
 		[
-			ECS.world.query.with_all([C_ZombieBehavior, C_Transform, C_Enemy, C_Velocity, C_Attacking]).with_none([C_Death]), 
+			ECS.world.query.with_all([C_ZombieBehavior, C_Transform, C_Enemy, C_Velocity, C_Attacking]).with_none([C_Death, C_AttackCooldown]), 
 			attack_subsystem
 		],
 	]
 
-## Try to attack the target	if we
+## Try to attack the target	if we can
 func attack_subsystem(entity, _delta):
 	var c_velocity = entity.get_component(C_Velocity) as C_Velocity
 	var c_trs = entity.get_component(C_Transform) as C_Transform
 	var c_attacking = entity.get_component(C_Attacking) as C_Attacking
+	Loggie.debug('Attacking', c_attacking.target)
+	c_attacking.target.add_component(C_Damage.new())
+	entity.add_component(C_AttackCooldown.new())
 
 
 func idle_subsystem(entity, _delta):
-	Loggie.debug('Idle Subsystem')
 	# Pick a random spot to go to every 5 seconds
 	var t_state = GameState.use_state(entity, 'idle_timer', randf_range(0, 3))
 	t_state.value -= _delta
@@ -53,7 +55,6 @@ func idle_subsystem(entity, _delta):
 
 
 func interested_subsystem(entity, _delta):
-	Loggie.debug('Interested')
 	var c_velocity = entity.get_component(C_Velocity) as C_Velocity
 	var c_trs = entity.get_component(C_Transform) as C_Transform
 	var c_interested = entity.get_component(C_Interested) as C_Interested
@@ -70,7 +71,6 @@ func interested_subsystem(entity, _delta):
 	c_velocity.speed = ZOMBIE_SPEED
 
 func chase_subsystem(entity, _delta):
-	Loggie.debug('Chasing')
 	# We can't be chasing and interested at the same time
 	entity.remove_component(C_Interested)
 	var c_velocity = entity.get_component(C_Velocity) as C_Velocity

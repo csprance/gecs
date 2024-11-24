@@ -17,15 +17,20 @@ extends BoxContainer
 var positive_style = preload("res://game/entities/ui/hud/health_pip_positive.tres")
 var negative_style = preload("res://game/entities/ui/hud/health_pip_negative.tres")
 
+func _ready() -> void:
+	GameState.health_changed.connect(_on_health_changed)
+
+func _on_health_changed(health: int) -> void:
+	set_health(health)
 
 func set_health(amount: int):
-    # Turn them all off
+	# Turn them all off
 	for i in range(health_pips.size()):
-		turn_on_pip(health_pips[i])
-
-    # Turn some back on
-	for i in range(amount):
 		turn_off_pip(health_pips[i])
+
+	# Turn some back on
+	for i in range(amount):
+		turn_on_pip(health_pips[i])
 
 func turn_off_pip(pip: Panel):
 	pip.add_theme_stylebox_override("panel", negative_style)

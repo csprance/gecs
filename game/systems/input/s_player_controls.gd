@@ -49,7 +49,7 @@ func player_input_subsystem(_3d_playersentity: Entity, _delta: float) -> void:
 		Loggie.debug('Change Weapon')
 	
 	if Input.is_action_just_pressed('radar_toggle'):
-		Loggie.debug('Toggle Radar')
+		GameState.radar_toggled.emit()
 
 	if Input.is_action_just_pressed('pause_toggle'):
 		GameState.paused = not GameState.paused
@@ -59,8 +59,7 @@ func item_subsystem(entity: Entity, _delta: float) -> void:
 	var player = entity as Player
 	
 	if Input.is_action_just_pressed('use_item'):
-		var c_item = player.get_component(C_HasActiveItem) as C_HasActiveItem
-		Loggie.debug('Using Item', c_item)
+		GameState.use_inventory_item(GameState.active_item)
 
 
 func weapon_subsystem(entity: Entity, _delta: float) -> void:

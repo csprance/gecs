@@ -26,4 +26,7 @@ func process(entity: Entity, _delta: float):
 	
 	if health.current <= 0:
 		entity.add_component(C_Death.new())
+	
+	if entity is Player:
+		GameState.health_changed.emit(health.current)
 

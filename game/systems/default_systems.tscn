@@ -1,4 +1,4 @@
-[gd_scene load_steps=13 format=3 uid="uid://ex2wx8kwwjjx"]
+[gd_scene load_steps=15 format=3 uid="uid://ex2wx8kwwjjx"]
 
 [ext_resource type="Script" path="res://game/systems/gameplay/s_zombie_behavior.gd" id="1_a57uo"]
 [ext_resource type="Script" path="res://game/systems/input/s_player_controls.gd" id="1_e5u7d"]
@@ -9,9 +9,11 @@
 [ext_resource type="Script" path="res://game/systems/gameplay/s_item_picked_up.gd" id="5_02wam"]
 [ext_resource type="Script" path="res://game/systems/physics/s_character_body_3d.gd" id="6_n8p4l"]
 [ext_resource type="Script" path="res://game/systems/gameplay/s_transform.gd" id="7_5veey"]
-[ext_resource type="Script" path="res://game/systems/gameplay/s_use_weapon.gd" id="7_50mn1"]
 [ext_resource type="Script" path="res://game/systems/ui/s_ui_visiblity.gd" id="8_xctm1"]
+[ext_resource type="Script" path="res://game/systems/gameplay/s_pending_delete.gd" id="9_bykvn"]
+[ext_resource type="Script" path="res://game/systems/gameplay/s_damage.gd" id="10_io67f"]
 [ext_resource type="Script" path="res://game/systems/gameplay/s_look_at.gd" id="10_qatai"]
+[ext_resource type="Script" path="res://game/systems/gameplay/s_cooldown.gd" id="11_1n20v"]
 
 [node name="Systems" type="Node"]
 
@@ -39,13 +41,6 @@ group = "gameplay"
 script = ExtResource("5_02wam")
 group = "gameplay"
 
-[node name="UseItemSystem" type="Node" parent="gameplay"]
-script = ExtResource("7_50mn1")
-group = "gameplay"
-
-[node name="UseWeaponSystem" type="Node" parent="gameplay"]
-script = ExtResource("7_50mn1")
-
 [node name="LookAtSystem" type="Node" parent="gameplay"]
 script = ExtResource("10_qatai")
 group = "gameplay"
@@ -56,6 +51,18 @@ group = "gameplay"
 
 [node name="EventSystem" type="Node" parent="gameplay"]
 script = ExtResource("2_byjij")
+group = "gameplay"
+
+[node name="PendingDeleteSystem" type="Node" parent="gameplay"]
+script = ExtResource("9_bykvn")
+group = "gameplay"
+
+[node name="DamageSystem" type="Node" parent="gameplay"]
+script = ExtResource("10_io67f")
+group = "gameplay"
+
+[node name="CooldownSystem" type="Node" parent="gameplay"]
+script = ExtResource("11_1n20v")
 group = "gameplay"
 
 [node name="physics" type="Node" parent="."]
