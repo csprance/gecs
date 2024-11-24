@@ -51,6 +51,8 @@ current = 10
 
 [sub_resource type="Resource" id="Resource_urpic"]
 script = ExtResource("10_pvi0u")
+target = Vector3(0, 0, 0)
+debug = true
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_0svhy"]
 albedo_color = Color(1, 0, 0, 1)

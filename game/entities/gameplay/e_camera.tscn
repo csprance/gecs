@@ -1,4 +1,4 @@
-[gd_scene load_steps=5 format=3 uid="uid://kbaf5qn6kuu7"]
+[gd_scene load_steps=5 format=3 uid="uid://vdhm1ygxl2dx"]
 
 [ext_resource type="Script" path="res://addons/gecs/entity.gd" id="1_1rh60"]
 [ext_resource type="Script" path="res://game/components/physics/c_character_body_3d.gd" id="2_ofpu0"]

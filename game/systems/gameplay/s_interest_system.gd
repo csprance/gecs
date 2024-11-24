@@ -11,15 +11,13 @@ func process(entity: Entity, delta: float):
 	var c_interest_range = entity.get_component(C_InterestRange) as C_InterestRange
 	var c_trs =  entity.get_component(C_Transform) as C_Transform
 
-	# Check if it's too far away and remove the interest component if they get bored
+	c_interest.bored_timer -= delta
+
+	# Check if it's too far away and remove the interest component twice as fast
 	if c_trs.transform.origin.distance_to(c_interest.target) > c_interest_range.value:
 		if c_interest.bored_timer >= 0:
 			c_interest.bored_timer -= delta
-	
-	# Check if they can see the target
-	if not Utils.has_los(c_trs.transform.origin, c_interest.target):
-		c_interest.bored_timer -= delta
-	
+
 	# If they're bored, remove the interest component
 	if c_interest.bored_timer <= 0:
 		entity.remove_component(C_Interested)

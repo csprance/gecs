@@ -1,11 +1,11 @@
 [gd_scene load_steps=13 format=3 uid="uid://ex2wx8kwwjjx"]
 
 [ext_resource type="Script" path="res://game/systems/gameplay/s_zombie_behavior.gd" id="1_a57uo"]
+[ext_resource type="Script" path="res://game/systems/input/s_player_controls.gd" id="1_e5u7d"]
 [ext_resource type="Script" path="res://game/systems/gameplay/s_commands.gd" id="1_o3q20"]
 [ext_resource type="Script" path="res://game/systems/gameplay/s_aim_point.gd" id="1_wvq8n"]
 [ext_resource type="Script" path="res://game/systems/gameplay/s_interest_system.gd" id="2_8njdu"]
 [ext_resource type="Script" path="res://game/systems/gameplay/s_events.gd" id="2_byjij"]
-[ext_resource type="Script" path="res://game/systems/input/s_player_controls.gd" id="3_r4g52"]
 [ext_resource type="Script" path="res://game/systems/gameplay/s_item_picked_up.gd" id="5_02wam"]
 [ext_resource type="Script" path="res://game/systems/physics/s_character_body_3d.gd" id="6_n8p4l"]
 [ext_resource type="Script" path="res://game/systems/gameplay/s_transform.gd" id="7_5veey"]
@@ -18,7 +18,7 @@
 [node name="input" type="Node" parent="."]
 
 [node name="PlayerControlsSystem" type="Node" parent="input"]
-script = ExtResource("3_r4g52")
+script = ExtResource("1_e5u7d")
 group = "input"
 
 [node name="gameplay" type="Node" parent="."]

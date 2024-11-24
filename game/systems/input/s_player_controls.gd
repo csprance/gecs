@@ -42,6 +42,7 @@ func sub_systems():
 
 func player_input_subsystem(_3d_playersentity: Entity, _delta: float) -> void:
 	if Input.is_action_just_pressed('change_item'):
+		# change to the next item in the list of the player's items
 		Loggie.debug('Change Item')
 
 	if Input.is_action_just_pressed('change_weapon'):

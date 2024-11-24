@@ -38,8 +38,9 @@ func attack_subsystem(entity, _delta):
 
 
 func idle_subsystem(entity, _delta):
+	Loggie.debug('Idle Subsystem')
 	# Pick a random spot to go to every 5 seconds
-	var t_state = GameState.use_state(entity, 'timer', 0)
+	var t_state = GameState.use_state(entity, 'idle_timer', randf_range(0, 3))
 	t_state.value -= _delta
 	# Pick a random spot to get interested in every 5 seconds
 	if t_state.value <= 0:
@@ -52,15 +53,24 @@ func idle_subsystem(entity, _delta):
 
 
 func interested_subsystem(entity, _delta):
+	Loggie.debug('Interested')
 	var c_velocity = entity.get_component(C_Velocity) as C_Velocity
 	var c_trs = entity.get_component(C_Transform) as C_Transform
 	var c_interested = entity.get_component(C_Interested) as C_Interested
+	
+	# Check if we're close enough to the target and then idle
+	if c_trs.transform.origin.distance_to(c_interested.target) < 0.1:
+		entity.remove_component(C_Interested)
+		c_velocity.direction = Vector3.ZERO
+		c_velocity.speed = 0
+		return
 	
 	# Set the velocity to go towards the target
 	c_velocity.direction = (c_interested.target - c_trs.transform.origin).normalized()
 	c_velocity.speed = ZOMBIE_SPEED
 
 func chase_subsystem(entity, _delta):
+	Loggie.debug('Chasing')
 	# We can't be chasing and interested at the same time
 	entity.remove_component(C_Interested)
 	var c_velocity = entity.get_component(C_Velocity) as C_Velocity

@@ -2,12 +2,12 @@
 
 [ext_resource type="Script" path="res://addons/gecs/world.gd" id="1_q7jtq"]
 [ext_resource type="PackedScene" uid="uid://mfv8kghahued" path="res://game/entities/gameplay/e_player.tscn" id="2_3jqhy"]
-[ext_resource type="PackedScene" path="res://game/entities/gameplay/e_pickup.tscn" id="2_8fx5w"]
+[ext_resource type="PackedScene" uid="uid://o00dv6xya8el" path="res://game/entities/gameplay/e_pickup.tscn" id="2_8fx5w"]
 [ext_resource type="PackedScene" uid="uid://x548ueo7udx1" path="res://game/entities/gameplay/e_aim_point.tscn" id="3_d5cy8"]
 [ext_resource type="Resource" uid="uid://bfpi3fqtjk6df" path="res://game/data/items/i_healthkit.tres" id="3_jg4rd"]
 [ext_resource type="PackedScene" uid="uid://cganbyuy0jce" path="res://game/assets/worlds/level_one/level-one.gltf" id="3_njsrj"]
 [ext_resource type="PackedScene" uid="uid://cudyrj1egdocg" path="res://game/entities/ui/hud/e_hud.tscn" id="4_y7ehf"]
-[ext_resource type="PackedScene" path="res://game/entities/gameplay/e_camera.tscn" id="5_xr84t"]
+[ext_resource type="PackedScene" uid="uid://vdhm1ygxl2dx" path="res://game/entities/gameplay/e_camera.tscn" id="5_xr84t"]
 [ext_resource type="PackedScene" uid="uid://bv4lxxnenah0s" path="res://game/entities/gameplay/e_enemy.tscn" id="6_2sg1q"]
 [ext_resource type="PackedScene" uid="uid://ex2wx8kwwjjx" path="res://game/systems/default_systems.tscn" id="16_2mwmf"]
 
@@ -18,36 +18,12 @@ system_nodes_root = NodePath("Systems")
 
 [node name="Entities" type="Node" parent="."]
 
+[node name="Pickup" parent="Entities" instance=ExtResource("2_8fx5w")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.21112, 0, 6.54257)
+item_resource = ExtResource("3_jg4rd")
+
 [node name="Enemy" parent="Entities" instance=ExtResource("6_2sg1q")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 9.89956)
-
-[node name="Enemy2" parent="Entities" instance=ExtResource("6_2sg1q")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.9682, 0, 3.26329)
-
-[node name="Enemy3" parent="Entities" instance=ExtResource("6_2sg1q")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.43766, 0, -10.3613)
-
-[node name="Enemy4" parent="Entities" instance=ExtResource("6_2sg1q")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18.2917, 0, -8.8816)
-
-[node name="Enemy5" parent="Entities" instance=ExtResource("6_2sg1q")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.83359, 0, 3.52596)
-
-[node name="Enemy6" parent="Entities" instance=ExtResource("6_2sg1q")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -24.6205, 0, 2.88773)
-
-[node name="Enemy7" parent="Entities" instance=ExtResource("6_2sg1q")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -23.1495, 0, 14.4026)
-
-[node name="Enemy8" parent="Entities" instance=ExtResource("6_2sg1q")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 25.9258, 0, -8.26904)
-
-[node name="Enemy9" parent="Entities" instance=ExtResource("6_2sg1q")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 25.0537, 0, -19.6457)
-
-[node name="Pickup" parent="Entities" instance=ExtResource("2_8fx5w")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.94403, 0.045001, 11.7421)
-item_resource = ExtResource("3_jg4rd")
 
 [node name="EPlayer" parent="Entities" instance=ExtResource("2_3jqhy")]
 

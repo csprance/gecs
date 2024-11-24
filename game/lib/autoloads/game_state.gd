@@ -42,26 +42,42 @@ var lives :int = 3 :
 
 var active_weapon : Entity :
 	get:
-		return active_weapon
+		var entities = ECS.world.query.with_all([C_Item, C_InInventory, C_IsActiveWeapon]).execute()
+		if entities.size() > 0:
+			return entities[0]
+		return
 	set(v):
-		active_weapon = v
+		for e in ECS.world.query.with_all([C_Item, C_InInventory, C_IsActiveWeapon]).execute():
+			e.remove_component(C_IsActiveWeapon)
+		v.add_component(C_IsActiveWeapon.new())
 
 
 var active_item: Entity :
 	get:
-		return active_item
+		var entities = ECS.world.query.with_all([C_Item, C_InInventory, C_IsActiveItem]).execute()
+		if entities.size() > 0:
+			return entities[0]
+		return
 	set(v):
-		active_item = v
+		for e in ECS.world.query.with_all([C_Item, C_InInventory, C_IsActiveItem]).execute():
+			e.remove_component(C_IsActiveItem)
+		v.add_component(C_IsActiveItem.new())
 
 ## The current state of the world, use use_state to access this
 var _state = {}
+
+
+func get_inventory_items() -> Array:
+	return ECS.world.query.with_all([C_Item, C_InInventory]).execute()
+	
 
 func add_inventory_item(c_item: C_Item, quantity: int = 1):
 	var new_item = Item.new()
 	new_item.add_components([c_item, C_InInventory.new(), C_Quantity.new(quantity)])
 	ECS.world.add_entity(new_item)
-	inventory_item_added.emit(c_item)
+	inventory_item_added.emit(new_item)
 	Loggie.debug('Added item to inventory: ', new_item.name, ' Quantity: ', quantity)
+	return new_item
 
 func remove_inventory_item(c_item: C_Item, quantity: int = 1):
 	for entity in ECS.world.query.with_all([c_item, C_InInventory]).execute():
