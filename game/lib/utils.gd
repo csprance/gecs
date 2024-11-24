@@ -51,11 +51,6 @@ static func zip(sequence_x, sequence_y):
 			result.append(Vector2(x, y))
 	return result
 
-static func add_inventory_item(c_item: C_Item, quantity: int = 1):
-	var new_item = Item.new()
-	new_item.add_components([c_item, C_InInventory.new(), C_Quantity.new(quantity)])
-	ECS.world.add_entity(new_item)
-	Loggie.debug('Added item to inventory: ', new_item.name, ' Quantity: ', quantity)
 
 static func has_los(from: Vector3, to: Vector3) -> bool:
 	var scene_tree = Engine.get_main_loop()

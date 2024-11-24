@@ -13,6 +13,7 @@ func process(entity, _delta: float):
 		entity.velocity = velocity.direction.normalized() * velocity.speed
 		# Move the entity
 		if entity.move_and_slide():
+			# Check if we're on the floor and ignore the floor collisions
 			# Add a collision event to the entity that just collided to handle collisions
 			var c_collision = C_Collision.new()
 			var col = entity.get_last_slide_collision()

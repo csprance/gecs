@@ -57,6 +57,7 @@ func _ready() -> void:
 ## [param delta] The time elapsed since the last frame.
 ## [param group] The string for the group we should run. If empty runs all
 func process(delta: float, group: String='' ) -> void:
+	# If no group specific in the group, run all systems and process was called run all system
 	if group == '':
 		for system in systems:
 			if system.active:

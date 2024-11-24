@@ -1,4 +1,4 @@
-[gd_scene load_steps=28 format=3 uid="uid://cjnq2w3wyxi1f"]
+[gd_scene load_steps=30 format=3 uid="uid://mfv8kghahued"]
 
 [ext_resource type="Script" path="res://game/entities/gameplay/e_player.gd" id="1_tt02t"]
 [ext_resource type="Script" path="res://game/components/gameplay/player/c_player.gd" id="2_c0i32"]
@@ -11,6 +11,7 @@
 [ext_resource type="Script" path="res://game/components/gameplay/c_health.gd" id="9_ckw1g"]
 [ext_resource type="Script" path="res://addons/phantom_camera/scripts/phantom_camera/phantom_camera_3d.gd" id="9_jx5cx"]
 [ext_resource type="Script" path="res://addons/phantom_camera/scripts/resources/tween_resource.gd" id="10_4iumm"]
+[ext_resource type="Script" path="res://game/components/gameplay/c_look_at.gd" id="10_pvi0u"]
 [ext_resource type="Script" path="res://addons/phantom_camera/scripts/resources/camera_3d_resource.gd" id="11_e803a"]
 
 [sub_resource type="Resource" id="Resource_w7h0e"]
@@ -47,6 +48,9 @@ direction = Vector3(0, 0, 0)
 script = ExtResource("9_ckw1g")
 total = 10
 current = 10
+
+[sub_resource type="Resource" id="Resource_urpic"]
+script = ExtResource("10_pvi0u")
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_0svhy"]
 albedo_color = Color(1, 0, 0, 1)
@@ -96,7 +100,7 @@ far = 4000.0
 
 [node name="EPlayer" type="CharacterBody3D"]
 script = ExtResource("1_tt02t")
-component_resources = Array[Resource("res://addons/gecs/component.gd")]([SubResource("Resource_w7h0e"), SubResource("Resource_m0ng3"), SubResource("Resource_j1swe"), SubResource("Resource_l36gj"), SubResource("Resource_qysxq"), SubResource("Resource_d0axv"), SubResource("Resource_el2pk"), SubResource("Resource_4axd2")])
+component_resources = Array[Resource("res://addons/gecs/component.gd")]([SubResource("Resource_w7h0e"), SubResource("Resource_m0ng3"), SubResource("Resource_j1swe"), SubResource("Resource_l36gj"), SubResource("Resource_qysxq"), SubResource("Resource_d0axv"), SubResource("Resource_el2pk"), SubResource("Resource_4axd2"), SubResource("Resource_urpic")])
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="."]
 unique_name_in_owner = true
