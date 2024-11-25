@@ -2,8 +2,6 @@
 class_name C_Weapon
 extends C_Item
 
-@export var damage := 1
-
 @export var weapon_visuals: PackedScene
 
 @export var projectile: C_Projectile
