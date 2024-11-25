@@ -61,3 +61,9 @@ func execute() -> Array:
 	var result = _world._query(_all_components, _any_components, _exclude_components) as Array[Entity]
 	clear()
 	return result
+
+func combine(other: QueryBuilder) -> QueryBuilder:
+	_all_components += other._all_components
+	_any_components += other._any_components
+	_exclude_components += other._exclude_components
+	return self
