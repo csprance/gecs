@@ -17,10 +17,13 @@ func on_ready() -> void:
 	Utils.sync_transform(self)
 
 func _show_visuals():
-	if item_resource:
+	if item_resource or weapon_resource:
+		var resource = item_resource if item_resource else weapon_resource
+		if not resource.visuals:
+			return
 		# Remove spawn cone
 		spawn_cone.visible = false
-		var visuals = item_resource.visuals.instantiate()
+		var visuals = resource.visuals.instantiate()
 		add_child(visuals)
 
 func _on_area_3d_body_shape_entered(body_rid:RID, body, body_shape_index:int, local_shape_index:int) -> void:

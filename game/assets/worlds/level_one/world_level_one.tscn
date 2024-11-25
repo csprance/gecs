@@ -31,9 +31,9 @@ item_resource = ExtResource("4_nyenq")
 quantity = 1
 
 [node name="Pickup3" parent="Entities" instance=ExtResource("2_8fx5w")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.659, 0, 12.926)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.81597, 0, 9.11063)
 weapon_resource = ExtResource("5_8l0mn")
-quantity = 1
+quantity = 100
 
 [node name="Enemy" parent="Entities" instance=ExtResource("6_2sg1q")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 9.89956)

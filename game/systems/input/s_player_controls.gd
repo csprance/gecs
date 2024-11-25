@@ -55,19 +55,16 @@ func player_input_subsystem(_3d_playersentity: Entity, _delta: float) -> void:
 		GameState.paused = not GameState.paused
 
 
-func item_subsystem(entity: Entity, _delta: float) -> void:
-	var player = entity as Player
-	
+func item_subsystem(_entity: Entity, _delta: float) -> void:
 	if Input.is_action_just_pressed('use_item'):
-		GameState.use_inventory_item(GameState.active_item)
+		if GameState.active_item:
+			GameState.use_inventory_item(GameState.active_item)
 
 
-func weapon_subsystem(entity: Entity, _delta: float) -> void:
-	var player = entity as Player
-
+func weapon_subsystem(_entity: Entity, _delta: float) -> void:
 	if Input.is_action_just_pressed('use_weapon'):
-		var c_weapon = player.get_component(C_HasActiveWeapon) as C_HasActiveWeapon
-		Loggie.debug('Using Weapon', c_weapon)
+		if GameState.active_weapon:
+			GameState.use_inventory_item(GameState.active_weapon)
 
 
 func movement_subsystem(entity: Entity, _delta: float) -> void:

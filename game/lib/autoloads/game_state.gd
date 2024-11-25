@@ -53,13 +53,12 @@ var lives :int = 3 :
 
 var active_weapon : Entity :
 	get:
-		var entities = ECS.world.query.with_all([C_Item, C_InInventory, C_IsActiveWeapon]).execute()
+		var entities = ECS.world.query.with_all([C_Weapon, C_InInventory, C_IsActiveWeapon]).execute()
 		if entities.size() > 0:
 			return entities[0]
-		GameState.player.remove_component(C_HasActiveWeapon)
 		return 
 	set(v):
-		for e in ECS.world.query.with_all([C_Item, C_InInventory, C_IsActiveWeapon]).execute():
+		for e in ECS.world.query.with_all([C_Weapon, C_InInventory, C_IsActiveWeapon]).execute():
 			e.remove_component(C_IsActiveWeapon)
 		v.add_component(C_IsActiveWeapon.new())
 		GameState.player.add_component(C_HasActiveWeapon.new())
@@ -71,7 +70,6 @@ var active_item: Entity :
 		var entities = ECS.world.query.with_all([C_Item, C_InInventory, C_IsActiveItem]).execute()
 		if entities.size() > 0:
 			return entities[0]
-		GameState.player.remove_component(C_HasActiveItem)
 		return
 	set(v):
 		Loggie.debug('Setting active item: ', v)
@@ -92,15 +90,10 @@ func get_inventory_items() -> Array:
 	"""
 	return ECS.world.query.with_all([C_Item, C_InInventory]).execute()
 	
-
+## Adds an item to the player's inventory.
+## c_item (C_Item): The item component to add.
+## quantity (int): The quantity of the item to add.
 func add_inventory_c_item(c_item: C_Item, quantity: int = 1):
-	"""
-	Adds an item to the player's inventory.
-
-	Parameters:
-		c_item (C_Item): The item component to add.
-		quantity (int): The quantity of the item to add.
-	"""
 	var new_item = Item.new()
 	new_item.add_components([c_item, C_InInventory.new(), C_Quantity.new(quantity)])
 	ECS.world.add_entity(new_item)
@@ -110,18 +103,29 @@ func add_inventory_c_item(c_item: C_Item, quantity: int = 1):
 
 ## Uses an item from the player's inventory.
 ## 
-## Parameters:
 ## 	item (Entity): The item entity to use.
 func use_inventory_item(item: Entity):
+	var action = get_item_action(item)
+	Loggie.debug('Using Item', item)
+	if action:
+		action.execute()
+	
+	remove_inventory_item(item)
+
+func get_item_action(item: Entity) -> Action:
+	var c_item_weapon = get_item_or_weapon(item)
+	if c_item_weapon:
+		return c_item_weapon.action
+	return
+
+func get_item_or_weapon(item:Entity):
 	var c_item = item.get_component(C_Item) as C_Item
+	var c_weapon = item.get_component(C_Weapon) as C_Weapon
 	if c_item:
-		Loggie.debug('Using Item', c_item)
-		c_item.action.execute()
-		
-		item.add_component(C_IsPendingDelete.new())
-		remove_inventory_item(item)
-	else:
-		Loggie.debug('Item does not have a C_Item component')
+		return c_item
+	if c_weapon:
+		return c_weapon
+	return
 
 ## Removes a specified quantity of an item from the player's inventory.
 ##
@@ -129,10 +133,10 @@ func use_inventory_item(item: Entity):
 ##		item (Entity): The item entity to remove.
 ##		remove_quantity (int): The quantity to remove.
 func remove_inventory_item(item: Entity, remove_quantity = 1):	
-	var c_item = item.get_component(C_Item) as C_Item
+	var c_item_weapon = get_item_or_weapon(item)
 	var c_qty = item.get_component(C_Quantity) as C_Quantity
 	var quantity = c_qty.value if c_qty else 1
-	if c_item:
+	if c_item_weapon:
 		if quantity >= remove_quantity:
 			quantity -= remove_quantity
 		if quantity == 0:
@@ -140,14 +144,12 @@ func remove_inventory_item(item: Entity, remove_quantity = 1):
 			# TODO: Swap this to a different item?
 			player.remove_component(C_HasActiveItem)
 
-		Loggie.debug('Removing Item', c_item)
+		Loggie.debug('Removing Item', c_item_weapon)
 	else:
 		Loggie.debug('Item does not have a C_Item component')
 
+## Cycles to the next item in the player's inventory.
 func cycle_inventory_item():
-	"""
-	Cycles to the next item in the player's inventory.
-	"""
 	var items = get_inventory_items()
 	if items.size() > 0:
 		var index = items.find(player.get_component(C_HasActiveItem))
@@ -160,18 +162,10 @@ func cycle_inventory_item():
 			active_item = items[index]
 
 ## Access to the current active state of the ecs system
-func use_state(entity: Entity, key: String, default_value = null) -> UseState:	
-	"""
-	Accesses or initializes a state associated with an entity.
-
-	Parameters:
-		entity (Entity): The entity to associate the state with.
-		key (String): The key identifying the state.
-		default_value: The default value to initialize if the state doesn't exist.
-
-	Returns:
-		UseState: A wrapper for the state value.
-	"""
+## entity (Entity): The entity to associate the state with.
+## key (String): The key identifying the state.
+## default_value: The default value to initialize if the state doesn't exist.
+func use_state(entity: Entity, key: String, default_value = null) -> UseState:		
 	return UseState.new(
 		entity, 
 		key, 

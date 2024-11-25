@@ -1,4 +1,4 @@
-class_name HealPlayerAction
+class_name ShootWaterPistolAction
 extends Action
 
 func execute() -> void:
