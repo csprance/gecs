@@ -5,3 +5,7 @@ extends Component
 @export var projectile_visuals: PackedScene
 ## When this hits something what component does it add to the hit entity
 @export var damage_component: Component
+## How big the collision sphere is
+@export var collision_scale:= Vector3.ONE
+## How fast this moves
+@export var speed:= 10.0
