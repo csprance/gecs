@@ -2,4 +2,7 @@
 class_name C_DebugLabel
 extends Component
 
-@export var value: String = "Debug Label"
+## The text label to display
+@export var text: String = "Debug Label"
+## The offset from the entity's C_Transform to display the label
+@export var offset:= Vector3.ZERO
