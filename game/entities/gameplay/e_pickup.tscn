@@ -22,6 +22,7 @@ rings = 2
 
 [node name="Pickup" type="Node3D"]
 script = ExtResource("1_jt4xy")
+quantity = null
 component_resources = Array[Resource("res://addons/gecs/component.gd")]([SubResource("Resource_bys3g"), SubResource("Resource_ylw1q")])
 
 [node name="Area3D" type="Area3D" parent="."]

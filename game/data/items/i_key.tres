@@ -1,8 +1,13 @@
-[gd_resource type="Resource" script_class="C_Item" load_steps=4 format=3 uid="uid://bx7u7wpmcac6v"]
+[gd_resource type="Resource" script_class="C_Item" load_steps=6 format=3 uid="uid://bx7u7wpmcac6v"]
 
 [ext_resource type="Script" path="res://game/components/gameplay/c_item.gd" id="1_2trlm"]
 [ext_resource type="Texture2D" uid="uid://bplgxin3rk2nr" path="res://game/assets/icons/keys.svg" id="1_70cro"]
+[ext_resource type="Script" path="res://game/lib/action.gd" id="1_wwl03"]
 [ext_resource type="PackedScene" uid="uid://bhxsx3bpl2v5" path="res://game/assets/items/key_visuals.tscn" id="3_iwa4v"]
+
+[sub_resource type="Resource" id="Resource_n4qe3"]
+script = ExtResource("1_wwl03")
+callable = null
 
 [resource]
 script = ExtResource("1_2trlm")
@@ -10,3 +15,4 @@ icon = ExtResource("1_70cro")
 name = "Key"
 description = "A skeleton key that can open any door"
 visuals = ExtResource("3_iwa4v")
+action = SubResource("Resource_n4qe3")

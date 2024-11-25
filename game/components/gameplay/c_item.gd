@@ -11,4 +11,4 @@ extends Component
 ## THe visuals for the item as it exist as a pickup
 @export var visuals: PackedScene
 ## THe visuals for the item as it exist as a pickup
-@export var action: Action
+@export var action: Action = Action.new()

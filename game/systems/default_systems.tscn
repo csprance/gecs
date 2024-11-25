@@ -4,9 +4,9 @@
 [ext_resource type="Script" path="res://game/systems/input/s_player_controls.gd" id="1_e5u7d"]
 [ext_resource type="Script" path="res://game/systems/gameplay/s_commands.gd" id="1_o3q20"]
 [ext_resource type="Script" path="res://game/systems/gameplay/s_aim_point.gd" id="1_wvq8n"]
-[ext_resource type="Script" path="res://game/systems/gameplay/s_interest_system.gd" id="2_8njdu"]
 [ext_resource type="Script" path="res://game/systems/gameplay/s_events.gd" id="2_byjij"]
-[ext_resource type="Script" path="res://game/systems/gameplay/s_item_picked_up.gd" id="5_02wam"]
+[ext_resource type="Script" path="res://game/systems/gameplay/s_interest.gd" id="4_epoj1"]
+[ext_resource type="Script" path="res://game/systems/gameplay/s_pickup.gd" id="5_kryj1"]
 [ext_resource type="Script" path="res://game/systems/physics/s_character_body_3d.gd" id="6_n8p4l"]
 [ext_resource type="Script" path="res://game/systems/gameplay/s_transform.gd" id="7_5veey"]
 [ext_resource type="Script" path="res://game/systems/ui/s_ui_visiblity.gd" id="8_xctm1"]
@@ -34,11 +34,11 @@ script = ExtResource("1_a57uo")
 group = "gameplay"
 
 [node name="InterestSystem" type="Node" parent="gameplay"]
-script = ExtResource("2_8njdu")
+script = ExtResource("4_epoj1")
 group = "gameplay"
 
 [node name="ItemPickedUpSystem" type="Node" parent="gameplay"]
-script = ExtResource("5_02wam")
+script = ExtResource("5_kryj1")
 group = "gameplay"
 
 [node name="LookAtSystem" type="Node" parent="gameplay"]

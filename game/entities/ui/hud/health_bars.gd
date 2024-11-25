@@ -19,6 +19,7 @@ var negative_style = preload("res://game/entities/ui/hud/health_pip_negative.tre
 
 func _ready() -> void:
 	GameState.health_changed.connect(_on_health_changed)
+	GameState.health_changed.emit(10)
 
 func _on_health_changed(health: int) -> void:
 	set_health(health)

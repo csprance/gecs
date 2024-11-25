@@ -93,7 +93,7 @@ func get_inventory_items() -> Array:
 	return ECS.world.query.with_all([C_Item, C_InInventory]).execute()
 	
 
-func add_inventory_item(c_item: C_Item, quantity: int = 1):
+func add_inventory_c_item(c_item: C_Item, quantity: int = 1):
 	"""
 	Adds an item to the player's inventory.
 
