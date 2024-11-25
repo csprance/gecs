@@ -3,8 +3,7 @@ class_name AimPointSystem
 extends System
 
 func query() -> QueryBuilder:
-	# process_empty = false # Do we want this to run every frame even with no entities?
-	return q.with_all([C_AimPoint, C_ScreenPosition]) # return the query here
+	return q.with_all([C_AimPoint, C_ScreenPosition])
 	
 
 func process(entity: Entity, delta: float) -> void:
