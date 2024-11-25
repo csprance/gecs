@@ -15,3 +15,5 @@ func _process(delta):
 func _physics_process(delta: float) -> void:
 	if not GameState.paused:
 		ECS.process(delta, 'physics')
+	
+	ECS.process(delta, 'debug')
