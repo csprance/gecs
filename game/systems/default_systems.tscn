@@ -1,4 +1,4 @@
-[gd_scene load_steps=15 format=3 uid="uid://ex2wx8kwwjjx"]
+[gd_scene load_steps=16 format=3 uid="uid://ex2wx8kwwjjx"]
 
 [ext_resource type="Script" path="res://game/systems/gameplay/s_zombie_behavior.gd" id="1_a57uo"]
 [ext_resource type="Script" path="res://game/systems/input/s_player_controls.gd" id="1_e5u7d"]
@@ -14,6 +14,7 @@
 [ext_resource type="Script" path="res://game/systems/gameplay/s_damage.gd" id="10_io67f"]
 [ext_resource type="Script" path="res://game/systems/gameplay/s_look_at.gd" id="10_qatai"]
 [ext_resource type="Script" path="res://game/systems/gameplay/s_cooldown.gd" id="11_1n20v"]
+[ext_resource type="Script" path="res://game/systems/gameplay/s_lifetime.gd" id="12_hr240"]
 
 [node name="Systems" type="Node"]
 
@@ -63,6 +64,10 @@ group = "gameplay"
 
 [node name="CooldownSystem" type="Node" parent="gameplay"]
 script = ExtResource("11_1n20v")
+group = "gameplay"
+
+[node name="LifetimeSystem" type="Node" parent="gameplay"]
+script = ExtResource("12_hr240")
 group = "gameplay"
 
 [node name="physics" type="Node" parent="."]
