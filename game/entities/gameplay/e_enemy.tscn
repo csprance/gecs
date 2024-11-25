@@ -53,7 +53,8 @@ debug = true
 
 [sub_resource type="Resource" id="Resource_fi7jj"]
 script = ExtResource("11_yq81k")
-value = "Debug Label"
+text = "Debug Label"
+offset = Vector3(0, 5, 0)
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_pjpad"]
 radius = 0.518612
