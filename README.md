@@ -341,3 +341,13 @@ In your system script, set the `group` property to specify which group the syste
 The GECS addon provides a flexible and efficient way to implement the ECS pattern in your Godot projects. By separating data (components) from logic (systems), you can create reusable and maintainable game code.
 
 Feel free to explore and expand upon the example project provided, and refer to this documentation and especially the in editor documentation as you integrate GECS into your own games.
+
+## TODO:
+- Build a better GUI for seeing Systems and their groups
+- GUI For Seeing all Systems executing
+- Gui for seeing all Entities and Components and Values in those components
+- GUI TO see all Components by type
+- Relationships
+	- q.with_all([C_Health, C_Damage, Rel([C_DamagedBy, Player])]).with_none([Rel(C_ImmuneTo, RedTeam)])
+		-  Entities that all have health, damage, and were damaged by the player entity, without a relationship of immunity to red team entity
+	- enemy_entity.add_relationship(Rel([C_DamagedBy, player_entity]))
