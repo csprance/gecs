@@ -7,7 +7,7 @@
 
 [sub_resource type="Resource" id="Resource_n4qe3"]
 script = ExtResource("1_wwl03")
-callable = null
+meta = {}
 
 [resource]
 script = ExtResource("1_2trlm")

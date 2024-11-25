@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="C_Projectile" load_steps=5 format=3 uid="uid://crekuuaar4m8l"]
+
+[ext_resource type="Script" path="res://game/components/gameplay/weapon/c_damage.gd" id="1_jg2nh"]
+[ext_resource type="PackedScene" uid="uid://wf4r34fehgpo" path="res://game/assets/weapons/water_pistol_projectile_visuals.tscn" id="2_gmm5o"]
+[ext_resource type="Script" path="res://game/components/gameplay/weapon/c_projectile.gd" id="3_ntjnw"]
+
+[sub_resource type="Resource" id="Resource_wx844"]
+script = ExtResource("1_jg2nh")
+amount = 1
+
+[resource]
+script = ExtResource("3_ntjnw")
+projectile_visuals = ExtResource("2_gmm5o")
+damage_component = SubResource("Resource_wx844")
+collision_scale = Vector3(1, 1, 1)
+speed = 25.0
