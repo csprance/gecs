@@ -4,7 +4,7 @@
 
 [sub_resource type="CylinderShape3D" id="CylinderShape3D_2akom"]
 height = 4.96175
-radius = 6.3143
+radius = 1.04704
 
 [node name="ReusableComponentArea" type="Node3D"]
 script = ExtResource("1_vqo7n")
