@@ -9,3 +9,6 @@ addons/*
 !addons/gecs/**
 
 game/bin/*
+*.spp
+
+*.painter_lock
