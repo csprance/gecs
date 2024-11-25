@@ -21,7 +21,7 @@ signal item_changed(item: Entity)
 
 var player : Entity:
 	get:
-		var players =  ECS.world.query.with_all([C_Player]).execute()
+		var players =  Queries.is_players().execute()
 		if players.size() > 0:
 			return players[0]
 		return
@@ -53,12 +53,12 @@ var lives :int = 3 :
 
 var active_weapon : Entity :
 	get:
-		var entities = ECS.world.query.with_all([C_Weapon, C_InInventory, C_IsActiveWeapon]).execute()
+		var entities = Queries.active_weapons().execute()
 		if entities.size() > 0:
 			return entities[0]
 		return 
 	set(v):
-		for e in ECS.world.query.with_all([C_Weapon, C_InInventory, C_IsActiveWeapon]).execute():
+		for e in  Queries.active_weapons().execute():
 			e.remove_component(C_IsActiveWeapon)
 		v.add_component(C_IsActiveWeapon.new())
 		GameState.player.add_component(C_HasActiveWeapon.new())
@@ -67,13 +67,13 @@ var active_weapon : Entity :
 
 var active_item: Entity :
 	get:
-		var entities = ECS.world.query.with_all([C_Item, C_InInventory, C_IsActiveItem]).execute()
+		var entities =  Queries.active_items().execute()
 		if entities.size() > 0:
 			return entities[0]
 		return
 	set(v):
 		Loggie.debug('Setting active item: ', v)
-		for e in ECS.world.query.with_all([C_Item, C_InInventory, C_IsActiveItem]).execute():
+		for e in  Queries.active_items().execute():
 			e.remove_component(C_IsActiveItem)
 		v.add_component(C_IsActiveItem.new())
 		GameState.player.add_component(C_HasActiveItem.new())
@@ -81,14 +81,6 @@ var active_item: Entity :
 
 ## The current state of the world, use use_state to access this
 var _state = {}
-
-
-
-func get_inventory_items() -> Array:
-	"""
-	Returns an array of all items currently in the player's inventory.
-	"""
-	return ECS.world.query.with_all([C_Item, C_InInventory]).execute()
 	
 ## Adds an item to the player's inventory.
 ## c_item (C_Item): The item component to add.
@@ -107,6 +99,7 @@ func add_inventory_c_item(c_item: C_Item, quantity: int = 1):
 func use_inventory_item(item: Entity):
 	var action = get_item_action(item)
 	Loggie.debug('Using Item', item)
+	action.meta['item']	= item
 	if action:
 		action.execute()
 	
@@ -150,7 +143,7 @@ func remove_inventory_item(item: Entity, remove_quantity = 1):
 
 ## Cycles to the next item in the player's inventory.
 func cycle_inventory_item():
-	var items = get_inventory_items()
+	var items =  Queries.all_items_in_inventory().execute()
 	if items.size() > 0:
 		var index = items.find(player.get_component(C_HasActiveItem))
 		if index == -1:
