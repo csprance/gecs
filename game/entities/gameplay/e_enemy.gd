@@ -31,3 +31,21 @@ func _on_attack_area_body_shape_entered(_body_rid:RID, body, _body_shape_index:i
 	if body is Player:
 		Loggie.debug('Started Attacking', body)
 		add_component(C_Attacking.new(body))
+
+
+func _on_hitbox_area_body_shape_exited(body_rid:RID, body, body_shape_index:int, local_shape_index:int) -> void:
+	if body is Projectile:
+		Loggie.debug('Projectile Left Hitbox', body)
+		var c_projectile = body.get_component(C_Projectile) as C_Projectile
+		if c_projectile:
+			add_component(C_Damage.new(c_projectile.damage_component.amount))
+		body.add_component(C_IsPendingDelete.new())
+		
+
+func _on_hitbox_area_body_shape_entered(body_rid:RID, body, body_shape_index:int, local_shape_index:int) -> void:
+	if body is Projectile:
+		Loggie.debug('Porjectile Entered Hitbox', body)
+		var c_projectile = body.get_component(C_Projectile) as C_Projectile
+		if c_projectile:
+			add_component(C_Damage.new(c_projectile.damage_component.amount))
+		body.add_component(C_IsPendingDelete.new())

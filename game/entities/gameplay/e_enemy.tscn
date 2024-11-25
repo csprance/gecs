@@ -105,3 +105,5 @@ shape = SubResource("CapsuleShape3D_6ok6t")
 [connection signal="body_shape_exited" from="InterestArea" to="." method="_on_interest_dome_body_shape_exited"]
 [connection signal="body_shape_entered" from="AttackArea" to="." method="_on_attack_area_body_shape_entered"]
 [connection signal="body_shape_exited" from="AttackArea" to="." method="_on_attack_area_body_shape_exited"]
+[connection signal="body_shape_entered" from="HitboxArea" to="." method="_on_hitbox_area_body_shape_entered"]
+[connection signal="body_shape_exited" from="HitboxArea" to="." method="_on_hitbox_area_body_shape_exited"]

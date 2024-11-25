@@ -8,3 +8,6 @@ extends Component
 ## How much Damage was just done
 @export var amount := 1
 
+func _init(_amount: int = 1):
+    amount = _amount
+
