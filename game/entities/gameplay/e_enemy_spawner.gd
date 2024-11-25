@@ -1,0 +1,19 @@
+class_name EnemySpawner
+extends Entity
+
+@export var enemies: Array[Enemy] = []
+
+# Remember Entities are just containers and glue code
+
+# func on_ready() -> void:
+# 	# we probably want to sync the component transform to the node transform
+# 	Utils.sync_transform(self)
+	
+
+#func on_update(delta: float) -> void:
+	#pass
+
+
+#func on_destroy() -> void:
+	#pass
+

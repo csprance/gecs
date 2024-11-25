@@ -1,0 +1,7 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://cmxiqi3bgucve"]
+
+[resource]
+resource_name = "bark"
+albedo_color = Color(0.53, 0.41, 0.24, 1)
+metallic = 1.0
+emission_enabled = true

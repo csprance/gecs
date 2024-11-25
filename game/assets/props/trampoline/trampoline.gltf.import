@@ -3,13 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://cganbyuy0jce"
-path="res://.godot/imported/level-one.gltf-97492b93fb051c42d63dad9d33e6be21.scn"
+uid="uid://yx4evyedjcbm"
+path="res://.godot/imported/trampoline.gltf-9dbfcfe85a11a2b70e532502aa184cc8.scn"
 
 [deps]
 
-source_file="res://game/assets/worlds/level_one/level-one.gltf"
-dest_files=["res://.godot/imported/level-one.gltf-97492b93fb051c42d63dad9d33e6be21.scn"]
+source_file="res://game/assets/props/trampoline/trampoline.gltf"
+dest_files=["res://.godot/imported/trampoline.gltf-9dbfcfe85a11a2b70e532502aa184cc8.scn"]
 
 [params]
 
@@ -31,27 +31,17 @@ animation/remove_immutable_tracks=true
 import_script/path=""
 _subresources={
 "materials": {
-"grass": {
+"blue_metal": {
 "use_external/enabled": true,
-"use_external/path": "res://game/assets/worlds/level_one/grass.tres"
+"use_external/path": "res://game/assets/props/trampoline/blue_metal.tres"
 },
-"house_walls": {
+"canvas": {
 "use_external/enabled": true,
-"use_external/path": "res://game/assets/worlds/level_one/house_walls.tres"
+"use_external/path": "res://game/assets/props/trampoline/canvas.tres"
 },
-"walls": {
+"metal_springs": {
 "use_external/enabled": true,
-"use_external/path": "res://game/assets/worlds/level_one/walls.tres"
-}
-},
-"nodes": {
-"PATH:Camera": {
-"import/skip_import": true
-},
-"PATH:walls": {
-"generate/navmesh": 1,
-"generate/physics": true,
-"physics/shape_type": 2
+"use_external/path": "res://game/assets/props/trampoline/metal_springs.tres"
 }
 }
 }

@@ -3,13 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://cganbyuy0jce"
-path="res://.godot/imported/level-one.gltf-97492b93fb051c42d63dad9d33e6be21.scn"
+uid="uid://b0ctwmw006svf"
+path="res://.godot/imported/tree_01_a.gltf-5b20185fcd023646d18d746c9c6dd745.scn"
 
 [deps]
 
-source_file="res://game/assets/worlds/level_one/level-one.gltf"
-dest_files=["res://.godot/imported/level-one.gltf-97492b93fb051c42d63dad9d33e6be21.scn"]
+source_file="res://game/assets/props/tree/tree_01_a.gltf"
+dest_files=["res://.godot/imported/tree_01_a.gltf-5b20185fcd023646d18d746c9c6dd745.scn"]
 
 [params]
 
@@ -31,27 +31,22 @@ animation/remove_immutable_tracks=true
 import_script/path=""
 _subresources={
 "materials": {
-"grass": {
+"bark": {
 "use_external/enabled": true,
-"use_external/path": "res://game/assets/worlds/level_one/grass.tres"
+"use_external/path": "res://game/assets/props/tree/bark.tres"
 },
-"house_walls": {
+"leaves": {
 "use_external/enabled": true,
-"use_external/path": "res://game/assets/worlds/level_one/house_walls.tres"
-},
-"walls": {
-"use_external/enabled": true,
-"use_external/path": "res://game/assets/worlds/level_one/walls.tres"
+"use_external/path": "res://game/assets/props/tree/leaves.tres"
 }
 },
 "nodes": {
-"PATH:Camera": {
-"import/skip_import": true
-},
-"PATH:walls": {
-"generate/navmesh": 1,
+"PATH:tree": {
 "generate/physics": true,
-"physics/shape_type": 2
+"physics/shape_type": 5,
+"primitive/height": 5.0,
+"primitive/position": Vector3(0.08, 2.5, 0),
+"primitive/radius": 0.5
 }
 }
 }

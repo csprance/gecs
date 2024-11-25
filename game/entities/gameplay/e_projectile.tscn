@@ -1,8 +1,9 @@
-[gd_scene load_steps=9 format=3 uid="uid://dh8sobya08mac"]
+[gd_scene load_steps=11 format=3 uid="uid://dh8sobya08mac"]
 
 [ext_resource type="Script" path="res://game/entities/gameplay/e_projectile.gd" id="1_lo2ip"]
 [ext_resource type="Script" path="res://game/components/physics/c_character_body_3d.gd" id="3_sl8v6"]
 [ext_resource type="Script" path="res://game/components/physics/c_velocity.gd" id="5_30jqd"]
+[ext_resource type="PackedScene" uid="uid://dlkc3vxyeobtk" path="res://game/lib/component_area.tscn" id="5_s7wqd"]
 [ext_resource type="Script" path="res://game/components/gameplay/c_lifetime.gd" id="6_t2px4"]
 
 [sub_resource type="Resource" id="Resource_hlh4b"]
@@ -19,6 +20,8 @@ lifetime = 2.0
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_ne1e8"]
 
+[sub_resource type="SphereShape3D" id="SphereShape3D_vy0if"]
+
 [node name="EProjectile" type="CharacterBody3D"]
 motion_mode = 1
 script = ExtResource("1_lo2ip")
@@ -26,3 +29,12 @@ component_resources = Array[Resource("res://addons/gecs/component.gd")]([SubReso
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 shape = SubResource("SphereShape3D_ne1e8")
+
+[node name="ReusableComponentArea" parent="." node_paths=PackedStringArray("parent_entity") instance=ExtResource("5_s7wqd")]
+unique_name_in_owner = true
+parent_entity = NodePath("..")
+
+[node name="CollisionShape3D" parent="ReusableComponentArea/Area" index="0"]
+shape = SubResource("SphereShape3D_vy0if")
+
+[editable path="ReusableComponentArea"]

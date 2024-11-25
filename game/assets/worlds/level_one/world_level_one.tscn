@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3 uid="uid://dmwx5l6qp3hgj"]
+[gd_scene load_steps=17 format=3 uid="uid://dmwx5l6qp3hgj"]
 
 [ext_resource type="Script" path="res://addons/gecs/world.gd" id="1_q7jtq"]
 [ext_resource type="PackedScene" uid="uid://mfv8kghahued" path="res://game/entities/gameplay/e_player.tscn" id="2_3jqhy"]
@@ -10,7 +10,12 @@
 [ext_resource type="PackedScene" uid="uid://cudyrj1egdocg" path="res://game/entities/ui/hud/e_hud.tscn" id="4_y7ehf"]
 [ext_resource type="Resource" uid="uid://c2njvh8tdqqem" path="res://game/data/weapons/w_water_pistol.tres" id="5_8l0mn"]
 [ext_resource type="PackedScene" uid="uid://vdhm1ygxl2dx" path="res://game/entities/gameplay/e_camera.tscn" id="5_xr84t"]
+[ext_resource type="PackedScene" uid="uid://bv4lxxnenah0s" path="res://game/entities/gameplay/e_enemy.tscn" id="6_2sg1q"]
+[ext_resource type="PackedScene" uid="uid://b0ctwmw006svf" path="res://game/assets/props/tree/tree_01_a.gltf" id="12_qgq0w"]
+[ext_resource type="PackedScene" uid="uid://yx4evyedjcbm" path="res://game/assets/props/trampoline/trampoline.gltf" id="14_oqqgs"]
+[ext_resource type="PackedScene" uid="uid://dx7av6n5xik2f" path="res://game/assets/props/doors/door_01_a.gltf" id="15_62pqm"]
 [ext_resource type="PackedScene" uid="uid://ex2wx8kwwjjx" path="res://game/systems/default_systems.tscn" id="16_2mwmf"]
+[ext_resource type="PackedScene" uid="uid://dmehwuect8hlf" path="res://game/assets/props/searchables/cabinet_01_a.gltf" id="16_5puje"]
 
 [node name="World" type="Node"]
 script = ExtResource("1_q7jtq")
@@ -19,22 +24,76 @@ system_nodes_root = NodePath("Systems")
 
 [node name="Entities" type="Node" parent="."]
 
-[node name="Pickup" parent="Entities" instance=ExtResource("2_8fx5w")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.21112, 0, 6.54257)
+[node name="ZombieEnemy" parent="Entities" instance=ExtResource("6_2sg1q")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -34.9544, 0, -1.09044)
+
+[node name="ZombieEnemy2" parent="Entities" instance=ExtResource("6_2sg1q")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -41.9668, 0, 5.56332)
+
+[node name="ZombieEnemy3" parent="Entities" instance=ExtResource("6_2sg1q")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -19.9546, 0, 18.7396)
+
+[node name="ZombieEnemy9" parent="Entities" instance=ExtResource("6_2sg1q")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.81856, -3.8147e-06, -16.9426)
+
+[node name="ZombieEnemy10" parent="Entities" instance=ExtResource("6_2sg1q")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13.3787, -3.8147e-06, -24.979)
+
+[node name="ZombieEnemy11" parent="Entities" instance=ExtResource("6_2sg1q")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22.6743, -3.8147e-06, -22.1559)
+
+[node name="ZombieEnemy12" parent="Entities" instance=ExtResource("6_2sg1q")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11.2173, -3.8147e-06, -12.0302)
+
+[node name="ZombieEnemy13" parent="Entities" instance=ExtResource("6_2sg1q")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.76716, -3.8147e-06, -2.09822)
+
+[node name="ZombieEnemy14" parent="Entities" instance=ExtResource("6_2sg1q")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24.8717, -3.8147e-06, 1.50989)
+
+[node name="ZombieEnemy15" parent="Entities" instance=ExtResource("6_2sg1q")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 38.0872, -3.8147e-06, -6.47926)
+
+[node name="ZombieEnemy16" parent="Entities" instance=ExtResource("6_2sg1q")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13.0038, -3.8147e-06, 10.0859)
+
+[node name="ZombieEnemy4" parent="Entities" instance=ExtResource("6_2sg1q")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.4408, 0, 11.6332)
+
+[node name="ZombieEnemy5" parent="Entities" instance=ExtResource("6_2sg1q")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -25.739, 0, -5.21744)
+
+[node name="ZombieEnemy6" parent="Entities" instance=ExtResource("6_2sg1q")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.7573, 0, -0.460978)
+
+[node name="ZombieEnemy7" parent="Entities" instance=ExtResource("6_2sg1q")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.7573, -8.72361, 9.35187)
+
+[node name="ZombieEnemy8" parent="Entities" instance=ExtResource("6_2sg1q")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -35.8393, -8.72361, -31.9556)
+
+[node name="HealthkitPickup" parent="Entities" instance=ExtResource("2_8fx5w")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40.0387, 3.8147e-06, -26.8543)
 item_resource = ExtResource("3_jg4rd")
 quantity = 1
 
-[node name="Pickup2" parent="Entities" instance=ExtResource("2_8fx5w")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.659, 0, 12.926)
+[node name="KeyPickup" parent="Entities" instance=ExtResource("2_8fx5w")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -41.8443, 0, -7.62729)
 item_resource = ExtResource("4_nyenq")
 quantity = 1
 
-[node name="Pickup3" parent="Entities" instance=ExtResource("2_8fx5w")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.81597, 0, 9.11063)
+[node name="KeyPickup2" parent="Entities" instance=ExtResource("2_8fx5w")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11.0722, 0, -10.5177)
+item_resource = ExtResource("4_nyenq")
+quantity = 1
+
+[node name="SquirtGunPickup" parent="Entities" instance=ExtResource("2_8fx5w")]
+transform = Transform3D(-4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 0, 0, 1, -31.8811, 0.193465, -23.7035)
 weapon_resource = ExtResource("5_8l0mn")
 quantity = 100
 
 [node name="EPlayer" parent="Entities" instance=ExtResource("2_3jqhy")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -27.7749, -1.90735e-06, 10.1219)
 
 [node name="EAimPoint" parent="Entities" instance=ExtResource("3_d5cy8")]
 
@@ -46,7 +105,80 @@ quantity = 100
 
 [node name="Props" type="Node" parent="."]
 
+[node name="tree_01_a" parent="Props" instance=ExtResource("12_qgq0w")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -39.1928, -9.53674e-07, 15.5365)
+
+[node name="tree_01_a2" parent="Props" instance=ExtResource("12_qgq0w")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -48.7775, -9.53674e-07, -16.407)
+
+[node name="tree_01_a3" parent="Props" instance=ExtResource("12_qgq0w")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -41.3403, -9.53674e-07, -16.1243)
+
+[node name="tree_01_a4" parent="Props" instance=ExtResource("12_qgq0w")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -44.9624, -2.86102e-06, -21.6989)
+
+[node name="tree_01_a5" parent="Props" instance=ExtResource("12_qgq0w")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -25.3334, -4.76837e-06, -14.382)
+
+[node name="tree_01_a6" parent="Props" instance=ExtResource("12_qgq0w")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -19.9918, -9.53674e-07, -19.3087)
+
+[node name="tree_01_a7" parent="Props" instance=ExtResource("12_qgq0w")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -31.1427, 9.53674e-07, -25.6934)
+
+[node name="tree_01_a8" parent="Props" instance=ExtResource("12_qgq0w")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -41.7187, -9.53674e-07, -25.7585)
+
+[node name="tree_01_a9" parent="Props" instance=ExtResource("12_qgq0w")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.16876, -2.86102e-06, 6.1317)
+
+[node name="tree_01_a10" parent="Props" instance=ExtResource("12_qgq0w")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18.4376, -2.86102e-06, 13.401)
+
+[node name="tree_01_a11" parent="Props" instance=ExtResource("12_qgq0w")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.01303, -0.616601, 13.2919)
+
+[node name="tree_01_a12" parent="Props" instance=ExtResource("12_qgq0w")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 41.6498, -0.616601, 20.2286)
+
+[node name="tree_01_a13" parent="Props" instance=ExtResource("12_qgq0w")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 41.1279, -0.616597, -19.045)
+
+[node name="tree_01_a14" parent="Props" instance=ExtResource("12_qgq0w")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 36.0458, -0.616597, -16.4741)
+
+[node name="tree_01_a15" parent="Props" instance=ExtResource("12_qgq0w")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20.3434, -0.616597, -15.2232)
+
 [node name="level-one" parent="Props" instance=ExtResource("3_njsrj")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -2.72389)
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="Props"]
-transform = Transform3D(0.15095, 0.748929, -0.645228, 0, 0.652707, 0.757611, 0.988541, -0.114362, 0.0985263, 0, 5.4899, 3.30209)
+transform = Transform3D(0.15095, 0.748929, -0.645228, 0, 0.652707, 0.75761, 0.988541, -0.114361, 0.0985262, -0.643284, 5.4899, 3.87359)
+
+[node name="trampoline2" parent="Props" instance=ExtResource("14_oqqgs")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.38272, 0, -4.74875)
+
+[node name="trampoline3" parent="Props" instance=ExtResource("14_oqqgs")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.61308, 0, -11.3906)
+
+[node name="trampoline4" parent="Props" instance=ExtResource("14_oqqgs")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.31412, 0, -11.3906)
+
+[node name="trampoline5" parent="Props" instance=ExtResource("14_oqqgs")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.42551, 0, -19.6148)
+
+[node name="door_01_a2" parent="Props" instance=ExtResource("15_62pqm")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -17.4941, -0.0292895, -23.9156)
+
+[node name="door_01_a3" parent="Props" instance=ExtResource("15_62pqm")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28.4462, -0.0292895, -23.9156)
+
+[node name="cabinet_01_a2" parent="Props" instance=ExtResource("16_5puje")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20.9485, -4.76837e-07, -29.386)
+
+[node name="cabinet_01_a3" parent="Props" instance=ExtResource("16_5puje")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 26.0769, -4.76837e-07, -29.386)
+
+[node name="trampoline6" parent="Props" instance=ExtResource("14_oqqgs")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.151, 0, 8.68946)
