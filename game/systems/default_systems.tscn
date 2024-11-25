@@ -1,4 +1,4 @@
-[gd_scene load_steps=16 format=3 uid="uid://ex2wx8kwwjjx"]
+[gd_scene load_steps=18 format=3 uid="uid://ex2wx8kwwjjx"]
 
 [ext_resource type="Script" path="res://game/systems/gameplay/s_zombie_behavior.gd" id="1_a57uo"]
 [ext_resource type="Script" path="res://game/systems/input/s_player_controls.gd" id="1_e5u7d"]
@@ -15,6 +15,8 @@
 [ext_resource type="Script" path="res://game/systems/gameplay/s_look_at.gd" id="10_qatai"]
 [ext_resource type="Script" path="res://game/systems/gameplay/s_cooldown.gd" id="11_1n20v"]
 [ext_resource type="Script" path="res://game/systems/gameplay/s_lifetime.gd" id="12_hr240"]
+[ext_resource type="Script" path="res://game/systems/gameplay/s_death.gd" id="13_i48ai"]
+[ext_resource type="Script" path="res://game/systems/debug/s_debug_label_3d.gd" id="17_7hyu0"]
 
 [node name="Systems" type="Node"]
 
@@ -70,6 +72,10 @@ group = "gameplay"
 script = ExtResource("12_hr240")
 group = "gameplay"
 
+[node name="DeathSystem" type="Node" parent="gameplay"]
+script = ExtResource("13_i48ai")
+group = "gameplay"
+
 [node name="physics" type="Node" parent="."]
 
 [node name="CharacterBody3DSystem" type="Node" parent="physics"]
@@ -85,3 +91,9 @@ group = "physics"
 [node name="UiVisibilitySystem" type="Node" parent="ui"]
 script = ExtResource("8_xctm1")
 group = "ui"
+
+[node name="debug" type="Node" parent="."]
+
+[node name="DebugLabel3DSystem" type="Node" parent="debug"]
+script = ExtResource("17_7hyu0")
+group = "debug"
