@@ -137,13 +137,13 @@ func add_systems(_systems: Array):
 ##      [codeblock]world.remove_entity(player_entity)[/codeblock]
 func remove_entity(entity) -> void:
 	entity = entity as Entity
+	entity_removed.emit(entity)
 	worldLogger.debug('remove_entity Removing Entity: ', entity)
 	entities.erase(entity)
 	# Update index
 	for component_key in entity.components.keys():
 		_remove_entity_from_index(entity, component_key)
 	
-	entity_removed.emit(entity)
 	entity.component_added.disconnect(_on_entity_component_added)
 	entity.component_removed.disconnect(_on_entity_component_removed)
 	entity.on_destroy()
