@@ -23,6 +23,10 @@ var _all_components: Array = []
 var _any_components: Array = []
 # Components that an entity must not have.
 var _exclude_components: Array = []
+# Relationships that entities must have
+var _relationships: Array = []
+# Relationships that entities must not have
+var _exclude_relationships: Array = []
 
 ## Initializes the QueryBuilder with the specified [param world]
 func _init(world: World):
@@ -32,6 +36,8 @@ func clear():
 	_all_components = []
 	_any_components = []
 	_exclude_components = []
+	_relationships = []
+	_exclude_relationships = []
 	return self
 
 ## Finds entities with all of the provided components.[br]
@@ -55,10 +61,39 @@ func with_none(components: Array = []) -> QueryBuilder:
 	_exclude_components = components
 	return self
 
+## Finds entities with specific relationships.
+func with_relationship(relationships: Array = []) -> QueryBuilder:
+	_relationships = relationships
+	return self
+
+## Entities must not have any of the provided relationships.
+func without_relationship(relationships: Array = []) -> QueryBuilder:
+	_exclude_relationships = relationships
+	return self
+
 ## Executes the constructed query and retrieves matching entities.[br]
 ## [param returns] -  An [Array] of [Entity] that match the query criteria.
 func execute() -> Array:
 	var result = _world._query(_all_components, _any_components, _exclude_components) as Array[Entity]
+	# Handle relationship filtering
+	if not _relationships.is_empty() or not _exclude_relationships.is_empty():
+		var filtered_entities: Array = []
+		for entity in result:
+			var matches = true
+			# Required relationships
+			for relationship in _relationships:
+				if not entity.has_relationship(relationship):
+					matches = false
+					break
+			# Excluded relationships
+			if matches:
+				for ex_relationship in _exclude_relationships:
+					if entity.has_relationship(ex_relationship):
+						matches = false
+						break
+			if matches:
+				filtered_entities.append(entity)
+		result = filtered_entities
 	clear()
 	return result
 

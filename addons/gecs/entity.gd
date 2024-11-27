@@ -36,8 +36,15 @@ var _entityLogger = GECSLogger.new().domain('Entity')
 ## We can store ephemeral state on the entity
 var _state = {}
 
+## Relationships attached to the entity
+var relationships: Array[Relationship] = []
+
 
 func _ready() -> void:
+	initialize()
+
+
+func initialize():
 	_entityLogger.trace('_ready Entity Initializing Components: ', self)
 	component_resources.append_array(define_components())
 	# Initialize components from the exported array
@@ -96,6 +103,27 @@ func get_component(component: Variant) -> Component:
 ## If you plan on getting and using the component, use [method get_component] instead.
 func has_component(component: Variant) -> bool:
 	return components.has(component.resource_path)
+
+
+## Adds a relationship to another entity.
+func add_relationship(relationship: Relationship) -> void:
+	relationships.append(relationship)
+
+## Removes a relationship from the entity.
+func remove_relationship(relationship: Relationship) -> void:
+	var to_remove = []
+	for rel in relationships:
+		if rel.matches(relationship):
+			to_remove.append(rel)
+	for rel in to_remove:
+		relationships.erase(rel)
+
+## Checks if the entity has a specific relationship.
+func has_relationship(relationship: Relationship) -> bool:
+	for rel in relationships:
+		if rel.matches(relationship):
+			return true
+	return false
 
 
 # Lifecycle methods

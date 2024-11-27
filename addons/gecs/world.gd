@@ -40,6 +40,9 @@ var query: QueryBuilder:
 
 var worldLogger =  GECSLogger.new().domain('World')
 
+## Index for relationships to entities (Optional for optimization)
+var relationship_entity_index: Dictionary = {}
+
 ## Called when the World node is ready.[br]
 ## Adds [Entity]s and [System]s from the scene tree to the [World].
 func _ready() -> void:
@@ -139,7 +142,7 @@ func remove_entity(entity) -> void:
 	entity = entity as Entity
 	entity_removed.emit(entity)
 	worldLogger.debug('remove_entity Removing Entity: ', entity)
-	entities.erase(entity)
+	entities.erase(entity) # FIXME: This doesn't always work for some reason?
 	# Update index
 	for component_key in entity.components.keys():
 		_remove_entity_from_index(entity, component_key)
@@ -162,13 +165,17 @@ func remove_system(system) -> void:
 	system.queue_free()
 
 ## Removes all [Entity]s and [System]s from the world.
-func purge():
-	for entity in entities:
+## Optionally frees the world node by default.
+func purge(should_free=true) -> void:
+	worldLogger.debug('Purging Entities', entities)
+	for entity in entities.duplicate():
 		remove_entity(entity)
-	for system in systems:
+	worldLogger.debug('Purging Systems', systems)
+	for system in systems.duplicate():
 		remove_system(system)
 	# remove itself
-	queue_free()
+	if should_free:
+		queue_free()
 
 ## Maps a [Component] to its [member Resource.resource_path].[br]
 ## [param x] The [Component] to map.[br]
@@ -296,3 +303,10 @@ func _on_entity_component_removed(entity, component: Variant) -> void:
 	 # We just use resource path here because we pass in a component type
 	_remove_entity_from_index(entity, component.resource_path)
 	component_removed.emit(entity, component)
+
+## (Optional) Update index when a relationship is added.
+func _on_entity_relationship_added(entity: Entity, relationship: Relationship) -> void:
+	var key = relationship.relation.get_script().resource_path
+	if not relationship_entity_index.has(key):
+		relationship_entity_index[key] = []
+	relationship_entity_index[key].append(entity)
