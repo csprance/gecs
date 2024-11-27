@@ -12,3 +12,6 @@ var position := Vector3.ZERO :
         transform.origin = v
     get:
         return transform.origin
+
+func _init(_trs: Transform3D = transform) -> void:
+    transform = _trs
