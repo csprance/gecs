@@ -28,6 +28,7 @@ manager/music/bus="Music"
 
 [autoload]
 
+Constants="*res://game/lib/autoloads/constants.tscn"
 Loggie="*res://addons/loggie/loggie.gd"
 GameState="*res://game/lib/autoloads/game_state.gd"
 SoundManager="*res://addons/resonate/sound_manager/sound_manager.gd"
