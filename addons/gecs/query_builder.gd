@@ -67,3 +67,6 @@ func combine(other: QueryBuilder) -> QueryBuilder:
 	_any_components += other._any_components
 	_exclude_components += other._exclude_components
 	return self
+
+func as_array() -> Array:
+	return [_all_components, _any_components, _exclude_components]
