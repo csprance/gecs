@@ -1,0 +1,17 @@
+[gd_scene load_steps=3 format=3 uid="uid://ngouye3it3qy"]
+
+[ext_resource type="Script" path="res://addons/gecs/world.gd" id="1_o1k8h"]
+[ext_resource type="Script" path="res://addons/gecs/tests/test_scene.gd" id="1_vo5ju"]
+
+[node name="Node3D" type="Node3D"]
+script = ExtResource("1_vo5ju")
+
+[node name="World" type="Node" parent="."]
+unique_name_in_owner = true
+script = ExtResource("1_o1k8h")
+entity_nodes_root = NodePath("Entities")
+system_nodes_root = NodePath("Systems")
+
+[node name="Entities" type="Node" parent="World"]
+
+[node name="Systems" type="Node" parent="World"]
