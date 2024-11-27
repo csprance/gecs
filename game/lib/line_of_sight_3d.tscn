@@ -1,0 +1,15 @@
+[gd_scene load_steps=3 format=3 uid="uid://cblqfvanyrdd4"]
+
+[ext_resource type="Script" path="res://game/lib/line_of_sight_3d.gd" id="1_exa3r"]
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_a6p7i"]
+height = 5.0
+radius = 2.07107
+
+[node name="LineOfSight3D" type="Area3D"]
+script = ExtResource("1_exa3r")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 0, 2.5)
+shape = SubResource("CylinderShape3D_a6p7i")
