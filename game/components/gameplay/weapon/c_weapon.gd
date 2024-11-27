@@ -2,6 +2,7 @@
 class_name C_Weapon
 extends C_Item
 
-@export var weapon_visuals: PackedScene
-
+## The Visual of the Weapon as it's held on the player
+@export var weapon_visuals: C_Visuals
+## The Projectile Component that this weapon fires
 @export var projectile: C_Projectile

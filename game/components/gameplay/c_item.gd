@@ -8,7 +8,7 @@ extends Component
 @export var name:= '|EMPTY|'
 ## The Description of the item
 @export var description:= '|EMPTY|'
-## THe visuals for the item as it exist as a pickup
-@export var visuals: PackedScene
-## THe visuals for the item as it exist as a pickup
+## The visuals for the item as it exists in the world
+@export var visuals: C_Visuals
+## The action that is called when the item is used
 @export var action: Action = Action.new()
