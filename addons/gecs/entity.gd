@@ -33,6 +33,9 @@ var components: Dictionary = {}
 ## Logger for entities to only log to a specific domain
 var _entityLogger = GECSLogger.new().domain('Entity')
 
+## We can store ephemeral state on the entity
+var _state = {}
+
 
 func _ready() -> void:
 	_entityLogger.trace('_ready Entity Initializing Components: ', self)
