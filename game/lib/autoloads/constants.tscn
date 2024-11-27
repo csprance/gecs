@@ -1,0 +1,8 @@
+[gd_scene load_steps=3 format=3 uid="uid://b7rnsgrh44l6m"]
+
+[ext_resource type="Script" path="res://game/lib/autoloads/constants.gd" id="1_efvrk"]
+[ext_resource type="PackedScene" uid="uid://dh8sobya08mac" path="res://game/entities/gameplay/e_projectile.tscn" id="2_ltewv"]
+
+[node name="Constants" type="Node"]
+script = ExtResource("1_efvrk")
+projectile_scene = ExtResource("2_ltewv")
