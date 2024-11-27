@@ -1,4 +1,4 @@
-[gd_scene load_steps=19 format=3 uid="uid://ex2wx8kwwjjx"]
+[gd_scene load_steps=21 format=3 uid="uid://ex2wx8kwwjjx"]
 
 [ext_resource type="Script" path="res://game/systems/gameplay/s_zombie_behavior.gd" id="1_a57uo"]
 [ext_resource type="Script" path="res://game/systems/input/s_player_controls.gd" id="1_e5u7d"]
@@ -16,8 +16,10 @@
 [ext_resource type="Script" path="res://game/systems/gameplay/s_cooldown.gd" id="11_1n20v"]
 [ext_resource type="Script" path="res://game/systems/gameplay/s_lifetime.gd" id="12_hr240"]
 [ext_resource type="Script" path="res://game/systems/gameplay/s_death.gd" id="13_i48ai"]
+[ext_resource type="Script" path="res://game/systems/gameplay/s_visuals.gd" id="14_fkfa2"]
 [ext_resource type="Script" path="res://game/systems/debug/s_debug_label_3d.gd" id="17_7hyu0"]
 [ext_resource type="PackedScene" uid="uid://82d66uq2w35y" path="res://game/lib/debug_label.tscn" id="18_c8vbw"]
+[ext_resource type="Script" path="res://game/systems/debug/s_debug_look_at.gd" id="19_ntm2m"]
 
 [node name="Systems" type="Node"]
 
@@ -28,6 +30,10 @@ script = ExtResource("1_e5u7d")
 group = "input"
 
 [node name="gameplay" type="Node" parent="."]
+
+[node name="VisualsSystem" type="Node" parent="gameplay"]
+script = ExtResource("14_fkfa2")
+group = "gameplay"
 
 [node name="AimPointSystem" type="Node" parent="gameplay"]
 script = ExtResource("1_wvq8n")
@@ -98,4 +104,8 @@ group = "ui"
 [node name="DebugLabel3DSystem" type="Node" parent="debug"]
 script = ExtResource("17_7hyu0")
 debug_label_scene = ExtResource("18_c8vbw")
+group = "debug"
+
+[node name="DebugLookAtSystem" type="Node" parent="debug"]
+script = ExtResource("19_ntm2m")
 group = "debug"

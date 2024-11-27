@@ -17,8 +17,3 @@ func process(entity: Entity, _delta: float) -> void:
     # Update the transform's rotation around the Y-axis
     c_transform.transform.basis = Basis(Vector3.UP, rotation_y)
 
-    # After updating the rotation, add the debug draw
-    if c_look_at.debug:
-        var aim_from = c_transform.transform.origin
-        var aim_at = c_look_at.target
-        DebugDraw3D.draw_arrow(aim_from, aim_at, Color.RED, 1.0, true)
