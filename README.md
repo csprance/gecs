@@ -12,6 +12,7 @@ A lightweight, performant ECS framework for Godot 4.x that integrates seamlessly
 - 🔧 System groups for organized processing
 - 📦 Component resources that work in the editor
 - 🎮 Easy setup with automatic node management
+- 🕹️ Full Example game Zombies Ate My Neighbors and a 2D Breakout Clone being made with system
 
 ## Table of Contents
 
@@ -156,6 +157,7 @@ func _process(delta):
 ```
 
 ## Example Project
+> ALSO Check out the example games being made on the branch [zombies-ate-my-neighbors](https://github.com/csprance/gecs/tree/zombies-ate-my-neighbors/game) and [breakout](https://github.com/csprance/gecs/tree/breakout/game)
 
 To illustrate the usage of GECS, let's look at an example project that simulates a simple Breakout game.
 
