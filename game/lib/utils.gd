@@ -59,3 +59,23 @@ static func has_los(from: Vector3, to: Vector3) -> bool:
 	var space_state = scene_tree.root.get_world_3d().direct_space_state
 	var result = space_state.intersect_ray(PhysicsRayQueryParameters3D.create(from, to))
 	return result.has('collider')
+
+
+static func entity_has_los(from: Entity, to: Entity) -> bool:
+	var c_trs_from = from.get_component(C_Transform) as C_Transform
+	var c_trs_to = to.get_component(C_Transform) as C_Transform
+	if not c_trs_from or not c_trs_to:
+		return false
+	
+	return has_los(c_trs_from.transform.origin, c_trs_to.transform.origin)
+
+# Calculates the direction an entity is facing based on the look-at component and TRS component.
+static func calculate_entity_direction(entity: Entity) -> Vector3:
+	var c_trs = entity.get_component(C_Transform) as C_Transform
+	var c_lookat = entity.get_component(C_LookAt) as C_LookAt
+	if not c_trs or not c_lookat:
+		return Vector3.ZERO
+	# Direction from the player to the look-at target, ignoring the y-axis.
+	var dir = (c_lookat.target - c_trs.position).normalized()
+	dir.y = 0
+	return dir.normalized()
