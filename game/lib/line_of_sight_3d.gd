@@ -1,23 +1,7 @@
 @tool
 class_name LineOfSight3D
-extends Area3D
+extends ComponentArea3D
 
-## What entity this hitbox belongs to
-@export var parent: Entity
-
-@export_group("Add/Remove Components On Enter")
-## What components should we add/remove on Entering the Line of Sight
-@export var parent_add_on_entered: Array[Component] = []
-@export var parent_remove_on_entered: Array[Component] = []
-@export var body_add_on_entered: Array[Component] = []
-@export var body_remove_on_entered: Array[Component] = []
-
-@export_group("Add/Remove Components On Exit")
-## What components should we add/remove on Exiting the Line of Sight
-@export var parent_add_on_exit: Array[Component] = []
-@export var parent_remove_on_exit: Array[Component] = []
-@export var body_add_on_exit: Array[Component] = []
-@export var body_remove_on_exit: Array[Component] = []
 
 @export_group("Cone Settings")
 ## The Line of Sight angle
@@ -48,39 +32,25 @@ extends Area3D
             cone_mesh_instance.visible = debug
 @export var cone_color: Color = Color(1, 0, 0, 0.5)
 
+
 @onready var collision_shape_3d: CollisionShape3D = %CollisionShape3D
 
-
 var cone_mesh_instance: MeshInstance3D
+
+
+func enter_check(_body_rid:RID, body, _body_shape_index:int, _local_shape_index:int) -> bool:
+    # Now we do angle check since we're already in the collision area
+    var to_body = (body.global_position - global_position).normalized()
+    var forward = -global_transform.basis.z
+    var dot_product = forward.dot(to_body)
+    var body_angle = rad_to_deg(acos(dot_product))
+    
+    return body_angle <= angle/2 and Utils.entity_has_los(parent, body)
 
 func _ready() -> void:
     if debug:
         _create_cone_mesh()
         _update_collision_shape()
-
-
-func _on_los_exited(_body_rid:RID, body, _body_shape_index:int, _local_shape_index:int) -> void:
-    if body is Entity:
-        body.add_components(body_add_on_exit)
-        body.remove_components(body_remove_on_exit)
-        parent.add_components(parent_add_on_exit)
-        parent.remove_components(parent_remove_on_exit)
-
-
-func _on_los_entered(_body_rid:RID, body, _body_shape_index:int, _local_shape_index:int) -> void:
-    if body is Entity:
-        # Now we do angle check since we're already in the collision area
-        var to_body = (body.global_position - global_position).normalized()
-        var forward = -global_transform.basis.z
-        var dot_product = forward.dot(to_body)
-        var body_angle = rad_to_deg(acos(dot_product))
-        
-        if body_angle <= angle/2 and Utils.entity_has_los(parent, body):
-            # Body is within angle and has line of sight
-            body.add_components(body_add_on_entered)
-            body.remove_components(body_remove_on_entered)
-            parent.add_components(parent_add_on_entered)
-            parent.remove_components(parent_remove_on_entered)
 
 
 func _create_cone_mesh() -> void:
