@@ -4,7 +4,6 @@ extends Entity
 var spawn_spot: Vector3
 
 func on_ready():
-	# Add the components
 	Utils.sync_transform(self)
 
 # Start Chasing
@@ -33,7 +32,7 @@ func _on_attack_area_body_shape_entered(_body_rid:RID, body, _body_shape_index:i
 		add_component(C_Attacking.new(body))
 
 
-func _on_hitbox_area_body_shape_exited(body_rid:RID, body, body_shape_index:int, local_shape_index:int) -> void:
+func _on_hitbox_area_body_shape_exited(_body_rid:RID, body, _body_shape_index:int, _local_shape_index:int) -> void:
 	if body is Projectile:
 		Loggie.debug('Projectile Left Hitbox', body)
 		var c_projectile = body.get_component(C_Projectile) as C_Projectile
@@ -42,9 +41,9 @@ func _on_hitbox_area_body_shape_exited(body_rid:RID, body, body_shape_index:int,
 		body.add_component(C_IsPendingDelete.new())
 		
 
-func _on_hitbox_area_body_shape_entered(body_rid:RID, body, body_shape_index:int, local_shape_index:int) -> void:
+func _on_hitbox_area_body_shape_entered(_body_rid:RID, body, _body_shape_index:int, _local_shape_index:int) -> void:
 	if body is Projectile:
-		Loggie.debug('Porjectile Entered Hitbox', body)
+		Loggie.debug('Projectile Entered Hitbox', body)
 		var c_projectile = body.get_component(C_Projectile) as C_Projectile
 		if c_projectile:
 			add_component(C_Damage.new(c_projectile.damage_component.amount))
