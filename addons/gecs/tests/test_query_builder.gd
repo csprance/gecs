@@ -233,9 +233,9 @@ func test_query_entities_with_nothing():
 	world.add_entity(entity1)
 	world.add_entity(entity2)
 
-	# Query with no components specified should return no entities
+	# Query with no components specified should return all entities
 	var result = QueryBuilder.new(world).execute()
-	assert_array(result).is_empty()
+	assert_array(result).has_size(2)
 
 func test_query_entities_excluding_only():
 	var entity1 = Entity.new()
