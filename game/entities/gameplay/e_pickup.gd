@@ -23,7 +23,7 @@ func _show_visuals():
 			return
 		# Remove spawn cone
 		spawn_cone.visible = false
-		var visuals = resource.visuals.instantiate()
+		var visuals = resource.visuals.packed_scene.instantiate()
 		add_child(visuals)
 
 func _on_area_3d_body_shape_entered(body_rid:RID, body, body_shape_index:int, local_shape_index:int) -> void:
