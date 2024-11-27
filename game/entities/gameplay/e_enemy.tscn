@@ -75,6 +75,7 @@ script = ExtResource("1_k0hdh")
 component_resources = Array[Resource("res://addons/gecs/component.gd")]([SubResource("Resource_iixki"), SubResource("Resource_ypv7w"), SubResource("Resource_itu4t"), SubResource("Resource_05cb1"), SubResource("Resource_6kqax"), SubResource("Resource_apar3"), SubResource("Resource_5elb1"), SubResource("Resource_x5chr"), SubResource("Resource_buds4"), SubResource("Resource_fi7jj")])
 
 [node name="LineOfSight3D" parent="." node_paths=PackedStringArray("parent") instance=ExtResource("12_f8y1n")]
+angle = 280.0
 parent = NodePath("..")
 
 [node name="HeadHitbox" parent="." node_paths=PackedStringArray("parent") instance=ExtResource("12_mjcjh")]
