@@ -9,4 +9,4 @@ func process(entity, _delta: float):
     if entity.has_component(C_Item):
         GameState.inventory_item_removed.emit(entity)
 
-    ECS.world.remove_entity(entity)
+    ECS.world.call_deferred('remove_entity', entity)

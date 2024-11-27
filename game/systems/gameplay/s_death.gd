@@ -15,4 +15,4 @@ func process(entity: Entity, _delta: float) -> void:
 	GameState.score += 10
 
 	# This entity is dead remove it from the world
-	ECS.world.remove_entity(entity)
+	ECS.world.call_deferred('remove_entity', entity)
