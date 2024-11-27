@@ -197,7 +197,7 @@ func map_resource_path(x) -> String:
 func _query(all_components = [], any_components = [], exclude_components = []) -> Array:
 	# Early return if no components specified
 	if all_components.is_empty() and any_components.is_empty() and exclude_components.is_empty():
-		return []
+		return entities
 	
 	# Convert all component arrays to resource paths
 	var _all := all_components.map(map_resource_path)
