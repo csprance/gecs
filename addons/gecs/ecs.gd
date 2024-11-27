@@ -26,9 +26,6 @@
 class_name _ECS
 extends Node
 
-## The Wildcard enum for use in the ECS system with the [Relationship] class
-enum Wildcard { Relation, Target }
-
 ## The Current active [World] Instance[br]
 ## Holds a reference to the currently active [World], allowing access to the [member World.query] instance and any [Entity]s and [System]s within it.
 var world: World:
