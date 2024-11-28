@@ -1,4 +1,3 @@
-class_name TestASystem
 extends System
 
 const C_TestA = preload("res://addons/gecs/tests/components/c_test_a.gd")
