@@ -66,11 +66,15 @@ Before diving into the usage of the GECS addon, it's important to understand the
 
 - **Component**: A data container that holds specific attributes or properties. Components do not contain game logic.
 
+- **Archetypes**: A specific named Entity that has a specific set of components (at ready) and usually is using script inheritance to take advantage of any godot nodes features. OR... just a named Entity. Very handy for relationship queries.
+
 - **System**: A system contains the logic that operates on entities with specific components.
 
 - **World**: The context in which entities and systems exist and interact.
 
 - **Query**: A way to query for specific entities in the world based on the components they contain.
+
+- **Relationship**: A resource that represents a relationship between a target and a source based on a relation. See more: [Relations.md](./RELATIONSHIPS.md)
 
 - **ECS Singleton**: Provides global access to the current `World` instance and offers utility functions for processing.
 
