@@ -5,6 +5,7 @@
 ## Entities serves as the fundamental building block for game objects, allowing for flexible and modular design.[br]
 ##[br]
 ## Entities can have [Component]s added or removed dynamically, enabling the behavior and properties of game objects to change at runtime.[br]
+## Entities can have [Relationship]s added or removed dynamically, allowing for a deep heirachical query system.[br]
 ##[br]
 ## Example:
 ##[codeblock]	
@@ -24,20 +25,24 @@ extends Node
 signal component_added(entity: Entity, component: Variant)
 ## Emitted when a [Component] is removed from the entity.
 signal component_removed(entity: Entity, component: Variant)
+## Emit when a [Relationship] is added to the [Entity]	
+signal relationship_added(entity: Entity, relationship: Relationship)
+## Emit when a [Relationship] is removed from the [Entity]
+signal relationship_removed(entity: Entity, relationship: Relationship)
 
 ## [Component]s to be attached to the entity set in the editor. These will be loaded for you and added to the [Entity]
 @export var component_resources: Array[Component] = []
 
 ## [Component]s attached to the [Entity]
 var components: Dictionary = {}
-## Logger for entities to only log to a specific domain
-var _entityLogger = GECSLogger.new().domain('Entity')
-
-## We can store ephemeral state on the entity
-var _state = {}
-
 ## Relationships attached to the entity
 var relationships: Array[Relationship] = []
+
+
+## Logger for entities to only log to a specific domain
+var _entityLogger = GECSLogger.new().domain('Entity')
+## We can store ephemeral state on the entity
+var _state = {}
 
 
 func _ready() -> void:
@@ -105,11 +110,14 @@ func has_component(component: Variant) -> bool:
 	return components.has(component.resource_path)
 
 
-## Adds a relationship to another entity.
+## Adds a relationship to this entity.[br]
+## [param relationship] The [Relationship] to add.
 func add_relationship(relationship: Relationship) -> void:
 	relationships.append(relationship)
+	relationship_added.emit(self, relationship)
 
-## Removes a relationship from the entity.
+## Removes a relationship from the entity.[br]
+## [param relationship] The [Relationship] to remove.
 func remove_relationship(relationship: Relationship) -> void:
 	var to_remove = []
 	for rel in relationships:
@@ -117,8 +125,10 @@ func remove_relationship(relationship: Relationship) -> void:
 			to_remove.append(rel)
 	for rel in to_remove:
 		relationships.erase(rel)
+		relationship_removed.emit(self, rel)
 
-## Checks if the entity has a specific relationship.
+## Checks if the entity has a specific relationship.[br]
+## [param relationship] The [Relationship] to check for.
 func has_relationship(relationship: Relationship) -> bool:
 	for rel in relationships:
 		if rel.matches(relationship):
