@@ -75,7 +75,8 @@ func test_system_processes_entities_with_required_components():
 	
 	# Doesn't get incremented because no systems picked it up (still)
 	assert_int(entity_d.get_component(C_TestD).value).is_equal(0)
-	
+
+# FIXME: This test is failing system groups are not being set correctly (or they're being overidden somewhere)
 func test_system_group_processes_entities_with_required_components():
 
 	# Create entities with the required components
