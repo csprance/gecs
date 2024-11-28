@@ -16,7 +16,8 @@ signal hitbox_exited(projectile: Projectile, parent: Entity, part: String)
 	get:
 		return collision_shape_3d.scale
 	set(v):
-		collision_shape_3d.scale = v
+		if collision_shape_3d:
+			collision_shape_3d.scale = v
 @export var debug: bool = true
 @export var color: Color = Color(1, 0, 0, 0.5)
 

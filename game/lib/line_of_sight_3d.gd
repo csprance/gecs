@@ -102,6 +102,8 @@ func _generate_cone_mesh() -> ArrayMesh:
 	return mesh
 
 func _update_collision_shape() -> void:
+	if not collision_shape_3d:
+		return
 	# Create cylinder shape
 	var shape = CylinderShape3D.new()
 	
