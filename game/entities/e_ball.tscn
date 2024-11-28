@@ -1,0 +1,24 @@
+[gd_scene load_steps=7 format=3 uid="uid://crguyxg1qeqa3"]
+
+[ext_resource type="Script" path="res://game/entities/e_ball.gd" id="1_k3lcq"]
+[ext_resource type="Script" path="res://game/components/c_position.gd" id="2_gj7me"]
+[ext_resource type="Texture2D" uid="uid://dfuhf6eppvmxn" path="res://addons/gecs/assets/logo.png" id="3_7rfga"]
+[ext_resource type="Script" path="res://game/components/c_velocity.gd" id="3_fi3ey"]
+
+[sub_resource type="Resource" id="Resource_ghkca"]
+script = ExtResource("2_gj7me")
+position = Vector2(0, 0)
+
+[sub_resource type="Resource" id="Resource_6htpr"]
+script = ExtResource("3_fi3ey")
+velocity = Vector2(0, -1)
+speed = 10.0
+
+[node name="EBall" type="Node2D"]
+position = Vector2(532, 237)
+script = ExtResource("1_k3lcq")
+component_resources = Array[Resource("res://addons/gecs/component.gd")]([SubResource("Resource_ghkca"), SubResource("Resource_6htpr")])
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+scale = Vector2(0.1, 0.1)
+texture = ExtResource("3_7rfga")

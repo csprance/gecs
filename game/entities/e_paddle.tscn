@@ -1,0 +1,19 @@
+[gd_scene load_steps=4 format=3 uid="uid://bwtri7m68e3ty"]
+
+[ext_resource type="Script" path="res://game/entities/e_paddle.gd" id="1_pewl8"]
+[ext_resource type="Script" path="res://game/components/c_position.gd" id="2_wfqxs"]
+
+[sub_resource type="Resource" id="Resource_ub7xn"]
+script = ExtResource("2_wfqxs")
+position = Vector2(0, 0)
+
+[node name="EPaddle" type="Node2D"]
+script = ExtResource("1_pewl8")
+component_resources = Array[Resource("res://addons/gecs/component.gd")]([SubResource("Resource_ub7xn")])
+
+[node name="ColorRect" type="ColorRect" parent="."]
+offset_left = 20.0
+offset_top = -75.0
+offset_right = 170.0
+offset_bottom = -35.0
+rotation = 1.5708
