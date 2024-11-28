@@ -97,9 +97,10 @@ func test_with_relationships_wildcard_relation():
 	assert_bool(Array(any_relation_to_food).has(e_heather)).is_true() # heather likes food. but i mean cmon we all do
 
 func test_reverse_relationships_a():
-	# Here I want to get the reverse of this relationship I want to get all the food being attacked? DO I need to just add a new component to the food entity when someone attacks it or can I query for this?
+	# Here I want to get the reverse of this relationship I want to get all the food being attacked.
 	var food_being_attacked = ECS.world.query.with_reverse_relationship([Relationship.new(C_IsAttacking.new())]).execute()
 	assert_bool(food_being_attacked.has(e_apple)).is_true() # The Apple is being attacked by alice
+	assert_bool(Array(food_being_attacked).size() == 1).is_true() # only one entity is being attacked
 
 func test_reverse_relationships_b():
 	# Query 2: Find all entities that are the target of any relationship with Person archetype
