@@ -46,7 +46,6 @@ This documentation will guide you through the setup and usage of the GECS addon,
 
 3. **Autoload ECS**: The addon requires the `ECS` singleton to be autoloaded. This should be handled automatically when you enable the plugin. If not, go to `Project > Project Settings > Autoload`, and add `ECS` pointing to `res://addons/gecs/ecs.gd`.
 
-4. **Configure Entity Base Type**: GECS allows you to set the base type for entities. In `Project > Project Settings > GECS`, set `Entity Base Type` to `Node2D` or `Node3D` depending on your project's requirements.
 
 ## Getting Started
 
