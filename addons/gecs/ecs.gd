@@ -61,3 +61,7 @@ func _show_debug():
 		debug_window_scene.name = "DebugWindow"
 		add_child(debug_window_scene)
 		debug_window_scene.create_debug_window()
+
+## A Wildcard for use in relatonship queries. Indicates can be any value for a relation 
+## or a target in a Relationship Pair
+var wildcard = null
