@@ -28,5 +28,3 @@ func process(entity: Entity, delta: float) -> void:
 			c_velocity.velocity += Vector2.DOWN
 		if Input.is_action_pressed('paddle_2_up'):
 			c_velocity.velocity += Vector2.UP
-	
-	#c_velocity.speed = c_velocity.speed if c_velocity.velocity != Vector2.ZERO else 0.0

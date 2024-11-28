@@ -1,8 +1,10 @@
-[gd_scene load_steps=3 format=3 uid="uid://b7rnsgrh44l6m"]
+[gd_scene load_steps=4 format=3 uid="uid://b7rnsgrh44l6m"]
 
 [ext_resource type="Script" path="res://game/lib/autoloads/constants.gd" id="1_efvrk"]
-[ext_resource type="PackedScene" uid="uid://dh8sobya08mac" path="res://game/entities/gameplay/e_projectile.tscn" id="2_ltewv"]
+[ext_resource type="PackedScene" uid="uid://crguyxg1qeqa3" path="res://game/entities/e_ball.tscn" id="2_dgnbg"]
+[ext_resource type="PackedScene" uid="uid://bwtri7m68e3ty" path="res://game/entities/e_paddle.tscn" id="3_p8dc2"]
 
 [node name="Constants" type="Node"]
 script = ExtResource("1_efvrk")
-projectile_scene = ExtResource("2_ltewv")
+ball_scene = ExtResource("2_dgnbg")
+paddle_scene = ExtResource("3_p8dc2")
