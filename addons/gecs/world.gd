@@ -43,6 +43,9 @@ var worldLogger =  GECSLogger.new().domain('World')
 ## Index for relationships to entities (Optional for optimization)
 var relationship_entity_index: Dictionary = {}
 
+## Index for reverse relationships (target to source entities)
+var reverse_relationship_index: Dictionary = {}
+
 ## Called when the World node is ready.[br]
 ## Adds [Entity]s and [System]s from the scene tree to the [World].
 func _ready() -> void:
@@ -55,6 +58,11 @@ func _ready() -> void:
 	var _systems  = find_children('*', "System") as Array[System]
 	add_systems(_systems)
 	worldLogger.debug('_ready Added Systems from Scene Tree: ', _systems)
+
+	# Connect to entity relationship signals
+	for entity in entities:
+		entity.relationship_added.connect(_on_entity_relationship_added)
+		entity.relationship_removed.connect(_on_entity_relationship_removed)
 
 ## Called every frame by the [method _ECS.process] to process [System]s.[br]
 ## [param delta] The time elapsed since the last frame.
@@ -310,3 +318,21 @@ func _on_entity_relationship_added(entity: Entity, relationship: Relationship) -
 	if not relationship_entity_index.has(key):
 		relationship_entity_index[key] = []
 	relationship_entity_index[key].append(entity)
+	
+	# Index the reverse relationship
+	if relationship.target is Entity:
+		var rev_key = "reverse_" + key
+		if not reverse_relationship_index.has(rev_key):
+			reverse_relationship_index[rev_key] = []
+		reverse_relationship_index[rev_key].append(relationship.target)
+
+## (Optional) Update index when a relationship is removed.
+func _on_entity_relationship_removed(entity: Entity, relationship: Relationship) -> void:
+	var key = relationship.relation.get_script().resource_path
+	if relationship_entity_index.has(key):
+		relationship_entity_index[key].erase(entity)
+		
+	if relationship.target is Entity:
+		var rev_key = "reverse_" + key
+		if reverse_relationship_index.has(rev_key):
+			reverse_relationship_index[rev_key].erase(relationship.target)
