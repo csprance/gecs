@@ -197,9 +197,7 @@ extends Component
 class_name Transform
 extends Component
 
-@export var position := Vector2.ZERO
-@export var rotation := 0.0
-@export var scale := Vector2.ONE
+@export var transform: Transform2D
 ```
 
 ### Entities
@@ -264,7 +262,7 @@ func process(entity: Entity, delta: float):
 	var velocity: Velocity = entity.get_component(Velocity)
 	var transform: Transform = entity.get_component(Transform)
 	var velocity_vector: Vector2 = velocity.direction.normalized() * velocity.speed
-	transform.position += velocity_vector * delta
+	transform.transform.origin += velocity_vector * delta
 ```
 
 - **Transform2DSystem**: Synchronizes the `Transform` component with the entity's actual transform.
@@ -278,10 +276,8 @@ func query():
 	return q.with_all([Transform])
 
 func process(entity: Entity, delta):
-	var transform: Transform = entity.get_component(Transform)
-	entity.position = transform.position
-	entity.rotation = transform.rotation
-	entity.scale = transform.scale
+	var kitransform: Transform = entity.get_component(Transform)
+	Utils.sync_transform(entity)
 ```
 
 ## Advanced Usage
