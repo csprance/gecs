@@ -108,7 +108,7 @@ func on_ready() -> void:
 	Utils.sync_transform(self)
 ```
 
-3. **Initialize Components**: In the `_ready()` function, components listed in `component_resources` are automatically added to the entity.
+3. **Initialize Components**: In the `_ready()` function, components listed in `component_resources` are automatically added to the entity but you can also override a method called `define_components()` and return an array of components. 
 
 ## Creating Systems
 
