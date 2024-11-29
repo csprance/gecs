@@ -8,12 +8,9 @@ signal entity_entered(entity:Entity, parent:Entity)
 ## When an entity exits the area
 signal entity_exited(entity:Entity, parent:Entity)
 
-@export_group("Parent")
 ## What entity this hitbox belongs to
 @export var parent: Entity
-
 ## Actions to run when an entity enters or exits the area (that isn't the parent entering/exiting itself?)
-@export_group("Actions")
 @export var actions: Array[ComponentAreaAction]
 
 @export_group("Parent Components")
@@ -66,7 +63,6 @@ func _run_on_enter(body: Entity, body_rid: RID, body_shape_index: int, local_sha
 
 	for action in actions:
 		action.on_enter(parent, body, body_rid, body_shape_index, local_shape_index)
-
 
 func _on_area_exited(body_rid:RID, body, body_shape_index:int, local_shape_index:int) -> void:
 	# We're only interested in entities and not if it's the parent and if it passes the exit check
