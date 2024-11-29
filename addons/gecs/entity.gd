@@ -127,13 +127,29 @@ func remove_relationship(relationship: Relationship) -> void:
 		relationships.erase(rel)
 		relationship_removed.emit(self, rel)
 
+## Retrieves a specific [Relationship] from the entity.
+## [param relationship] The [Relationship] to retrieve.
+## [param return] - The matching [Relationship] if it exists, otherwise `null`.
+func get_relationship(relationship: Relationship) -> Relationship:
+	var to_remove = []
+	for rel in relationships:
+		# Check if the target is still valid
+		if rel.target is Object and not is_instance_valid(rel.target):
+			to_remove.append(rel)
+			continue
+		if rel.matches(relationship):
+			return rel
+	# Remove invalid relationships
+	for rel in to_remove:
+		relationships.erase(rel)
+		relationship_removed.emit(self, rel)
+	return null
+
+
 ## Checks if the entity has a specific relationship.[br]
 ## [param relationship] The [Relationship] to check for.
 func has_relationship(relationship: Relationship) -> bool:
-	for rel in relationships:
-		if rel.matches(relationship):
-			return true
-	return false
+	return get_relationship(relationship) != null
 
 
 # Lifecycle methods
