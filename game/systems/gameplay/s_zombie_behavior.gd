@@ -15,7 +15,7 @@ func sub_systems():
 		],
 		## Chase
 		[
-			ECS.world.query.with_all([C_ZombieBehavior, C_Transform, C_Enemy, C_Velocity, C_InterestRange, C_Chasing]).with_none([C_Death]), 
+			ECS.world.query.with_all([C_ZombieBehavior, C_Transform, C_Enemy, C_Velocity, C_InterestRange, C_Chasing]).with_none([C_Death]),
 			chase_subsystem
 		], 
 		## Interested

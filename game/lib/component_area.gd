@@ -12,6 +12,10 @@ signal entity_exited(entity:Entity, parent:Entity)
 ## What entity this hitbox belongs to
 @export var parent: Entity
 
+## Actions to run when an entity enters or exits the area (that isn't the parent entering/exiting itself?)
+@export_group("Actions")
+@export var actions: Array[ComponentAreaAction]
+
 @export_group("Parent Components")
 # What components should we add/remove to the PARENT Entity on Entering the Line of Sight
 @export_subgroup("On Enter")
@@ -31,7 +35,8 @@ signal entity_exited(entity:Entity, parent:Entity)
 @export var body_remove_on_exit: Array[Component] = []
 
 
-## Override this function to check if the body should be added
+## Override this function to check if the body should be added. This is helpful for things that extend from
+## ComponentArea3D and want to add additional checks like [LineOfSight3D]
 func enter_check(_body_rid:RID, _body, _body_shape_index:int, _local_shape_index:int) -> bool:
 	return true
 
@@ -43,26 +48,43 @@ func _ready() -> void:
 	body_shape_entered.connect(_on_area_entered)
 	body_shape_exited.connect(_on_area_exited)
 
-func _on_area_entered(_body_rid:RID, body, _body_shape_index:int, _local_shape_index:int) -> void:
-	if body == parent:
+func _on_area_entered(body_rid:RID, body, body_shape_index:int, local_shape_index:int) -> void:
+	# We're only interested in entities and not if it's the parent and if it passes the enter check
+	if body == parent or not body is Entity:
 		return
-	if body is Entity and enter_check(_body_rid, body, _body_shape_index, _local_shape_index):
-		# Body is within angle and has line of sight
-		entity_entered.emit(body, parent)
-		body.add_components(body_add_on_entered)
-		body.remove_components(body_remove_on_entered)
-		parent.add_components(parent_add_on_entered)
-		parent.remove_components(parent_remove_on_entered)
+	if not enter_check(body_rid, body, body_shape_index, local_shape_index):
+		return
+	_run_on_enter(body, body_rid, body_shape_index, local_shape_index)
+
+func _run_on_enter(body: Entity, body_rid: RID, body_shape_index: int, local_shape_index: int) -> void:
+	# Add components to the body and parent and emit the signal
+	entity_entered.emit(body, parent)
+	body.add_components(body_add_on_entered)
+	body.remove_components(body_remove_on_entered)
+	parent.add_components(parent_add_on_entered)
+	parent.remove_components(parent_remove_on_entered)
+
+	for action in actions:
+		action.on_enter(parent, body, body_rid, body_shape_index, local_shape_index)
 
 
-func _on_area_exited(_body_rid:RID, body, _body_shape_index:int, _local_shape_index:int) -> void:
-	if body == parent:
+func _on_area_exited(body_rid:RID, body, body_shape_index:int, local_shape_index:int) -> void:
+	# We're only interested in entities and not if it's the parent and if it passes the exit check
+	if body == parent or not body is Entity:
 		return
-	if body is Entity and exit_check(_body_rid, body, _body_shape_index, _local_shape_index):
-		entity_exited.emit(body, parent)
-		body.add_components(body_add_on_exit)
-		body.remove_components(body_remove_on_exit)
-		parent.add_components(parent_add_on_exit)
-		parent.remove_components(parent_remove_on_exit)
+	if not exit_check(body_rid, body, body_shape_index, local_shape_index):
+		return
+	_run_on_exit(body, body_rid, body_shape_index, local_shape_index)
+
+func _run_on_exit(body: Entity, body_rid: RID, body_shape_index: int, local_shape_index: int) -> void:
+	entity_exited.emit(body, parent)
+	body.add_components(body_add_on_exit)
+	body.remove_components(body_remove_on_exit)
+	parent.add_components(parent_add_on_exit)
+	parent.remove_components(parent_remove_on_exit)
+	
+	for action in actions:
+		action.on_exit(parent, body, body_rid, body_shape_index, local_shape_index)
+
 
 

@@ -37,21 +37,44 @@ extends ComponentArea3D
 
 var cone_mesh_instance: MeshInstance3D
 
+var bodies = {}  # Dictionary to track bodies and their LOS status
 
-func enter_check(_body_rid:RID, body, _body_shape_index:int, _local_shape_index:int) -> bool:
-	# Now we do angle check since we're already in the collision area
-	var to_body = (body.global_position - global_position).normalized()
-	var forward = -global_transform.basis.z
-	var dot_product = forward.dot(to_body)
-	var body_angle = rad_to_deg(acos(dot_product))
-	
-	return body_angle <= angle/2 and Utils.entity_has_los(parent, body)
+func enter_check(_body_rid: RID, body, _body_shape_index: int, _local_shape_index: int) -> bool:
+	if not body is Player:
+		return false
+	bodies[body] = false  # Start tracking the body with LOS status false
+	return false  # We'll handle enter logic in _process
+
+func exit_check(_body_rid: RID, body, _body_shape_index: int, _local_shape_index: int) -> bool:
+	if body in bodies:
+		if bodies[body]:
+			_run_on_exit(body, body.get_rid(), 0, 0)
+		bodies.erase(body)
+	return true
 
 func _ready() -> void:
+	super._ready()
 	if debug:
 		_create_cone_mesh()
 		_update_collision_shape()
 
+func _process(delta: float) -> void:
+	for body in bodies.keys():
+		var is_in_los = _check_line_of_sight(body)
+		var was_in_los = bodies[body]
+		if is_in_los and not was_in_los:
+			_run_on_enter(body, body.get_rid(), 0, 0)
+			bodies[body] = true
+		elif not is_in_los and was_in_los:
+			_run_on_exit(body, body.get_rid(), 0, 0)
+			bodies[body] = false
+
+func _check_line_of_sight(body) -> bool:
+	var direction = (body.global_position - global_position).normalized()
+	var forward = global_transform.basis.z.normalized()
+	var angle_check = Utils.angle_check(direction, forward, angle)
+	var los_check = Utils.entity_has_los(parent, body, true)
+	return angle_check and los_check
 
 func _create_cone_mesh() -> void:
 	if cone_mesh_instance:
@@ -112,15 +135,10 @@ func _update_collision_shape() -> void:
 	
 	# Set cylinder dimensions
 	# Height is distance, radius is calculated from angle
-	shape.height = distance
-	shape.radius = radius
+	shape.height = 5.0
+	shape.radius = distance
 	
 	# Update collision shape
 	collision_shape_3d.shape = shape
-	
-	# Move cylinder to correct position (half distance forward since pivot is in center)
-	collision_shape_3d.position = Vector3(0, 0, distance/2)
-	# Rotate cylinder to lay flat
-	collision_shape_3d.rotation_degrees = Vector3(-90, 0, 0)
 
 

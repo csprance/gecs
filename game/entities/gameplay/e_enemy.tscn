@@ -1,4 +1,4 @@
-[gd_scene load_steps=33 format=3 uid="uid://bv4lxxnenah0s"]
+[gd_scene load_steps=37 format=3 uid="uid://bv4lxxnenah0s"]
 
 [ext_resource type="Script" path="res://game/entities/gameplay/e_enemy.gd" id="1_k0hdh"]
 [ext_resource type="Script" path="res://game/components/gameplay/c_animation_player.gd" id="2_ee2ni"]
@@ -16,6 +16,9 @@
 [ext_resource type="PackedScene" uid="uid://d2p72cr27pb2f" path="res://game/lib/hitbox_3d.tscn" id="12_mjcjh"]
 [ext_resource type="Texture2D" uid="uid://bnvcgfhim0vqp" path="res://game/assets/characters/skins/zombieA.png" id="13_i5che"]
 [ext_resource type="AnimationLibrary" uid="uid://b16umwm2bkor0" path="res://game/assets/animations/attack.fbx" id="16_skx14"]
+[ext_resource type="Script" path="res://game/lib/component_area.gd" id="17_s0oo0"]
+[ext_resource type="Script" path="res://game/actions/component_area_actions/zombie_attack_area_action.gd" id="18_8lilb"]
+[ext_resource type="Script" path="res://game/actions/component_area_actions/zombie_interest_area_action.gd" id="19_j3onr"]
 
 [sub_resource type="Resource" id="Resource_iixki"]
 script = ExtResource("2_ee2ni")
@@ -60,20 +63,6 @@ script = ExtResource("11_yq81k")
 text = "Debug Label"
 offset = Vector3(0, 5, 0)
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_3du5i"]
-albedo_texture = ExtResource("13_i5che")
-
-[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_pjpad"]
-radius = 0.518612
-height = 1.90148
-
-[sub_resource type="CylinderShape3D" id="CylinderShape3D_fqpd7"]
-height = 3.01173
-radius = 1.67235
-
-[sub_resource type="CylinderShape3D" id="CylinderShape3D_xsjlu"]
-radius = 6.90846
-
 [sub_resource type="Animation" id="Animation_axjf3"]
 resource_name = "new_animation"
 
@@ -82,20 +71,52 @@ _data = {
 "new_animation": SubResource("Animation_axjf3")
 }
 
+[sub_resource type="Resource" id="Resource_t4wul"]
+script = ExtResource("19_j3onr")
+meta = {
+"description": "This is the default action that is executed when no other action is assigned",
+"name": "Default Action"
+}
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_3du5i"]
+albedo_texture = ExtResource("13_i5che")
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_pjpad"]
+radius = 0.518612
+height = 1.90148
+
+[sub_resource type="Resource" id="Resource_31pec"]
+script = ExtResource("18_8lilb")
+meta = {
+"description": "This is the default action that is executed when no other action is assigned",
+"name": "Default Action"
+}
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_xsjlu"]
+radius = 1.20496
+
 [node name="Enemy" type="CharacterBody3D"]
 motion_mode = 1
 script = ExtResource("1_k0hdh")
 component_resources = Array[Resource("res://addons/gecs/component.gd")]([SubResource("Resource_iixki"), SubResource("Resource_ypv7w"), SubResource("Resource_itu4t"), SubResource("Resource_05cb1"), SubResource("Resource_6kqax"), SubResource("Resource_apar3"), SubResource("Resource_5elb1"), SubResource("Resource_x5chr"), SubResource("Resource_buds4"), SubResource("Resource_fi7jj")])
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+root_node = NodePath("../Visuals/RootNode/Root/GeneralSkeleton")
+libraries = {
+"": SubResource("AnimationLibrary_qrdbm"),
+"attack": ExtResource("16_skx14")
+}
+
+[node name="LineOfSight3D" parent="." node_paths=PackedStringArray("parent") instance=ExtResource("12_f8y1n")]
+angle = 150.0
+parent = NodePath("..")
+actions = Array[Resource("res://game/actions/component_area_actions/component_area_action.gd")]([SubResource("Resource_t4wul")])
 
 [node name="Visuals" parent="." instance=ExtResource("12_magfx")]
 transform = Transform3D(0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, 0, 0, 0)
 
 [node name="characterMedium" parent="Visuals/RootNode/Root/GeneralSkeleton" index="0"]
 surface_material_override/0 = SubResource("StandardMaterial3D_3du5i")
-
-[node name="LineOfSight3D" parent="." node_paths=PackedStringArray("parent") instance=ExtResource("12_f8y1n")]
-angle = 280.0
-parent = NodePath("..")
 
 [node name="HeadHitbox" parent="." node_paths=PackedStringArray("parent") instance=ExtResource("12_mjcjh")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.04253, 0)
@@ -118,28 +139,13 @@ color = Color(0.054902, 0.533333, 0.972549, 0.501961)
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.926148, 0)
 shape = SubResource("CapsuleShape3D_pjpad")
 
-[node name="AttackArea" type="Area3D" parent="."]
+[node name="AttackArea" type="Area3D" parent="." node_paths=PackedStringArray("parent")]
+script = ExtResource("17_s0oo0")
+parent = NodePath("..")
+actions = Array[Resource("res://game/actions/component_area_actions/component_area_action.gd")]([SubResource("Resource_31pec")])
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="AttackArea"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.4871, 0)
-shape = SubResource("CylinderShape3D_fqpd7")
-
-[node name="InterestArea" type="Area3D" parent="."]
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="InterestArea"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.4871, 0)
 shape = SubResource("CylinderShape3D_xsjlu")
-
-[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
-root_node = NodePath("../Visuals/RootNode/Root/GeneralSkeleton")
-libraries = {
-"": SubResource("AnimationLibrary_qrdbm"),
-"attack": ExtResource("16_skx14")
-}
-
-[connection signal="body_shape_entered" from="AttackArea" to="." method="_on_attack_area_entered"]
-[connection signal="body_shape_exited" from="AttackArea" to="." method="_on_attack_area_exited"]
-[connection signal="body_shape_entered" from="InterestArea" to="." method="_on_interest_area_entered"]
-[connection signal="body_shape_exited" from="InterestArea" to="." method="_on_interest_area_exited"]
 
 [editable path="Visuals"]

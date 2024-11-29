@@ -1,0 +1,129 @@
+[gd_scene load_steps=20 format=3 uid="uid://c8ors4ai4l4if"]
+
+[ext_resource type="Script" path="res://addons/gecs/world.gd" id="1_dnklw"]
+[ext_resource type="PackedScene" uid="uid://bv4lxxnenah0s" path="res://game/entities/gameplay/e_enemy.tscn" id="2_8weni"]
+[ext_resource type="PackedScene" uid="uid://o00dv6xya8el" path="res://game/entities/gameplay/e_pickup.tscn" id="3_b6amu"]
+[ext_resource type="Resource" uid="uid://bfpi3fqtjk6df" path="res://game/data/items/i_healthkit.tres" id="4_vaqdj"]
+[ext_resource type="Resource" uid="uid://bx7u7wpmcac6v" path="res://game/data/items/i_key.tres" id="5_uedm4"]
+[ext_resource type="Resource" uid="uid://c2njvh8tdqqem" path="res://game/data/weapons/w_water_pistol.tres" id="6_vtm68"]
+[ext_resource type="PackedScene" uid="uid://mfv8kghahued" path="res://game/entities/gameplay/e_player.tscn" id="7_4pqio"]
+[ext_resource type="PackedScene" uid="uid://x548ueo7udx1" path="res://game/entities/gameplay/e_aim_point.tscn" id="8_ib406"]
+[ext_resource type="PackedScene" uid="uid://cudyrj1egdocg" path="res://game/entities/ui/hud/e_hud.tscn" id="9_u2l4c"]
+[ext_resource type="PackedScene" uid="uid://vdhm1ygxl2dx" path="res://game/entities/gameplay/e_camera.tscn" id="10_osjvc"]
+[ext_resource type="PackedScene" uid="uid://ex2wx8kwwjjx" path="res://game/systems/default_systems.tscn" id="11_dp1f4"]
+[ext_resource type="PackedScene" uid="uid://b0ctwmw006svf" path="res://game/assets/props/tree/tree_01_a.gltf" id="12_oqyl0"]
+[ext_resource type="PackedScene" uid="uid://yx4evyedjcbm" path="res://game/assets/props/trampoline/trampoline.gltf" id="14_ecd70"]
+[ext_resource type="PackedScene" uid="uid://dx7av6n5xik2f" path="res://game/assets/props/doors/door_01_a.gltf" id="15_vvmgj"]
+[ext_resource type="PackedScene" uid="uid://dmehwuect8hlf" path="res://game/assets/props/searchables/cabinet_01_a.gltf" id="16_jyyhi"]
+[ext_resource type="PackedScene" uid="uid://csxwta28e2lxv" path="res://game/assets/props/gravestone/gravestone.gltf" id="17_7ar8e"]
+[ext_resource type="Texture2D" uid="uid://bv4vlxbttsxcl" path="res://game/assets/worlds/level_one/grass.png" id="17_8l3ga"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_leccv"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_61ucv"]
+albedo_texture = ExtResource("17_8l3ga")
+uv1_scale = Vector3(100, 100, 100)
+texture_filter = 0
+
+[node name="World" type="Node"]
+script = ExtResource("1_dnklw")
+entity_nodes_root = NodePath("Entities")
+system_nodes_root = NodePath("DefaultSystems")
+
+[node name="Entities" type="Node" parent="."]
+
+[node name="ZombieEnemy" parent="Entities" instance=ExtResource("2_8weni")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0388603, 0, 10.0392)
+
+[node name="HealthkitPickup" parent="Entities" instance=ExtResource("3_b6amu")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.73383, 3.8147e-06, 2.22476)
+item_resource = ExtResource("4_vaqdj")
+
+[node name="KeyPickup" parent="Entities" instance=ExtResource("3_b6amu")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.2883, 0, 1.54391)
+item_resource = ExtResource("5_uedm4")
+
+[node name="KeyPickup2" parent="Entities" instance=ExtResource("3_b6amu")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.11615, 0, 1.51265)
+item_resource = ExtResource("5_uedm4")
+
+[node name="SquirtGunPickup" parent="Entities" instance=ExtResource("3_b6amu")]
+transform = Transform3D(-4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 0, 0, 1, -0.404482, 0.193465, 1.79263)
+item_resource = null
+weapon_resource = ExtResource("6_vtm68")
+quantity = 100
+
+[node name="EPlayer" parent="Entities" instance=ExtResource("7_4pqio")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.1498, -3.8147e-06, -1.91343)
+
+[node name="EAimPoint" parent="Entities" instance=ExtResource("8_ib406")]
+
+[node name="EHud" parent="Entities" instance=ExtResource("9_u2l4c")]
+
+[node name="ECamera" parent="Entities" instance=ExtResource("10_osjvc")]
+
+[node name="DefaultSystems" parent="." instance=ExtResource("11_dp1f4")]
+
+[node name="Props" type="Node" parent="."]
+
+[node name="tree_01_a" parent="Props" instance=ExtResource("12_oqyl0")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18.7477, -2.86102e-06, -9.08856)
+
+[node name="tree_01_a3" parent="Props" instance=ExtResource("12_oqyl0")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -28.7919, -9.53674e-07, -1.3267)
+
+[node name="tree_01_a4" parent="Props" instance=ExtResource("12_oqyl0")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15.9117, -2.86102e-06, -1.44091)
+
+[node name="tree_01_a5" parent="Props" instance=ExtResource("12_oqyl0")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -30.6682, -4.76837e-06, 5.93443)
+
+[node name="tree_01_a6" parent="Props" instance=ExtResource("12_oqyl0")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -33.8847, -9.53674e-07, 13.2668)
+
+[node name="tree_01_a2" parent="Props" instance=ExtResource("12_oqyl0")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -28.1972, -9.53674e-07, -10.6233)
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="Props"]
+transform = Transform3D(0.15095, 0.748929, -0.645228, 0, 0.652707, 0.75761, 0.988541, -0.114361, 0.0985262, -0.643284, 5.4899, 3.87359)
+
+[node name="trampoline2" parent="Props" instance=ExtResource("14_ecd70")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.6685, 0, -4.74875)
+
+[node name="trampoline3" parent="Props" instance=ExtResource("14_ecd70")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.8988, 0, -11.3906)
+
+[node name="door_01_a2" parent="Props" instance=ExtResource("15_vvmgj")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.95644, -0.0292895, 0.260296)
+
+[node name="door_01_a3" parent="Props" instance=ExtResource("15_vvmgj")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15.5589, -0.0292914, 0.127659)
+
+[node name="cabinet_01_a2" parent="Props" instance=ExtResource("16_jyyhi")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11.2996, -4.76837e-07, -5.20902)
+
+[node name="cabinet_01_a3" parent="Props" instance=ExtResource("16_jyyhi")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17.1442, -4.76837e-07, -5.57665)
+
+[node name="gravestone47" parent="Props" instance=ExtResource("17_7ar8e")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20.5307, 0, -3.79209)
+
+[node name="gravestone48" parent="Props" instance=ExtResource("17_7ar8e")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -24.8213, 0, -3.79209)
+
+[node name="gravestone49" parent="Props" instance=ExtResource("17_7ar8e")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -24.8213, 0, 2.23345)
+
+[node name="gravestone50" parent="Props" instance=ExtResource("17_7ar8e")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -19.3405, 0, 2.23345)
+
+[node name="gravestone51" parent="Props" instance=ExtResource("17_7ar8e")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -22.9894, -1.90735e-06, -8.87887)
+
+[node name="trampoline6" parent="Props" instance=ExtResource("14_ecd70")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.151, 0, 8.68946)
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Props"]
+transform = Transform3D(150, 0, 0, 0, 1, 0, 0, 0, 105, 0, -0.532787, 0)
+mesh = SubResource("BoxMesh_leccv")
+surface_material_override/0 = SubResource("StandardMaterial3D_61ucv")

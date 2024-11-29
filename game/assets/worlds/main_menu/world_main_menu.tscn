@@ -1,7 +1,8 @@
-[gd_scene load_steps=5 format=3 uid="uid://ufipo5bjo0f8"]
+[gd_scene load_steps=6 format=3 uid="uid://ufipo5bjo0f8"]
 
 [ext_resource type="Script" path="res://addons/gecs/world.gd" id="1_ovct5"]
 [ext_resource type="PackedScene" uid="uid://bqk4e5e2yfpdf" path="res://game/entities/ui/e_main_menu.tscn" id="2_p55xk"]
+[ext_resource type="PackedScene" uid="uid://c8ors4ai4l4if" path="res://game/assets/worlds/test/world_test.tscn" id="3_8iqhv"]
 [ext_resource type="Script" path="res://game/systems/ui/s_ui_visiblity.gd" id="3_cnpy7"]
 [ext_resource type="Script" path="res://game/systems/ui/s_main_menu.gd" id="4_g26qu"]
 
@@ -13,6 +14,7 @@ system_nodes_root = NodePath("Systems")
 [node name="Entities" type="Node" parent="."]
 
 [node name="MainMenu" parent="Entities" instance=ExtResource("2_p55xk")]
+worlds = Array[PackedScene]([ExtResource("3_8iqhv")])
 
 [node name="Systems" type="Node" parent="."]
 

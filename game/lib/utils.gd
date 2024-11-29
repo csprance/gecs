@@ -51,23 +51,26 @@ static func zip(sequence_x, sequence_y):
 			result.append(Vector2(x, y))
 	return result
 
-
-static func has_los(from: Vector3, to: Vector3) -> bool:
+## Can we see from one point to another
+static func has_los(from: Vector3, to: Vector3, debug = false) -> bool:
 	var scene_tree = Engine.get_main_loop()
 	if not scene_tree is SceneTree:
 		return false
 	var space_state = scene_tree.root.get_world_3d().direct_space_state
-	var result = space_state.intersect_ray(PhysicsRayQueryParameters3D.create(from, to))
-	return result.has('collider')
+	var query = PhysicsRayQueryParameters3D.create(from, to)
+	var result = space_state.intersect_ray(query)
+	if debug:
+		DebugDraw3D.draw_line(from, to, Color(1, 0, 0) if result.has('collider') else Color(0, 1, 0), 15)
+	return not result.has('collider')
 
 
-static func entity_has_los(from: Entity, to: Entity) -> bool:
+static func entity_has_los(from: Entity, to: Entity, debug= false) -> bool:
 	var c_trs_from = from.get_component(C_Transform) as C_Transform
 	var c_trs_to = to.get_component(C_Transform) as C_Transform
 	if not c_trs_from or not c_trs_to:
 		return false
-	
-	return has_los(c_trs_from.transform.origin, c_trs_to.transform.origin)
+	var dir = (c_trs_to.transform.origin - c_trs_from.transform.origin).normalized()
+	return has_los(c_trs_from.transform.origin + (dir*1.1), c_trs_to.transform.origin, debug)
 
 # Calculates the direction an entity is facing based on the look-at component and TRS component.
 static func calculate_entity_direction(entity: Entity) -> Vector3:
@@ -79,3 +82,9 @@ static func calculate_entity_direction(entity: Entity) -> Vector3:
 	var dir = (c_lookat.target - c_trs.position).normalized()
 	dir.y = 0
 	return dir.normalized()
+
+## Check if the angle between two points is less than the angle
+static func angle_check(direction: Vector3, forward: Vector3, angle: float) -> bool:
+	var dot_product = forward.dot(direction)
+	var body_angle = rad_to_deg(acos(dot_product))
+	return body_angle <= angle/2.0
