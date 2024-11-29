@@ -122,6 +122,7 @@ class_name BounceSystem
 extends System
 
 func query():
+  # All entities that all have transform, velocity and bounce components
 	return q.with_all([Transform, Velocity, Bounce])
 
 func process(entity: Entity, delta: float):
