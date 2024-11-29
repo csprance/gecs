@@ -116,6 +116,10 @@ func add_relationship(relationship: Relationship) -> void:
 	relationships.append(relationship)
 	relationship_added.emit(self, relationship)
 
+func add_relationships(_relationships: Array):
+	for relationship in _relationships:
+		add_relationship(relationship)
+
 ## Removes a relationship from the entity.[br]
 ## [param relationship] The [Relationship] to remove.
 func remove_relationship(relationship: Relationship) -> void:
@@ -126,6 +130,10 @@ func remove_relationship(relationship: Relationship) -> void:
 	for rel in to_remove:
 		relationships.erase(rel)
 		relationship_removed.emit(self, rel)
+
+func remove_relationships(_relationships: Array):
+	for relationship in _relationships:
+		remove_relationship(relationship)
 
 ## Retrieves a specific [Relationship] from the entity.
 ## [param relationship] The [Relationship] to retrieve.
