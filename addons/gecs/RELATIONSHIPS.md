@@ -25,12 +25,12 @@ Relationship.new(C_Relation, E_Target)
 class_name C_Likes
 extends Component
 ```
-```
+```gdscript
 # c_loves.gd
 class_name C_Loves
 extends Component
 ```
-```
+```gdscript
 # c_eats.gd
 class_name C_Eats
 extends Component
@@ -40,12 +40,12 @@ extends Component
 func _init(qty: int = quantity):
     quantity = qty
 ```
-```
+```gdscript
 # e_food.gd
 class_name Food
 extends Entity
 ```
-```
+```gdscript
 # example.gd
 # Create our entities
 var e_bob = Person.new()
@@ -79,7 +79,7 @@ We can then query for these relationships in the following ways
 - Relation: A component type, or an instanced component with data
 - Target: Either a reference to an entity, or the entity archetype.
 
-```
+```gdscript
 # Any entity that likes alice
 ECS.world.query.with_relationship([Relationship.new(C_Likes.new(), e_alice)]).execute()
 # Any entity with any relations toward heather
