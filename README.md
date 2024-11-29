@@ -67,7 +67,7 @@ Before diving into the usage of the GECS addon, it's important to understand the
 
 - **Query**: A way to query for specific entities in the world based on the components they contain or the relationships they have. 
 
-- **Relationship**: A resource that represents a relationship between a target and a source based on a relation. See more: [Relations.md](./RELATIONSHIPS.md)
+- **Relationship**: A resource that represents a relationship between a target and a source based on a relation. See more: [Relations.md](./addons/gecs/RELATIONSHIPS.md)
 
 - **ECS Singleton**: Provides global access to the current `World` instance and offers utility functions for processing.
 
