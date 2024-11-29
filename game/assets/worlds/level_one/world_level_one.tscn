@@ -76,20 +76,18 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -35.8393, -8.72361, -31.9556)
 [node name="HealthkitPickup" parent="Entities" instance=ExtResource("2_8fx5w")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40.0387, 3.8147e-06, -26.8543)
 item_resource = ExtResource("3_jg4rd")
-quantity = 1
 
 [node name="KeyPickup" parent="Entities" instance=ExtResource("2_8fx5w")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -41.8443, 0, -7.62729)
 item_resource = ExtResource("4_nyenq")
-quantity = 1
 
 [node name="KeyPickup2" parent="Entities" instance=ExtResource("2_8fx5w")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11.0722, 0, -10.5177)
 item_resource = ExtResource("4_nyenq")
-quantity = 1
 
 [node name="SquirtGunPickup" parent="Entities" instance=ExtResource("2_8fx5w")]
 transform = Transform3D(-4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 0, 0, 1, -30.5311, 0.193465, 10.0846)
+item_resource = null
 weapon_resource = ExtResource("5_8l0mn")
 quantity = 100
 
