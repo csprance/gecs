@@ -61,11 +61,11 @@ Before diving into the usage of the GECS addon, it's important to understand the
 
 - **Archetypes**: A specific named Entity that has a specific set of components (at ready) and usually is using script inheritance to take advantage of any godot nodes features. OR... just a named Entity. Very handy for relationship queries.
 
-- **System**: A system contains the logic that operates on entities with specific components.
+- **System**: A system contains two parts. The query which defines which entities to operate on and the logic that operates on each entity with specific components.
 
 - **World**: The context in which entities and systems exist and interact.
 
-- **Query**: A way to query for specific entities in the world based on the components they contain.
+- **Query**: A way to query for specific entities in the world based on the components they contain or the relationships they have. 
 
 - **Relationship**: A resource that represents a relationship between a target and a source based on a relation. See more: [Relations.md](./RELATIONSHIPS.md)
 
@@ -74,7 +74,7 @@ Before diving into the usage of the GECS addon, it's important to understand the
 
 ## Creating Components
 
-Components in GECS are resources that extend the `Component` class. They are simple data containers without any logic.
+Components in GECS are resources that extend the `Component` class. They are simple data containers without any logic. They may contain functions but only for getting/setting properties on the component. 
 
 Here's how to create a new component:
 
@@ -89,7 +89,7 @@ extends Component
 @export var should_bounce := false
 ```
 
-2. **Define Properties**: Add any properties that represent the data for this component. Use the `@export` keyword to make them editable in the inspector.
+2. **Define Properties**: Add any properties that represent the data for this component. Use the `@export` keyword to make them editable in the inspector. This allows you to use them in the godot editor to design entities with components and modify those properties. 
 
 ## Creating Entities
 
@@ -276,7 +276,6 @@ func query():
 	return q.with_all([Transform])
 
 func process(entity: Entity, delta):
-	var kitransform: Transform = entity.get_component(Transform)
 	Utils.sync_transform(entity)
 ```
 
@@ -291,11 +290,15 @@ q
 	.with_all([]) # Find entities that have all these components
 	.with_any([]) # Find entities that have any of these components
 	.with_none([]) # Exclude entities that have these components
+ .has_relationship([])
+ .has_reverse_relationship([])
 ```
 
 - **with_all**: Entities must have all of these components.
 - **with_any**: Entities must have at least one of these components.
 - **with_none**: Entities must not have any of these components.
+- **has_relationship**: Entities must have these relationships
+- **has_reverse_relationship**: This finds the entities of reverse relationships (aka the target of the relationship, not the source)
 
 **Example**:
 
@@ -320,17 +323,6 @@ This will only process systems that are in the "physics" group in the physics pr
 
 To process all active systems regardless of their group, omit the `group` parameter:
 
-### Configuring Entity Base Type
-
-GECS provides flexibility in choosing the base class for your entities, allowing you to work seamlessly with both 2D and 3D nodes.
-
-To set the base type for entities:
-
-1. Open `Project > Project Settings > GECS`.
-2. Set `Entity Base Type` to either `Node2D` or `Node3D`.
-
-This setting updates the base class of the `Entity` to match your selection, ensuring compatibility with your project's node structure.
-
 ### Processing Systems by Group
 
 Systems can be assigned to specific groups, enabling you to control when and how they are processed. This is particularly useful for separating logic that should run at different times or frequencies.
@@ -350,7 +342,3 @@ Feel free to explore and expand upon the example project provided, and refer to 
 - GUI For Seeing all Systems executing
 - Gui for seeing all Entities and Components and Values in those components
 - GUI TO see all Components by type
-- Relationships
-	- q.with_all([C_Health, C_Damage, Rel([C_DamagedBy, Player])]).with_none([Rel(C_ImmuneTo, RedTeam)])
-		-  Entities that all have health, damage, and were damaged by the player entity, without a relationship of immunity to red team entity
-	- enemy_entity.add_relationship(Rel([C_DamagedBy, player_entity]))
