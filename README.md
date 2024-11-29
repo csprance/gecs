@@ -157,8 +157,8 @@ func _ready() -> void:
 	ECS.world = world
 
 func _process(delta):
-	# Process only systems in the "physics" group
-	ECS.process(delta, "physics")
+	# Process only systems in the "gameplay" group
+	ECS.process(delta, "gameplay")
 ```
 
 ## Example Project
