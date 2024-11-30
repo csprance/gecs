@@ -3,41 +3,59 @@
 class_name EvilDollBehaviorSystem
 extends System
 
-const ZOMBIE_SPEED = 2.0
+# How fast the evil doll moves when it's chasing
+const CHASE_SPEED = 2.0
+# How fast the evil doll moves when it's bursting
+const BURST_SPEED = 5.0
+# How fast the evil doll moves when it's interested
+const INTERESTED_SPEED = 1.0
 
 ## This has sub systems so we can group all these things together
 func sub_systems():
 	return [
 		## Idle
 		[
-			ECS.world.query.with_all([C_EvilDollBehavior, C_Transform, C_Enemy, C_Velocity, C_InterestRange]).with_none([C_Chasing, C_Interested, C_Death]),
+			ECS.world.query
+			.with_all([C_EvilDollBehavior, C_Transform, C_Enemy, C_Velocity, C_InterestRange])
+			.with_none([C_Interested, C_Death])
+			.without_relationship([Relationships.chasing_players()]),
 			idle_subsystem
 		],
 		## Chase
 		[
-			ECS.world.query.with_all([C_EvilDollBehavior, C_Transform, C_Enemy, C_Velocity, C_InterestRange, C_Chasing]).with_none([C_Death]),
+			ECS.world.query
+			.with_all([C_EvilDollBehavior, C_Transform, C_Enemy, C_Velocity, C_InterestRange])
+			.with_none([C_Death])
+			.with_relationship([Relationships.chasing_players()]),
 			chase_subsystem
 		], 
 		## Interested
 		[
-			ECS.world.query.with_all([C_EvilDollBehavior, C_Transform, C_Enemy, C_Velocity, C_InterestRange, C_Interested]).with_none([C_Death]), 
+			ECS.world.query
+			.with_all([C_EvilDollBehavior, C_Transform, C_Enemy, C_Velocity, C_InterestRange, C_Interested])
+			.with_none([C_Death]), 
 			interested_subsystem
 		],
 		## Attack
 		[
-			ECS.world.query.with_all([C_EvilDollBehavior, C_Transform, C_Enemy, C_Velocity]).with_none([C_Death, C_AttackCooldown]).with_relationship([Relationships.attacking_players()]), 
+			ECS.world.query
+			.with_all([C_EvilDollBehavior, C_Transform, C_Enemy, C_Velocity])
+			.with_none([C_Death, C_AttackCooldown])
+			.with_relationship([Relationships.attacking_players()]), 
 			attack_subsystem
 		],
 	]
 
 ## Try to attack the target	if we can
 func attack_subsystem(entity, _delta):
-	var c_velocity = entity.get_component(C_Velocity) as C_Velocity
-	var c_trs = entity.get_component(C_Transform) as C_Transform
-	var c_attacking = entity.get_component(C_Attacking) as C_Attacking
-	Loggie.debug('Attacking', c_attacking.target)
-	c_attacking.target.add_component(C_Damage.new())
-	entity.add_component(C_AttackCooldown.new())
+	# look at the player
+	var r_attacking = entity.get_relationship(Relationships.attacking_players())
+	Loggie.debug('Attacking', r_attacking.target)
+	r_attacking.target.add_component(C_Damage.new())
+	entity.add_component(C_AttackCooldown.new(randf_range(6.0, 9.0)))
+	var c_attacker_trs = r_attacking.target.get_component(C_Transform) as C_Transform
+	if c_attacker_trs:
+		entity.add_component(C_LookAt.new(c_attacker_trs.transform.origin))
 
 
 func idle_subsystem(entity, delta):
@@ -68,23 +86,22 @@ func interested_subsystem(entity, _delta):
 	
 	# Set the velocity to go towards the target
 	c_velocity.direction = (c_interested.target - c_trs.transform.origin).normalized()
-	c_velocity.speed = ZOMBIE_SPEED
+	c_velocity.speed = INTERESTED_SPEED
 
 func chase_subsystem(entity, _delta):
 	# We can't be chasing and interested at the same time
 	entity.remove_component(C_Interested)
 	var c_velocity = entity.get_component(C_Velocity) as C_Velocity
 	var c_trs = entity.get_component(C_Transform) as C_Transform
-	var c_chasing = entity.get_component(C_Chasing) as C_Chasing
+	var r_chasing = entity.get_relationship(Relationships.chasing_players())
 
-	var chase_target = c_chasing.target
+	var chase_target = r_chasing.target
 	var chase_target_trs = (chase_target.get_component(C_Transform) as C_Transform).transform
 
 	# Set the velocity to go towards the target
 	c_velocity.direction = (chase_target_trs.origin - c_trs.transform.origin).normalized()
-	c_velocity.speed = ZOMBIE_SPEED
+	c_velocity.speed = CHASE_SPEED
 
 	# Look at the chase target
 	var c_look_at = C_LookAt.new(chase_target_trs.origin)
 	entity.add_component(c_look_at)
-	
