@@ -16,17 +16,26 @@ script = ExtResource("3_5u8xx")
 [sub_resource type="Resource" id="Resource_nq1id"]
 script = ExtResource("3_5u8xx")
 
-[sub_resource type="CylinderShape3D" id="CylinderShape3D_cy6u6"]
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_6lkwx"]
 height = 5.0
 radius = 5.0
 
 [node name="LineOfSight3D" type="Area3D"]
 script = ExtResource("1_exa3r")
+parent_rel_add_on_entered = null
+parent_rel_remove_on_entered = null
+parent_rel_add_on_exit = null
+parent_rel_remove_on_exit = null
+body_rel_add_on_entered = null
+body_rel_remove_on_entered = null
+body_rel_add_on_exit = null
+body_rel_remove_on_exit = null
 parent_add_on_entered = Array[Resource("res://addons/gecs/component.gd")]([SubResource("Resource_f3in7")])
 parent_remove_on_exit = Array[Resource("res://addons/gecs/component.gd")]([SubResource("Resource_ifcxy")])
 body_add_on_entered = Array[Resource("res://addons/gecs/component.gd")]([SubResource("Resource_eeaui")])
+body_add_on_exit = null
 body_remove_on_exit = Array[Resource("res://addons/gecs/component.gd")]([SubResource("Resource_nq1id")])
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 unique_name_in_owner = true
-shape = SubResource("CylinderShape3D_cy6u6")
+shape = SubResource("CylinderShape3D_6lkwx")
