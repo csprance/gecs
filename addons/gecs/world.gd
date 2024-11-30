@@ -332,7 +332,7 @@ func _on_entity_component_removed(entity, component: Variant) -> void:
 
 ## (Optional) Update index when a relationship is added.
 func _on_entity_relationship_added(entity: Entity, relationship: Relationship) -> void:
-	var key = relationship.relation.get_script().resource_path
+	var key = relationship.relation.resource_path
 	if not relationship_entity_index.has(key):
 		relationship_entity_index[key] = []
 	relationship_entity_index[key].append(entity)
@@ -348,7 +348,7 @@ func _on_entity_relationship_added(entity: Entity, relationship: Relationship) -
 
 ## (Optional) Update index when a relationship is removed.
 func _on_entity_relationship_removed(entity: Entity, relationship: Relationship) -> void:
-	var key = relationship.relation.get_script().resource_path
+	var key = relationship.relation.resource_path
 	if relationship_entity_index.has(key):
 		relationship_entity_index[key].erase(entity)
 		
