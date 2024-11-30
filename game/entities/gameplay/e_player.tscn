@@ -91,6 +91,8 @@ near = 0.05
 far = 4000.0
 
 [node name="EPlayer" type="CharacterBody3D"]
+collision_layer = 8
+collision_mask = 9
 script = ExtResource("1_tt02t")
 component_resources = Array[Resource("res://addons/gecs/component.gd")]([SubResource("Resource_w7h0e"), SubResource("Resource_m0ng3"), SubResource("Resource_j1swe"), SubResource("Resource_l36gj"), SubResource("Resource_qysxq"), SubResource("Resource_d0axv"), SubResource("Resource_el2pk"), SubResource("Resource_4axd2"), SubResource("Resource_urpic")])
 

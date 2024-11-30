@@ -18,8 +18,11 @@ script = ExtResource("6_t2px4")
 lifetime = 2.0
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_ne1e8"]
+radius = 0.128079
 
 [node name="EProjectile" type="CharacterBody3D"]
+collision_layer = 4
+collision_mask = 7
 motion_mode = 1
 script = ExtResource("1_lo2ip")
 component_resources = Array[Resource("res://addons/gecs/component.gd")]([SubResource("Resource_hlh4b"), SubResource("Resource_ncikw"), SubResource("Resource_e2i7i")])
