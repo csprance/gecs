@@ -1,4 +1,4 @@
-class_name ZombieInterestAreaAction
+class_name ChaseInAreaAreaAction
 extends ComponentAreaAction
 
 # Start chaing the body if they get in the interest area
