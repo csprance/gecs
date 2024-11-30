@@ -33,11 +33,11 @@ system_nodes_root = NodePath("DefaultSystems")
 
 [node name="Entities" type="Node" parent="."]
 
+[node name="EvilDollEnemy" parent="Entities" instance=ExtResource("2_bt0om")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.98224, 0, 7.00414)
+
 [node name="ZombieEnemy" parent="Entities" instance=ExtResource("18_jmf4t")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.1781, 0, 7.86873)
-
-[node name="EvilDollEnemy" parent="Entities" instance=ExtResource("2_bt0om")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0241785, 0, 10.4428)
 
 [node name="HealthkitPickup" parent="Entities" instance=ExtResource("3_b6amu")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.73383, 3.8147e-06, 2.22476)
