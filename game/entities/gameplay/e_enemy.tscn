@@ -63,6 +63,9 @@ script = ExtResource("11_yq81k")
 text = "Debug Label"
 offset = Vector3(0, 5, 0)
 
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_3du5i"]
+albedo_texture = ExtResource("13_i5che")
+
 [sub_resource type="Animation" id="Animation_axjf3"]
 resource_name = "new_animation"
 
@@ -78,13 +81,6 @@ meta = {
 "name": "Default Action"
 }
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_3du5i"]
-albedo_texture = ExtResource("13_i5che")
-
-[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_pjpad"]
-radius = 0.518612
-height = 1.90148
-
 [sub_resource type="Resource" id="Resource_31pec"]
 script = ExtResource("18_8lilb")
 meta = {
@@ -95,10 +91,20 @@ meta = {
 [sub_resource type="CylinderShape3D" id="CylinderShape3D_xsjlu"]
 radius = 1.20496
 
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_pjpad"]
+radius = 0.518612
+height = 1.90148
+
 [node name="Enemy" type="CharacterBody3D"]
 motion_mode = 1
 script = ExtResource("1_k0hdh")
 component_resources = Array[Resource("res://addons/gecs/component.gd")]([SubResource("Resource_iixki"), SubResource("Resource_ypv7w"), SubResource("Resource_itu4t"), SubResource("Resource_05cb1"), SubResource("Resource_6kqax"), SubResource("Resource_apar3"), SubResource("Resource_5elb1"), SubResource("Resource_x5chr"), SubResource("Resource_buds4"), SubResource("Resource_fi7jj")])
+
+[node name="Visuals" parent="." instance=ExtResource("12_magfx")]
+transform = Transform3D(0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, 0, 0, 0)
+
+[node name="characterMedium" parent="Visuals/RootNode/Root/GeneralSkeleton" index="0"]
+surface_material_override/0 = SubResource("StandardMaterial3D_3du5i")
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="."]
 root_node = NodePath("../Visuals/RootNode/Root/GeneralSkeleton")
@@ -111,12 +117,16 @@ libraries = {
 angle = 150.0
 parent = NodePath("..")
 actions = Array[Resource("res://game/actions/component_area_actions/component_area_action.gd")]([SubResource("Resource_t4wul")])
+parent_add_on_exit = null
 
-[node name="Visuals" parent="." instance=ExtResource("12_magfx")]
-transform = Transform3D(0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, 0, 0, 0)
+[node name="AttackArea" type="Area3D" parent="." node_paths=PackedStringArray("parent")]
+script = ExtResource("17_s0oo0")
+parent = NodePath("..")
+actions = Array[Resource("res://game/actions/component_area_actions/component_area_action.gd")]([SubResource("Resource_31pec")])
 
-[node name="characterMedium" parent="Visuals/RootNode/Root/GeneralSkeleton" index="0"]
-surface_material_override/0 = SubResource("StandardMaterial3D_3du5i")
+[node name="CollisionShape3D" type="CollisionShape3D" parent="AttackArea"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.4871, 0)
+shape = SubResource("CylinderShape3D_xsjlu")
 
 [node name="HeadHitbox" parent="." node_paths=PackedStringArray("parent") instance=ExtResource("12_mjcjh")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.04253, 0)
@@ -138,14 +148,5 @@ color = Color(0.054902, 0.533333, 0.972549, 0.501961)
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.926148, 0)
 shape = SubResource("CapsuleShape3D_pjpad")
-
-[node name="AttackArea" type="Area3D" parent="." node_paths=PackedStringArray("parent")]
-script = ExtResource("17_s0oo0")
-parent = NodePath("..")
-actions = Array[Resource("res://game/actions/component_area_actions/component_area_action.gd")]([SubResource("Resource_31pec")])
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="AttackArea"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.4871, 0)
-shape = SubResource("CylinderShape3D_xsjlu")
 
 [editable path="Visuals"]
