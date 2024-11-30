@@ -18,7 +18,7 @@ script = ExtResource("6_t2px4")
 lifetime = 2.0
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_ne1e8"]
-radius = 0.128079
+radius = 0.413
 
 [node name="EProjectile" type="CharacterBody3D"]
 collision_layer = 4
