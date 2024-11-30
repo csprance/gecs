@@ -9,3 +9,7 @@ extends Component
 @export var collision_scale:= Vector3.ONE
 ## How fast this moves
 @export var speed:= 10.0
+## How many hitboxes can we go through
+@export var pass_through_hitboxes:= 1
+
+var cur_pass_through_hitboxes:= 0
