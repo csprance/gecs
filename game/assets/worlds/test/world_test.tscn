@@ -1,7 +1,7 @@
-[gd_scene load_steps=20 format=3 uid="uid://c8ors4ai4l4if"]
+[gd_scene load_steps=21 format=3 uid="uid://c8ors4ai4l4if"]
 
 [ext_resource type="Script" path="res://addons/gecs/world.gd" id="1_dnklw"]
-[ext_resource type="PackedScene" uid="uid://bv4lxxnenah0s" path="res://game/entities/gameplay/e_enemy.tscn" id="2_8weni"]
+[ext_resource type="PackedScene" uid="uid://n6ivo0wnpuvg" path="res://game/entities/gameplay/enemies/e_enemy_evil_doll.tscn" id="2_bt0om"]
 [ext_resource type="PackedScene" uid="uid://o00dv6xya8el" path="res://game/entities/gameplay/e_pickup.tscn" id="3_b6amu"]
 [ext_resource type="Resource" uid="uid://bfpi3fqtjk6df" path="res://game/data/items/i_healthkit.tres" id="4_vaqdj"]
 [ext_resource type="Resource" uid="uid://bx7u7wpmcac6v" path="res://game/data/items/i_key.tres" id="5_uedm4"]
@@ -17,6 +17,7 @@
 [ext_resource type="PackedScene" uid="uid://dmehwuect8hlf" path="res://game/assets/props/searchables/cabinet_01_a.gltf" id="16_jyyhi"]
 [ext_resource type="PackedScene" uid="uid://csxwta28e2lxv" path="res://game/assets/props/gravestone/gravestone.gltf" id="17_7ar8e"]
 [ext_resource type="Texture2D" uid="uid://bv4vlxbttsxcl" path="res://game/assets/worlds/level_one/grass.png" id="17_8l3ga"]
+[ext_resource type="PackedScene" uid="uid://cgl874p46o3qf" path="res://game/entities/gameplay/enemies/e_enemy_zombie.tscn" id="18_jmf4t"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_leccv"]
 
@@ -32,8 +33,11 @@ system_nodes_root = NodePath("DefaultSystems")
 
 [node name="Entities" type="Node" parent="."]
 
-[node name="ZombieEnemy" parent="Entities" instance=ExtResource("2_8weni")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0388603, 0, 10.0392)
+[node name="ZombieEnemy" parent="Entities" instance=ExtResource("18_jmf4t")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.1781, 0, 7.86873)
+
+[node name="EvilDollEnemy" parent="Entities" instance=ExtResource("2_bt0om")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0241785, 0, 10.4428)
 
 [node name="HealthkitPickup" parent="Entities" instance=ExtResource("3_b6amu")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.73383, 3.8147e-06, 2.22476)
