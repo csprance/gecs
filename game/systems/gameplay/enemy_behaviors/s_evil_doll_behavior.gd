@@ -1,6 +1,6 @@
-## Zombies sit around doing nothing until they're interested and then then just go start for that target. 
-## They don't have any pathfinding or anything, they just go straight for the target
-class_name ZombieBehaviorSystem
+## Evil Dolls wander randomly until they see the player, then they rush at the player choosing a path through them
+## They will also attempt to throw a knife at the player randomly if they are in the attack area
+class_name EvilDollBehaviorSystem
 extends System
 
 const ZOMBIE_SPEED = 2.0
@@ -10,22 +10,22 @@ func sub_systems():
 	return [
 		## Idle
 		[
-			ECS.world.query.with_all([C_ZombieBehavior, C_Transform, C_Enemy, C_Velocity, C_InterestRange]).with_none([C_Chasing, C_Interested, C_Death]),
+			ECS.world.query.with_all([C_EvilDollBehavior, C_Transform, C_Enemy, C_Velocity, C_InterestRange]).with_none([C_Chasing, C_Interested, C_Death]),
 			idle_subsystem
 		],
 		## Chase
 		[
-			ECS.world.query.with_all([C_ZombieBehavior, C_Transform, C_Enemy, C_Velocity, C_InterestRange, C_Chasing]).with_none([C_Death]),
+			ECS.world.query.with_all([C_EvilDollBehavior, C_Transform, C_Enemy, C_Velocity, C_InterestRange, C_Chasing]).with_none([C_Death]),
 			chase_subsystem
 		], 
 		## Interested
 		[
-			ECS.world.query.with_all([C_ZombieBehavior, C_Transform, C_Enemy, C_Velocity, C_InterestRange, C_Interested]).with_none([C_Death]), 
+			ECS.world.query.with_all([C_EvilDollBehavior, C_Transform, C_Enemy, C_Velocity, C_InterestRange, C_Interested]).with_none([C_Death]), 
 			interested_subsystem
 		],
 		## Attack
 		[
-			ECS.world.query.with_all([C_ZombieBehavior, C_Transform, C_Enemy, C_Velocity, C_Attacking]).with_none([C_Death, C_AttackCooldown]), 
+			ECS.world.query.with_all([C_EvilDollBehavior, C_Transform, C_Enemy, C_Velocity]).with_none([C_Death, C_AttackCooldown]).with_relationship([Relationships.attacking_players()]), 
 			attack_subsystem
 		],
 	]
@@ -40,10 +40,10 @@ func attack_subsystem(entity, _delta):
 	entity.add_component(C_AttackCooldown.new())
 
 
-func idle_subsystem(entity, _delta):
+func idle_subsystem(entity, delta):
 	# Pick a random spot to go to every 5 seconds
 	var t_state = GameState.use_state(entity, 'idle_timer', randf_range(0, 3))
-	t_state.value -= _delta
+	t_state.value -= delta
 	# Pick a random spot to get interested in every 5 seconds
 	if t_state.value <= 0:
 		# reset the timer
