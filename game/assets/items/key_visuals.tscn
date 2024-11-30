@@ -10,7 +10,7 @@ roughness = 0.2
 [sub_resource type="TorusMesh" id="TorusMesh_hjrgt"]
 
 [node name="Key Visuals" type="Node3D"]
-transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0, 0)
+transform = Transform3D(0.3, 0, 0, 0, 0.3, 0, 0, 0, 0.3, 0, 0, 0)
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="."]
 transform = Transform3D(-1.31134e-08, -1, 0, 0.3, -4.37114e-08, 0, 0, 0, 0.3, 0, 0.028518, 0)
