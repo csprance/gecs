@@ -14,6 +14,7 @@ func sub_systems():
 		],
 	]
 
+# TODO: Create world collision
 func projectile_collision_subsy(entity, _delta: float):
 	var c_projectile = entity.get_component(C_Projectile) as C_Projectile
 	var c_collision = entity.get_component(C_Collision) as C_Collision
