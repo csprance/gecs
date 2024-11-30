@@ -17,8 +17,8 @@
 [ext_resource type="Texture2D" uid="uid://bnvcgfhim0vqp" path="res://game/assets/characters/skins/zombieA.png" id="13_i5che"]
 [ext_resource type="AnimationLibrary" uid="uid://b16umwm2bkor0" path="res://game/assets/animations/attack.fbx" id="16_skx14"]
 [ext_resource type="Script" path="res://game/lib/component_area.gd" id="17_s0oo0"]
-[ext_resource type="Script" path="res://game/actions/component_area_actions/zombie_attack_area_action.gd" id="18_8lilb"]
-[ext_resource type="Script" path="res://game/actions/component_area_actions/zombie_interest_area_action.gd" id="19_j3onr"]
+[ext_resource type="Script" path="res://game/actions/component_area_actions/attack_in_area_action.gd" id="18_8lilb"]
+[ext_resource type="Script" path="res://game/actions/component_area_actions/chase_in_area_action.gd" id="19_j3onr"]
 
 [sub_resource type="Resource" id="Resource_iixki"]
 script = ExtResource("2_ee2ni")
@@ -116,13 +116,13 @@ libraries = {
 [node name="LineOfSight3D" parent="." node_paths=PackedStringArray("parent") instance=ExtResource("12_f8y1n")]
 angle = 150.0
 parent = NodePath("..")
-actions = Array[Resource("res://game/actions/component_area_actions/component_area_action.gd")]([SubResource("Resource_t4wul")])
+actions = Array[Resource("res://game/lib/component_area_action.gd")]([SubResource("Resource_t4wul")])
 parent_add_on_exit = null
 
 [node name="AttackArea" type="Area3D" parent="." node_paths=PackedStringArray("parent")]
 script = ExtResource("17_s0oo0")
 parent = NodePath("..")
-actions = Array[Resource("res://game/actions/component_area_actions/component_area_action.gd")]([SubResource("Resource_31pec")])
+actions = Array[Resource("res://game/lib/component_area_action.gd")]([SubResource("Resource_31pec")])
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="AttackArea"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.4871, 0)
