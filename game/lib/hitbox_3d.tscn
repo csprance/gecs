@@ -5,6 +5,8 @@
 [sub_resource type="BoxShape3D" id="BoxShape3D_mrbh0"]
 
 [node name="Hitbox3D" type="Area3D"]
+collision_layer = 2
+collision_mask = 4
 script = ExtResource("1_f8cox")
 hitbox_scale = Vector3(1, 1, 1)
 
