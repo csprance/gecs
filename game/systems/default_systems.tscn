@@ -1,4 +1,4 @@
-[gd_scene load_steps=22 format=3 uid="uid://ex2wx8kwwjjx"]
+[gd_scene load_steps=23 format=3 uid="uid://ex2wx8kwwjjx"]
 
 [ext_resource type="Script" path="res://game/systems/gameplay/enemy_behaviors/s_zombie_behavior.gd" id="1_a57uo"]
 [ext_resource type="Script" path="res://game/systems/input/s_player_controls.gd" id="1_e5u7d"]
@@ -6,6 +6,7 @@
 [ext_resource type="Script" path="res://game/systems/gameplay/s_aim_point.gd" id="1_wvq8n"]
 [ext_resource type="Script" path="res://game/systems/gameplay/s_events.gd" id="2_byjij"]
 [ext_resource type="Script" path="res://game/systems/gameplay/s_interest.gd" id="4_epoj1"]
+[ext_resource type="Script" path="res://game/systems/gameplay/enemy_behaviors/s_evil_doll_behavior.gd" id="4_yy88v"]
 [ext_resource type="Script" path="res://game/systems/gameplay/s_pickup.gd" id="5_kryj1"]
 [ext_resource type="Script" path="res://game/systems/physics/s_character_body_3d.gd" id="6_n8p4l"]
 [ext_resource type="Script" path="res://game/systems/gameplay/s_transform.gd" id="7_5veey"]
@@ -38,6 +39,10 @@ group = "gameplay"
 
 [node name="AimPointSystem" type="Node" parent="gameplay"]
 script = ExtResource("1_wvq8n")
+group = "gameplay"
+
+[node name="EvilDollBehaviorSystem" type="Node" parent="gameplay"]
+script = ExtResource("4_yy88v")
 group = "gameplay"
 
 [node name="ZombieBehaviorSystem" type="Node" parent="gameplay"]
