@@ -119,4 +119,11 @@ tween_on_load = false
 camera_3d_resource = SubResource("Resource_4bwhh")
 follow_offset = Vector3(0, 11, 5)
 
+[node name="WeaponAttachment" type="BoneAttachment3D" parent="."]
+transform = Transform3D(0.925772, -99.3322, -11.5032, -7.96631, -11.5402, 99.012, -99.6785, -0.000198696, -8.01988, -1.14137, 2.24607, 0.0772056)
+bone_name = "RightHand"
+bone_idx = 40
+use_external_skeleton = true
+external_skeleton = NodePath("../Visuals/RootNode/Root/Skeleton3D")
+
 [editable path="Visuals"]
