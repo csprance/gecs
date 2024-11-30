@@ -108,6 +108,13 @@ debug_camera_toggle={
 ]
 }
 
+[layer_names]
+
+3d_physics/layer_1="world"
+3d_physics/layer_2="hitbox"
+3d_physics/layer_3="projectile"
+3d_physics/layer_4="player"
+
 [loggie]
 
 general/log_level=4
