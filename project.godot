@@ -114,6 +114,9 @@ debug_camera_toggle={
 3d_physics/layer_2="hitbox"
 3d_physics/layer_3="projectile"
 3d_physics/layer_4="player"
+3d_physics/layer_5="enemy"
+3d_physics/layer_6="pickup"
+3d_physics/layer_7="victim"
 
 [loggie]
 
