@@ -1,4 +1,4 @@
-[gd_scene load_steps=34 format=3 uid="uid://n6ivo0wnpuvg"]
+[gd_scene load_steps=36 format=3 uid="uid://n6ivo0wnpuvg"]
 
 [ext_resource type="Script" path="res://game/entities/gameplay/e_enemy.gd" id="1_8mheo"]
 [ext_resource type="Script" path="res://game/components/gameplay/c_animation_player.gd" id="2_tohob"]
@@ -9,13 +9,14 @@
 [ext_resource type="Script" path="res://game/components/gameplay/c_interest_range.gd" id="7_15lua"]
 [ext_resource type="Script" path="res://game/components/gameplay/c_transform.gd" id="9_gbgln"]
 [ext_resource type="Script" path="res://game/components/gameplay/c_look_at.gd" id="10_w27te"]
-[ext_resource type="Script" path="res://game/components/gameplay/c_evil_doll_behavior.gd" id="11_13fu6"]
+[ext_resource type="Script" path="res://game/components/gameplay/behavior/c_evil_doll_behavior.gd" id="11_6abnt"]
 [ext_resource type="PackedScene" uid="uid://cdoq0qjcutvy3" path="res://game/assets/characters/models/characterSmall.fbx" id="11_aqfx0"]
 [ext_resource type="Script" path="res://game/components/debug/c_debug_label.gd" id="11_xj56r"]
 [ext_resource type="Texture2D" uid="uid://d4asuwe8kpb3y" path="res://game/assets/characters/skins/alienB.png" id="12_8ivd6"]
 [ext_resource type="PackedScene" uid="uid://cblqfvanyrdd4" path="res://game/lib/line_of_sight_3d.tscn" id="15_3bntj"]
+[ext_resource type="Script" path="res://game/actions/component_area_actions/dash_in_area_action.gd" id="16_36j7f"]
+[ext_resource type="Script" path="res://game/actions/component_area_actions/ranged_attack_in_area_action.gd" id="16_b7nvm"]
 [ext_resource type="Script" path="res://game/actions/component_area_actions/chase_in_area_action.gd" id="16_dv5eg"]
-[ext_resource type="Script" path="res://game/lib/component_area.gd" id="17_e0ohk"]
 [ext_resource type="Script" path="res://game/actions/component_area_actions/attack_in_area_action.gd" id="18_n6h1n"]
 [ext_resource type="PackedScene" uid="uid://d2p72cr27pb2f" path="res://game/lib/hitbox_3d.tscn" id="19_iq2ko"]
 
@@ -59,8 +60,8 @@ script = ExtResource("11_xj56r")
 text = "Debug Label"
 offset = Vector3(0, 5, 0)
 
-[sub_resource type="Resource" id="Resource_xy73p"]
-script = ExtResource("11_13fu6")
+[sub_resource type="Resource" id="Resource_u4fji"]
+script = ExtResource("11_6abnt")
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_l4yq5"]
 albedo_texture = ExtResource("12_8ivd6")
@@ -72,15 +73,29 @@ meta = {
 "name": "Evil Doll Chase"
 }
 
-[sub_resource type="Resource" id="Resource_31pec"]
-script = ExtResource("18_n6h1n")
+[sub_resource type="Resource" id="Resource_w7x8h"]
+script = ExtResource("16_36j7f")
+dash_speed = 1.5
+dash_duration = 0.5
+dash_cooldown = 15.0
 meta = {
-"description": "This happens from the MeleeAttackArea action",
-"name": "Evil Doll Melee Attack"
+"description": "Dash at the player really fast when you enter los and then cooldown for 15 seconds.",
+"name": "Evil Doll Dash"
 }
 
-[sub_resource type="CylinderShape3D" id="CylinderShape3D_xsjlu"]
-radius = 0.965699
+[sub_resource type="Resource" id="Resource_ahgns"]
+script = ExtResource("16_b7nvm")
+meta = {
+"description": "This is the default action that is executed when no other action is assigned",
+"name": "Default Action"
+}
+
+[sub_resource type="Resource" id="Resource_ffh6u"]
+script = ExtResource("18_n6h1n")
+meta = {
+"description": "DO A melee attack from the evil doll up close",
+"name": "Attack in LOS"
+}
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_pjpad"]
 radius = 0.518612
@@ -91,7 +106,7 @@ collision_layer = 16
 collision_mask = 89
 motion_mode = 1
 script = ExtResource("1_8mheo")
-component_resources = Array[Resource("res://addons/gecs/component.gd")]([SubResource("Resource_iixki"), SubResource("Resource_ypv7w"), SubResource("Resource_itu4t"), SubResource("Resource_05cb1"), SubResource("Resource_6kqax"), SubResource("Resource_apar3"), SubResource("Resource_x5chr"), SubResource("Resource_buds4"), SubResource("Resource_fi7jj"), SubResource("Resource_xy73p")])
+component_resources = Array[Resource("res://addons/gecs/component.gd")]([SubResource("Resource_iixki"), SubResource("Resource_ypv7w"), SubResource("Resource_itu4t"), SubResource("Resource_05cb1"), SubResource("Resource_6kqax"), SubResource("Resource_apar3"), SubResource("Resource_x5chr"), SubResource("Resource_buds4"), SubResource("Resource_fi7jj"), SubResource("Resource_u4fji")])
 
 [node name="Root Scene" parent="." instance=ExtResource("11_aqfx0")]
 transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0, 0)
@@ -99,33 +114,26 @@ transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0, 0)
 [node name="characterSmall" parent="Root Scene/RootNode/Root/Skeleton3D" index="0"]
 surface_material_override/0 = SubResource("StandardMaterial3D_l4yq5")
 
-[node name="LineOfSight3D" parent="." node_paths=PackedStringArray("parent") instance=ExtResource("15_3bntj")]
+[node name="ChaseLOS" parent="." node_paths=PackedStringArray("parent") instance=ExtResource("15_3bntj")]
 angle = 250.0
+distance = 9.92
+cone_color = Color(0.564706, 0.439216, 0, 0.501961)
+parent = NodePath("..")
+actions = Array[Resource("res://game/lib/component_area_action.gd")]([SubResource("Resource_t4wul"), SubResource("Resource_w7x8h")])
+
+[node name="RangedAttackLOS" parent="." node_paths=PackedStringArray("parent") instance=ExtResource("15_3bntj")]
+angle = 80.0
 distance = 9.255
+cone_color = Color(1, 0, 0, 0.501961)
 parent = NodePath("..")
-actions = Array[Resource("res://game/lib/component_area_action.gd")]([SubResource("Resource_t4wul")])
+actions = Array[Resource("res://game/lib/component_area_action.gd")]([SubResource("Resource_ahgns")])
 
-[node name="MeleeAttackArea" type="Area3D" parent="." node_paths=PackedStringArray("parent")]
-collision_layer = 0
-collision_mask = 72
-script = ExtResource("17_e0ohk")
+[node name="MeleeAttackLOS" parent="." node_paths=PackedStringArray("parent") instance=ExtResource("15_3bntj")]
+angle = 217.725
+distance = 1.1
+cone_color = Color(0.729412, 0.0117647, 0.65098, 0.501961)
 parent = NodePath("..")
-actions = Array[Resource("res://game/lib/component_area_action.gd")]([SubResource("Resource_31pec")])
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="MeleeAttackArea"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.97875, 0)
-shape = SubResource("CylinderShape3D_xsjlu")
-
-[node name="RangedAttackArea" type="Area3D" parent="." node_paths=PackedStringArray("parent")]
-collision_layer = 0
-collision_mask = 8
-script = ExtResource("17_e0ohk")
-parent = NodePath("..")
-actions = Array[Resource("res://game/lib/component_area_action.gd")]([SubResource("Resource_31pec")])
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="RangedAttackArea"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.97875, 0)
-shape = SubResource("CylinderShape3D_xsjlu")
+actions = Array[Resource("res://game/lib/component_area_action.gd")]([SubResource("Resource_ffh6u")])
 
 [node name="HeadHitbox" parent="." node_paths=PackedStringArray("parent") instance=ExtResource("19_iq2ko")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.37016, 0)

@@ -11,6 +11,8 @@ func execute() -> void:
 
     var direction = Utils.calculate_entity_direction(player)
     var projectile_transform = WeaponUtils.create_projectile_transform(player, direction)
-    WeaponUtils.instantiate_projectile(active_weapon, projectile_transform)
+        # Retrieve the projectile component from the active weapon.
+    var c_projectile = WeaponUtils.get_projectile_component(active_weapon)
+    WeaponUtils.instantiate_projectile(c_projectile, projectile_transform)
 
 # Helper functions

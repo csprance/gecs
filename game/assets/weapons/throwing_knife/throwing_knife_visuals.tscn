@@ -5,4 +5,4 @@
 [node name="ThrowingKnifeVisuals" type="Node3D"]
 
 [node name="throwing_knife_source" parent="." instance=ExtResource("1_isd3u")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.0880248, 0)
+transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, 0, 0, 0)

@@ -19,3 +19,4 @@ visuals = SubResource("Resource_sj07p")
 damage_component = SubResource("Resource_he5hq")
 collision_scale = Vector3(1, 1, 1)
 speed = 10.0
+pass_through_hitboxes = 1

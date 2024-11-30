@@ -1,14 +1,16 @@
-[gd_scene load_steps=24 format=3 uid="uid://ex2wx8kwwjjx"]
+[gd_scene load_steps=26 format=3 uid="uid://ex2wx8kwwjjx"]
 
 [ext_resource type="Script" path="res://game/systems/gameplay/enemy_behaviors/s_zombie_behavior.gd" id="1_a57uo"]
 [ext_resource type="Script" path="res://game/systems/input/s_player_controls.gd" id="1_e5u7d"]
 [ext_resource type="Script" path="res://game/systems/gameplay/s_commands.gd" id="1_o3q20"]
 [ext_resource type="Script" path="res://game/systems/gameplay/s_aim_point.gd" id="1_wvq8n"]
 [ext_resource type="Script" path="res://game/systems/gameplay/s_events.gd" id="2_byjij"]
+[ext_resource type="Script" path="res://game/systems/gameplay/s_dashing.gd" id="2_tk2t4"]
 [ext_resource type="Script" path="res://game/systems/gameplay/s_interest.gd" id="4_epoj1"]
 [ext_resource type="Script" path="res://game/systems/gameplay/enemy_behaviors/s_evil_doll_behavior.gd" id="4_yy88v"]
 [ext_resource type="Script" path="res://game/systems/gameplay/s_pickup.gd" id="5_kryj1"]
 [ext_resource type="Script" path="res://game/systems/physics/s_character_body_3d.gd" id="6_n8p4l"]
+[ext_resource type="Resource" uid="uid://2fag5eywrov5" path="res://game/data/projectiles/throwing_knife_projectile.tres" id="6_ss2lc"]
 [ext_resource type="Script" path="res://game/systems/gameplay/s_transform.gd" id="7_5veey"]
 [ext_resource type="Script" path="res://game/systems/ui/s_ui_visiblity.gd" id="8_xctm1"]
 [ext_resource type="Script" path="res://game/systems/gameplay/s_pending_delete.gd" id="9_bykvn"]
@@ -34,6 +36,10 @@ group = "input"
 
 [node name="gameplay" type="Node" parent="."]
 
+[node name="DashingSystem" type="Node" parent="gameplay"]
+script = ExtResource("2_tk2t4")
+group = "gameplay"
+
 [node name="VisualsSystem" type="Node" parent="gameplay"]
 script = ExtResource("14_fkfa2")
 group = "gameplay"
@@ -44,6 +50,7 @@ group = "gameplay"
 
 [node name="EvilDollBehaviorSystem" type="Node" parent="gameplay"]
 script = ExtResource("4_yy88v")
+c_projectile = ExtResource("6_ss2lc")
 group = "gameplay"
 
 [node name="ZombieBehaviorSystem" type="Node" parent="gameplay"]

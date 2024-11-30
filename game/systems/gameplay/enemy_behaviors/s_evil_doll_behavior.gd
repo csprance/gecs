@@ -10,6 +10,8 @@ const BURST_SPEED = 5.0
 # How fast the evil doll moves when it's interested
 const INTERESTED_SPEED = 1.0
 
+@export var c_projectile: C_Projectile
+
 ## This has sub systems so we can group all these things together
 func sub_systems():
 	return [
@@ -43,8 +45,33 @@ func sub_systems():
 			.with_none([C_Death, C_AttackCooldown])
 			.with_relationship([Relationships.attacking_players()]), 
 			attack_subsystem
+
+		],
+		## Ranged Attack
+		[
+			ECS.world.query
+			.with_all([C_EvilDollBehavior, C_Transform, C_Enemy, C_Velocity])
+			.with_none([C_Death, C_RangedAttackCooldown])
+			.with_relationship([Relationships.range_attacking_players()]), 
+			ranged_attack_subsystem
 		],
 	]
+
+
+func ranged_attack_subsystem(entity, _delta):
+	# Check if we can attack
+	var r_attacking = entity.get_relationship(Relationships.range_attacking_players())
+	var c_trs = r_attacking.target.get_component(C_Transform) as C_Transform
+	if not c_trs:
+		assert(false, "No transform for ranged attack target")
+		return 
+	## Look at the target
+	entity.add_component(C_LookAt.new(r_attacking.target.get_component(C_Transform).transform.origin))
+	## Shoot a projectile at the target
+	var direction = Utils.calculate_entity_direction(entity)
+	var projectile_transform = WeaponUtils.create_projectile_transform(entity, direction)
+	WeaponUtils.instantiate_projectile(c_projectile, projectile_transform)
+	entity.add_component(C_RangedAttackCooldown.new(randf_range(6.0, 9.0)))
 
 ## Try to attack the target	if we can
 func attack_subsystem(entity, _delta):
