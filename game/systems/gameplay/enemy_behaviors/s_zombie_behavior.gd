@@ -11,22 +11,33 @@ func sub_systems():
 	return [
 		## Idle
 		[
-			ECS.world.query.with_all([C_ZombieBehavior, C_Transform, C_Enemy, C_Velocity, C_InterestRange]).with_none([C_Chasing, C_Interested, C_Death]),
+			ECS.world.query
+			.with_all([C_ZombieBehavior, C_Transform, C_Enemy, C_Velocity, C_InterestRange])
+			.with_none([C_Interested, C_Death])
+			.without_relationship([Relationships.chasing_players()]),
 			idle_subsystem
 		],
 		## Chase
 		[
-			ECS.world.query.with_all([C_ZombieBehavior, C_Transform, C_Enemy, C_Velocity, C_InterestRange, C_Chasing]).with_none([C_Death]),
+			ECS.world.query
+			.with_all([C_ZombieBehavior, C_Transform, C_Enemy, C_Velocity, C_InterestRange])
+			.with_none([C_Death])
+			.with_relationship([Relationships.chasing_players()]),
 			chase_subsystem
 		], 
 		## Interested
 		[
-			ECS.world.query.with_all([C_ZombieBehavior, C_Transform, C_Enemy, C_Velocity, C_InterestRange, C_Interested]).with_none([C_Death]), 
+			ECS.world.query
+			.with_all([C_ZombieBehavior, C_Transform, C_Enemy, C_Velocity, C_InterestRange, C_Interested])
+			.with_none([C_Death]), 
 			interested_subsystem
 		],
 		## Attack
 		[
-			ECS.world.query.with_all([C_ZombieBehavior, C_Transform, C_Enemy, C_Velocity]).with_none([C_Death, C_AttackCooldown]).with_relationship([Relationships.attacking_players()]), 
+			ECS.world.query
+			.with_all([C_ZombieBehavior, C_Transform, C_Enemy, C_Velocity])
+			.with_none([C_Death, C_AttackCooldown])
+			.with_relationship([Relationships.attacking_players()]), 
 			attack_subsystem
 		],
 	]
@@ -78,9 +89,9 @@ func chase_subsystem(entity, _delta):
 	entity.remove_component(C_Interested)
 	var c_velocity = entity.get_component(C_Velocity) as C_Velocity
 	var c_trs = entity.get_component(C_Transform) as C_Transform
-	var c_chasing = entity.get_component(C_Chasing) as C_Chasing
+	var r_chasing = entity.get_relationship(Relationships.chasing_players())
 
-	var chase_target = c_chasing.target
+	var chase_target = r_chasing.target
 	var chase_target_trs = (chase_target.get_component(C_Transform) as C_Transform).transform
 
 	# Set the velocity to go towards the target
