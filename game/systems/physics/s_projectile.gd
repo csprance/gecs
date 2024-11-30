@@ -14,12 +14,11 @@ func sub_systems():
 		],
 	]
 
-# TODO: Create world collision
 func projectile_collision_subsy(entity, _delta: float):
 	var c_projectile = entity.get_component(C_Projectile) as C_Projectile
 	var c_collision = entity.get_component(C_Collision) as C_Collision
 	var hitbox = c_collision.collision.get_collider()
-	if hitbox and hitbox is Hitbox3D:
+	if hitbox:
 		hitbox.parent.add_component(C_Damage.new(c_projectile.damage_component.amount))
 		c_projectile.cur_pass_through_hitboxes += 1
 	else:
@@ -32,19 +31,25 @@ func projectile_collision_subsy(entity, _delta: float):
 		entity.remove_component(C_Collision)
 
 func travelling_subsys(entity, _delta: float):
-	if entity is CharacterBody3D:
-		var velocity = entity.get_component(C_Velocity) as C_Velocity
-		# Set the velocity from the velocity component
+	var velocity = entity.get_component(C_Velocity) as C_Velocity
+	# Set the velocity from the velocity component
 
-		entity.velocity = velocity.direction.normalized() * velocity.speed
-		# Move the entity
-		if entity.move_and_slide():
-			var c_collision = C_Collision.new()
-			var col = entity.get_last_slide_collision()
-			c_collision.collision = col
-			entity.add_component(c_collision)
-		# Set the velocity from the entity to the component
-		velocity.direction = entity.velocity.normalized()
-		velocity.speed = entity.velocity.length()
-		# Sync the transform back to the entity
-		Utils.sync_transform(entity)
+	entity.velocity = velocity.direction.normalized() * velocity.speed
+	# Move the entity
+	if entity.move_and_slide():
+		var c_collision = C_Collision.new()
+		var col = entity.get_last_slide_collision() as KinematicCollision3D
+		var layer = col.get_collider().collision_layer
+		Loggie.debug("Projectile hit layer: %s" % layer)
+		# Hit the world layer
+		if layer == 1:
+			ECS.world.remove_entity(entity)
+			return
+
+		c_collision.collision = col
+		entity.add_component(c_collision)
+	# Set the velocity from the entity to the component
+	velocity.direction = entity.velocity.normalized()
+	velocity.speed = entity.velocity.length()
+	# Sync the transform back to the entity
+	Utils.sync_transform(entity)
