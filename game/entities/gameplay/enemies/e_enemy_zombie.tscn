@@ -96,8 +96,8 @@ radius = 0.518612
 height = 1.90148
 
 [node name="ZombieEnemy" type="CharacterBody3D"]
-collision_layer = 8
-collision_mask = 9
+collision_layer = 16
+collision_mask = 89
 motion_mode = 1
 script = ExtResource("1_s8nbc")
 component_resources = Array[Resource("res://addons/gecs/component.gd")]([SubResource("Resource_iixki"), SubResource("Resource_ypv7w"), SubResource("Resource_itu4t"), SubResource("Resource_05cb1"), SubResource("Resource_6kqax"), SubResource("Resource_apar3"), SubResource("Resource_5elb1"), SubResource("Resource_x5chr"), SubResource("Resource_buds4"), SubResource("Resource_fi7jj")])
@@ -119,9 +119,10 @@ libraries = {
 angle = 150.0
 parent = NodePath("..")
 actions = Array[Resource("res://game/lib/component_area_action.gd")]([SubResource("Resource_t4wul")])
-body_add_on_exit = Array[Resource("res://addons/gecs/component.gd")]([])
 
 [node name="AttackArea" type="Area3D" parent="." node_paths=PackedStringArray("parent")]
+collision_layer = 0
+collision_mask = 72
 script = ExtResource("17_e4wmm")
 parent = NodePath("..")
 actions = Array[Resource("res://game/lib/component_area_action.gd")]([SubResource("Resource_31pec")])
@@ -136,19 +137,23 @@ parent = NodePath("..")
 part = "head"
 
 [node name="BodyHitbox" parent="." node_paths=PackedStringArray("parent") instance=ExtResource("19_v7nx8")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.37338, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.23999, 0)
 parent = NodePath("..")
 part = "body"
+hitbox_scale = Vector3(1, 1.47, 1)
 color = Color(0, 0.635294, 0.427451, 0.501961)
 
 [node name="LegsHitbox" parent="." node_paths=PackedStringArray("parent") instance=ExtResource("19_v7nx8")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.199064, 0)
 parent = NodePath("..")
 part = "legs"
+hitbox_scale = Vector3(1, 0.54, 1)
 color = Color(0.054902, 0.533333, 0.972549, 0.501961)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.926148, 0)
 shape = SubResource("CapsuleShape3D_pjpad")
+
+[connection signal="hitbox_entered" from="BodyHitbox" to="." method="_on_body_hitbox_hitbox_entered"]
 
 [editable path="Visuals"]
