@@ -24,6 +24,8 @@ func _show_visuals():
 		# Remove spawn cone
 		spawn_cone.visible = false
 		var visuals = resource.visuals.packed_scene.instantiate()
+		# make the visuals on the ground a little bigger than normal
+		visuals.scale *= Vector3(2, 2, 2)
 		add_child(visuals)
 
 func _on_area_3d_body_shape_entered(body_rid:RID, body, body_shape_index:int, local_shape_index:int) -> void:
