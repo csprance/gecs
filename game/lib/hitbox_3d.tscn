@@ -4,15 +4,11 @@
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_mrbh0"]
 
-[node name="Hitbox3D" type="Area3D"]
+[node name="Hitbox3D" type="StaticBody3D"]
 collision_layer = 2
 collision_mask = 4
 script = ExtResource("1_f8cox")
-hitbox_scale = Vector3(1, 1, 1)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 unique_name_in_owner = true
 shape = SubResource("BoxShape3D_mrbh0")
-
-[connection signal="body_shape_entered" from="." to="." method="_on_hitbox_entered"]
-[connection signal="body_shape_exited" from="." to="." method="_on_hitbox_exited"]
