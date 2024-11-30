@@ -4,7 +4,7 @@ class_name CharacterBody3DSystem
 extends System
 
 func query() -> QueryBuilder:
-	return q.with_all([C_Velocity, C_CharacterBody3D, C_Transform])
+	return q.with_all([C_Velocity, C_CharacterBody3D, C_Transform]).with_none([C_Projectile])
 
 func process(entity, _delta: float):
 	if entity is CharacterBody3D:

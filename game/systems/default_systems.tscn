@@ -1,4 +1,4 @@
-[gd_scene load_steps=23 format=3 uid="uid://ex2wx8kwwjjx"]
+[gd_scene load_steps=24 format=3 uid="uid://ex2wx8kwwjjx"]
 
 [ext_resource type="Script" path="res://game/systems/gameplay/enemy_behaviors/s_zombie_behavior.gd" id="1_a57uo"]
 [ext_resource type="Script" path="res://game/systems/input/s_player_controls.gd" id="1_e5u7d"]
@@ -19,6 +19,7 @@
 [ext_resource type="Script" path="res://game/systems/gameplay/s_death.gd" id="13_i48ai"]
 [ext_resource type="Script" path="res://game/systems/gameplay/s_visuals.gd" id="14_fkfa2"]
 [ext_resource type="Script" path="res://game/systems/debug/s_debug_label_3d.gd" id="17_7hyu0"]
+[ext_resource type="Script" path="res://game/systems/physics/s_projectile.gd" id="18_6nose"]
 [ext_resource type="PackedScene" uid="uid://82d66uq2w35y" path="res://game/lib/debug_label.tscn" id="18_c8vbw"]
 [ext_resource type="Script" path="res://game/systems/debug/s_debug_look_at.gd" id="19_ntm2m"]
 [ext_resource type="Script" path="res://game/systems/debug/s_debug_camera.gd" id="21_srdyu"]
@@ -90,6 +91,10 @@ group = "gameplay"
 [node name="CharacterBody3DSystem" type="Node" parent="physics"]
 script = ExtResource("6_n8p4l")
 group = "physics"
+
+[node name="ProjectileSystem" type="Node" parent="physics"]
+script = ExtResource("18_6nose")
+group = "gameplay"
 
 [node name="LookAtSystem" type="Node" parent="physics"]
 script = ExtResource("10_qatai")
