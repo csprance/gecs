@@ -87,6 +87,8 @@ radius = 0.518612
 height = 1.90148
 
 [node name="EvilDollEnemy" type="CharacterBody3D"]
+collision_layer = 8
+collision_mask = 9
 motion_mode = 1
 script = ExtResource("1_8mheo")
 component_resources = Array[Resource("res://addons/gecs/component.gd")]([SubResource("Resource_iixki"), SubResource("Resource_ypv7w"), SubResource("Resource_itu4t"), SubResource("Resource_05cb1"), SubResource("Resource_6kqax"), SubResource("Resource_apar3"), SubResource("Resource_x5chr"), SubResource("Resource_buds4"), SubResource("Resource_fi7jj"), SubResource("Resource_xy73p")])

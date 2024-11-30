@@ -96,6 +96,8 @@ radius = 0.518612
 height = 1.90148
 
 [node name="ZombieEnemy" type="CharacterBody3D"]
+collision_layer = 8
+collision_mask = 9
 motion_mode = 1
 script = ExtResource("1_s8nbc")
 component_resources = Array[Resource("res://addons/gecs/component.gd")]([SubResource("Resource_iixki"), SubResource("Resource_ypv7w"), SubResource("Resource_itu4t"), SubResource("Resource_05cb1"), SubResource("Resource_6kqax"), SubResource("Resource_apar3"), SubResource("Resource_5elb1"), SubResource("Resource_x5chr"), SubResource("Resource_buds4"), SubResource("Resource_fi7jj")])
@@ -137,14 +139,12 @@ part = "head"
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.37338, 0)
 parent = NodePath("..")
 part = "body"
-hitbox_scale = Vector3(1.61, 1.365, 1)
 color = Color(0, 0.635294, 0.427451, 0.501961)
 
 [node name="LegsHitbox" parent="." node_paths=PackedStringArray("parent") instance=ExtResource("19_v7nx8")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.199064, 0)
 parent = NodePath("..")
 part = "legs"
-hitbox_scale = Vector3(1.595, 1, 1)
 color = Color(0.054902, 0.533333, 0.972549, 0.501961)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
