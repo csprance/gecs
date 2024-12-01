@@ -55,6 +55,25 @@ func process(entity: Entity, delta: float) -> void:
 	if not sub_systems():
 		assert(false, "The 'process' method must be overridden in subclasses if it is not using sub systems.")
 
+## Sometimes you want to process all entities that match the system's query, this method does that.[br]
+## This way instead of running one function for each entity you can run one function for all entities.[br]
+## By default this method will run the [method System.process] method for each entity.[br]
+## but you can override this method to do something different.[br]
+## [param entities] The [Entity]s to process.[br]
+## [param delta] The time elapsed since the last frame.
+func process_all(entities: Array, delta: float) -> bool:
+	# If we have no entities and we want to process even when empty do it once and return
+	if entities.size() == 0 and process_empty:
+		process(null, delta)
+		return true
+	var did_run = false
+	# otherwise process all the entities (wont happen if empty array)
+	for entity in entities:
+		did_run = true
+		process(entity, delta)
+		entity.on_update(delta)
+	return did_run
+
 ## handles the processing of all [Entity]s that match the system's query [Component]s.[br]
 ## [param delta] The time elapsed since the last frame.
 func _handle(delta: float):
@@ -64,18 +83,8 @@ func _handle(delta: float):
 	q = ECS.world.query
 	var did_run := false
 	# Query for the entities that match the system's query
-	var entities = query().execute() as Array[Entity]
-	# If we have no entities and we want to process even when empty do it once and return
-	if entities.size() == 0 and process_empty:
-		process(null, delta)
-		did_run = true
-	else:
-		# otherwise process all the entities (wont happen if empty array)
-		for entity in entities:
-			did_run = true
-			process(entity, delta)
-			entity.on_update(delta)
-	
+	var entities = query().execute()
+	did_run = process_all(entities, delta)
 	if did_run:
 		# Log the whole thing
 		_log_handle(entities)

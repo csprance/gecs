@@ -65,3 +65,14 @@ func _show_debug():
 ## A Wildcard for use in relatonship queries. Indicates can be any value for a relation 
 ## or a target in a Relationship Pair
 var wildcard = null
+
+## Get all components of a specific type from a list of entities
+func get_components(entities, component_type):
+	var components = []
+	for entity in entities:
+		var component = entity.components.get(component_type.resource_path, null)
+		if not component:
+			assert(component, "Entity does not have component: " + str(component_type))
+		components.append(component)
+		
+	return components
