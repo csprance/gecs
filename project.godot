@@ -49,7 +49,7 @@ window/size/always_on_top=true
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/easy_velocity_vector_display/plugin.cfg", "res://addons/gdUnit4/plugin.cfg", "res://addons/gecs/plugin.cfg", "res://addons/loggie/plugin.cfg", "res://addons/panku_console/plugin.cfg", "res://addons/phantom_camera/plugin.cfg", "res://addons/resonate/plugin.cfg", "res://addons/script-tabs/plugin.cfg", "res://addons/toggle_external_editor/plugin.cfg")
+enabled=PackedStringArray("res://addons/easy_velocity_vector_display/plugin.cfg", "res://addons/gdUnit4/plugin.cfg", "res://addons/gecs/plugin.cfg", "res://addons/loggie/plugin.cfg", "res://addons/panku_console/plugin.cfg", "res://addons/phantom_camera/plugin.cfg", "res://addons/qt_tools/plugin.cfg", "res://addons/resonate/plugin.cfg", "res://addons/script-tabs/plugin.cfg")
 
 [input]
 
