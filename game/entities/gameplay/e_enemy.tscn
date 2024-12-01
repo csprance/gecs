@@ -1,4 +1,4 @@
-[gd_scene load_steps=37 format=3 uid="uid://bv4lxxnenah0s"]
+[gd_scene load_steps=28 format=3 uid="uid://bv4lxxnenah0s"]
 
 [ext_resource type="Script" path="res://game/entities/gameplay/e_enemy.gd" id="1_k0hdh"]
 [ext_resource type="Script" path="res://game/components/gameplay/c_animation_player.gd" id="2_ee2ni"]
@@ -7,64 +7,48 @@
 [ext_resource type="Script" path="res://game/components/physics/c_velocity.gd" id="5_oxxxc"]
 [ext_resource type="Script" path="res://game/components/gameplay/c_enemy.gd" id="6_n5rg4"]
 [ext_resource type="Script" path="res://game/components/gameplay/c_interest_range.gd" id="7_7beir"]
-[ext_resource type="Script" path="res://game/components/gameplay/c_zombie_behavior.gd" id="8_qtxyq"]
 [ext_resource type="Script" path="res://game/components/gameplay/c_transform.gd" id="9_3pnkh"]
 [ext_resource type="Script" path="res://game/components/gameplay/c_look_at.gd" id="10_b7f7k"]
-[ext_resource type="Script" path="res://game/components/debug/c_debug_label.gd" id="11_yq81k"]
 [ext_resource type="PackedScene" uid="uid://cblqfvanyrdd4" path="res://game/lib/line_of_sight_3d.tscn" id="12_f8y1n"]
-[ext_resource type="PackedScene" uid="uid://cvroricp14108" path="res://game/assets/characters/models/characterMedium.fbx" id="12_magfx"]
 [ext_resource type="PackedScene" uid="uid://d2p72cr27pb2f" path="res://game/lib/hitbox_3d.tscn" id="12_mjcjh"]
-[ext_resource type="Texture2D" uid="uid://bnvcgfhim0vqp" path="res://game/assets/characters/skins/zombieA.png" id="13_i5che"]
 [ext_resource type="AnimationLibrary" uid="uid://b16umwm2bkor0" path="res://game/assets/animations/attack.fbx" id="16_skx14"]
-[ext_resource type="Script" path="res://game/lib/component_area.gd" id="17_s0oo0"]
 [ext_resource type="Script" path="res://game/actions/component_area_actions/attack_in_area_action.gd" id="18_8lilb"]
 [ext_resource type="Script" path="res://game/actions/component_area_actions/chase_in_area_action.gd" id="19_j3onr"]
 
-[sub_resource type="Resource" id="Resource_iixki"]
-script = ExtResource("2_ee2ni")
-anim_player = NodePath("")
-anim_name = ""
-anim_speed = ""
+[sub_resource type="Resource" id="Resource_x5chr"]
+script = ExtResource("9_3pnkh")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 
 [sub_resource type="Resource" id="Resource_ypv7w"]
 script = ExtResource("3_tiohx")
-
-[sub_resource type="Resource" id="Resource_itu4t"]
-script = ExtResource("4_seq5a")
-total = 1
-current = 1
 
 [sub_resource type="Resource" id="Resource_05cb1"]
 script = ExtResource("5_oxxxc")
 direction = Vector3(0, 0, 0)
 speed = 0.0
 
-[sub_resource type="Resource" id="Resource_6kqax"]
-script = ExtResource("6_n5rg4")
-
-[sub_resource type="Resource" id="Resource_apar3"]
-script = ExtResource("7_7beir")
-value = 55.0
-
-[sub_resource type="Resource" id="Resource_5elb1"]
-script = ExtResource("8_qtxyq")
-
-[sub_resource type="Resource" id="Resource_x5chr"]
-script = ExtResource("9_3pnkh")
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
-
 [sub_resource type="Resource" id="Resource_buds4"]
 script = ExtResource("10_b7f7k")
 target = Vector3(0, 0, 0)
 debug = true
 
-[sub_resource type="Resource" id="Resource_fi7jj"]
-script = ExtResource("11_yq81k")
-text = "Debug Label"
-offset = Vector3(0, 5, 0)
+[sub_resource type="Resource" id="Resource_6kqax"]
+script = ExtResource("6_n5rg4")
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_3du5i"]
-albedo_texture = ExtResource("13_i5che")
+[sub_resource type="Resource" id="Resource_itu4t"]
+script = ExtResource("4_seq5a")
+total = 1
+current = 1
+
+[sub_resource type="Resource" id="Resource_apar3"]
+script = ExtResource("7_7beir")
+value = 55.0
+
+[sub_resource type="Resource" id="Resource_iixki"]
+script = ExtResource("2_ee2ni")
+anim_player = NodePath("AnimationPlayer")
+anim_name = ""
+anim_speed = ""
 
 [sub_resource type="Animation" id="Animation_axjf3"]
 resource_name = "new_animation"
@@ -77,76 +61,60 @@ _data = {
 [sub_resource type="Resource" id="Resource_t4wul"]
 script = ExtResource("19_j3onr")
 meta = {
-"description": "This is the default action that is executed when no other action is assigned",
-"name": "Default Action"
+"description": "Chase While you're in the Zombies LOS from E Zombie Enemey",
+"name": "Zombie LOS Chase"
 }
 
-[sub_resource type="Resource" id="Resource_31pec"]
+[sub_resource type="Resource" id="Resource_bibud"]
 script = ExtResource("18_8lilb")
 meta = {
-"description": "This is the default action that is executed when no other action is assigned",
-"name": "Default Action"
+"description": "Attack when you're in the Zombie LOS",
+"name": "Zombie Attack LOS"
 }
 
-[sub_resource type="CylinderShape3D" id="CylinderShape3D_xsjlu"]
-radius = 1.20496
-
-[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_pjpad"]
-radius = 0.518612
-height = 1.90148
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_nflbs"]
+radius = 0.661144
+height = 3.12695
 
 [node name="Enemy" type="CharacterBody3D"]
 motion_mode = 1
 script = ExtResource("1_k0hdh")
-component_resources = Array[Resource("res://addons/gecs/component.gd")]([SubResource("Resource_iixki"), SubResource("Resource_ypv7w"), SubResource("Resource_itu4t"), SubResource("Resource_05cb1"), SubResource("Resource_6kqax"), SubResource("Resource_apar3"), SubResource("Resource_5elb1"), SubResource("Resource_x5chr"), SubResource("Resource_buds4"), SubResource("Resource_fi7jj")])
-
-[node name="Visuals" parent="." instance=ExtResource("12_magfx")]
-transform = Transform3D(0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, 0, 0, 0)
-
-[node name="characterMedium" parent="Visuals/RootNode/Root/GeneralSkeleton" index="0"]
-surface_material_override/0 = SubResource("StandardMaterial3D_3du5i")
+component_resources = Array[Resource("res://addons/gecs/component.gd")]([SubResource("Resource_x5chr"), SubResource("Resource_ypv7w"), SubResource("Resource_05cb1"), SubResource("Resource_buds4"), SubResource("Resource_6kqax"), SubResource("Resource_itu4t"), SubResource("Resource_apar3"), SubResource("Resource_iixki")])
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="."]
-root_node = NodePath("../Visuals/RootNode/Root/GeneralSkeleton")
+root_node = NodePath("")
 libraries = {
 "": SubResource("AnimationLibrary_qrdbm"),
 "attack": ExtResource("16_skx14")
 }
 
-[node name="LineOfSight3D" parent="." node_paths=PackedStringArray("parent") instance=ExtResource("12_f8y1n")]
-angle = 150.0
-parent = NodePath("..")
+[node name="ChaseLOS" parent="." instance=ExtResource("12_f8y1n")]
+angle = 151.085
+cone_color = Color(0.647059, 0.505882, 0, 0.501961)
 actions = Array[Resource("res://game/lib/component_area_action.gd")]([SubResource("Resource_t4wul")])
-parent_add_on_exit = null
 
-[node name="AttackArea" type="Area3D" parent="." node_paths=PackedStringArray("parent")]
-script = ExtResource("17_s0oo0")
-parent = NodePath("..")
-actions = Array[Resource("res://game/lib/component_area_action.gd")]([SubResource("Resource_31pec")])
+[node name="AttackLOS" parent="." instance=ExtResource("12_f8y1n")]
+angle = 109.17
+distance = 1.44
+cone_color = Color(0.819608, 0, 0.760784, 0.501961)
+actions = Array[Resource("res://game/lib/component_area_action.gd")]([SubResource("Resource_bibud")])
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="AttackArea"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.4871, 0)
-shape = SubResource("CylinderShape3D_xsjlu")
-
-[node name="HeadHitbox" parent="." node_paths=PackedStringArray("parent") instance=ExtResource("12_mjcjh")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.04253, 0)
-parent = NodePath("..")
+[node name="HeadHitbox" parent="." instance=ExtResource("12_mjcjh")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.55789, 0)
 part = "head"
 
-[node name="BodyHitbox" parent="." node_paths=PackedStringArray("parent") instance=ExtResource("12_mjcjh")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.01175, 0)
-parent = NodePath("..")
+[node name="BodyHitbox" parent="." instance=ExtResource("12_mjcjh")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.23999, 0)
 part = "body"
+hitbox_scale = Vector3(1, 1.47, 1)
 color = Color(0, 0.635294, 0.427451, 0.501961)
 
-[node name="LegsHitbox" parent="." node_paths=PackedStringArray("parent") instance=ExtResource("12_mjcjh")]
+[node name="LegsHitbox" parent="." instance=ExtResource("12_mjcjh")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.199064, 0)
-parent = NodePath("..")
 part = "legs"
+hitbox_scale = Vector3(1, 0.54, 1)
 color = Color(0.054902, 0.533333, 0.972549, 0.501961)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.926148, 0)
-shape = SubResource("CapsuleShape3D_pjpad")
-
-[editable path="Visuals"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.41763, 0)
+shape = SubResource("CapsuleShape3D_nflbs")
