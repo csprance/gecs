@@ -78,11 +78,12 @@ func attack_subsystem(entity, _delta):
 	# look at the player
 	var r_attacking = entity.get_relationship(Relationships.attacking_players())
 	Loggie.debug('Attacking', r_attacking.target)
-	r_attacking.target.add_component(C_Damage.new())
-	entity.add_component(C_AttackCooldown.new(randf_range(6.0, 9.0)))
 	var c_attacker_trs = r_attacking.target.get_component(C_Transform) as C_Transform
 	if c_attacker_trs:
 		entity.add_component(C_LookAt.new(c_attacker_trs.transform.origin))
+	
+	r_attacking.target.add_component(C_Damage.new())
+	entity.add_component(C_AttackCooldown.new(randf_range(6.0, 9.0)))
 
 
 func idle_subsystem(entity, delta):
