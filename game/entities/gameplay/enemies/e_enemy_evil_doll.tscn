@@ -115,15 +115,15 @@ transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0, 0)
 surface_material_override/0 = SubResource("StandardMaterial3D_l4yq5")
 
 [node name="ChaseLOS" parent="." node_paths=PackedStringArray("parent") instance=ExtResource("15_3bntj")]
-angle = 250.0
+angle = 251.115
 distance = 9.92
 cone_color = Color(0.564706, 0.439216, 0, 0.501961)
 parent = NodePath("..")
 actions = Array[Resource("res://game/lib/component_area_action.gd")]([SubResource("Resource_t4wul"), SubResource("Resource_w7x8h")])
 
 [node name="RangedAttackLOS" parent="." node_paths=PackedStringArray("parent") instance=ExtResource("15_3bntj")]
-angle = 80.0
-distance = 9.255
+angle = 80.765
+distance = 8.195
 cone_color = Color(1, 0, 0, 0.501961)
 parent = NodePath("..")
 actions = Array[Resource("res://game/lib/component_area_action.gd")]([SubResource("Resource_ahgns")])
