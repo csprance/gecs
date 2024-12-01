@@ -4,6 +4,7 @@ extends ComponentArea3D
 
 
 @export_group("Cone Settings")
+
 ## The Line of Sight angle
 @export var angle: float = 45:
 	set(value):
@@ -13,6 +14,7 @@ extends ComponentArea3D
 			_update_collision_shape()
 	get:
 		return angle
+
 ## The Line of Sight distance
 @export var distance: float = 5:
 	set(value):
@@ -30,6 +32,7 @@ extends ComponentArea3D
 		debug = value
 		if cone_mesh_instance:
 			cone_mesh_instance.visible = debug
+# What color is the cone
 @export var cone_color: Color = Color(1, 0, 0, 0.5)
 
 
@@ -84,6 +87,8 @@ func _create_cone_mesh() -> void:
 	cone_mesh_instance.mesh = mesh
 	var material = StandardMaterial3D.new()
 	material.albedo_color = cone_color
+	material.blend_mode = StandardMaterial3D.BLEND_MODE_ADD
+	material.shading_mode = StandardMaterial3D.SHADING_MODE_UNSHADED
 	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	material.cull_mode = StandardMaterial3D.CULL_DISABLED  # This makes it double-sided
 	cone_mesh_instance.material_override = material
