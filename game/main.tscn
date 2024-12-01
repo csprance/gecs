@@ -21,11 +21,8 @@
 [sub_resource type="AudioStreamRandomizer" id="AudioStreamRandomizer_yg1tm"]
 streams_count = 3
 stream_0/stream = ExtResource("4_c844j")
-stream_0/weight = 1.0
 stream_1/stream = ExtResource("5_g7wqa")
-stream_1/weight = 1.0
 stream_2/stream = ExtResource("6_pke5j")
-stream_2/weight = 1.0
 
 [sub_resource type="Resource" id="Resource_qhgwi"]
 script = ExtResource("3_acroa")
@@ -38,9 +35,7 @@ streams = Array[AudioStream]([SubResource("AudioStreamRandomizer_yg1tm")])
 [sub_resource type="AudioStreamRandomizer" id="AudioStreamRandomizer_4ew3m"]
 streams_count = 2
 stream_0/stream = ExtResource("7_r0v48")
-stream_0/weight = 1.0
 stream_1/stream = ExtResource("7_r0v48")
-stream_1/weight = 1.0
 
 [sub_resource type="Resource" id="Resource_ni5bo"]
 script = ExtResource("3_acroa")
@@ -54,11 +49,8 @@ streams = Array[AudioStream]([SubResource("AudioStreamRandomizer_4ew3m")])
 random_pitch = 2.75
 streams_count = 3
 stream_0/stream = ExtResource("8_u3xve")
-stream_0/weight = 1.0
 stream_1/stream = ExtResource("7_r0v48")
-stream_1/weight = 1.0
 stream_2/stream = ExtResource("9_xwrxi")
-stream_2/weight = 1.0
 
 [sub_resource type="Resource" id="Resource_7mu7w"]
 script = ExtResource("3_acroa")
