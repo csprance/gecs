@@ -1,3 +1,4 @@
+# Manages cooldowns of different types for entities together
 class_name CooldownSystem
 extends System
 
@@ -16,4 +17,5 @@ func process(entity: Entity, delta: float):
 func update_cooldown(cooldown: Component, entity: Entity, delta: float):
     cooldown.time -= delta
     if cooldown.time <= 0:
-        entity.remove_component(cooldown)
+        # remove_component takes the class type not the instance so get that
+        entity.remove_component(cooldown.get_script())
