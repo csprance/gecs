@@ -14,6 +14,7 @@ position = Vector2(0, 0)
 
 [node name="EAimPoint" type="Node3D"]
 script = ExtResource("1_wk5r3")
+color = Color(0.847059, 0.223529, 0.552941, 1)
 component_resources = Array[Resource("res://addons/gecs/component.gd")]([SubResource("Resource_5qig2"), SubResource("Resource_1ylns")])
 
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
