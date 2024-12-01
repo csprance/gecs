@@ -36,6 +36,10 @@ group = "input"
 
 [node name="gameplay" type="Node" parent="."]
 
+[node name="CooldownSystem" type="Node" parent="gameplay"]
+script = ExtResource("11_1n20v")
+group = "gameplay"
+
 [node name="DashingSystem" type="Node" parent="gameplay"]
 script = ExtResource("2_tk2t4")
 group = "gameplay"
@@ -79,10 +83,6 @@ group = "gameplay"
 
 [node name="DamageSystem" type="Node" parent="gameplay"]
 script = ExtResource("10_io67f")
-group = "gameplay"
-
-[node name="CooldownSystem" type="Node" parent="gameplay"]
-script = ExtResource("11_1n20v")
 group = "gameplay"
 
 [node name="LifetimeSystem" type="Node" parent="gameplay"]
