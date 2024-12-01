@@ -17,6 +17,7 @@ nodes/root_type=""
 nodes/root_name=""
 nodes/apply_root_scale=true
 nodes/root_scale=1.0
+nodes/import_as_skeleton_bones=false
 meshes/ensure_tangents=true
 meshes/generate_lods=true
 meshes/create_shadow_meshes=true
@@ -28,7 +29,22 @@ animation/import=true
 animation/fps=30
 animation/trimming=false
 animation/remove_immutable_tracks=true
+animation/import_rest_as_RESET=false
 import_script/path=""
-_subresources={}
+_subresources={
+"nodes": {
+"PATH:Camera": {
+"import/skip_import": true
+},
+"PATH:flower_bed": {
+"generate/navmesh": 1,
+"generate/physics": true,
+"physics/mask": 0,
+"physics/shape_type": 3,
+"primitive/position": Vector3(0, 0.2, 0),
+"primitive/size": Vector3(4, 1, 3)
+}
+}
+}
 gltf/naming_version=1
 gltf/embedded_image_handling=1
