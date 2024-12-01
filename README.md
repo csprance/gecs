@@ -81,8 +81,8 @@ Here's how to create a new component:
 1. **Create a New Script**: Create a new script extending `Component`.
 
 ```gdscript
-# bounce.gd
-class_name Bounce
+# c_bounce.gd
+class_name CBounce
 extends Component
 
 @export var normal := Vector2.ZERO
@@ -100,7 +100,7 @@ Entities in GECS are nodes that extend the `Entity` class. They can have compone
 2. **Add Components**: Use the `component_resources` exported array to add instances of your components.
 
 ```gdscript
-# ball.gd
+# e_ball.gd
 class_name Ball
 extends Entity
 
@@ -117,20 +117,20 @@ Systems in GECS are nodes that extend the `System` class. They contain the logic
 1. **Create a New Script**: Create a new script extending `System`.
 
 ```gdscript
-# bounce_system.gd
+# s_bounce.gd
 class_name BounceSystem
 extends System
 
 func query():
   # All entities that all have transform, velocity and bounce components
-	return q.with_all([Transform, Velocity, Bounce])
+	return q.with_all([CTransform, CVelocity, CBounce])
 
 func process(entity: Entity, delta: float):
-	var bounce_component: Bounce = entity.get_component(Bounce)
-	if bounce_component.should_bounce:
-		var velocity_component: Velocity = entity.get_component(Velocity)
-		velocity_component.direction = bounce_component.normal
-		bounce_component.should_bounce = false
+	var c_bounce: CBounce = entity.get_component(CBounce)
+	if c_bounce.should_bounce:
+		var c_velocity: CVelocity = entity.get_component(CVelocity)
+		c_velocity.direction = c_bounce.normal
+		c_bounce.should_bounce = false
 ```
 
 2. **Override the `query()` Function**: In the `query()` function, specify the components that entities must have for the system to process them. Use the provided `q` (QueryBuilder) to build the query.
@@ -159,6 +159,10 @@ func _ready() -> void:
 func _process(delta):
 	# Process only systems in the "gameplay" group
 	ECS.process(delta, "gameplay")
+
+func _physics_process(delta):
+	# Process only systems in the "physics" group
+	ECS.process(delta, "physics")
 ```
 
 ## Example Project
@@ -171,8 +175,8 @@ To illustrate the usage of GECS, let's look at an example project that simulates
 - **Bounce**: Indicates that an entity can bounce off surfaces.
 
 ```gdscript
-# bounce.gd
-class_name Bounce
+# c_bounce.gd
+class_name CBounce
 extends Component
 
 @export var normal := Vector2.ZERO
@@ -182,8 +186,8 @@ extends Component
 - **Velocity**: Controls the movement speed and direction of an entity.
 
 ```gdscript
-# velocity.gd
-class_name Velocity
+# c_velocity.gd
+class_name CVelocity
 extends Component
 
 @export var direction := Vector2.ZERO
@@ -193,8 +197,8 @@ extends Component
 - **Transform**: Manages the position, rotation, and scale of an entity.
 
 ```gdscript
-# transform.gd
-class_name Transform
+# c_transform.gd
+class_name CTransform
 extends Component
 
 @export var transform: Transform2D
@@ -205,7 +209,7 @@ extends Component
 - **Ball**: Represents the ball in the game.
 
 ```gdscript
-# ball.gd
+# e_ball.gd
 class_name Ball
 extends Entity
 
@@ -218,7 +222,7 @@ In the scene, the `Ball` entity includes `Bounce`, `Velocity`, and `Transform` c
 - **Paddle**: Represents the player's paddle.
 
 ```gdscript
-# paddle.gd
+# e_paddle.gd
 class_name Paddle
 extends Entity
 
@@ -226,54 +230,54 @@ func on_ready() -> void:
 	Utils.sync_transform(self)
 ```
 
-Includes `PlayerMovement`, `Velocity`, `Transform`, and `Friction` components.
+Includes `CPlayerMovement`, `CVelocity`, `CTransform`, and `CFriction` components.
 
 ### Systems
 
 - **BounceSystem**: Handles the bouncing logic of entities.
 
 ```gdscript
-# bounce_system.gd
+# s_bounce.gd
 class_name BounceSystem
 extends System
 
 func query():
-	return q.with_all([Transform, Velocity, Bounce])
+	return q.with_all([CTransform, CVelocity, CBounce])
 
 func process(entity: Entity, delta: float):
-	var bounce_component: Bounce = entity.get_component(Bounce)
-	if bounce_component.should_bounce:
-		var velocity_component: Velocity = entity.get_component(Velocity)
-		velocity_component.direction = bounce_component.normal
-		bounce_component.should_bounce = false
+	var c_bounce: CBounce = entity.get_component(CBounce)
+	if c_bounce.should_bounce:
+		var c_velocity: CVelocity = entity.get_component(CVelocity)
+		c_velocity.direction = c_bounce.normal
+		c_bounce.should_bounce = false
 ```
 
 - **VelocitySystem**: Updates entity positions based on their velocity.
 
 ```gdscript
-# velocity_system.gd
+# s_velocity.gd
 class_name VelocitySystem
 extends System
 
 func query():
-	return q.with_all([Velocity, Transform])
+	return q.with_all([CVelocity, CTransform])
 
 func process(entity: Entity, delta: float):
-	var velocity: Velocity = entity.get_component(Velocity)
-	var transform: Transform = entity.get_component(Transform)
-	var velocity_vector: Vector2 = velocity.direction.normalized() * velocity.speed
-	transform.transform.origin += velocity_vector * delta
+	var c_velocity: CVelocity = entity.get_component(CVelocity)
+	var c_transform: CTransform = entity.get_component(CTransform)
+	var velocity_vector: Vector2 = c_velocity.direction.normalized() * c_velocity.speed
+	c_transform.transform.origin += velocity_vector * delta
 ```
 
 - **Transform2DSystem**: Synchronizes the `Transform` component with the entity's actual transform.
 
 ```gdscript
-# transform_2d_system.gd
+# s_transform_2d.gd
 class_name Transform2DSystem
 extends System
 
 func query():
-	return q.with_all([Transform])
+	return q.with_all([CTransform])
 
 func process(entity: Entity, delta):
 	Utils.sync_transform(entity)
@@ -287,23 +291,25 @@ The `QueryBuilder` class provides an advanced query function to retrieve entitie
 In classes extending System it is exposed in the `q` variable
 ```gdscript
 q
-	.with_all([]) # Find entities that have all these components
-	.with_any([]) # Find entities that have any of these components
-	.with_none([]) # Exclude entities that have these components
- .has_relationship([])
- .has_reverse_relationship([])
+  .with_all([]) # Find entities that have all these components
+  .with_any([]) # Find entities that have any of these components
+  .with_none([]) # Exclude entities that have these components
+  .with_relationship([]) # Must have these relationships
+  .without_relationship([]) # must not  these relationships
+  .with_reverse_relationship([]) # must have these reverse relationships
 ```
 
 - **with_all**: Entities must have all of these components.
 - **with_any**: Entities must have at least one of these components.
 - **with_none**: Entities must not have any of these components.
-- **has_relationship**: Entities must have these relationships
-- **has_reverse_relationship**: This finds the entities of reverse relationships (aka the target of the relationship, not the source)
+- **with_relationship**: Entities must have these relationships
+- **without_relationship**: Entities must not have these relationships
+- **with_reverse_relationship**: This finds the entities of reverse relationships (aka the target of the relationship, not the source)
 
 **Example**:
 
 ```gdscript
-var entities_with_velocity_and_not_captured = q.with_all([Velocity]).with_none([Captured])
+var entities_with_velocity_and_not_captured = q.with_all([CVelocity]).with_none([CCaptured])
 ```
 
 Systems have properties that allow for customizing their execution:
