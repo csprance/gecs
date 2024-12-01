@@ -6,22 +6,24 @@ extends System
 func query() -> QueryBuilder:
 	return q.with_all([C_Velocity, C_CharacterBody3D, C_Transform]).with_none([C_Projectile])
 
-func process(entity, _delta: float):
-	if entity is CharacterBody3D:
-		var velocity = entity.get_component(C_Velocity) as C_Velocity
+func process_all(entities, _delta: float):
+	var velocitys = ECS.get_components(entities, C_Velocity) as Array[C_Velocity]
+	for i in range(entities.size()):
+		if not entities[i] is CharacterBody3D:
+			continue # skip if it's not a character body
 		# Set the velocity from the velocity component
-		entity.velocity = velocity.direction.normalized() * velocity.speed
+		entities[i].velocity = velocitys[i].direction.normalized() * velocitys[i].speed
 		# Move the entity
-		if entity.move_and_slide():
+		if entities[i].move_and_slide():
 			# Check if we're on the floor and ignore the floor collisions
 			# Add a collision event to the entity that just collided to handle collisions
 			var c_collision = C_Collision.new()
-			var col = entity.get_last_slide_collision()
+			var col = entities[i].get_last_slide_collision()
 			c_collision.collision = col
-			entity.add_component(c_collision)
+			entities[i].add_component(c_collision)
 		# Set the velocity from the entity to the component
-		velocity.direction = entity.velocity.normalized()
-		velocity.speed = entity.velocity.length()
+		velocitys[i].direction = entities[i].velocity.normalized()
+		velocitys[i].speed = entities[i].velocity.length()
 		# Sync the transform back to the entity
-		Utils.sync_transform(entity)
+		Utils.sync_transform(entities[i])
 

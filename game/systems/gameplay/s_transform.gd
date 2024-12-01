@@ -9,8 +9,8 @@ extends System
 func query() -> QueryBuilder:
 	return q.with_all([C_Transform])
 
-
-func process(entity: Entity, _delta):
-	var transform: C_Transform = entity.get_component(C_Transform) as C_Transform
-	entity.global_transform = transform.transform
+func process_all(entities: Array, _delta):
+	var transforms = ECS.get_components(entities, C_Transform) as Array[C_Transform]
+	for i in range(entities.size()):
+		entities[i].global_transform = transforms[i].transform
 
