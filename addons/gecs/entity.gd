@@ -182,3 +182,38 @@ func on_destroy() -> void:
 ## This should return a list of components to add by default when the entity is created
 func define_components() -> Array:
 	return []
+
+# Adds a single component or relationship to the entity.
+func add(item) -> void:
+	# Type check is acceptable here since 'add' is called less frequently.
+	if item is Component:
+		add_component(item)
+	elif item is Relationship:
+		add_relationship(item)
+
+# Removes a single component or relationship from the entity.
+func remove(item) -> void:
+	if item is Component:
+		remove_component(item)
+	elif item is Relationship:
+		remove_relationship(item)
+
+# The 'has' method may not be optimal for performance-critical code.
+# Use 'has_component' or 'has_relationship' directly instead.
+func has(item) -> bool:
+	# Avoid using in performance-critical code due to type checking.
+	if item is Component:
+		return has_component(item)
+	elif item is Relationship:
+		return has_relationship(item)
+	return false
+
+# The 'get' method may not be optimal for performance-critical code.
+# Use 'get_component' or 'get_relationship' directly instead.
+func get(item):
+	# Avoid using in performance-critical code due to type checking.
+	if item is Component:
+		return get_component(item)
+	elif item is Relationship:
+		return get_relationship(item)
+	return null
