@@ -18,7 +18,7 @@ func projectile_collision_subsy(entity, _delta: float):
 	var c_projectile = entity.get_component(C_Projectile) as C_Projectile
 	var c_collision = entity.get_component(C_Collision) as C_Collision
 	var hitbox = c_collision.collision.get_collider()
-	if hitbox:
+	if hitbox is Hitbox3D:
 		hitbox.parent.add_component(C_Damage.new(c_projectile.damage_component.amount))
 		c_projectile.cur_pass_through_hitboxes += 1
 	else:
