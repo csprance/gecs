@@ -1,7 +1,8 @@
-[gd_scene load_steps=33 format=3 uid="uid://mfv8kghahued"]
+[gd_scene load_steps=34 format=3 uid="uid://mfv8kghahued"]
 
 [ext_resource type="Script" path="res://game/entities/gameplay/e_player.gd" id="1_tt02t"]
 [ext_resource type="Script" path="res://game/components/gameplay/player/c_player.gd" id="2_c0i32"]
+[ext_resource type="Script" path="res://addons/gecs/component.gd" id="2_mdxt7"]
 [ext_resource type="Script" path="res://game/components/physics/c_velocity.gd" id="3_01fnx"]
 [ext_resource type="Script" path="res://game/components/gameplay/c_transform.gd" id="4_1iiu1"]
 [ext_resource type="Script" path="res://game/components/physics/c_character_body_3d.gd" id="5_xne1k"]
@@ -96,7 +97,7 @@ far = 4000.0
 collision_layer = 8
 collision_mask = 121
 script = ExtResource("1_tt02t")
-component_resources = Array[Resource("res://addons/gecs/component.gd")]([SubResource("Resource_w7h0e"), SubResource("Resource_m0ng3"), SubResource("Resource_j1swe"), SubResource("Resource_l36gj"), SubResource("Resource_qysxq"), SubResource("Resource_d0axv"), SubResource("Resource_el2pk"), SubResource("Resource_4axd2"), SubResource("Resource_urpic")])
+component_resources = Array[ExtResource("2_mdxt7")]([SubResource("Resource_w7h0e"), SubResource("Resource_m0ng3"), SubResource("Resource_j1swe"), SubResource("Resource_l36gj"), SubResource("Resource_qysxq"), SubResource("Resource_d0axv"), SubResource("Resource_el2pk"), SubResource("Resource_4axd2"), SubResource("Resource_urpic")])
 
 [node name="Visuals" parent="." instance=ExtResource("11_l3h6n")]
 
