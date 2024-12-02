@@ -57,7 +57,7 @@ static func has_los(from: Vector3, to: Vector3, debug = false) -> bool:
 	if not scene_tree is SceneTree:
 		return false
 	var space_state = scene_tree.root.get_world_3d().direct_space_state
-	var query = PhysicsRayQueryParameters3D.create(from, to)
+	var query = PhysicsRayQueryParameters3D.create(from, to, 2) # Only check against hitboxes
 	var result = space_state.intersect_ray(query)
 	if debug:
 		DebugDraw3D.draw_line(from, to, Color(1, 0, 0) if result.has('collider') else Color(0, 1, 0), 15)
