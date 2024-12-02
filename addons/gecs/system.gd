@@ -32,6 +32,7 @@ var q: QueryBuilder
 
 var systemLogger = GECSLogger.new().domain('System')
 
+var _using_subsystems = true
 
 ## Override this method and return a [QueryBuilder] to define the required [Component]s for the system.[br]
 ## If not overridden, the system will run on every update with no entities.
@@ -41,6 +42,7 @@ func query() -> QueryBuilder:
 
 ## Override this method to define any sub-systems that should be processed by this system.[br]
 func sub_systems():
+	_using_subsystems = false # If this method is not overridden then we are not using sub systems
 	return []
 
 ## Runs once after the system has been added to the [World] to setup anything on the system one time[br]
@@ -52,8 +54,7 @@ func setup():
 ## [param entity] The [Entity] being processed.[br]
 ## [param delta] The time elapsed since the last frame.
 func process(entity: Entity, delta: float) -> void:
-	if not sub_systems():
-		assert(false, "The 'process' method must be overridden in subclasses if it is not using sub systems.")
+	assert(false, "The 'process' method must be overridden in subclasses if it is not using sub systems.")
 
 ## Sometimes you want to process all entities that match the system's query, this method does that.[br]
 ## This way instead of running one function for each entity you can run one function for all entities.[br]
@@ -88,23 +89,32 @@ func _handle(delta: float):
 	if did_run:
 		# Log the whole thing
 		_log_handle(entities)
+		entities.map(func(e): e.on_update(delta))
 
 func _handle_subsystems(delta: float):
+	var subsystems = sub_systems()
+	if not _using_subsystems:
+		return false
 	q = ECS.world.query
 	var sub_systems_ran = false
-	for sub_sys_tuple in sub_systems():
+	for sub_sys_tuple in subsystems:
 		var did_run = false
 		sub_systems_ran = true
 		var query = sub_sys_tuple[0]
-		var entities = query.execute() as Array[Entity]
 		var sub_sys_process = sub_sys_tuple[1] as Callable
-		for entity in entities:
-			did_run = true
-			sub_sys_process.call(entity, delta)
-			entity.on_update(delta)
+		var should_process_all = sub_sys_tuple[2] if sub_sys_tuple.size() > 2 else false
+		var entities = query.execute() as Array[Entity]
+		if should_process_all:
+			did_run = sub_sys_process.call(entities, delta)
+		else:
+			for entity in entities:
+				did_run = true
+				sub_sys_process.call(entity, delta)
+				entity.on_update(delta)
 		if did_run:
 			# Log the whole thing
 			_log_handle(entities)
+			entities.map(func(e): e.on_update(delta))
 	return sub_systems_ran
 
 func _log_handle(entities):
