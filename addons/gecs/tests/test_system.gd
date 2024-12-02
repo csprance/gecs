@@ -98,9 +98,9 @@ func test_system_group_processes_entities_with_required_components():
 	var sys_a = TestSystemA.new()
 	sys_a.group = "group1"
 	var sys_b = TestSystemB.new()
-	sys_a.group = "group1"
+	sys_b.group = "group1"
 	var sys_c = TestSystemC.new()
-	sys_a.group = "group2"
+	sys_c.group = "group2"
 
 	world.add_systems([sys_a, sys_b, sys_c])
 
