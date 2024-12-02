@@ -106,6 +106,43 @@ func execute() -> Array:
 	clear()
 	return result
 
+## Filters a provided list of entities using the current query criteria.
+## Unlike execute(), this doesn't query the world but instead filters the provided entities.
+## [param entities] Array of entities to filter
+## [param returns] Array of entities that match the query criteria
+func matches(entities: Array) -> Array:
+	var result = []
+	
+	for entity in entities:
+		var matches = true
+		
+		# Check all required components
+		for component in _all_components:
+			if not entity.has_component(component):
+				matches = false
+				break
+		
+		# If still matching and we have any_components, check those
+		if matches and not _any_components.is_empty():
+			matches = false
+			for component in _any_components:
+				if entity.has_component(component):
+					matches = true
+					break
+		
+		# Check excluded components
+		if matches:
+			for component in _exclude_components:
+				if entity.has_component(component):
+					matches = false
+					break
+		
+		if matches:
+			result.append(entity)
+	
+	clear()
+	return result
+
 func combine(other: QueryBuilder) -> QueryBuilder:
 	_all_components += other._all_components
 	_any_components += other._any_components

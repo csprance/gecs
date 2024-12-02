@@ -326,3 +326,69 @@ func test_query_entities_with_multiple_excludes():
 	assert_bool(result.has(entity1)).is_false()
 	assert_bool(result.has(entity2)).is_false()
 	assert_bool(result.has(entity3)).is_false()
+
+func test_query_matches():
+	var entitya = auto_free(Entity.new())
+	var entityb = auto_free(Entity.new())
+	var entityc = auto_free(Entity.new())
+	var entityd = auto_free(Entity.new())
+	var entitye = auto_free(Entity.new())
+
+	var test_a = C_TestA.new()
+	var test_b = C_TestB.new()
+	var test_c = C_TestC.new()
+	var test_d = C_TestD.new()
+
+	# Entitya has TestA
+	entitya.add_component(test_a)
+	# Entityb has TestA and TestD
+	entityb.add_component(test_a.duplicate())
+	entityb.add_component(test_d)
+	# Entityc has TestD only
+	entityc.add_component(test_d.duplicate())
+	# Entityd has no components
+	# Entitye has TestA, TestB, TestC
+	entitye.add_component(test_a.duplicate())
+	entitye.add_component(test_b)
+	entitye.add_component(test_c)
+
+	var q = QueryBuilder.new(world)
+
+	# Test with_all
+	assert_array(q.with_all([C_TestA]).matches([entitya,entityb,entityc,entityd,entitye])).has_size(3)
+	assert_bool(q.with_all([C_TestA]).matches([entitya,entityb,entityc,entityd,entitye]).has(entitya)).is_true()
+	assert_bool(q.with_all([C_TestA]).matches([entitya,entityb,entityc,entityd,entitye]).has(entityb)).is_true()
+	assert_bool(q.with_all([C_TestA]).matches([entitya,entityb,entityc,entityd,entitye]).has(entitye)).is_true()
+	q.clear()
+
+	# Test multiple with_all
+	assert_array(q.with_all([C_TestA, C_TestD]).matches([entitya,entityb,entityc,entityd,entitye])).has_size(1)
+	assert_bool(q.with_all([C_TestA, C_TestD]).matches([entitya,entityb,entityc,entityd,entitye]).has(entityb)).is_true()
+	q.clear()
+
+	# Test with_none
+	assert_array(q.with_none([C_TestB]).matches([entitya,entityb,entityc,entityd])).has_size(4)
+	assert_array(q.with_none([C_TestB]).matches([entitya,entityb])).has_size(2)
+	q.clear()
+
+	# Test with_any
+	assert_array(q.with_any([C_TestA, C_TestD]).matches([entitya,entityb,entityc,entityd,entitye])).has_size(4)
+	assert_bool(q.with_any([C_TestA, C_TestD]).matches([entitya,entityb,entityc,entityd,entitye]).has(entityc)).is_true()
+	assert_bool(q.with_any([C_TestA, C_TestD]).matches([entitya,entityb,entityc,entityd,entitye]).has(entityd)).is_false()
+	q.clear()
+
+	# Test combination of with_all and with_any
+	assert_array(q.with_all([C_TestA]).with_any([C_TestB, C_TestC]).matches([entitya,entityb,entityc,entityd,entitye])).has_size(1)
+	assert_bool(q.with_all([C_TestA]).with_any([C_TestB, C_TestC]).matches([entitya,entityb,entityc,entityd,entitye]).has(entitye)).is_true()
+	q.clear()
+
+	# Test combination of with_all and with_none
+	assert_array(q.with_all([C_TestA]).with_none([C_TestD]).matches([entitya,entityb,entityc,entityd,entitye])).has_size(2)
+	assert_bool(q.with_all([C_TestA]).with_none([C_TestD]).matches([entitya,entityb,entityc,entityd,entitye]).has(entitya)).is_true()
+	assert_bool(q.with_all([C_TestA]).with_none([C_TestD]).matches([entitya,entityb,entityc,entityd,entitye]).has(entitye)).is_true()
+	q.clear()
+
+	# Test combination of all three query types
+	assert_array(q.with_all([C_TestA]).with_any([C_TestB, C_TestC]).with_none([C_TestD]).matches([entitya,entityb,entityc,entityd,entitye])).has_size(1)
+	assert_bool(q.with_all([C_TestA]).with_any([C_TestB, C_TestC]).with_none([C_TestD]).matches([entitya,entityb,entityc,entityd,entitye]).has(entitye)).is_true()
+	q.clear()
