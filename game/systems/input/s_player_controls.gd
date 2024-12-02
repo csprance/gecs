@@ -10,19 +10,19 @@ func sub_systems():
 		## Movement Subsystem
 		[
 			## Entity has a velocity and player movement component and is the player
-			ECS.world.query.with_all([C_Velocity, C_PlayerMovement, C_Player]), 
+			ECS.world.query.with_all([C_Player, C_Velocity, C_PlayerMovement]), 
 			movement_subsystem
 		],
 		## Weapon Subsystem
 		[
 			## Entity has an active weapon and is the player
-			ECS.world.query.with_all([C_HasActiveWeapon, C_Player]), 
+			ECS.world.query.with_all([C_Player, C_HasActiveWeapon]), 
 			weapon_subsystem
 		],
 		## Item Subsystem
 		[
 			## Entity has an active item and is the player
-			ECS.world.query.with_all([C_HasActiveItem, C_Player]), 
+			ECS.world.query.with_all([C_Player, C_HasActiveItem]), 
 			item_subsystem
 		],
 		## Generic Input Subsystem
@@ -94,6 +94,13 @@ func movement_subsystem(entity: Entity, _delta: float) -> void:
 	velocity.speed = movement.speed if movement.direction != Vector3.ZERO else 0.0
 
 
+# updates the player's direction based on the aim point in the game world.
+# It calculates the direction the player should look at by projecting a ray from the camera
+# through the aim point on the screen and finding the intersection with the player's y-coordinate.
+# The resulting aim point is then set as the target for the player's C_LookAt component.
+#
+# [param entity]: The player entity whose direction is being updated.
+# [param _delta]: The time elapsed since the last frame (not used in this function).
 func player_direction_subsystem(entity: Entity, _delta: float) -> void:
 	# Get the camera
 	var camera = get_viewport().get_camera_3d()
