@@ -3,22 +3,36 @@
 [ext_resource type="Script" path="res://game/entities/gameplay/e_trampoline.gd" id="1_ct15j"]
 [ext_resource type="PackedScene" uid="uid://yx4evyedjcbm" path="res://game/assets/props/trampoline/trampoline.gltf" id="2_wb5fw"]
 [ext_resource type="Script" path="res://game/lib/component_area.gd" id="3_1sf6e"]
+[ext_resource type="PackedScene" uid="uid://04sixpunsk8a" path="res://game/lib/locator_3d.tscn" id="3_xexxj"]
 [ext_resource type="Script" path="res://addons/gecs/component.gd" id="4_x6f6h"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_valwx"]
 size = Vector3(5.00934, 5.94293, 5.00914)
 
-[sub_resource type="Curve3D" id="Curve3D_lkxiq"]
-_data = {
-"points": PackedVector3Array(0, 0, 0, 0, 0, 0, 0, 1.79133, -1.52337, 0, 0, 0, 0, 0, 0, -0.181408, -0.804127, -1.43744, 0, 0.45, -2.49, 0, 0, 0, 4.76837e-07, 1.97214, 2.96976, 0, 3.45, -0.44, 0, 0, 0, 0, -1.20279, 6.26197),
-"tilts": PackedFloat32Array(0, 0, 0, 0)
-}
-point_count = 4
-
 [node name="ETrampoline" type="Node"]
 script = ExtResource("1_ct15j")
 
 [node name="trampoline2" parent="." instance=ExtResource("2_wb5fw")]
+
+[node name="BounceCenter" parent="trampoline2" instance=ExtResource("3_xexxj")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.685772, 0)
+draw_in_game = null
+
+[node name="ExitRight" parent="trampoline2" instance=ExtResource("3_xexxj")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 4)
+draw_in_game = null
+
+[node name="ExitTop" parent="trampoline2" instance=ExtResource("3_xexxj")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, 0)
+draw_in_game = null
+
+[node name="ExitLeft" parent="trampoline2" instance=ExtResource("3_xexxj")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -4)
+draw_in_game = null
+
+[node name="ExitBottom" parent="trampoline2" instance=ExtResource("3_xexxj")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0, 0)
+draw_in_game = null
 
 [node name="EnterTrampolineArea" type="Area3D" parent="." node_paths=PackedStringArray("parent")]
 script = ExtResource("3_1sf6e")
@@ -28,9 +42,5 @@ body_add_on_entered = Array[ExtResource("4_x6f6h")]([null])
 [node name="CollisionShape3D" type="CollisionShape3D" parent="EnterTrampolineArea"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0540466, 2.47147, -0.0233536)
 shape = SubResource("BoxShape3D_valwx")
-
-[node name="Path3D" type="Path3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.294202, 2.04673, 1.59359)
-curve = SubResource("Curve3D_lkxiq")
 
 [editable path="trampoline2"]
