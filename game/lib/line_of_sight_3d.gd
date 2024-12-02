@@ -76,7 +76,7 @@ func _check_line_of_sight(body) -> bool:
 	var direction = (body.global_position - global_position).normalized()
 	var forward = global_transform.basis.z.normalized()
 	var angle_check = Utils.angle_check(direction, forward, angle)
-	var los_check = Utils.entity_has_los(parent, body)
+	var los_check = Utils.entity_has_los(parent, body, debug)
 	return angle_check and los_check
 
 func _create_cone_mesh() -> void:
