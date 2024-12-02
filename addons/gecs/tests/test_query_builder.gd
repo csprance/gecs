@@ -392,3 +392,40 @@ func test_query_matches():
 	assert_array(q.with_all([C_TestA]).with_any([C_TestB, C_TestC]).with_none([C_TestD]).matches([entitya,entityb,entityc,entityd,entitye])).has_size(1)
 	assert_bool(q.with_all([C_TestA]).with_any([C_TestB, C_TestC]).with_none([C_TestD]).matches([entitya,entityb,entityc,entityd,entitye]).has(entitye)).is_true()
 	q.clear()
+
+func test_query_matches_with_relationships():
+	var entitya = auto_free(Entity.new())
+	var entityb = auto_free(Entity.new())
+	var entityc = auto_free(Entity.new())
+	
+	var test_a = C_TestA.new()
+	var test_b = C_TestB.new()
+	var rel_a = Relationship.new(test_a, entityb)
+	var rel_b = Relationship.new(test_b, entityc)
+	
+	# EntityA has relationship with EntityB using TestA
+	entitya.add_relationship(rel_a)
+	# EntityB has relationship with EntityC using TestB
+	entityb.add_relationship(rel_b)
+	
+	var q = QueryBuilder.new(world)
+	
+	# Test with_relationship
+	var result = q.with_relationship([Relationship.new(C_TestA.new(), ECS.wildcard)]).matches([entitya, entityb, entityc])
+	assert_array(result).has_size(1)
+	assert_bool(result.has(entitya)).is_true()
+	q.clear()
+	
+	# Test without_relationship
+	result = q.without_relationship([Relationship.new(C_TestA.new(), Entity)]).matches([entitya, entityb, entityc])
+	assert_array(result).has_size(2)
+	assert_bool(result.has(entityb)).is_true()
+	assert_bool(result.has(entityc)).is_true()
+	q.clear()
+	
+	# Test combination of relationships and components
+	entitya.add_component(test_a.duplicate())
+	result = q.with_all([C_TestA]).with_relationship([Relationship.new(C_TestA.new())]).matches([entitya, entityb, entityc])
+	assert_array(result).has_size(1)
+	assert_bool(result.has(entitya)).is_true()
+	q.clear()

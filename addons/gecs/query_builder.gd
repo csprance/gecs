@@ -136,6 +136,20 @@ func matches(entities: Array) -> Array:
 				if entity.has_component(component):
 					matches = false
 					break
+					
+		# Check required relationships
+		if matches and not _relationships.is_empty():
+			for relationship in _relationships:
+				if not entity.has_relationship(relationship):
+					matches = false
+					break
+					
+		# Check excluded relationships
+		if matches and not _exclude_relationships.is_empty():
+			for relationship in _exclude_relationships:
+				if entity.has_relationship(relationship):
+					matches = false
+					break
 		
 		if matches:
 			result.append(entity)
