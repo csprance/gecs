@@ -66,7 +66,7 @@ func ranged_attack_subsystem(entity, _delta):
 		assert(false, "No transform for ranged attack target")
 		return 
 	## Look at the target
-	entity.add_component(C_LookAt.new(r_attacking.target.get_component(C_Transform).transform.origin))
+	entity.add_component(C_LookAt.new(r_attacking.target.get_component(C_Transform).transform.origin + Vector3(0, 1, 0)))
 	## Shoot a projectile at the target
 	var direction = Utils.calculate_entity_direction(entity)
 	var projectile_transform = WeaponUtils.create_projectile_transform(entity, direction)
