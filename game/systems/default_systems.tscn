@@ -1,10 +1,11 @@
-[gd_scene load_steps=26 format=3 uid="uid://ex2wx8kwwjjx"]
+[gd_scene load_steps=28 format=3 uid="uid://ex2wx8kwwjjx"]
 
 [ext_resource type="Script" path="res://game/systems/gameplay/enemy_behaviors/s_zombie_behavior.gd" id="1_a57uo"]
 [ext_resource type="Script" path="res://game/systems/input/s_player_controls.gd" id="1_e5u7d"]
 [ext_resource type="Script" path="res://game/systems/gameplay/s_commands.gd" id="1_o3q20"]
 [ext_resource type="Script" path="res://game/systems/gameplay/s_aim_point.gd" id="1_wvq8n"]
 [ext_resource type="Script" path="res://game/systems/gameplay/s_events.gd" id="2_byjij"]
+[ext_resource type="Script" path="res://game/systems/input/s_trampoline_controls.gd" id="2_fwg0y"]
 [ext_resource type="Script" path="res://game/systems/gameplay/s_dashing.gd" id="2_tk2t4"]
 [ext_resource type="Script" path="res://game/systems/gameplay/s_interest.gd" id="4_epoj1"]
 [ext_resource type="Script" path="res://game/systems/gameplay/enemy_behaviors/s_evil_doll_behavior.gd" id="4_yy88v"]
@@ -23,6 +24,7 @@
 [ext_resource type="Script" path="res://game/systems/debug/s_debug_label_3d.gd" id="17_7hyu0"]
 [ext_resource type="Script" path="res://game/systems/physics/s_projectile.gd" id="18_6nose"]
 [ext_resource type="PackedScene" uid="uid://82d66uq2w35y" path="res://game/lib/debug_label.tscn" id="18_c8vbw"]
+[ext_resource type="Script" path="res://game/systems/physics/s_gravity.gd" id="18_ymlgq"]
 [ext_resource type="Script" path="res://game/systems/debug/s_debug_look_at.gd" id="19_ntm2m"]
 [ext_resource type="Script" path="res://game/systems/debug/s_debug_camera.gd" id="21_srdyu"]
 
@@ -32,6 +34,10 @@
 
 [node name="PlayerControlsSystem" type="Node" parent="input"]
 script = ExtResource("1_e5u7d")
+group = "input"
+
+[node name="TrampolineControlsSystem" type="Node" parent="input"]
+script = ExtResource("2_fwg0y")
 group = "input"
 
 [node name="gameplay" type="Node" parent="."]
@@ -94,6 +100,10 @@ script = ExtResource("13_i48ai")
 group = "gameplay"
 
 [node name="physics" type="Node" parent="."]
+
+[node name="GravitySystem" type="Node" parent="physics"]
+script = ExtResource("18_ymlgq")
+group = "physics"
 
 [node name="CharacterBody3DSystem" type="Node" parent="physics"]
 script = ExtResource("6_n8p4l")
