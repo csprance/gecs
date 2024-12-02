@@ -1,7 +1,8 @@
-[gd_scene load_steps=35 format=3 uid="uid://cgl874p46o3qf"]
+[gd_scene load_steps=36 format=3 uid="uid://cgl874p46o3qf"]
 
 [ext_resource type="Script" path="res://game/entities/gameplay/e_enemy.gd" id="1_s8nbc"]
 [ext_resource type="Script" path="res://game/components/gameplay/c_animation_player.gd" id="2_bv4ns"]
+[ext_resource type="Script" path="res://addons/gecs/component.gd" id="2_u03c1"]
 [ext_resource type="Script" path="res://game/components/physics/c_character_body_3d.gd" id="3_ton84"]
 [ext_resource type="Script" path="res://game/components/gameplay/c_health.gd" id="4_0g088"]
 [ext_resource type="Script" path="res://game/components/physics/c_velocity.gd" id="5_aa25d"]
@@ -13,8 +14,8 @@
 [ext_resource type="Script" path="res://game/components/gameplay/behavior/c_zombie_behavior.gd" id="11_uit2a"]
 [ext_resource type="PackedScene" uid="uid://cvroricp14108" path="res://game/assets/characters/models/characterMedium.fbx" id="12_ctq82"]
 [ext_resource type="Texture2D" uid="uid://bnvcgfhim0vqp" path="res://game/assets/characters/skins/zombieA.png" id="13_7shsy"]
-[ext_resource type="AnimationLibrary" uid="uid://b16umwm2bkor0" path="res://game/assets/animations/attack.fbx" id="14_qc2t6"]
 [ext_resource type="PackedScene" uid="uid://cblqfvanyrdd4" path="res://game/lib/line_of_sight_3d.tscn" id="15_kbo0c"]
+[ext_resource type="Script" path="res://game/lib/component_area_action.gd" id="16_qr2lg"]
 [ext_resource type="Script" path="res://game/actions/component_area_actions/chase_in_area_action.gd" id="16_yk8sx"]
 [ext_resource type="Script" path="res://game/actions/component_area_actions/attack_in_area_action.gd" id="18_xck8f"]
 [ext_resource type="PackedScene" uid="uid://d2p72cr27pb2f" path="res://game/lib/hitbox_3d.tscn" id="19_v7nx8"]
@@ -94,9 +95,8 @@ height = 1.90148
 [node name="ZombieEnemy" type="CharacterBody3D"]
 collision_layer = 16
 collision_mask = 89
-motion_mode = 1
 script = ExtResource("1_s8nbc")
-component_resources = Array[Resource("res://addons/gecs/component.gd")]([SubResource("Resource_iixki"), SubResource("Resource_ypv7w"), SubResource("Resource_itu4t"), SubResource("Resource_05cb1"), SubResource("Resource_6kqax"), SubResource("Resource_apar3"), SubResource("Resource_x5chr"), SubResource("Resource_buds4"), SubResource("Resource_fi7jj"), SubResource("Resource_y6nof")])
+component_resources = Array[ExtResource("2_u03c1")]([SubResource("Resource_iixki"), SubResource("Resource_ypv7w"), SubResource("Resource_itu4t"), SubResource("Resource_05cb1"), SubResource("Resource_6kqax"), SubResource("Resource_apar3"), SubResource("Resource_x5chr"), SubResource("Resource_buds4"), SubResource("Resource_fi7jj"), SubResource("Resource_y6nof")])
 
 [node name="Visuals" parent="." instance=ExtResource("12_ctq82")]
 transform = Transform3D(0.8, 0, 0, 0, 0.8, 0, 0, 0, 0.8, 0, 0, 0)
@@ -107,22 +107,21 @@ surface_material_override/0 = SubResource("StandardMaterial3D_3du5i")
 [node name="AnimationPlayer" type="AnimationPlayer" parent="."]
 root_node = NodePath("../Visuals/RootNode/Root/GeneralSkeleton")
 libraries = {
-"": SubResource("AnimationLibrary_qrdbm"),
-"attack": ExtResource("14_qc2t6")
+"": SubResource("AnimationLibrary_qrdbm")
 }
 
 [node name="ChaseLOS" parent="." node_paths=PackedStringArray("parent") instance=ExtResource("15_kbo0c")]
 angle = 150.0
 cone_color = Color(0.647059, 0.505882, 0, 0.501961)
 parent = NodePath("..")
-actions = Array[Resource("res://game/lib/component_area_action.gd")]([SubResource("Resource_t4wul")])
+actions = Array[ExtResource("16_qr2lg")]([SubResource("Resource_t4wul")])
 
 [node name="AttackLOS" parent="." node_paths=PackedStringArray("parent") instance=ExtResource("15_kbo0c")]
 angle = 106.725
 distance = 1.44
 cone_color = Color(0.819608, 0, 0.760784, 0.501961)
 parent = NodePath("..")
-actions = Array[Resource("res://game/lib/component_area_action.gd")]([SubResource("Resource_bibud")])
+actions = Array[ExtResource("16_qr2lg")]([SubResource("Resource_bibud")])
 
 [node name="HeadHitbox" parent="." node_paths=PackedStringArray("parent") instance=ExtResource("19_v7nx8")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.55789, 0)
