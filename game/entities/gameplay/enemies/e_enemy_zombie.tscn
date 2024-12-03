@@ -1,4 +1,4 @@
-[gd_scene load_steps=36 format=3 uid="uid://cgl874p46o3qf"]
+[gd_scene load_steps=38 format=3 uid="uid://cgl874p46o3qf"]
 
 [ext_resource type="Script" path="res://game/entities/gameplay/e_enemy.gd" id="1_s8nbc"]
 [ext_resource type="Script" path="res://game/components/gameplay/c_animation_player.gd" id="2_bv4ns"]
@@ -14,6 +14,7 @@
 [ext_resource type="Script" path="res://game/components/gameplay/behavior/c_zombie_behavior.gd" id="11_uit2a"]
 [ext_resource type="PackedScene" uid="uid://cvroricp14108" path="res://game/assets/characters/models/characterMedium.fbx" id="12_ctq82"]
 [ext_resource type="Texture2D" uid="uid://bnvcgfhim0vqp" path="res://game/assets/characters/skins/zombieA.png" id="13_7shsy"]
+[ext_resource type="Script" path="res://game/components/gameplay/c_reward.gd" id="13_xpf4g"]
 [ext_resource type="PackedScene" uid="uid://cblqfvanyrdd4" path="res://game/lib/line_of_sight_3d.tscn" id="15_kbo0c"]
 [ext_resource type="Script" path="res://game/actions/component_area_actions/component_area_action.gd" id="16_qr2lg"]
 [ext_resource type="Script" path="res://game/actions/component_area_actions/aa_chase.gd" id="16_yk8sx"]
@@ -63,6 +64,10 @@ offset = Vector3(0, 5, 0)
 [sub_resource type="Resource" id="Resource_y6nof"]
 script = ExtResource("11_uit2a")
 
+[sub_resource type="Resource" id="Resource_immos"]
+script = ExtResource("13_xpf4g")
+points = 10
+
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_3du5i"]
 albedo_texture = ExtResource("13_7shsy")
 
@@ -96,7 +101,7 @@ height = 1.90148
 collision_layer = 16
 collision_mask = 89
 script = ExtResource("1_s8nbc")
-component_resources = Array[ExtResource("2_u03c1")]([SubResource("Resource_iixki"), SubResource("Resource_ypv7w"), SubResource("Resource_itu4t"), SubResource("Resource_05cb1"), SubResource("Resource_6kqax"), SubResource("Resource_apar3"), SubResource("Resource_x5chr"), SubResource("Resource_buds4"), SubResource("Resource_fi7jj"), SubResource("Resource_y6nof")])
+component_resources = Array[ExtResource("2_u03c1")]([SubResource("Resource_iixki"), SubResource("Resource_ypv7w"), SubResource("Resource_itu4t"), SubResource("Resource_05cb1"), SubResource("Resource_6kqax"), SubResource("Resource_apar3"), SubResource("Resource_x5chr"), SubResource("Resource_buds4"), SubResource("Resource_fi7jj"), SubResource("Resource_y6nof"), SubResource("Resource_immos")])
 
 [node name="Visuals" parent="." instance=ExtResource("12_ctq82")]
 transform = Transform3D(0.8, 0, 0, 0, 0.8, 0, 0, 0, 0.8, 0, 0, 0)
@@ -115,6 +120,8 @@ angle = 150.0
 cone_color = Color(0.647059, 0.505882, 0, 0.501961)
 parent = NodePath("..")
 actions = Array[ExtResource("16_qr2lg")]([SubResource("Resource_t4wul")])
+parent_add_on_exit = Array[ExtResource("2_u03c1")]([])
+body_add_on_exit = Array[ExtResource("2_u03c1")]([])
 
 [node name="AttackLOS" parent="." node_paths=PackedStringArray("parent") instance=ExtResource("15_kbo0c")]
 angle = 106.725
@@ -122,6 +129,8 @@ distance = 1.44
 cone_color = Color(0.819608, 0, 0.760784, 0.501961)
 parent = NodePath("..")
 actions = Array[ExtResource("16_qr2lg")]([SubResource("Resource_bibud")])
+parent_add_on_exit = Array[ExtResource("2_u03c1")]([])
+body_add_on_exit = Array[ExtResource("2_u03c1")]([])
 
 [node name="HeadHitbox" parent="." node_paths=PackedStringArray("parent") instance=ExtResource("19_v7nx8")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.55789, 0)
