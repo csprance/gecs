@@ -44,6 +44,13 @@ var paused :bool = false:
 		else:
 			game_unpaused.emit()
 
+## How many victims can spawn in the game in each level. Each victim that dies reduces this number. 
+# Which means there are less victims that spawn in each level and less high score
+var victims := 10:
+	set(v):
+		victims = v
+		if v == 0:
+			print('Game Lost All Victims Dead')
 
 var score :int = 0:
 	get:
