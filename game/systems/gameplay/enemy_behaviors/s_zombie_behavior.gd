@@ -76,13 +76,12 @@ func interested_subsystem(entity, _delta):
 	# Check if we're close enough to the target and then idle
 	if c_trs.transform.origin.distance_to(c_interested.target) < 0.1:
 		entity.remove_component(C_Interested)
-		c_velocity.direction = Vector3.ZERO
-		c_velocity.speed = 0
+		c_velocity.velocity = Vector3.ZERO
 		return
 	
 	# Set the velocity to go towards the target
-	c_velocity.direction = (c_interested.target - c_trs.transform.origin).normalized()
-	c_velocity.speed = ZOMBIE_SPEED
+	c_velocity.velocity = (c_interested.target - c_trs.transform.origin).normalized() * ZOMBIE_SPEED
+	
 
 func chase_subsystem(entity, _delta):
 	# We can't be chasing and interested at the same time
@@ -95,8 +94,7 @@ func chase_subsystem(entity, _delta):
 	var chase_target_trs = (chase_target.get_component(C_Transform) as C_Transform).transform
 
 	# Set the velocity to go towards the target
-	c_velocity.direction = (chase_target_trs.origin - c_trs.transform.origin).normalized()
-	c_velocity.speed = ZOMBIE_SPEED
+	c_velocity.velocity = (chase_target_trs.origin - c_trs.transform.origin).normalized() * ZOMBIE_SPEED
 
 	# Look at the chase target
 	var c_look_at = C_LookAt.new(chase_target_trs.origin)

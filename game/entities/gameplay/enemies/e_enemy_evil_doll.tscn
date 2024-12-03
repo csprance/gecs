@@ -39,8 +39,7 @@ current = 1
 
 [sub_resource type="Resource" id="Resource_05cb1"]
 script = ExtResource("5_1ks0t")
-direction = Vector3(0, 0, 0)
-speed = 0.0
+velocity = Vector3(0, 0, 0)
 
 [sub_resource type="Resource" id="Resource_6kqax"]
 script = ExtResource("6_5bwmr")
@@ -82,8 +81,8 @@ meta = {
 
 [sub_resource type="Resource" id="Resource_w7x8h"]
 script = ExtResource("16_36j7f")
-dash_speed = 1.5
-dash_duration = 0.5
+dash_speed = 25.0
+dash_duration = 1.0
 dash_cooldown = 15.0
 meta = {
 "description": "Dash at the player really fast when you enter los and then cooldown for 15 seconds.",

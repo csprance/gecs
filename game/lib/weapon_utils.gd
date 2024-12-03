@@ -42,9 +42,7 @@ static func instantiate_projectile(c_projectile: C_Projectile, transform: Transf
 	ECS.world.add_entity(e_projectile)
 
 	# Set up the velocity component for the projectile.
-	var c_velocity = C_Velocity.new()
-	c_velocity.speed = c_projectile.speed
-	c_velocity.direction = -transform.basis.z
+	var c_velocity = C_Velocity.new(-transform.basis.z * c_projectile.speed)
 
 	# Add remaining components after adding to the world.
 	e_projectile.add_components([c_velocity])

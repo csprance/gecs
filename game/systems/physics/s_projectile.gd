@@ -31,10 +31,10 @@ func projectile_collision_subsy(entity, _delta: float):
 		entity.remove_component(C_Collision)
 
 func travelling_subsys(entity, _delta: float):
-	var velocity = entity.get_component(C_Velocity) as C_Velocity
+	var c_velocity = entity.get_component(C_Velocity) as C_Velocity
 	# Set the velocity from the velocity component
 
-	entity.velocity = velocity.direction.normalized() * velocity.speed
+	entity.velocity = c_velocity.velocity
 	# Move the entity
 	if entity.move_and_slide():
 		var c_collision = C_Collision.new()
@@ -49,7 +49,6 @@ func travelling_subsys(entity, _delta: float):
 		c_collision.collision = col
 		entity.add_component(c_collision)
 	# Set the velocity from the entity to the component
-	velocity.direction = entity.velocity.normalized()
-	velocity.speed = entity.velocity.length()
+	c_velocity.velocity = entity.velocity
 	# Sync the transform back to the entity
 	Utils.sync_transform(entity)

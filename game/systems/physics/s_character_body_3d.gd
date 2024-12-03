@@ -9,10 +9,11 @@ func query() -> QueryBuilder:
 func process_all(entities, _delta: float):
 	var velocitys = ECS.get_components(entities, C_Velocity) as Array[C_Velocity]
 	for i in range(entities.size()):
+		assert(entities[i] is CharacterBody3D, 'Entity is not a CharacterBody3D. Check its components')
 		if not entities[i] is CharacterBody3D:
 			continue # skip if it's not a character body
 		# Set the velocity from the velocity component
-		entities[i].velocity = (velocitys[i].direction.normalized() * velocitys[i].speed) 
+		entities[i].velocity = velocitys[i].velocity
 		# Move the entity
 		if entities[i].move_and_slide():
 			# Check if we're on the floor and ignore the floor collisions
@@ -24,7 +25,6 @@ func process_all(entities, _delta: float):
 				# c_collision.collision = col
 				# entities[i].add_component(c_collision)
 		# Set the velocity from the entity to the component
-		velocitys[i].direction = entities[i].velocity.normalized()
-		velocitys[i].speed = entities[i].velocity.length()
+		velocitys[i].velocity = entities[i].velocity
 		# Sync the transform back to the entity
 		Utils.sync_transform(entities[i])

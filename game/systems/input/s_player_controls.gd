@@ -71,7 +71,7 @@ func weapon_subsystem(entity: Entity, _delta: float) -> void:
 func movement_subsystem(entity: Entity, _delta: float) -> void:
 	var player = entity as Player
 	# Get the velocity component from the entity
-	var velocity = player.get_component(C_Velocity) as C_Velocity
+	var c_velocity = player.get_component(C_Velocity) as C_Velocity
 	var movement = player.get_component(C_PlayerMovement) as C_PlayerMovement
 
 	# Reset our movement
@@ -91,8 +91,8 @@ func movement_subsystem(entity: Entity, _delta: float) -> void:
 		movement.direction = movement.direction.normalized()
 
 	# Update velocity based on the move axis and speed
-	velocity.direction = movement.direction
-	velocity.speed = movement.speed if movement.direction != Vector3.ZERO else 0.0
+	c_velocity.velocity = movement.direction * (movement.speed if movement.direction != Vector3.ZERO else 0.0)
+
 
 
 # updates the player's direction based on the aim point in the game world.

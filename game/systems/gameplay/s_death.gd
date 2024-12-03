@@ -23,4 +23,3 @@ func process(entity: Entity, _delta: float) -> void:
 	if c_lives.lives <= 0:
 		entity.add_component(C_IsPendingDelete.new()) # mark for deletion
 		return
-
