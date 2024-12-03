@@ -19,10 +19,10 @@ extends Resource
 
 ## Checks if this component equals another, including data
 func equals(other: Component) -> bool:
-    if self.get_script().resource_path != other.get_script().resource_path:
-        return false
-    for prop in self.get_property_list():
-        var prop_name = prop.name
-        if self.get(prop_name) != other.get(prop_name):
-            return false
-    return true
+	if self.get_script().resource_path != other.get_script().resource_path:
+		return false
+	for prop in self.get_property_list():
+		var prop_name = prop.name
+		if self.get(prop_name) != other.get(prop_name):
+			return false
+	return true

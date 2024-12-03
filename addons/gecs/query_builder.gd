@@ -27,6 +27,10 @@ var _exclude_components: Array = []
 var _relationships: Array = []
 # Relationships that entities must not have
 var _exclude_relationships: Array = []
+# Components queries that an entity must match
+var _all_components_queries: Array = []
+# Components queries that an entity must match for any components
+var _any_components_queries: Array = []
 
 ## Initializes the QueryBuilder with the specified [param world]
 func _init(world: World):
@@ -38,27 +42,56 @@ func clear():
 	_exclude_components = []
 	_relationships = []
 	_exclude_relationships = []
+	_all_components_queries = []
+	_any_components_queries = []
 	return self
+
+## Helper to process components list that might contain queries
+func _process_component_list(components: Array) -> Dictionary:
+	var result = {
+		"components": [],
+		"queries": []
+	}
+	
+	for component in components:
+		if component is Dictionary:
+			# Handle component query case
+			for component_type in component:
+				result.components.append(component_type)
+				result.queries.append(component[component_type])
+		else:
+			# Handle regular component case
+			result.components.append(component)
+			result.queries.append({}) # Empty query for regular components
+	
+	return result
 
 ## Finds entities with all of the provided components.[br]
 ## [param components] An [Array] of [Component] classes.[br]
 ## [param returns]: [QueryBuilder] instance for chaining.
 func with_all(components: Array = []) -> QueryBuilder:
-	_all_components = components
+	var processed = _process_component_list(components)
+	_all_components = processed.components
+	_all_components_queries = processed.queries
 	return self
 
 ## Entities must have at least one of the provided components.[br]
 ## [param components] An [Array] of [Component] classes.[br]
 ## [param reutrns] [QueryBuilder] instance for chaining.
 func with_any(components: Array = []) -> QueryBuilder:
-	_any_components = components
+	var processed = _process_component_list(components)
+	_any_components = processed.components
+	_any_components_queries = processed.queries
 	return self
 
 ## Entities must not have any of the provided components.[br]
 ## Params: [param components] An [Array] of [Component] classes.[br]
 ## [param reutrns] [QueryBuilder] instance for chaining.
 func with_none(components: Array = []) -> QueryBuilder:
-	_exclude_components = components
+	# Don't process queries for with_none, just take the components directly
+	_exclude_components = components.map(func(comp): 
+		return comp if not comp is Dictionary else comp.keys()[0]
+	)
 	return self
 
 ## Finds entities with specific relationships.
@@ -80,89 +113,21 @@ func with_reverse_relationship(relationships: Array = []) -> QueryBuilder:
 				return self.with_all(_world.reverse_relationship_index[rev_key])
 	return self
 
-## Parses a query string and configures the QueryBuilder accordingly
-## Query syntax: WITH (Components) ANY (Components) NONE (Components) HAS (Relations) NOT (Relations)
-## [param query_str] The query string to parse
-## [param returns] QueryBuilder instance for chaining
-func from_string(query_str: String) -> QueryBuilder:
-	# Split into sections
-	var sections = query_str.to_upper().split(" ")
-	var current_section = ""
-	var i = 0
-	
-	while i < sections.size():
-		var section = sections[i].strip_edges()
-		
-		match section:
-			"WITH":
-				current_section = "WITH"
-				i += 1
-				if i < sections.size():
-					var components = _parse_component_list(sections[i])
-					with_all(components)
-			"ANY":
-				current_section = "ANY"
-				i += 1
-				if i < sections.size():
-					var components = _parse_component_list(sections[i])
-					with_any(components)
-			"NONE":
-				current_section = "NONE"
-				i += 1
-				if i < sections.size():
-					var components = _parse_component_list(sections[i])
-					with_none(components)
-			"HAS":
-				current_section = "HAS"
-				i += 1
-				if i < sections.size():
-					var relationships = _parse_relationship_list(sections[i])
-					with_relationship(relationships)
-			"NOT":
-				current_section = "NOT"
-				i += 1
-				if i < sections.size():
-					var relationships = _parse_relationship_list(sections[i])
-					without_relationship(relationships)
-		i += 1
-	
-	return self
-
-func _parse_component_list(component_str: String) -> Array:
-	# Remove parentheses and split by comma
-	component_str = component_str.trim_prefix("(").trim_suffix(")")
-	var components = []
-	for comp_name in component_str.split(","):
-		comp_name = comp_name.strip_edges()
-		# Attempt to get the component class from its name
-		var component = ClassDB.instantiate(comp_name)
-		if component:
-			components.append(component)
-	return components
-
-func _parse_relationship_list(relation_str: String) -> Array:
-	# Remove parentheses and split by comma
-	relation_str = relation_str.trim_prefix("(").trim_suffix(")")
-	var relationships = []
-	for rel in relation_str.split(","):
-		rel = rel.strip_edges()
-		var parts = rel.split("->")
-		if parts.size() == 2:
-			var relation_type = parts[0].strip_edges()
-			var target = parts[1].strip_edges()
-			
-			var relation_component = ClassDB.instantiate(relation_type)
-			var target_entity = target if target == "*" else ClassDB.instantiate(target)
-			
-			if relation_component:
-				relationships.append(Relationship.new(relation_component.new(), target_entity if target != "*" else ECS.wildcard))
-	
-	return relationships
-
 ## Executes the constructed query and retrieves matching entities.[br]
 ## [param returns] -  An [Array] of [Entity] that match the query criteria.
 func execute() -> Array:
 	var result = _world._query(_all_components, _any_components, _exclude_components) as Array[Entity]
+	
+	# Handle component property queries for required components
+	if not _all_components_queries.is_empty():
+		result = _filter_entities_by_queries(result, _all_components, _all_components_queries, true)
+	
+	# Handle component property queries for any components
+	if not _any_components_queries.is_empty():
+		result = _filter_entities_by_queries(result, _any_components, _any_components_queries, false)
+	
+	# Note: Removed _none_components_queries handling since it's not logical
+	
 	# Handle relationship filtering
 	if not _relationships.is_empty() or not _exclude_relationships.is_empty():
 		var filtered_entities: Array = []
@@ -184,6 +149,80 @@ func execute() -> Array:
 		result = filtered_entities
 	clear()
 	return result
+
+## Filter entities based on component queries
+func _filter_entities_by_queries(entities: Array, components: Array, queries: Array, require_all: bool) -> Array:
+	var filtered = []
+	for entity in entities:
+		if require_all:
+			# Must match all queries
+			var matches = true
+			for i in range(components.size()):
+				var component = entity.get_component(components[i])
+				var query = queries[i]
+				if not _matches_component_query(component, query):
+					matches = false
+					break
+			if matches:
+				filtered.append(entity)
+		else:
+			# Must match any query
+			for i in range(components.size()):
+				var component = entity.get_component(components[i])
+				var query = queries[i]
+				if component and _matches_component_query(component, query):
+					filtered.append(entity)
+					break
+	return filtered
+
+## Check if entity matches any of the queries
+func _entity_matches_any_query(entity: Entity, components: Array, queries: Array) -> bool:
+	for i in range(components.size()):
+		var component = entity.get_component(components[i])
+		if component and _matches_component_query(component, queries[i]):
+			return true
+	return false
+
+## Helper method to check if a component's properties match a query
+func _matches_component_query(component: Component, query: Dictionary) -> bool:
+	if query.is_empty():
+		return true
+		
+	for property in query:
+		if not component.get(property):
+			return false
+			
+		var property_value = component.get(property)
+		var property_query = query[property]
+		
+		for operator in property_query:
+			match operator:
+				"_eq":
+					if property_value != property_query[operator]:
+						return false
+				"_gt":
+					if property_value <= property_query[operator]:
+						return false
+				"_lt":
+					if property_value >= property_query[operator]:
+						return false
+				"_gte":
+					if property_value < property_query[operator]:
+						return false
+				"_lte":
+					if property_value > property_query[operator]:
+						return false
+				"_ne":
+					if property_value == property_query[operator]:
+						return false
+				"_nin":
+					if property_value in property_query[operator]:
+						return false
+				"_in":
+					if not (property_value in property_query[operator]):
+						return false
+	
+	return true
 
 ## Filters a provided list of entities using the current query criteria.
 ## Unlike execute(), this doesn't query the world but instead filters the provided entities.

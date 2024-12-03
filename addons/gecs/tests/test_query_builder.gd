@@ -433,35 +433,133 @@ func test_query_matches_with_relationships():
 	assert_bool(result.has(entitya)).is_true()
 	q.clear()
 
-func test_query_string_parser():
-	var entitya = auto_free(Entity.new())
-	var entityb = auto_free(Entity.new())
-	
+func test_query_with_component_query():
+	var entity1 = Entity.new()
+	var entity2 = Entity.new()
+	var entity3 = Entity.new()
+	var entity4 = Entity.new()
+
+
 	var test_a = C_TestA.new()
-	var test_b = C_TestB.new()
-	var test_c = C_TestC.new()
-	
-	entitya.add_component(test_a)
-	entitya.add_component(test_b)
-	entityb.add_component(test_b)
-	entityb.add_component(test_c)
-	
-	var q = QueryBuilder.new(world)
-	
-	# Test basic WITH query
-	var result = q.from_string("WITH (C_TestA, C_TestB)").matches([entitya, entityb])
+	var test_d = C_TestD.new()
+
+	# Entity1 has TestC value 25 and TestA
+	entity1.add_component(C_TestC.new(25))
+	entity1.add_component(test_a)
+	# Entity2 has TestA and TestC but value 10
+	entity2.add_component(test_a)
+	entity2.add_component(C_TestC.new(10))
+	# Entity3 has TestD only
+	entity3.add_component(test_d.duplicate())
+	# Entity4 has no components
+
+	world.add_entity(entity1)
+	world.add_entity(entity2)
+	world.add_entity(entity3)
+	world.add_entity(entity4)
+
+	# Query excluding entities with TestC or TestD
+	var result = QueryBuilder.new(world).with_all([{C_TestC: {"value": {"_eq": 25}}}, C_TestA]).execute()
 	assert_array(result).has_size(1)
-	assert_bool(result.has(entitya)).is_true()
-	q.clear()
+	assert_bool(result.has(entity1)).is_true()
+	assert_bool(result.has(entity2)).is_false()
+	assert_bool(result.has(entity3)).is_false()
+	assert_bool(result.has(entity4)).is_false()
+
+func test_query_with_component_queries():
+	var entity1 = Entity.new()
+	var entity2 = Entity.new()
+	var entity3 = Entity.new()
+	var entity4 = Entity.new()
+
+	# Entity1: TestC(value=25), TestD(points=100)
+	entity1.add_component(C_TestC.new(25))
+	entity1.add_component(C_TestD.new(100))
 	
-	# Test ANY query
-	result = q.from_string("ANY (C_TestA, C_TestC)").matches([entitya, entityb])
+	# Entity2: TestC(value=10), TestD(points=50)
+	entity2.add_component(C_TestC.new(10))
+	entity2.add_component(C_TestD.new(50))
+	
+	# Entity3: TestC(value=25), TestD(points=25)
+	entity3.add_component(C_TestC.new(25))
+	entity3.add_component(C_TestD.new(25))
+	
+	# Entity4: TestC(value=30)
+	entity4.add_component(C_TestC.new(30))
+
+	world.add_entity(entity1)
+	world.add_entity(entity2)
+	world.add_entity(entity3)
+	world.add_entity(entity4)
+
+	# Test with_all with multiple component queries
+	var result = QueryBuilder.new(world).with_all([
+		{C_TestC: {"value": {"_eq": 25}}},
+		{C_TestD: {"points": {"_gt": 50}}}
+	]).execute()
+	assert_array(result).has_size(1)
+	assert_bool(result.has(entity1)).is_true()
+
+	# Test with_any with component queries
+	result = QueryBuilder.new(world).with_any([
+		{C_TestC: {"value": {"_lt": 15}}},
+		{C_TestD: {"points": {"_gte": 100}}}
+	]).execute()
 	assert_array(result).has_size(2)
-	q.clear()
-	
-	# Test complex query with relationships
-	entitya.add_relationship(Relationship.new(test_a, entityb))
-	result = q.from_string("WITH (C_TestA) HAS (C_TestA->Entity)").matches([entitya, entityb])
+	assert_bool(result.has(entity1)).is_true()
+	assert_bool(result.has(entity2)).is_true()
+
+	# Remove the with_none component query test and replace with regular component tests
+	result = QueryBuilder.new(world).with_none([C_TestD]).execute()
 	assert_array(result).has_size(1)
-	assert_bool(result.has(entitya)).is_true()
-	q.clear()
+	assert_bool(result.has(entity4)).is_true()
+
+
+	# Test multiple operators in same query
+	result = QueryBuilder.new(world).with_all([
+		{C_TestC: {"value": {"_gte": 20, "_lte": 25}}}
+	]).execute()
+	assert_array(result).has_size(2)
+	assert_bool(result.has(entity1)).is_true()
+	assert_bool(result.has(entity3)).is_true()
+
+	# Test combination of regular components and component queries
+	result = QueryBuilder.new(world).with_all([
+		C_TestD,
+		{C_TestC: {"value": {"_gt": 20}}}
+	]).execute()
+	assert_array(result).has_size(2)
+	assert_bool(result.has(entity1)).is_true()
+	assert_bool(result.has(entity3)).is_true()
+
+	# Test _in and _nin operators
+	result = QueryBuilder.new(world).with_all([
+		{C_TestC: {"value": {"_in": [10, 25]}}}
+	]).execute()
+	assert_array(result).has_size(3)
+	assert_bool(result.has(entity1)).is_true()
+	assert_bool(result.has(entity2)).is_true()
+	assert_bool(result.has(entity3)).is_true()
+
+	# Test complex combination of queries without with_none queries
+	result = QueryBuilder.new(world).with_all([
+		{C_TestC: {"value": {"_gte": 25}}}
+	]).with_any([
+		{C_TestD: {"points": {"_gt": 75}}},
+		{C_TestD: {"points": {"_lt": 30}}}
+	]).with_none([C_TestE]).execute()  # Only use simple component exclusion
+	assert_array(result).has_size(2)
+	assert_bool(result.has(entity1)).is_true()
+	assert_bool(result.has(entity3)).is_true()
+
+	# Test empty value matching
+	result = QueryBuilder.new(world).with_all([
+		{C_TestC: {}}
+	]).execute()
+	assert_array(result).has_size(4)  # Should match all entities with TestC
+
+	# Test non-existent property
+	result = QueryBuilder.new(world).with_all([
+		{C_TestC: {"non_existent": {"_eq": 10}}}
+	]).execute()
+	assert_array(result).has_size(0)  # Should match no entities
