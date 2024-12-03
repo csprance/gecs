@@ -80,6 +80,85 @@ func with_reverse_relationship(relationships: Array = []) -> QueryBuilder:
 				return self.with_all(_world.reverse_relationship_index[rev_key])
 	return self
 
+## Parses a query string and configures the QueryBuilder accordingly
+## Query syntax: WITH (Components) ANY (Components) NONE (Components) HAS (Relations) NOT (Relations)
+## [param query_str] The query string to parse
+## [param returns] QueryBuilder instance for chaining
+func from_string(query_str: String) -> QueryBuilder:
+	# Split into sections
+	var sections = query_str.to_upper().split(" ")
+	var current_section = ""
+	var i = 0
+	
+	while i < sections.size():
+		var section = sections[i].strip_edges()
+		
+		match section:
+			"WITH":
+				current_section = "WITH"
+				i += 1
+				if i < sections.size():
+					var components = _parse_component_list(sections[i])
+					with_all(components)
+			"ANY":
+				current_section = "ANY"
+				i += 1
+				if i < sections.size():
+					var components = _parse_component_list(sections[i])
+					with_any(components)
+			"NONE":
+				current_section = "NONE"
+				i += 1
+				if i < sections.size():
+					var components = _parse_component_list(sections[i])
+					with_none(components)
+			"HAS":
+				current_section = "HAS"
+				i += 1
+				if i < sections.size():
+					var relationships = _parse_relationship_list(sections[i])
+					with_relationship(relationships)
+			"NOT":
+				current_section = "NOT"
+				i += 1
+				if i < sections.size():
+					var relationships = _parse_relationship_list(sections[i])
+					without_relationship(relationships)
+		i += 1
+	
+	return self
+
+func _parse_component_list(component_str: String) -> Array:
+	# Remove parentheses and split by comma
+	component_str = component_str.trim_prefix("(").trim_suffix(")")
+	var components = []
+	for comp_name in component_str.split(","):
+		comp_name = comp_name.strip_edges()
+		# Attempt to get the component class from its name
+		var component = ClassDB.instantiate(comp_name)
+		if component:
+			components.append(component)
+	return components
+
+func _parse_relationship_list(relation_str: String) -> Array:
+	# Remove parentheses and split by comma
+	relation_str = relation_str.trim_prefix("(").trim_suffix(")")
+	var relationships = []
+	for rel in relation_str.split(","):
+		rel = rel.strip_edges()
+		var parts = rel.split("->")
+		if parts.size() == 2:
+			var relation_type = parts[0].strip_edges()
+			var target = parts[1].strip_edges()
+			
+			var relation_component = ClassDB.instantiate(relation_type)
+			var target_entity = target if target == "*" else ClassDB.instantiate(target)
+			
+			if relation_component:
+				relationships.append(Relationship.new(relation_component.new(), target_entity if target != "*" else ECS.wildcard))
+	
+	return relationships
+
 ## Executes the constructed query and retrieves matching entities.[br]
 ## [param returns] -  An [Array] of [Entity] that match the query criteria.
 func execute() -> Array:

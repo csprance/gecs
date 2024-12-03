@@ -1,4 +1,4 @@
-[gd_scene load_steps=22 format=3 uid="uid://c8ors4ai4l4if"]
+[gd_scene load_steps=32 format=3 uid="uid://c8ors4ai4l4if"]
 
 [ext_resource type="Script" path="res://addons/gecs/world.gd" id="1_dnklw"]
 [ext_resource type="PackedScene" uid="uid://n6ivo0wnpuvg" path="res://game/entities/gameplay/enemies/e_enemy_evil_doll.tscn" id="2_bt0om"]
@@ -13,11 +13,34 @@
 [ext_resource type="PackedScene" uid="uid://ex2wx8kwwjjx" path="res://game/systems/default_systems.tscn" id="11_dp1f4"]
 [ext_resource type="PackedScene" uid="uid://cnxv5jgoj4kw2" path="res://game/entities/gameplay/e_trampoline.tscn" id="11_jnj7n"]
 [ext_resource type="PackedScene" uid="uid://b0ctwmw006svf" path="res://game/assets/props/tree/tree_01_a.gltf" id="12_oqyl0"]
+[ext_resource type="Script" path="res://addons/gecs/component.gd" id="13_pvfgj"]
+[ext_resource type="Script" path="res://game/components/gameplay/c_transform.gd" id="14_1o3fy"]
+[ext_resource type="Script" path="res://game/components/gameplay/c_health.gd" id="15_j7s5o"]
 [ext_resource type="PackedScene" uid="uid://dx7av6n5xik2f" path="res://game/assets/props/doors/door_01_a.gltf" id="15_vvmgj"]
 [ext_resource type="PackedScene" uid="uid://dmehwuect8hlf" path="res://game/assets/props/searchables/cabinet_01_a.gltf" id="16_jyyhi"]
+[ext_resource type="Script" path="res://game/components/debug/c_debug_label.gd" id="16_pgbbi"]
 [ext_resource type="PackedScene" uid="uid://csxwta28e2lxv" path="res://game/assets/props/gravestone/gravestone.gltf" id="17_7ar8e"]
 [ext_resource type="Texture2D" uid="uid://bv4vlxbttsxcl" path="res://game/assets/worlds/level_one/grass.png" id="17_8l3ga"]
+[ext_resource type="Script" path="res://game/components/gameplay/c_victim.gd" id="17_eirrq"]
 [ext_resource type="PackedScene" uid="uid://cgl874p46o3qf" path="res://game/entities/gameplay/enemies/e_enemy_zombie.tscn" id="18_jmf4t"]
+[ext_resource type="PackedScene" uid="uid://bm6p3cjvxyqmy" path="res://game/entities/gameplay/e_victim.tscn" id="19_by7qk"]
+
+[sub_resource type="Resource" id="Resource_l81d8"]
+script = ExtResource("14_1o3fy")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+
+[sub_resource type="Resource" id="Resource_15ijl"]
+script = ExtResource("15_j7s5o")
+total = 1
+current = 1
+
+[sub_resource type="Resource" id="Resource_cagx0"]
+script = ExtResource("16_pgbbi")
+text = "Victim"
+offset = Vector3(0, 3, 0)
+
+[sub_resource type="Resource" id="Resource_s8kcv"]
+script = ExtResource("17_eirrq")
 
 [sub_resource type="BoxMesh" id="BoxMesh_leccv"]
 
@@ -79,6 +102,10 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.29409, 0, -8.20751)
 
 [node name="ETrampoline5" parent="Entities" instance=ExtResource("11_jnj7n")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.34891, 0, -8.20751)
+
+[node name="EVictim" parent="Entities" instance=ExtResource("19_by7qk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.63605, -0.032787, -2.40944)
+component_resources = Array[ExtResource("13_pvfgj")]([SubResource("Resource_l81d8"), SubResource("Resource_15ijl"), SubResource("Resource_cagx0"), SubResource("Resource_s8kcv")])
 
 [node name="ECamera" parent="Entities" instance=ExtResource("10_osjvc")]
 

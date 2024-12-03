@@ -16,7 +16,7 @@
 [ext_resource type="Texture2D" uid="uid://d4asuwe8kpb3y" path="res://game/assets/characters/skins/alienB.png" id="12_8ivd6"]
 [ext_resource type="PackedScene" uid="uid://cblqfvanyrdd4" path="res://game/lib/line_of_sight_3d.tscn" id="15_3bntj"]
 [ext_resource type="Script" path="res://game/actions/component_area_actions/dash_in_area_action.gd" id="16_36j7f"]
-[ext_resource type="Script" path="res://game/lib/component_area_action.gd" id="16_47dc3"]
+[ext_resource type="Script" path="res://game/actions/component_area_actions/component_area_action.gd" id="16_47dc3"]
 [ext_resource type="Script" path="res://game/actions/component_area_actions/ranged_attack_in_area_action.gd" id="16_b7nvm"]
 [ext_resource type="Script" path="res://game/actions/component_area_actions/chase_in_area_action.gd" id="16_dv5eg"]
 [ext_resource type="Script" path="res://game/actions/component_area_actions/attack_in_area_action.gd" id="18_n6h1n"]
@@ -121,6 +121,8 @@ distance = 9.92
 cone_color = Color(0.564706, 0.439216, 0, 0.501961)
 parent = NodePath("..")
 actions = Array[ExtResource("16_47dc3")]([SubResource("Resource_t4wul"), SubResource("Resource_w7x8h")])
+parent_add_on_exit = Array[ExtResource("2_epde0")]([])
+body_add_on_exit = Array[ExtResource("2_epde0")]([])
 
 [node name="RangedAttackLOS" parent="." node_paths=PackedStringArray("parent") instance=ExtResource("15_3bntj")]
 angle = 80.765
@@ -128,6 +130,8 @@ distance = 8.195
 cone_color = Color(1, 0, 0, 0.501961)
 parent = NodePath("..")
 actions = Array[ExtResource("16_47dc3")]([SubResource("Resource_ahgns")])
+parent_add_on_exit = Array[ExtResource("2_epde0")]([])
+body_add_on_exit = Array[ExtResource("2_epde0")]([])
 
 [node name="MeleeAttackLOS" parent="." node_paths=PackedStringArray("parent") instance=ExtResource("15_3bntj")]
 angle = 217.725
@@ -135,6 +139,8 @@ distance = 1.1
 cone_color = Color(0.729412, 0.0117647, 0.65098, 0.501961)
 parent = NodePath("..")
 actions = Array[ExtResource("16_47dc3")]([SubResource("Resource_ffh6u")])
+parent_add_on_exit = Array[ExtResource("2_epde0")]([])
+body_add_on_exit = Array[ExtResource("2_epde0")]([])
 
 [node name="HeadHitbox" parent="." node_paths=PackedStringArray("parent") instance=ExtResource("19_iq2ko")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.37016, 0)

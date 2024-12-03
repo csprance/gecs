@@ -1,0 +1,74 @@
+[gd_scene load_steps=18 format=3 uid="uid://bm6p3cjvxyqmy"]
+
+[ext_resource type="Script" path="res://game/entities/gameplay/e_victim.gd" id="1_7dyc1"]
+[ext_resource type="PackedScene" uid="uid://cvroricp14108" path="res://game/assets/characters/models/characterMedium.fbx" id="2_df2ty"]
+[ext_resource type="Script" path="res://addons/gecs/component.gd" id="2_f45rw"]
+[ext_resource type="Script" path="res://game/lib/component_area.gd" id="2_wn811"]
+[ext_resource type="Script" path="res://game/components/gameplay/c_transform.gd" id="3_pladw"]
+[ext_resource type="Texture2D" uid="uid://dg6h8tbiaowsh" path="res://game/assets/characters/skins/Animals/animalBaseA.png" id="3_wimem"]
+[ext_resource type="Script" path="res://game/components/gameplay/c_health.gd" id="4_ln4rp"]
+[ext_resource type="Script" path="res://game/actions/component_area_actions/component_area_action.gd" id="5_160ya"]
+[ext_resource type="Script" path="res://game/components/debug/c_debug_label.gd" id="5_nvb7j"]
+[ext_resource type="Script" path="res://game/actions/component_area_actions/kill_or_save_in_area_action.gd" id="10_d8660"]
+
+[sub_resource type="Resource" id="Resource_l81d8"]
+script = ExtResource("3_pladw")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+
+[sub_resource type="Resource" id="Resource_15ijl"]
+script = ExtResource("4_ln4rp")
+total = 1
+current = 1
+
+[sub_resource type="Resource" id="Resource_cagx0"]
+script = ExtResource("5_nvb7j")
+text = "Victim"
+offset = Vector3(0, 3, 0)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_l2ami"]
+albedo_texture = ExtResource("3_wimem")
+
+[sub_resource type="Resource" id="Resource_1rt3x"]
+script = ExtResource("10_d8660")
+meta = {
+"description": "This is called when an entity enters an area and it can either kill it or save a victim",
+"name": "Kill Or Save"
+}
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_mb6lx"]
+radius = 1.415
+height = 3.729
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_mwtkc"]
+radius = 0.708362
+height = 3.44898
+
+[node name="EVictim" type="Node3D"]
+script = ExtResource("1_7dyc1")
+component_resources = Array[ExtResource("2_f45rw")]([SubResource("Resource_l81d8"), SubResource("Resource_15ijl"), SubResource("Resource_cagx0")])
+
+[node name="Root Scene" parent="." instance=ExtResource("2_df2ty")]
+
+[node name="characterMedium" parent="Root Scene/RootNode/Root/GeneralSkeleton" index="0"]
+surface_material_override/0 = SubResource("StandardMaterial3D_l2ami")
+
+[node name="KillOrSaveArea" type="Area3D" parent="." node_paths=PackedStringArray("parent")]
+collision_layer = 64
+collision_mask = 28
+script = ExtResource("2_wn811")
+parent = NodePath("..")
+actions = Array[ExtResource("5_160ya")]([SubResource("Resource_1rt3x")])
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="KillOrSaveArea"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.95061, 0)
+shape = SubResource("CapsuleShape3D_mb6lx")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="."]
+collision_layer = 64
+collision_mask = 89
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="StaticBody3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.76856, 0)
+shape = SubResource("CapsuleShape3D_mwtkc")
+
+[editable path="Root Scene"]

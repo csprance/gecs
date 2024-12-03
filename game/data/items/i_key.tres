@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" path="res://game/components/gameplay/c_item.gd" id="1_2trlm"]
 [ext_resource type="Texture2D" uid="uid://bplgxin3rk2nr" path="res://game/assets/icons/keys.svg" id="1_70cro"]
-[ext_resource type="Script" path="res://game/lib/action.gd" id="1_wwl03"]
+[ext_resource type="Script" path="res://game/actions/action.gd" id="1_wwl03"]
 [ext_resource type="PackedScene" uid="uid://bhxsx3bpl2v5" path="res://game/assets/items/key_visuals.tscn" id="3_iwa4v"]
 [ext_resource type="Script" path="res://game/components/c_visuals.gd" id="5_l4akq"]
 

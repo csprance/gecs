@@ -15,7 +15,7 @@
 [ext_resource type="PackedScene" uid="uid://cvroricp14108" path="res://game/assets/characters/models/characterMedium.fbx" id="12_ctq82"]
 [ext_resource type="Texture2D" uid="uid://bnvcgfhim0vqp" path="res://game/assets/characters/skins/zombieA.png" id="13_7shsy"]
 [ext_resource type="PackedScene" uid="uid://cblqfvanyrdd4" path="res://game/lib/line_of_sight_3d.tscn" id="15_kbo0c"]
-[ext_resource type="Script" path="res://game/lib/component_area_action.gd" id="16_qr2lg"]
+[ext_resource type="Script" path="res://game/actions/component_area_actions/component_area_action.gd" id="16_qr2lg"]
 [ext_resource type="Script" path="res://game/actions/component_area_actions/chase_in_area_action.gd" id="16_yk8sx"]
 [ext_resource type="Script" path="res://game/actions/component_area_actions/attack_in_area_action.gd" id="18_xck8f"]
 [ext_resource type="PackedScene" uid="uid://d2p72cr27pb2f" path="res://game/lib/hitbox_3d.tscn" id="19_v7nx8"]

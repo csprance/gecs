@@ -354,6 +354,9 @@ func test_query_matches():
 
 	var q = QueryBuilder.new(world)
 
+	# test with no query (should match all entities)
+	assert_array(q.matches([entitya,entityb,entityc,entityd,entitye])).has_size(5)
+	q.clear()
 	# Test with_all
 	assert_array(q.with_all([C_TestA]).matches([entitya,entityb,entityc,entityd,entitye])).has_size(3)
 	assert_bool(q.with_all([C_TestA]).matches([entitya,entityb,entityc,entityd,entitye]).has(entitya)).is_true()
@@ -426,6 +429,39 @@ func test_query_matches_with_relationships():
 	# Test combination of relationships and components
 	entitya.add_component(test_a.duplicate())
 	result = q.with_all([C_TestA]).with_relationship([Relationship.new(C_TestA.new())]).matches([entitya, entityb, entityc])
+	assert_array(result).has_size(1)
+	assert_bool(result.has(entitya)).is_true()
+	q.clear()
+
+func test_query_string_parser():
+	var entitya = auto_free(Entity.new())
+	var entityb = auto_free(Entity.new())
+	
+	var test_a = C_TestA.new()
+	var test_b = C_TestB.new()
+	var test_c = C_TestC.new()
+	
+	entitya.add_component(test_a)
+	entitya.add_component(test_b)
+	entityb.add_component(test_b)
+	entityb.add_component(test_c)
+	
+	var q = QueryBuilder.new(world)
+	
+	# Test basic WITH query
+	var result = q.from_string("WITH (C_TestA, C_TestB)").matches([entitya, entityb])
+	assert_array(result).has_size(1)
+	assert_bool(result.has(entitya)).is_true()
+	q.clear()
+	
+	# Test ANY query
+	result = q.from_string("ANY (C_TestA, C_TestC)").matches([entitya, entityb])
+	assert_array(result).has_size(2)
+	q.clear()
+	
+	# Test complex query with relationships
+	entitya.add_relationship(Relationship.new(test_a, entityb))
+	result = q.from_string("WITH (C_TestA) HAS (C_TestA->Entity)").matches([entitya, entityb])
 	assert_array(result).has_size(1)
 	assert_bool(result.has(entitya)).is_true()
 	q.clear()
