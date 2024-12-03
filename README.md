@@ -348,3 +348,6 @@ Feel free to explore and expand upon the example project provided, and refer to 
 - GUI For Seeing all Systems executing
 - Gui for seeing all Entities and Components and Values in those components
 - GUI TO see all Components by type
+- `QueryBuilder.new(world).with_all([{C_TestA: {"value": {'_eq': 10}}}, C_TestB]).execute()`
+	- A GraphQl style query of a specific component so we can say it has to have these components and those components have to match this query
+	- 
