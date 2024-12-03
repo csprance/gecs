@@ -55,10 +55,6 @@ group = "gameplay"
 script = ExtResource("11_1n20v")
 group = "gameplay"
 
-[node name="DashingSystem" type="Node" parent="gameplay"]
-script = ExtResource("2_tk2t4")
-group = "gameplay"
-
 [node name="VisualsSystem" type="Node" parent="gameplay"]
 script = ExtResource("14_fkfa2")
 group = "gameplay"
@@ -102,6 +98,10 @@ group = "gameplay"
 
 [node name="PendingDeleteSystem" type="Node" parent="gameplay"]
 script = ExtResource("9_bykvn")
+group = "gameplay"
+
+[node name="DashingSystem" type="Node" parent="gameplay"]
+script = ExtResource("2_tk2t4")
 group = "gameplay"
 
 [node name="physics" type="Node" parent="."]
