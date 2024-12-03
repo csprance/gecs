@@ -277,9 +277,15 @@ func matches(entities: Array) -> Array:
 
 func combine(other: QueryBuilder) -> QueryBuilder:
 	_all_components += other._all_components
+	_all_components_queries += other._all_components_queries
 	_any_components += other._any_components
+	_any_components_queries += other._any_components_queries
 	_exclude_components += other._exclude_components
+	# If you have exclude component queries, include them as well
+	# _exclude_components_queries += other._exclude_components_queries
+	_relationships += other._relationships
+	_exclude_relationships += other._exclude_relationships
 	return self
 
 func as_array() -> Array:
-	return [_all_components, _any_components, _exclude_components]
+	return [_all_components, _any_components, _exclude_components, _relationships, _exclude_relationships]

@@ -563,3 +563,12 @@ func test_query_with_component_queries():
 		{C_TestC: {"non_existent": {"_eq": 10}}}
 	]).execute()
 	assert_array(result).has_size(0)  # Should match no entities
+
+	# Test empty world query with component query property
+	result = QueryBuilder.new(world).with_all([
+		{C_TestC: {"non_existent": {"_eq": 10}}},
+		C_TestD, C_TestE, C_TestA
+	]).execute()
+	assert_array(result).has_size(0)  # Should match no entities
+
+
