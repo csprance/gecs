@@ -15,6 +15,7 @@ dest_files=["res://.godot/imported/FEASFBI_.TTF-d9920cbc7611e2cdc53481defa5fa4c2
 Rendering=null
 antialiasing=1
 generate_mipmaps=false
+disable_embedded_bitmaps=true
 multichannel_signed_distance_field=false
 msdf_pixel_range=8
 msdf_size=48
