@@ -14,7 +14,7 @@ func sub_systems():
 			ECS.world.query
 			.with_all([C_ZombieBehavior, C_Transform, C_Enemy, C_Velocity, C_InterestRange])
 			.with_none([C_Interested, C_Death])
-			.without_relationship([Relationships.chasing_players()]),
+			.without_relationship([Relationships.chasing_anything()]),
 			idle_subsystem
 		],
 		## Chase
@@ -22,7 +22,7 @@ func sub_systems():
 			ECS.world.query
 			.with_all([C_ZombieBehavior, C_Transform, C_Enemy, C_Velocity, C_InterestRange])
 			.with_none([C_Death])
-			.with_relationship([Relationships.chasing_players()]),
+			.with_relationship([Relationships.chasing_anything()]),
 			chase_subsystem
 		], 
 		## Interested
@@ -37,7 +37,7 @@ func sub_systems():
 			ECS.world.query
 			.with_all([C_ZombieBehavior, C_Transform, C_Enemy, C_Velocity])
 			.with_none([C_Death, C_AttackCooldown])
-			.with_relationship([Relationships.attacking_players()]), 
+			.with_relationship([Relationships.attacking_anything()]), 
 			attack_subsystem
 		],
 	]
@@ -45,7 +45,7 @@ func sub_systems():
 ## Try to attack the target	if we can
 func attack_subsystem(entity, _delta):
 	# look at the player
-	var r_attacking = entity.get_relationship(Relationships.attacking_players())
+	var r_attacking = entity.get_relationship(Relationships.attacking_anything())
 	Loggie.debug('Attacking', r_attacking.target)
 	r_attacking.target.add_component(C_Damage.new())
 	entity.add_component(C_AttackCooldown.new())
@@ -89,7 +89,7 @@ func chase_subsystem(entity, _delta):
 	entity.remove_component(C_Interested)
 	var c_velocity = entity.get_component(C_Velocity) as C_Velocity
 	var c_trs = entity.get_component(C_Transform) as C_Transform
-	var r_chasing = entity.get_relationship(Relationships.chasing_players())
+	var r_chasing = entity.get_relationship(Relationships.chasing_anything())
 
 	var chase_target = r_chasing.target
 	var chase_target_trs = (chase_target.get_component(C_Transform) as C_Transform).transform
