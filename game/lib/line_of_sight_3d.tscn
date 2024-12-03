@@ -1,6 +1,7 @@
-[gd_scene load_steps=9 format=3 uid="uid://cblqfvanyrdd4"]
+[gd_scene load_steps=10 format=3 uid="uid://cblqfvanyrdd4"]
 
 [ext_resource type="Script" path="res://game/lib/line_of_sight_3d.gd" id="1_exa3r"]
+[ext_resource type="Script" path="res://addons/gecs/component.gd" id="2_ho3rx"]
 [ext_resource type="Script" path="res://game/components/gameplay/c_something_in_los.gd" id="2_lolq3"]
 [ext_resource type="Script" path="res://game/components/gameplay/c_in_los.gd" id="3_5u8xx"]
 
@@ -16,7 +17,7 @@ script = ExtResource("3_5u8xx")
 [sub_resource type="Resource" id="Resource_nq1id"]
 script = ExtResource("3_5u8xx")
 
-[sub_resource type="CylinderShape3D" id="CylinderShape3D_1u5f0"]
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_bbma6"]
 height = 5.0
 radius = 5.0
 
@@ -25,11 +26,13 @@ collision_layer = 0
 collision_mask = 72
 script = ExtResource("1_exa3r")
 cone_color = Color(1, 0, 0, 0.0470588)
-parent_add_on_entered = Array[Resource("res://addons/gecs/component.gd")]([SubResource("Resource_f3in7")])
-parent_remove_on_exit = Array[Resource("res://addons/gecs/component.gd")]([SubResource("Resource_ifcxy")])
-body_add_on_entered = Array[Resource("res://addons/gecs/component.gd")]([SubResource("Resource_eeaui")])
-body_remove_on_exit = Array[Resource("res://addons/gecs/component.gd")]([SubResource("Resource_nq1id")])
+parent_add_on_entered = Array[ExtResource("2_ho3rx")]([SubResource("Resource_f3in7")])
+parent_add_on_exit = null
+parent_remove_on_exit = Array[ExtResource("2_ho3rx")]([SubResource("Resource_ifcxy")])
+body_add_on_entered = Array[ExtResource("2_ho3rx")]([SubResource("Resource_eeaui")])
+body_add_on_exit = null
+body_remove_on_exit = Array[ExtResource("2_ho3rx")]([SubResource("Resource_nq1id")])
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 unique_name_in_owner = true
-shape = SubResource("CylinderShape3D_1u5f0")
+shape = SubResource("CylinderShape3D_bbma6")

@@ -4,7 +4,6 @@ extends ComponentArea3D
 
 
 @export_group("Cone Settings")
-
 ## The Line of Sight angle
 @export var angle: float = 45:
 	set(value):
@@ -14,7 +13,6 @@ extends ComponentArea3D
 			_update_collision_shape()
 	get:
 		return angle
-
 ## The Line of Sight distance
 @export var distance: float = 5:
 	set(value):
@@ -34,7 +32,6 @@ extends ComponentArea3D
 			cone_mesh_instance.visible = debug
 # What color is the cone
 @export var cone_color: Color = Color(1, 0, 0, 0.5)
-
 
 @onready var collision_shape_3d: CollisionShape3D = %CollisionShape3D
 

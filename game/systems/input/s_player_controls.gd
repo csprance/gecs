@@ -55,16 +55,16 @@ func player_input_subsystem(_3d_playersentity: Entity, _delta: float) -> void:
 		GameState.paused = not GameState.paused
 
 
-func item_subsystem(_entity: Entity, _delta: float) -> void:
+func item_subsystem(entity: Entity, _delta: float) -> void:
 	if Input.is_action_just_pressed('use_item'):
 		if GameState.active_item:
-			InventoryUtils.use_inventory_item(GameState.active_item)
+			InventoryUtils.use_inventory_item(GameState.active_item, entity)
 
 
-func weapon_subsystem(_entity: Entity, _delta: float) -> void:
+func weapon_subsystem(entity: Entity, _delta: float) -> void:
 	if Input.is_action_just_pressed('use_weapon'):
 		if GameState.active_weapon:
-			InventoryUtils.use_inventory_item(GameState.active_weapon)
+			InventoryUtils.use_inventory_item(GameState.active_weapon, entity)
 
 
 func movement_subsystem(entity: Entity, _delta: float) -> void:

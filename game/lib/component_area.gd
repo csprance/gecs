@@ -8,12 +8,27 @@ signal entity_entered(entity:Entity, parent:Entity)
 ## When an entity exits the area
 signal entity_exited(entity:Entity, parent:Entity)
 
-## What entity this hitbox belongs to
+## What entity this component area belongs to
 @export var parent: Entity
+
+## Do we need to match the query to run the actions? Defaults to false because actions can handle the query as well if needed. This makes it easier.
+@export var query_match_to_run_actions = false
 ## Actions to run when an entity enters or exits the area (that isn't the parent entering/exiting itself?)
 @export var actions: Array[ComponentAreaAction]
 
-@export_group("Parent Components")
+
+@export_group("Query")
+## This component area is triggered by entities that match all the components here
+@export var query_with_all: Array[Component] = []
+## This component area is triggered by entities that match any of the components here
+@export var query_with_any: Array[Component] = []
+## This component area is triggered by entities that match none of the components here
+@export var query_with_none: Array[Component] = []
+
+@export_group("Components")
+## Do we need to match the query to add/remove components? Default is true
+@export var query_match_for_components = true
+@export_subgroup("Parent Components")
 # What components should we add/remove to the PARENT Entity on Entering the Line of Sight
 @export_subgroup("On Enter")
 @export var parent_add_on_entered: Array[Component] = []
@@ -22,7 +37,7 @@ signal entity_exited(entity:Entity, parent:Entity)
 @export var parent_add_on_exit: Array[Component] = []
 @export var parent_remove_on_exit: Array[Component] = []
 
-@export_group("Body Components")
+@export_subgroup("Body Components")
 # What components should we add/remove to the BODY Entity on Entering the Line of Sight
 @export_subgroup("On Enter")
 @export var body_add_on_entered: Array[Component] = []
@@ -62,7 +77,7 @@ func _run_on_enter(body: Entity, body_rid: RID, body_shape_index: int, local_sha
 	parent.remove_components(parent_remove_on_entered)
 
 	for action in actions:
-		action.on_enter(parent, body, body_rid, body_shape_index, local_shape_index)
+		action._run_on_(true, parent, body, body_rid, body_shape_index, local_shape_index)
 
 func _on_area_exited(body_rid:RID, body, body_shape_index:int, local_shape_index:int) -> void:
 	# We're only interested in entities and not if it's the parent and if it passes the exit check
@@ -80,7 +95,7 @@ func _run_on_exit(body: Entity, body_rid: RID, body_shape_index: int, local_shap
 	parent.remove_components(parent_remove_on_exit)
 	
 	for action in actions:
-		action.on_exit(parent, body, body_rid, body_shape_index, local_shape_index)
+		action._run_on_(false, parent, body, body_rid, body_shape_index, local_shape_index)
 
 
 

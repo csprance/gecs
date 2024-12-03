@@ -19,12 +19,14 @@ static func get_item_quantity(item: Entity) -> int:
 ## Uses an item from the player's inventory.
 ## 
 ## 	item (Entity): The item entity to use.
-static func use_inventory_item(item: Entity):
+static func use_inventory_item(item: Entity, player: Entity):
 	var action = get_item_action(item)
 	Loggie.debug('Using Item', item)
 	action.meta['item']	= item
+	action.meta['player'] = player
 	if action:
-		action.execute()
+		# We execute the action with no entities, as the action should be able to find the entities it needs.
+		action._execute([])
 	
 	remove_inventory_item(item)
 
