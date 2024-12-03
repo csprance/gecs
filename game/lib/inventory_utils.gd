@@ -13,6 +13,8 @@ static func add_inventory_c_item(c_item: C_Item, quantity: int = 1):
 	return new_item
 
 static func get_item_quantity(item: Entity) -> int:
+	if not item:
+		return 0
 	var c_qty = item.get_component(C_Quantity) as C_Quantity
 	return c_qty.value if c_qty else 1
 

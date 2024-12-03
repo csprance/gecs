@@ -19,6 +19,10 @@ signal weapon_changed(weapon: Entity)
 
 signal item_changed(item: Entity)
 
+signal weapon_fired(weapon: Entity)
+
+signal item_used(item: Entity)
+
 
 var player : Entity:
 	get:

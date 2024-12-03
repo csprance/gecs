@@ -1,11 +1,11 @@
 [gd_scene load_steps=10 format=3 uid="uid://cudyrj1egdocg"]
 
 [ext_resource type="Script" path="res://game/entities/ui/hud/e_hud.gd" id="1_er366"]
+[ext_resource type="Script" path="res://addons/gecs/component.gd" id="2_bdqvh"]
 [ext_resource type="Script" path="res://game/components/ui/c_ui_visiblity.gd" id="2_w7auq"]
 [ext_resource type="Script" path="res://game/components/ui/c_ui_hud.gd" id="3_vut0j"]
 [ext_resource type="PackedScene" uid="uid://b6jmqgph1skge" path="res://game/entities/ui/hud/health_bars.tscn" id="4_u6j2k"]
-[ext_resource type="PackedScene" uid="uid://ces5ax6ygno3w" path="res://game/entities/ui/hud/weapon_hbar.tscn" id="5_6hv3l"]
-[ext_resource type="PackedScene" uid="uid://1arp0yea7xsb" path="res://game/entities/ui/hud/item_hbar.tscn" id="6_cyayq"]
+[ext_resource type="PackedScene" uid="uid://ces5ax6ygno3w" path="res://game/entities/ui/hud/inventory_quick_bar.tscn" id="5_6hv3l"]
 [ext_resource type="PackedScene" uid="uid://c867anjsel3yk" path="res://game/entities/ui/hud/radar.tscn" id="7_g11m7"]
 
 [sub_resource type="Resource" id="Resource_048mo"]
@@ -16,7 +16,7 @@ script = ExtResource("3_vut0j")
 
 [node name="EHud" type="Node3D"]
 script = ExtResource("1_er366")
-component_resources = Array[Resource("res://addons/gecs/component.gd")]([SubResource("Resource_048mo"), SubResource("Resource_wolta")])
+component_resources = Array[ExtResource("2_bdqvh")]([SubResource("Resource_048mo"), SubResource("Resource_wolta")])
 
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
 follow_viewport_enabled = true
@@ -63,17 +63,31 @@ text_direction = 2
 custom_minimum_size = Vector2(75, 0)
 layout_mode = 2
 
-[node name="WeaponHbar" parent="CanvasLayer/HudWrapper/TopRowMarginContainer/Top Row/WeaponWrapper" instance=ExtResource("5_6hv3l")]
+[node name="WeaponQuickBar" parent="CanvasLayer/HudWrapper/TopRowMarginContainer/Top Row/WeaponWrapper" instance=ExtResource("5_6hv3l")]
 unique_name_in_owner = true
 layout_mode = 1
+anchors_preset = 0
+anchor_right = 0.0
+anchor_bottom = 0.0
+offset_right = 64.0
+offset_bottom = 125.0
+grow_horizontal = 1
+grow_vertical = 1
 
 [node name="ItemWrapper" type="Control" parent="CanvasLayer/HudWrapper/TopRowMarginContainer/Top Row"]
 custom_minimum_size = Vector2(75, 0)
 layout_mode = 2
 
-[node name="ItemHbar" parent="CanvasLayer/HudWrapper/TopRowMarginContainer/Top Row/ItemWrapper" instance=ExtResource("6_cyayq")]
+[node name="ItemQuickBar" parent="CanvasLayer/HudWrapper/TopRowMarginContainer/Top Row/ItemWrapper" instance=ExtResource("5_6hv3l")]
 unique_name_in_owner = true
 layout_mode = 1
+anchors_preset = 0
+anchor_right = 0.0
+anchor_bottom = 0.0
+offset_right = 64.0
+offset_bottom = 118.0
+grow_horizontal = 1
+grow_vertical = 1
 
 [node name="RadarMarginContainer" type="MarginContainer" parent="CanvasLayer/HudWrapper"]
 layout_mode = 2
