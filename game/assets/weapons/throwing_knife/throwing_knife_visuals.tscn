@@ -1,0 +1,8 @@
+[gd_scene load_steps=2 format=3 uid="uid://x302jwul1y5r"]
+
+[ext_resource type="PackedScene" uid="uid://ccevdgeyyhqe6" path="res://game/assets/weapons/throwing_knife/throwing_knife_source.glb" id="1_isd3u"]
+
+[node name="ThrowingKnifeVisuals" type="Node3D"]
+
+[node name="throwing_knife_source" parent="." instance=ExtResource("1_isd3u")]
+transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, 0, 0, 0)

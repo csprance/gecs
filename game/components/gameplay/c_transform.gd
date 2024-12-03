@@ -4,6 +4,14 @@
 class_name C_Transform
 extends Component
 
-@export var position := Vector2.ZERO
-@export var rotation := 0.0
-@export var scale := Vector2.ZERO
+@export var transform := Transform3D.IDENTITY
+
+
+var position := Vector3.ZERO :
+    set(v):
+        transform.origin = v
+    get:
+        return transform.origin
+
+func _init(_trs: Transform3D = transform) -> void:
+    transform = _trs

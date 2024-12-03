@@ -7,5 +7,12 @@ repomix-output.txt
 addons/*
 !addons/gecs/
 !addons/gecs/**
+# include qt_tools because it's a dependency of game
+!addons/qt_tools/
+!addons/qt_tools/**
 
 game/bin/*
+*.spp
+
+*.painter_lock
+game/assets/characters/Ultimate Animated Character Pack - Nov 2019/*

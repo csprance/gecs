@@ -1,0 +1,1 @@
+Godot_v4.3-stable_win64.exe --doctool ./addons/gecs/docs --gdscript-docs res://addons/gecs 

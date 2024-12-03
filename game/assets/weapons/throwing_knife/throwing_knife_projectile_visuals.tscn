@@ -1,0 +1,12 @@
+[gd_scene load_steps=3 format=3 uid="uid://byydotk106tmm"]
+
+[ext_resource type="Script" path="res://game/assets/weapons/throwing_knife/throwing_knife_projectile_visuals.gd" id="1_g3tba"]
+[ext_resource type="PackedScene" uid="uid://ccevdgeyyhqe6" path="res://game/assets/weapons/throwing_knife/throwing_knife_source.glb" id="1_k6lfx"]
+
+[node name="ThrowingKnifeVisuals" type="Node3D"]
+transform = Transform3D(1, 0, 0, 0, 0.846827, -0.531868, 0, 0.531868, 0.846827, 0, 0, 0)
+script = ExtResource("1_g3tba")
+spin_speed = 8.205
+
+[node name="throwing_knife_source" parent="." instance=ExtResource("1_k6lfx")]
+transform = Transform3D(2.66588, 1.12582, -0.0816074, -0.585998, 1.20147, -2.5679, -0.964743, 2.38118, 1.33427, 0, -0.0880248, 0)

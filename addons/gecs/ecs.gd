@@ -32,8 +32,16 @@ var world: World:
 	get:
 		return world
 	set(value):
+		# bring about the end of times for this world
+		if world:
+			world.disconnect("tree_exited", _on_world_exited)
 		world = value
-		_show_debug()
+		if world:
+			world.connect("tree_exited", _on_world_exited)
+			_show_debug()
+
+func _on_world_exited() -> void:
+	world = null
 
 ## Are we in debug mode?
 var debug := false
@@ -50,5 +58,21 @@ func process(delta: float, group: String = '') -> void:
 func _show_debug():
 	if ECS.debug:
 		var debug_window_scene = preload('res://addons/gecs/ecs_debug.tscn').instantiate()
+		debug_window_scene.name = "DebugWindow"
 		add_child(debug_window_scene)
 		debug_window_scene.create_debug_window()
+
+## A Wildcard for use in relatonship queries. Indicates can be any value for a relation 
+## or a target in a Relationship Pair
+var wildcard = null
+
+## Get all components of a specific type from a list of entities
+func get_components(entities, component_type):
+	var components = []
+	for entity in entities:
+		var component = entity.components.get(component_type.resource_path, null)
+		if not component:
+			assert(component, "Entity does not have component: " + str(component_type))
+		components.append(component)
+		
+	return components

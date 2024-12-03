@@ -1,0 +1,8 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://b8ggdfx6u5du7"]
+
+[resource]
+resource_name = "metal_springs"
+albedo_color = Color(0.32549, 0.32549, 0.32549, 1)
+metallic = 1.0
+roughness = 0.5
+emission_enabled = true

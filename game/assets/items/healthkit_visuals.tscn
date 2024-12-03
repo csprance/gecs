@@ -1,0 +1,23 @@
+[gd_scene load_steps=3 format=3 uid="uid://bqkylo8gdhvtu"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_xc13p"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_uxntb"]
+albedo_color = Color(1, 0, 0, 1)
+
+[node name="MedkitVisuals" type="Node3D"]
+transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0)
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.463495, 0, 0, 0, 0.127437, 0, 0, 0, 0.320254, 0, 0.05403, 0)
+mesh = SubResource("BoxMesh_xc13p")
+
+[node name="MeshInstance3D2" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.278008, 0, 0, 0, 0.0442864, 0, 0, 0, 0.0819952, 0, 0.115926, 0)
+mesh = SubResource("BoxMesh_xc13p")
+surface_material_override/0 = SubResource("StandardMaterial3D_uxntb")
+
+[node name="MeshInstance3D3" type="MeshInstance3D" parent="."]
+transform = Transform3D(-1.21521e-08, 0, -0.0819952, 0, 0.0442864, 0, 0.278008, 0, -3.58412e-09, 0, 0.115926, 0)
+mesh = SubResource("BoxMesh_xc13p")
+surface_material_override/0 = SubResource("StandardMaterial3D_uxntb")

@@ -1,0 +1,26 @@
+[gd_scene load_steps=8 format=3 uid="uid://b7rnsgrh44l6m"]
+
+[ext_resource type="Script" path="res://game/lib/autoloads/constants.gd" id="1_efvrk"]
+[ext_resource type="PackedScene" uid="uid://dh8sobya08mac" path="res://game/entities/gameplay/e_projectile.tscn" id="2_ltewv"]
+[ext_resource type="Script" path="res://game/lib/level_resource.gd" id="3_11r4d"]
+[ext_resource type="PackedScene" uid="uid://c8ors4ai4l4if" path="res://game/assets/worlds/test/world_test.tscn" id="4_jtb2f"]
+[ext_resource type="PackedScene" uid="uid://dmwx5l6qp3hgj" path="res://game/assets/worlds/level_one/world_level_one.tscn" id="5_mxcaw"]
+
+[sub_resource type="Resource" id="Resource_4wqba"]
+script = ExtResource("3_11r4d")
+level_name = "Test Level"
+level_description = "A Scary Test Level"
+packed_scene = ExtResource("4_jtb2f")
+password = "test"
+
+[sub_resource type="Resource" id="Resource_yr8fu"]
+script = ExtResource("3_11r4d")
+level_name = "Rescue The Neighbors in: Level 1:"
+level_description = "Zombie Panic"
+packed_scene = ExtResource("5_mxcaw")
+password = ""
+
+[node name="Constants" type="Node"]
+script = ExtResource("1_efvrk")
+projectile_scene = ExtResource("2_ltewv")
+levels = Array[ExtResource("3_11r4d")]([SubResource("Resource_4wqba"), SubResource("Resource_yr8fu")])

@@ -19,6 +19,10 @@ signal system_removed(system: System)
 signal component_added(entity: Entity, component: Variant)
 ## Emitted when a component is removed from an entity
 signal component_removed(entity: Entity, component: Variant)
+## Emitted when a relationship is added to an entity
+signal relationship_added(entity: Entity, relationship: Relationship)
+## Emitted when a relationship is removed from an entity
+signal relationship_removed(entity: Entity, relationship: Relationship)
 
 ## Where are all the [Entity] nodes placed in the scene tree?
 @export var entity_nodes_root: NodePath
@@ -37,26 +41,50 @@ var component_entity_index: Dictionary = {}
 var query: QueryBuilder:
 	get:
 		return QueryBuilder.new(self)
-
-var worldLogger =  GECSLogger.new().domain('World')
+## Index for relationships to entities (Optional for optimization)
+var relationship_entity_index: Dictionary = {}
+## Index for reverse relationships (target to source entities)
+var reverse_relationship_index: Dictionary = {}
+## Logger for the world to only log to a specific domain
+var _worldLogger =  GECSLogger.new().domain('World')
 
 ## Called when the World node is ready.[br]
-## Adds [Entity]s and [System]s from the scene tree to the [World].
 func _ready() -> void:
+	_initialize()
+
+func _make_nodes_root(name: String) -> Node:
+	var node = Node.new()
+	node.name = name
+	add_child(node)
+	return node
+	
+## Adds [Entity]s and [System]s from the scene tree to the [World].[br]
+## Called when the World node is ready.
+func _initialize():
+	# if no entities/systems root node is set create them and use them. This keeps things tidy for debugging
+	entity_nodes_root = _make_nodes_root('Entities').get_path() if not entity_nodes_root else entity_nodes_root
+	system_nodes_root = _make_nodes_root('Systems').get_path() if not system_nodes_root else system_nodes_root
+
 	# Add entities from the scene tree
 	var _entities = find_children('*', "Entity") as Array[Entity]
 	add_entities(_entities)
-	worldLogger.debug('_ready Added Entities from Scene Tree: ', _entities)
+	_worldLogger.debug('_initialize Added Entities from Scene Tree: ', _entities)
 
 	# Add systems from scene tree
 	var _systems  = find_children('*', "System") as Array[System]
 	add_systems(_systems)
-	worldLogger.debug('_ready Added Systems from Scene Tree: ', _systems)
+	_worldLogger.debug('_initialize Added Systems from Scene Tree: ', _systems)
+
+	# Connect to entity relationship signals
+	for entity in entities:
+		entity.relationship_added.connect(_on_entity_relationship_added)
+		entity.relationship_removed.connect(_on_entity_relationship_removed)
 
 ## Called every frame by the [method _ECS.process] to process [System]s.[br]
 ## [param delta] The time elapsed since the last frame.
 ## [param group] The string for the group we should run. If empty runs all
 func process(delta: float, group: String='' ) -> void:
+	# If no group specific in the group, run all systems and process was called run all system
 	if group == '':
 		for system in systems:
 			if system.active:
@@ -81,7 +109,7 @@ func add_entity(entity: Entity, components = null) -> void:
 	if not entity.is_inside_tree():
 		get_node(entity_nodes_root).add_child(entity)
 	# Update index
-	worldLogger.debug('add_entity Adding Entity to World: ', entity)
+	_worldLogger.debug('add_entity Adding Entity to World: ', entity)
 	entities.append(entity)
 	entity_added.emit(entity)
 	for component_key in entity.components.keys():
@@ -112,7 +140,7 @@ func add_entities(_entities: Array, components = null):
 func add_system(system: System) -> void:
 	if not system.is_inside_tree():
 		get_node(system_nodes_root).add_child(system)
-	worldLogger.trace('add_system Adding System: ', system)
+	_worldLogger.trace('add_system Adding System: ', system)
 	systems.append(system)
 	if not systems_by_group.has(system.group):
 		systems_by_group[system.group] = []
@@ -135,14 +163,14 @@ func add_systems(_systems: Array):
 ## [b]Example:[/b]
 ##      [codeblock]world.remove_entity(player_entity)[/codeblock]
 func remove_entity(entity) -> void:
-	worldLogger.debug('remove_entity Removing Entity: ', entity)
-	entities.erase(entity)
+	entity = entity as Entity
+	entity_removed.emit(entity)
+	_worldLogger.debug('remove_entity Removing Entity: ', entity)
+	entities.erase(entity) # FIXME: This doesn't always work for some reason?
 	# Update index
 	for component_key in entity.components.keys():
 		_remove_entity_from_index(entity, component_key)
-
-	entity = entity as Entity
-	entity_removed.emit(entity)
+	
 	entity.component_added.disconnect(_on_entity_component_added)
 	entity.component_removed.disconnect(_on_entity_component_removed)
 	entity.on_destroy()
@@ -153,12 +181,25 @@ func remove_entity(entity) -> void:
 ## [b]Example:[/b]
 ##      [codeblock]world.remove_system(movement_system)[/codeblock]
 func remove_system(system) -> void:
-	worldLogger.debug('remove_system Removing System: ', system)
+	_worldLogger.debug('remove_system Removing System: ', system)
 	systems.erase(system)
 	systems_by_group[system.group].erase(system)
 	system_removed.emit(system)
 	# Update index
 	system.queue_free()
+
+## Removes all [Entity]s and [System]s from the world.
+## Optionally frees the world node by default.
+func purge(should_free=true) -> void:
+	_worldLogger.debug('Purging Entities', entities)
+	for entity in entities.duplicate():
+		remove_entity(entity)
+	_worldLogger.debug('Purging Systems', systems)
+	for system in systems.duplicate():
+		remove_system(system)
+	# remove itself
+	if should_free:
+		queue_free()
 
 ## Maps a [Component] to its [member Resource.resource_path].[br]
 ## [param x] The [Component] to map.[br]
@@ -180,7 +221,7 @@ func map_resource_path(x) -> String:
 func _query(all_components = [], any_components = [], exclude_components = []) -> Array:
 	# Early return if no components specified
 	if all_components.is_empty() and any_components.is_empty() and exclude_components.is_empty():
-		return []
+		return entities
 	
 	# Convert all component arrays to resource paths
 	var _all := all_components.map(map_resource_path)
@@ -277,6 +318,7 @@ func _remove_entity_from_index(entity, component_key: String) -> void:
 func _on_entity_component_added(entity, component: Variant) -> void:
 	# We have to get the script here then resource because we're using an instantiated resource
 	_add_entity_to_index(entity, component.get_script().resource_path)
+	# Emit Signal
 	component_added.emit(entity, component)
 
 ## [signal Entity.component_removed] Callback when a component is removed from an entity.[br]
@@ -285,4 +327,34 @@ func _on_entity_component_added(entity, component: Variant) -> void:
 func _on_entity_component_removed(entity, component: Variant) -> void:
 	 # We just use resource path here because we pass in a component type
 	_remove_entity_from_index(entity, component.resource_path)
+	# Emit Signal
 	component_removed.emit(entity, component)
+
+## (Optional) Update index when a relationship is added.
+func _on_entity_relationship_added(entity: Entity, relationship: Relationship) -> void:
+	var key = relationship.relation.resource_path
+	if not relationship_entity_index.has(key):
+		relationship_entity_index[key] = []
+	relationship_entity_index[key].append(entity)
+	
+	# Index the reverse relationship
+	if relationship.target is Entity:
+		var rev_key = "reverse_" + key
+		if not reverse_relationship_index.has(rev_key):
+			reverse_relationship_index[rev_key] = []
+		reverse_relationship_index[rev_key].append(relationship.target)
+	# Emit Signal
+	relationship_added.emit(entity, relationship)
+
+## (Optional) Update index when a relationship is removed.
+func _on_entity_relationship_removed(entity: Entity, relationship: Relationship) -> void:
+	var key = relationship.relation.resource_path
+	if relationship_entity_index.has(key):
+		relationship_entity_index[key].erase(entity)
+		
+	if relationship.target is Entity:
+		var rev_key = "reverse_" + key
+		if reverse_relationship_index.has(rev_key):
+			reverse_relationship_index[rev_key].erase(relationship.target)
+	# Emit Signal
+	relationship_removed.emit(entity, relationship)

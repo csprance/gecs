@@ -7,8 +7,13 @@ func _ready() -> void:
 	ECS.world = world
 
 func _process(delta):
-	ECS.process(delta, 'gameplay')
-	ECS.process(delta, 'ui')
+	ECS.process(delta, 'input')
+	if not GameState.paused:
+		ECS.process(delta, 'gameplay')
+		ECS.process(delta, 'ui')
 
 func _physics_process(delta: float) -> void:
-	ECS.process(delta, 'physics')
+	if not GameState.paused:
+		ECS.process(delta, 'physics')
+	
+	ECS.process(delta, 'debug')

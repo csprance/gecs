@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://cnyuhav7aqgyj"
+path="res://.godot/imported/One Man Symphony - Reflective District Vol- 2 (Free) - 02 Ambiance 05.mp3-ad89029a43f8accc0e0af28dcd51f0ae.mp3str"
+
+[deps]
+
+source_file="res://game/assets/music/One Man Symphony - Reflective District Vol- 2 (Free)/One Man Symphony - Reflective District Vol- 2 (Free) - 02 Ambiance 05.mp3"
+dest_files=["res://.godot/imported/One Man Symphony - Reflective District Vol- 2 (Free) - 02 Ambiance 05.mp3-ad89029a43f8accc0e0af28dcd51f0ae.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

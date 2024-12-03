@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://rtcv1v4adif4"
+path="res://.godot/imported/One Man Symphony - Undauntable (Free) - 02 Counter-Attack.mp3-9d2f4ebe2ce090fdc62e67b8009590a4.mp3str"
+
+[deps]
+
+source_file="res://game/assets/music/One Man Symphony - Undauntable (Free)/One Man Symphony - Undauntable (Free) - 02 Counter-Attack.mp3"
+dest_files=["res://.godot/imported/One Man Symphony - Undauntable (Free) - 02 Counter-Attack.mp3-9d2f4ebe2ce090fdc62e67b8009590a4.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4
