@@ -138,7 +138,8 @@ func remove_relationships(_relationships: Array):
 ## Retrieves a specific [Relationship] from the entity.
 ## [param relationship] The [Relationship] to retrieve.
 ## [param return] - The FIRST matching [Relationship] if it exists, otherwise `null`.
-func get_relationship(relationship: Relationship) -> Relationship:
+func get_relationship(relationship: Relationship, single=true):
+	var results = []
 	var to_remove = []
 	for rel in relationships:
 		# Check if the target is still valid
@@ -146,12 +147,15 @@ func get_relationship(relationship: Relationship) -> Relationship:
 			to_remove.append(rel)
 			continue
 		if rel.matches(relationship):
-			return rel
+			if single:
+				return rel
+			results.append(rel)
 	# Remove invalid relationships
 	for rel in to_remove:
 		relationships.erase(rel)
 		relationship_removed.emit(self, rel)
-	return null
+	
+	return null if results.is_empty() else results
 
 
 ## Checks if the entity has a specific relationship.[br]
