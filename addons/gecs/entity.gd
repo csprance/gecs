@@ -137,7 +137,7 @@ func remove_relationships(_relationships: Array):
 
 ## Retrieves a specific [Relationship] from the entity.
 ## [param relationship] The [Relationship] to retrieve.
-## [param return] - The matching [Relationship] if it exists, otherwise `null`.
+## [param return] - The FIRST matching [Relationship] if it exists, otherwise `null`.
 func get_relationship(relationship: Relationship) -> Relationship:
 	var to_remove = []
 	for rel in relationships:
