@@ -9,7 +9,7 @@
 [ext_resource type="Script" path="res://game/components/gameplay/c_health.gd" id="4_ln4rp"]
 [ext_resource type="Script" path="res://game/actions/component_area_actions/component_area_action.gd" id="5_160ya"]
 [ext_resource type="Script" path="res://game/components/debug/c_debug_label.gd" id="5_nvb7j"]
-[ext_resource type="Script" path="res://game/actions/component_area_actions/kill_or_save_in_area_action.gd" id="10_d8660"]
+[ext_resource type="Script" path="res://game/actions/component_area_actions/aa_kill_or_save.gd" id="10_d8660"]
 
 [sub_resource type="Resource" id="Resource_l81d8"]
 script = ExtResource("3_pladw")

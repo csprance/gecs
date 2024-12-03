@@ -1,3 +1,4 @@
+## ComponentAreaAction are like Actions but they are meant to be used with ComponentArea. They are meant to be used with the on_enter and on_exit functions.
 class_name ComponentAreaAction
 extends Action
 

@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="StaticQuery" load_steps=4 format=3 uid="uid://w4kx6jplclpm"]
+
+[ext_resource type="Script" path="res://game/lib/static_queries/static_query.gd" id="1_di85x"]
+[ext_resource type="Script" path="res://addons/gecs/component.gd" id="2_pqrqt"]
+[ext_resource type="Script" path="res://addons/gecs/relationship.gd" id="3_hx7qk"]
+
+[resource]
+script = ExtResource("1_di85x")
+with_all = Array[ExtResource("2_pqrqt")]([])
+with_any = Array[ExtResource("2_pqrqt")]([])
+with_none = Array[ExtResource("2_pqrqt")]([])
+with_relationship = Array[ExtResource("3_hx7qk")]([])
+without_relationship = Array[ExtResource("3_hx7qk")]([])

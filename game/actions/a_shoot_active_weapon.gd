@@ -1,6 +1,5 @@
-class_name ShootWaterPistolAction
+class_name ShootActiveWeaponAction
 extends Action
-
 
 
 func execute(_e) -> void:
@@ -14,5 +13,3 @@ func execute(_e) -> void:
         # Retrieve the projectile component from the active weapon.
     var c_projectile = WeaponUtils.get_projectile_component(active_weapon)
     WeaponUtils.instantiate_projectile(c_projectile, projectile_transform)
-
-# Helper functions

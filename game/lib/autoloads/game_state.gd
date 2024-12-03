@@ -27,6 +27,12 @@ var player : Entity:
 			return players[0]
 		return
 
+var player2 : Entity:
+	get:
+		var players =  Queries.is_players().execute()
+		if players.size() > 1:
+			return players[1]
+		return
 
 var paused :bool = false:
 	get:

@@ -22,6 +22,8 @@ func query() -> QueryBuilder:
 func execute(entities: Array) -> void:
     Loggie.warn('Default Action executed. You Should Probably Replace this!!')
 
+
 ## Call this if you're consuming the action
 func _execute(entities: Array) -> void:
+    Loggie.info('Executing Action: ' + meta.name, '\n', 'Description: ' + meta.description)
     execute(query().matches(entities)) 
