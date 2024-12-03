@@ -18,3 +18,7 @@ extends Node
 
 @export_category("Colors")
 @export var color_black: Color = Color(0, 0, 0, 1)
+
+
+@export_category("Levels")
+@export var levels: Array[LevelResource]
