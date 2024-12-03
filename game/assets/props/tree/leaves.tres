@@ -1,7 +1,0 @@
-[gd_resource type="StandardMaterial3D" format=3 uid="uid://r8awn5jbh6hq"]
-
-[resource]
-resource_name = "leaves"
-albedo_color = Color(0.52, 0.74, 0.35, 1)
-metallic = 1.0
-emission_enabled = true

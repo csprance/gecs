@@ -1,7 +1,0 @@
-[gd_resource type="StandardMaterial3D" format=3 uid="uid://dgr6fekkkcn81"]
-
-[resource]
-resource_name = "house_walls"
-albedo_color = Color(0.52549, 0.529412, 0.529412, 1)
-metallic = 1.0
-emission_enabled = true
