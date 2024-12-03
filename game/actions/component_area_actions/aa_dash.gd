@@ -16,6 +16,7 @@ func on_enter(parent: Entity, target: Entity, _body_rid: RID, _body_shape_index:
 
 # Stop dashing towards 
 func on_exit(parent: Entity, body: Entity, _body_rid: RID, _body_shape_index: int, _local_shape_index: int) -> void:
-	Loggie.debug('Stopped Dashing')
+	pass
+	# Loggie.debug('Stopped Dashing')
 	# parent.remove_component(C_Dashing)
 

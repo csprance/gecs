@@ -81,9 +81,9 @@ meta = {
 
 [sub_resource type="Resource" id="Resource_w7x8h"]
 script = ExtResource("16_36j7f")
-dash_speed = 25.0
-dash_duration = 1.0
-dash_cooldown = 15.0
+dash_speed = 5.0
+dash_duration = 3.0
+dash_cooldown = 8.0
 meta = {
 "description": "Dash at the player really fast when you enter los and then cooldown for 15 seconds.",
 "name": "Evil Doll Dash"

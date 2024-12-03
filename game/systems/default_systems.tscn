@@ -1,8 +1,9 @@
-[gd_scene load_steps=29 format=3 uid="uid://ex2wx8kwwjjx"]
+[gd_scene load_steps=30 format=3 uid="uid://ex2wx8kwwjjx"]
 
 [ext_resource type="Script" path="res://game/systems/gameplay/enemy_behaviors/s_zombie_behavior.gd" id="1_a57uo"]
 [ext_resource type="Script" path="res://game/systems/input/s_player_controls.gd" id="1_e5u7d"]
 [ext_resource type="Script" path="res://game/systems/gameplay/s_commands.gd" id="1_o3q20"]
+[ext_resource type="Script" path="res://game/systems/default_systems.gd" id="1_vjpkg"]
 [ext_resource type="Script" path="res://game/systems/gameplay/s_aim_point.gd" id="1_wvq8n"]
 [ext_resource type="Script" path="res://game/systems/gameplay/s_events.gd" id="2_byjij"]
 [ext_resource type="Script" path="res://game/systems/input/s_trampoline_controls.gd" id="2_fwg0y"]
@@ -30,6 +31,7 @@
 [ext_resource type="Script" path="res://game/systems/debug/s_debug_camera.gd" id="21_srdyu"]
 
 [node name="Systems" type="Node"]
+script = ExtResource("1_vjpkg")
 
 [node name="input" type="Node" parent="."]
 
