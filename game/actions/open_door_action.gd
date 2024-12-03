@@ -1,7 +1,7 @@
 class_name OpenDoorAction
 extends Action
 
-func execute() -> void:
+func execute(_e) -> void:
     # Do we have enough keys?
     if GameState.active_item_quantity < 1:
         Loggie.error('Not enough keys to open door')

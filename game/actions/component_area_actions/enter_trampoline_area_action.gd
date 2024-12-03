@@ -1,6 +1,8 @@
 class_name EnterTrampolineAreaAction
 extends ComponentAreaAction
 
+func query() -> QueryBuilder:
+	return ECS.world.query.with_any([C_Player])
 
 # if it's the player let them on the trampoline
 func on_enter(trampoline: Entity, player: Entity, _body_rid: RID, _body_shape_index: int, _local_shape_index: int) -> void:

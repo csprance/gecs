@@ -3,7 +3,7 @@ extends Action
 
 
 
-func execute() -> void:
+func execute(_e) -> void:
     var active_weapon = GameState.active_weapon
     var player = GameState.player
     if not active_weapon or not player:
