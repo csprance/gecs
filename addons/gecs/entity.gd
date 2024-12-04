@@ -157,6 +157,11 @@ func get_relationship(relationship: Relationship, single=true):
 	
 	return null if results.is_empty() else results
 
+## Retrieves [Relationship]s from the entity.
+## [param relationship] The [Relationship]s to retrieve.
+## [param return] - All matching [Relationship]s if it exists, otherwise `null`.
+func get_relationships(relationship: Relationship):
+	return get_relationship(relationship, false)
 
 ## Checks if the entity has a specific relationship.[br]
 ## [param relationship] The [Relationship] to check for.
