@@ -71,10 +71,10 @@ func _on_area_entered(body_rid:RID, body, body_shape_index:int, local_shape_inde
 func _run_on_enter(body: Entity, body_rid: RID, body_shape_index: int, local_shape_index: int) -> void:
 	# Add components to the body and parent and emit the signal
 	entity_entered.emit(body, parent)
-	body.add_components(body_add_on_entered)
-	body.remove_components(body_remove_on_entered)
-	parent.add_components(parent_add_on_entered)
-	parent.remove_components(parent_remove_on_entered)
+	body.add_components(body_add_on_entered.map(func(x): return x.duplicate()))
+	body.remove_components(body_remove_on_entered.map(func(x): return x.get_script()))
+	parent.add_components(parent_add_on_entered.map(func(x): return x.duplicate()))
+	parent.remove_components(parent_remove_on_entered.map(func(x): return x.get_script()))
 
 	for action in actions:
 		action._run_on_(true, parent, body, body_rid, body_shape_index, local_shape_index)
@@ -89,13 +89,10 @@ func _on_area_exited(body_rid:RID, body, body_shape_index:int, local_shape_index
 
 func _run_on_exit(body: Entity, body_rid: RID, body_shape_index: int, local_shape_index: int) -> void:
 	entity_exited.emit(body, parent)
-	body.add_components(body_add_on_exit)
-	body.remove_components(body_remove_on_exit)
-	parent.add_components(parent_add_on_exit)
-	parent.remove_components(parent_remove_on_exit)
+	body.add_components(body_add_on_exit.map(func(x): return x.duplicate()))
+	body.remove_components(body_remove_on_exit.map(func(x): return x.get_script()))
+	parent.add_components(parent_add_on_exit.map(func(x): return x.duplicate()))
+	parent.remove_components(parent_remove_on_exit.map(func(x): return x.get_script()))
 	
 	for action in actions:
 		action._run_on_(false, parent, body, body_rid, body_shape_index, local_shape_index)
-
-
-
