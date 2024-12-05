@@ -17,6 +17,7 @@ func process(entity: Entity, delta: float) -> void:
     if c_play_animation.time >= 1.0:
         c_play_animation.finished = true
         c_play_animation.time = 0.0
-        c_play_animation.callback.call()
+        if c_play_animation.callback:
+            c_play_animation.callback.call()
         if not c_play_animation.loop:
             entity.remove_component(C_PlayAnimation)

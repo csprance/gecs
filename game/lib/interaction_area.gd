@@ -13,7 +13,7 @@ func _ready():
     body_shape_exited.connect(_on_area_exited)
     
 
-func _on_area_entered(_body_id: int, body: Object, _body_shape: int, _area_shape: int) -> void:
+func _on_area_entered(_body_id: RID, body, _body_shape: int, _area_shape: int) -> void:
     if body is Entity:
         var query: QueryBuilder = ECS.world.query
         # Combine all static queries
@@ -23,5 +23,5 @@ func _on_area_entered(_body_id: int, body: Object, _body_shape: int, _area_shape
         if not query.matches([body]).is_empty():
             body.add_relationship(Relationship.new(C_CanInteractWith.new(), parent))
 
-func _on_area_exited(_body_id: int, body: Object, _body_shape: int, _area_shape: int) -> void:
+func _on_area_exited(_body_id: RID, body, _body_shape: int, _area_shape: int) -> void:
     body.remove_relationship(Relationship.new(C_CanInteractWith.new(), parent))

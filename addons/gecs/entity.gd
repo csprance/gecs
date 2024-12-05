@@ -160,7 +160,7 @@ func get_relationship(relationship: Relationship, single=true):
 ## Retrieves [Relationship]s from the entity.
 ## [param relationship] The [Relationship]s to retrieve.
 ## [param return] - All matching [Relationship]s if it exists, otherwise `null`.
-func get_relationships(relationship: Relationship) -> Array[Relationship]:
+func get_relationships(relationship: Relationship) -> Array:
 	return get_relationship(relationship, false)
 
 ## Checks if the entity has a specific relationship.[br]

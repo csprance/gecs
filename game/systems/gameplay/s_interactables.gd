@@ -6,7 +6,9 @@ func query() -> QueryBuilder:
     return q.with_all([C_Interactable]).with_relationship([Relationship.new(C_BeingInteractedWith.new(), ECS.wildcard)])
 
 func process(entity: Entity, delta: float) -> void:
-    var c_interactable = entity.get(C_Interactable) as C_Interactable
+    var c_interactable = entity.get_component(C_Interactable) as C_Interactable
     var r_interactors = entity.get_relationships(Relationship.new(C_BeingInteractedWith.new(), ECS.wildcard))
     # Call the interaction with all the entities interacting with it.
-    c_interactable.action.run.call([r_interactors.map(func(x): return x.target)])
+    c_interactable.action.run_interaction.call(entity, r_interactors.map(func(x): return x.target))
+    # Remove the being interacted with relationship
+    entity.remove_relationships(r_interactors)

@@ -17,6 +17,7 @@ func process(interactor: Entity, delta: float) -> void:
         var r_interactables = interactor.get_relationships(Relationship.new(C_CanInteractWith.new(), ECS.wildcard))
         for r in r_interactables:
             var interactable = r.target
+            # FIXME: This isn't being added to the interactable's relationships
             # Add the being interacted with relationship to the interactable with the interactor
             interactable.add_relationship(Relationship.new(C_BeingInteractedWith.new(), interactor))
             # This kicks it over to the interactables system to run the interaction

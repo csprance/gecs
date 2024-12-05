@@ -67,7 +67,7 @@ script = ExtResource("10_bif8j")
 height = 3.22603
 radius = 3.83196
 
-[node name="EDoor" type="Node"]
+[node name="EDoor" type="Node3D"]
 script = ExtResource("1_0jg53")
 component_resources = Array[ExtResource("2_yxdgp")]([SubResource("Resource_bv3gi"), SubResource("Resource_flfc2"), SubResource("Resource_fr1y0")])
 

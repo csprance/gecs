@@ -1,6 +1,7 @@
 [gd_scene load_steps=38 format=3 uid="uid://c8ors4ai4l4if"]
 
 [ext_resource type="Script" path="res://addons/gecs/world.gd" id="1_dnklw"]
+[ext_resource type="PackedScene" uid="uid://bg6jeo350r12f" path="res://game/entities/gameplay/e_door.tscn" id="2_els58"]
 [ext_resource type="Script" path="res://addons/gecs/entity.gd" id="2_i8cp4"]
 [ext_resource type="Script" path="res://game/lib/component_area.gd" id="3_14nx3"]
 [ext_resource type="PackedScene" uid="uid://o00dv6xya8el" path="res://game/entities/gameplay/e_pickup.tscn" id="3_b6amu"]
@@ -18,7 +19,6 @@
 [ext_resource type="Script" path="res://addons/gecs/component.gd" id="13_pvfgj"]
 [ext_resource type="Script" path="res://game/components/gameplay/c_transform.gd" id="14_1o3fy"]
 [ext_resource type="Script" path="res://game/components/gameplay/c_health.gd" id="15_j7s5o"]
-[ext_resource type="PackedScene" uid="uid://dx7av6n5xik2f" path="res://game/assets/props/doors/door_01_a.gltf" id="15_vvmgj"]
 [ext_resource type="PackedScene" uid="uid://dmehwuect8hlf" path="res://game/assets/props/searchables/cabinet_01_a.gltf" id="16_jyyhi"]
 [ext_resource type="Script" path="res://game/components/debug/c_debug_label.gd" id="16_pgbbi"]
 [ext_resource type="PackedScene" uid="uid://csxwta28e2lxv" path="res://game/assets/props/gravestone/gravestone.gltf" id="17_7ar8e"]
@@ -74,6 +74,9 @@ system_nodes_root = NodePath("DefaultSystems")
 
 [node name="Entities" type="Node" parent="."]
 
+[node name="EDoor" parent="Entities" instance=ExtResource("2_els58")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15.4196, 0, 0.120034)
+
 [node name="Entity" type="Node" parent="Entities"]
 script = ExtResource("2_i8cp4")
 
@@ -109,7 +112,7 @@ weapon_resource = ExtResource("6_vtm68")
 quantity = 100
 
 [node name="EPlayer" parent="Entities" instance=ExtResource("7_4pqio")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.1498, -3.8147e-06, -1.91343)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.57766, -3.8147e-06, -2.50553)
 
 [node name="EAimPoint" parent="Entities" instance=ExtResource("8_ib406")]
 
@@ -160,12 +163,6 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -28.1972, -9.53674e-07, -10.6
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="Props"]
 transform = Transform3D(0.15095, 0.748929, -0.645228, 0, 0.652707, 0.75761, 0.988541, -0.114361, 0.0985262, -0.643284, 5.4899, 3.87359)
-
-[node name="door_01_a2" parent="Props" instance=ExtResource("15_vvmgj")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.95644, -0.0292895, 0.260296)
-
-[node name="door_01_a3" parent="Props" instance=ExtResource("15_vvmgj")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15.5589, -0.0292914, 0.127659)
 
 [node name="cabinet_01_a2" parent="Props" instance=ExtResource("16_jyyhi")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11.2996, -4.76837e-07, -5.20902)

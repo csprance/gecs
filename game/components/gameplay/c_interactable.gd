@@ -3,6 +3,6 @@
 class_name C_Interactable
 extends Component
 
-@export var action: Action
+@export var action: Interaction
 
 @export var input_action: String
