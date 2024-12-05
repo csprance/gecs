@@ -1,4 +1,4 @@
-[gd_scene load_steps=30 format=3 uid="uid://ex2wx8kwwjjx"]
+[gd_scene load_steps=33 format=3 uid="uid://ex2wx8kwwjjx"]
 
 [ext_resource type="Script" path="res://game/systems/gameplay/enemy_behaviors/s_zombie_behavior.gd" id="1_a57uo"]
 [ext_resource type="Script" path="res://game/systems/input/s_player_controls.gd" id="1_e5u7d"]
@@ -28,7 +28,10 @@
 [ext_resource type="PackedScene" uid="uid://82d66uq2w35y" path="res://game/lib/debug_label.tscn" id="18_c8vbw"]
 [ext_resource type="Script" path="res://game/systems/physics/s_gravity.gd" id="18_ymlgq"]
 [ext_resource type="Script" path="res://game/systems/debug/s_debug_look_at.gd" id="19_ntm2m"]
+[ext_resource type="Script" path="res://game/systems/gameplay/s_animation_player.gd" id="20_a4qa2"]
+[ext_resource type="Script" path="res://game/systems/gameplay/s_interaction.gd" id="21_shyms"]
 [ext_resource type="Script" path="res://game/systems/debug/s_debug_camera.gd" id="21_srdyu"]
+[ext_resource type="Script" path="res://game/systems/gameplay/s_interactables.gd" id="22_ck7qi"]
 
 [node name="Systems" type="Node"]
 script = ExtResource("1_vjpkg")
@@ -98,12 +101,24 @@ group = "gameplay"
 script = ExtResource("12_hr240")
 group = "gameplay"
 
-[node name="PendingDeleteSystem" type="Node" parent="gameplay"]
-script = ExtResource("9_bykvn")
-group = "gameplay"
-
 [node name="DashingSystem" type="Node" parent="gameplay"]
 script = ExtResource("2_tk2t4")
+group = "gameplay"
+
+[node name="AnimationPlayerSystem" type="Node" parent="gameplay"]
+script = ExtResource("20_a4qa2")
+group = "gameplay"
+
+[node name="InteractionSystem" type="Node" parent="gameplay"]
+script = ExtResource("21_shyms")
+group = "gameplay"
+
+[node name="InteractablesSystem" type="Node" parent="gameplay"]
+script = ExtResource("22_ck7qi")
+group = "gameplay"
+
+[node name="PendingDeleteSystem" type="Node" parent="gameplay"]
+script = ExtResource("9_bykvn")
 group = "gameplay"
 
 [node name="physics" type="Node" parent="."]

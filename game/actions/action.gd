@@ -18,12 +18,14 @@ func query() -> QueryBuilder:
     return ECS.world.query
 
 
-## Always Override this with your own 
+## Always Override this with your own. This is what the action does or when it's run what does it execute
 func execute(entities: Array) -> void:
     Loggie.warn('Default Action executed. You Should Probably Replace this!!')
 
 
-## Call this if you're consuming the action
-func _execute(entities: Array) -> void:
-    Loggie.info('Executing Action: ' + meta.name, '\n', 'Description: ' + meta.description)
+## Call this if you're running the action from somewhere
+func run(entities: Array = [], _meta=null) -> void:
+    if _meta:
+        meta.assign(_meta)
+    Loggie.info('Running Action: ', meta)
     execute(query().matches(entities)) 

@@ -24,11 +24,9 @@ static func get_item_quantity(item: Entity) -> int:
 static func use_inventory_item(item: Entity, player: Entity):
 	var action = get_item_action(item)
 	Loggie.debug('Using Item', item)
-	action.meta['item']	= item
-	action.meta['player'] = player
 	if action:
 		# We execute the action with no entities, as the action should be able to find the entities it needs.
-		action._execute([])
+		action.run([], {'item': item, 'player': player, 'from': 'InventoryUtils.use_inventory_item'})
 	
 	remove_inventory_item(item)
 

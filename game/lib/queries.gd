@@ -41,7 +41,7 @@ static func active_items():
 
 ## This is a list of all the Status Effect type components
 static func is_status_effect():
-	return ECS.world.query.with_all([C_Fatigued, C_Frozen])
+	return ECS.world.query.with_any([C_Fatigued, C_Frozen])
 
 static func combine(a: QueryBuilder, b: QueryBuilder):
 	return a.combine(b)

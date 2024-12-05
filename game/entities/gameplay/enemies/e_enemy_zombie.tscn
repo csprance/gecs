@@ -37,8 +37,7 @@ current = 1
 
 [sub_resource type="Resource" id="Resource_05cb1"]
 script = ExtResource("5_aa25d")
-direction = Vector3(0, 0, 0)
-speed = 0.0
+velocity = Vector3(0, 0, 0)
 
 [sub_resource type="Resource" id="Resource_6kqax"]
 script = ExtResource("6_7uygt")

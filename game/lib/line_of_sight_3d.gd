@@ -142,5 +142,3 @@ func _update_collision_shape() -> void:
 	
 	# Update collision shape
 	collision_shape_3d.shape = shape
-
-
