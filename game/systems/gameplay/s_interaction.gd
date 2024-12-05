@@ -22,6 +22,7 @@ func process(interactor: Entity, delta: float) -> void:
             # This kicks it over to the interactables system to run the interaction
             # remove the can interact with relationship
             interactor.remove_relationship(r)
+            # specify we're interacting with the interactable
             interactor.add_component(C_Interacting.new())
     
     

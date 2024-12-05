@@ -1,8 +1,9 @@
 class_name InteractionArea
 extends Area3D
 
+## The parent entity of the interaction area
 @export var parent: Entity
-
+## The static queries that the interaction area will use to check if an entity can interact with it
 @export var can_interact_query: Array[StaticQuery]
 
 
@@ -12,7 +13,7 @@ func _ready():
     body_shape_exited.connect(_on_area_exited)
     
 
-func _on_area_entered(body_id: int, body: Object, body_shape: int, area_shape: int) -> void:
+func _on_area_entered(_body_id: int, body: Object, _body_shape: int, _area_shape: int) -> void:
     if body is Entity:
         var query: QueryBuilder = ECS.world.query
         # Combine all static queries
@@ -22,5 +23,5 @@ func _on_area_entered(body_id: int, body: Object, body_shape: int, area_shape: i
         if not query.matches([body]).is_empty():
             body.add_relationship(Relationship.new(C_CanInteractWith.new(), parent))
 
-func _on_area_exited(body_id: int, body: Object, body_shape: int, area_shape: int) -> void:
+func _on_area_exited(_body_id: int, body: Object, _body_shape: int, _area_shape: int) -> void:
     body.remove_relationship(Relationship.new(C_CanInteractWith.new(), parent))
