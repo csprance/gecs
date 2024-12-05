@@ -229,6 +229,9 @@ func _matches_component_query(component: Component, query: Dictionary) -> bool:
 ## [param entities] Array of entities to filter
 ## [param returns] Array of entities that match the query criteria
 func matches(entities: Array) -> Array:
+	# if the query is empty all entities match
+	if is_empty():
+		return entities
 	var result = []
 	
 	for entity in entities:
@@ -289,3 +292,10 @@ func combine(other: QueryBuilder) -> QueryBuilder:
 
 func as_array() -> Array:
 	return [_all_components, _any_components, _exclude_components, _relationships, _exclude_relationships]
+
+func is_empty() -> bool:
+	return _all_components.is_empty() and _any_components.is_empty() and _exclude_components.is_empty() and _relationships.is_empty() and _exclude_relationships.is_empty()
+
+
+func compile(query: String) -> QueryBuilder:
+	return QueryBuilder.new(_world)
