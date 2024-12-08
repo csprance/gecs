@@ -224,10 +224,10 @@ func _matches_component_query(component: Component, query: Dictionary) -> bool:
 	
 	return true
 
-## Filters a provided list of entities using the current query criteria.
-## Unlike execute(), this doesn't query the world but instead filters the provided entities.
-## [param entities] Array of entities to filter
-## [param returns] Array of entities that match the query criteria
+## Filters a provided list of entities using the current query criteria.[br]
+## Unlike execute(), this doesn't query the world but instead filters the provided entities.[br][br]
+## [param entities] Array of entities to filter[br]
+## [param returns] Array of entities that match the query criteria[br]
 func matches(entities: Array) -> Array:
 	# if the query is empty all entities match
 	if is_empty():

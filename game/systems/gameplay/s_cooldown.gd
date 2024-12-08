@@ -3,11 +3,12 @@ class_name CooldownSystem
 extends System
 
 var coooldown_components: Array = [C_AttackCooldown, C_RangedAttackCooldown, C_DashCooldown, C_SprintCooldown]
+var cooldown = C_Cooldown.new()
 
 func sub_systems():
     return [
         [ECS.world.query.with_any(coooldown_components), cooldowns_subsys],
-        [ECS.world.query.with_relationship([Relationship.new(C_Cooldown.new(), ECS.wildcard)]), cooldowns_rel_subsys],
+        [ECS.world.query.with_relationship([Relationship.new(cooldown, ECS.wildcard)]), cooldowns_rel_subsys],
         ]
 
 

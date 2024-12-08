@@ -48,7 +48,7 @@ func attack_subsystem(entity, _delta):
 	var r_attacking = entity.get_relationship(Relationships.attacking_anything())
 	Loggie.debug('Attacking', r_attacking.target)
 	r_attacking.target.add_component(C_Damage.new())
-	entity.add_component(C_AttackCooldown.new())
+	entity.add_component(C_AttackCooldown.new(1.0))
 	var c_attacker_trs = r_attacking.target.get_component(C_Transform) as C_Transform
 	if c_attacker_trs:
 		entity.add_component(C_LookAt.new(c_attacker_trs.transform.origin))
