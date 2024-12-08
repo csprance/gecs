@@ -8,4 +8,8 @@ func interaction(interactable: Entity, interactors: Array, meta: Dictionary = {}
     interactable.add_component(C_PlayAnimation.new("open"))
     for i in interactors:
         i.remove_component(C_Interacting)
+    # searchables only work once
+    interactable.remove_component(C_Interactable)
+    # drop the item
+    
     return true

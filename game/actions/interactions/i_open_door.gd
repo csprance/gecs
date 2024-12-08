@@ -7,5 +7,7 @@ func interaction(interactable: Entity, interactors: Array, meta: Dictionary = {}
     interactable.add_component(C_PlayAnimation.new("open_door"))
     for i in interactors:
         i.remove_component(C_Interacting)
+     # doors only work once
+    interactable.remove_component(C_Interactable)
     return true
     
