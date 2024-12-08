@@ -61,6 +61,7 @@ var score :int = 0:
 		return score
 	set(v):
 		score = v
+		score_changed.emit(v)
 
 
 var lives :int = 3 :
