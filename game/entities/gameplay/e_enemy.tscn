@@ -7,7 +7,7 @@
 [ext_resource type="Script" path="res://game/components/gameplay/c_health.gd" id="4_seq5a"]
 [ext_resource type="Script" path="res://game/components/physics/c_velocity.gd" id="5_oxxxc"]
 [ext_resource type="Script" path="res://game/components/gameplay/c_enemy.gd" id="6_n5rg4"]
-[ext_resource type="Script" path="res://game/components/gameplay/c_interest_range.gd" id="7_7beir"]
+[ext_resource type="Script" path="res://game/components/gameplay/behavior/c_interest_range.gd" id="7_7beir"]
 [ext_resource type="Script" path="res://game/components/gameplay/c_transform.gd" id="9_3pnkh"]
 [ext_resource type="Script" path="res://game/components/gameplay/c_look_at.gd" id="10_b7f7k"]
 [ext_resource type="PackedScene" uid="uid://cblqfvanyrdd4" path="res://game/lib/line_of_sight_3d.tscn" id="12_f8y1n"]

@@ -1,0 +1,101 @@
+[gd_scene load_steps=23 format=3 uid="uid://dt0gkq2t1eudo"]
+
+[ext_resource type="Script" path="res://addons/gecs/entity.gd" id="1_oww6f"]
+[ext_resource type="Script" path="res://addons/gecs/component.gd" id="2_ptiw5"]
+[ext_resource type="Script" path="res://game/components/gameplay/c_door.gd" id="3_ad5ln"]
+[ext_resource type="Script" path="res://game/actions/interactions/i_open_door.gd" id="4_jjnrs"]
+[ext_resource type="Script" path="res://game/components/gameplay/c_interactable.gd" id="5_v1peb"]
+[ext_resource type="Script" path="res://game/components/gameplay/c_animation_player.gd" id="6_ym5c4"]
+[ext_resource type="Resource" uid="uid://dbwgbc3qihhjf" path="res://game/data/spawners/item_spawner.tres" id="7_88b16"]
+[ext_resource type="Script" path="res://game/lib/interaction_area.gd" id="8_8l4da"]
+[ext_resource type="Script" path="res://game/lib/static_queries/static_query.gd" id="9_xacoh"]
+[ext_resource type="Script" path="res://game/lib/static_queries/sq_is_player.gd" id="10_ojkrc"]
+[ext_resource type="PackedScene" uid="uid://dmehwuect8hlf" path="res://game/assets/props/searchables/cabinet_01_a.gltf" id="11_ml5ta"]
+[ext_resource type="Script" path="res://game/lib/static_queries/sq_is_interactor.gd" id="11_w7m15"]
+
+[sub_resource type="Resource" id="Resource_bv3gi"]
+script = ExtResource("3_ad5ln")
+
+[sub_resource type="Resource" id="Resource_8516g"]
+script = ExtResource("4_jjnrs")
+meta = {
+"description": "Opening the door for e_door",
+"name": "Open Door"
+}
+
+[sub_resource type="Resource" id="Resource_flfc2"]
+script = ExtResource("5_v1peb")
+action = SubResource("Resource_8516g")
+input_action = "F"
+
+[sub_resource type="Resource" id="Resource_fr1y0"]
+script = ExtResource("6_ym5c4")
+player = NodePath("AnimationPlayer")
+
+[sub_resource type="Animation" id="Animation_tuih5"]
+resource_name = "open_door"
+tracks/0/type = "position_3d"
+tracks/0/imported = false
+tracks/0/enabled = false
+tracks/0/path = NodePath("cabinet_01_a2/cabinet_01_a_door")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = PackedFloat32Array(1, 1, 0, 0, 0)
+tracks/1/type = "rotation_3d"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("cabinet_01_a2/cabinet_01_a_door")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = PackedFloat32Array(0, 1, 0, 0, 0, 1, 1, 1, 0, -0.487479, 0, 0.873135)
+
+[sub_resource type="Animation" id="Animation_b7o2a"]
+length = 0.001
+tracks/0/type = "position_3d"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("cabinet_01_a2/cabinet_01_a_door")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = PackedFloat32Array(0, 1, 0, 0, 0)
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_ry413"]
+_data = {
+&"open_door": SubResource("Animation_tuih5"),
+&"RESET": SubResource("Animation_b7o2a")
+}
+
+[sub_resource type="Resource" id="Resource_ew57s"]
+script = ExtResource("10_ojkrc")
+
+[sub_resource type="Resource" id="Resource_gde14"]
+script = ExtResource("11_w7m15")
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_fjs6k"]
+height = 3.22603
+radius = 3.83196
+
+[node name="EDoor" type="Node3D"]
+script = ExtResource("1_oww6f")
+component_resources = Array[ExtResource("2_ptiw5")]([SubResource("Resource_bv3gi"), SubResource("Resource_flfc2"), SubResource("Resource_fr1y0"), ExtResource("7_88b16")])
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+libraries = {
+&"": SubResource("AnimationLibrary_ry413")
+}
+
+[node name="InteractionArea" type="Area3D" parent="." node_paths=PackedStringArray("parent")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0205323, 1.21281, 1.50528)
+collision_layer = 0
+collision_mask = 24
+script = ExtResource("8_8l4da")
+parent = NodePath("..")
+can_interact_query = Array[ExtResource("9_xacoh")]([SubResource("Resource_ew57s"), SubResource("Resource_gde14")])
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="InteractionArea"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.334233, 0)
+shape = SubResource("CylinderShape3D_fjs6k")
+
+[node name="cabinet_01_a2" parent="." instance=ExtResource("11_ml5ta")]
+
+[editable path="cabinet_01_a2"]

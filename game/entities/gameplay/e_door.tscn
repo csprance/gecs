@@ -79,7 +79,7 @@ libraries = {
 [node name="door_01_a2" parent="." instance=ExtResource("6_yqfw2")]
 
 [node name="InteractionArea" type="Area3D" parent="." node_paths=PackedStringArray("parent")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.4033, 1.21281, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0205323, 1.21281, 1.50528)
 collision_layer = 0
 collision_mask = 24
 script = ExtResource("4_his00")

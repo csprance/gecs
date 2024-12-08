@@ -7,7 +7,7 @@
 [ext_resource type="Script" path="res://game/components/gameplay/c_health.gd" id="4_itxjs"]
 [ext_resource type="Script" path="res://game/components/physics/c_velocity.gd" id="5_1ks0t"]
 [ext_resource type="Script" path="res://game/components/gameplay/c_enemy.gd" id="6_5bwmr"]
-[ext_resource type="Script" path="res://game/components/gameplay/c_interest_range.gd" id="7_15lua"]
+[ext_resource type="Script" path="res://game/components/gameplay/behavior/c_interest_range.gd" id="7_15lua"]
 [ext_resource type="Script" path="res://game/components/gameplay/c_transform.gd" id="9_gbgln"]
 [ext_resource type="Script" path="res://game/components/gameplay/c_look_at.gd" id="10_w27te"]
 [ext_resource type="Script" path="res://game/components/gameplay/behavior/c_evil_doll_behavior.gd" id="11_6abnt"]
@@ -25,9 +25,7 @@
 
 [sub_resource type="Resource" id="Resource_iixki"]
 script = ExtResource("2_tohob")
-anim_player = NodePath("")
-anim_name = ""
-anim_speed = ""
+player = NodePath("")
 
 [sub_resource type="Resource" id="Resource_ypv7w"]
 script = ExtResource("3_so838")
