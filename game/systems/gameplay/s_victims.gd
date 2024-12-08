@@ -21,8 +21,13 @@ func victim_death_subsys(entity, _delta: float):
 
 func victim_saved_subsys(entity, _delta: float):
     # Spawn the score visuals
-    var score_vfx = score_vfx_packed_scene.instantiate()
-    score_vfx.global_position = entity.global_position + Vector3(0, 3, 0)   
-    add_child(score_vfx)
+    var c_reward = entity.get_component(C_Reward) as C_Reward
+    if c_reward:
+        GameState.score += c_reward.points
+        var score_vfx = score_vfx_packed_scene.instantiate()
+        score_vfx.points = c_reward.points
+        score_vfx.global_position = entity.global_position + Vector3(0, 3, 0)   
+        add_child(score_vfx)
+    
     entity.add_component(C_IsPendingDelete.new())
 
