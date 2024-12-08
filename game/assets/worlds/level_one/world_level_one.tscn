@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" path="res://addons/gecs/world.gd" id="1_q7jtq"]
 [ext_resource type="PackedScene" uid="uid://mfv8kghahued" path="res://game/entities/gameplay/e_player.tscn" id="2_3jqhy"]
-[ext_resource type="PackedScene" uid="uid://o00dv6xya8el" path="res://game/entities/gameplay/e_pickup.tscn" id="2_8fx5w"]
+[ext_resource type="PackedScene" uid="uid://o00dv6xya8el" path="res://game/entities/gameplay/items/e_pickup.tscn" id="2_8fx5w"]
 [ext_resource type="PackedScene" uid="uid://x548ueo7udx1" path="res://game/entities/gameplay/e_aim_point.tscn" id="3_d5cy8"]
 [ext_resource type="Resource" uid="uid://bfpi3fqtjk6df" path="res://game/data/items/i_healthkit.tres" id="3_jg4rd"]
 [ext_resource type="PackedScene" uid="uid://cganbyuy0jce" path="res://game/assets/worlds/level_one/level-one.gltf" id="3_njsrj"]

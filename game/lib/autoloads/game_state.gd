@@ -113,16 +113,40 @@ func use_state(entity: Entity, key: String, default_value = null) -> UseState:
 
 ## A wrapper for the _state dictionary that allows you to use the state in a more object oriented way
 class UseState:
-	var key
-	var entity
+	var _key: String
+	var _entity: Entity
+	
 	var value: 
 		get:
-			return entity._state[key]
-		set(_value):
-			entity._state[key] = _value
+			return get_value()
+		set(new_value):
+			set_value(new_value)
 	
-	func _init(_entity, _key, default_value) -> void:
-		key = _key
-		entity = _entity
-		if not entity._state.has(key):
-			entity._state[key] = default_value
+	func _init(entity: Entity, key: String, initial_value = null) -> void:
+		if entity == null:
+			push_error("UseState: Entity cannot be null")
+			return
+			
+		self._key = key
+		self._entity = entity
+		
+		if not self._entity._state.has(key):
+			set_value(initial_value)
+	
+	func get_value():
+		if not self._entity._state.has(_key):
+			push_warning("UseState: Accessing undefined state key '%s'" % _key)
+			return null
+		return self._entity._state[_key]
+	
+	func set_value(new_value) -> void:
+		if self._entity == null:
+			push_error("UseState: Cannot set value on null entity")
+			return
+		self._entity._state[_key] = new_value
+	
+	func has_value() -> bool:
+		return self._entity._state.has(_key)
+	
+	func clear() -> void:
+		self._entity._state.erase(_key)

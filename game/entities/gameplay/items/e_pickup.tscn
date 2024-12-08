@@ -1,6 +1,6 @@
 [gd_scene load_steps=9 format=3 uid="uid://o00dv6xya8el"]
 
-[ext_resource type="Script" path="res://game/entities/gameplay/e_pickup.gd" id="1_jt4xy"]
+[ext_resource type="Script" path="res://game/entities/gameplay/items/e_pickup.gd" id="1_jt4xy"]
 [ext_resource type="Script" path="res://game/components/gameplay/c_transform.gd" id="2_yl6ch"]
 [ext_resource type="Script" path="res://addons/gecs/component.gd" id="2_ypxjw"]
 [ext_resource type="Script" path="res://game/components/gameplay/c_is_pickup.gd" id="3_57gcc"]
@@ -21,7 +21,7 @@ height = 1.0
 radial_segments = 12
 rings = 2
 
-[node name="Pickup" type="Node3D"]
+[node name="EPickup" type="Node3D"]
 script = ExtResource("1_jt4xy")
 component_resources = Array[ExtResource("2_ypxjw")]([SubResource("Resource_bys3g"), SubResource("Resource_ylw1q")])
 

@@ -51,7 +51,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -4)
 unique_name_in_owner = true
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0, 0)
 
-[node name="trampoline2" parent="." instance=ExtResource("2_wb5fw")]
+[node name="trampoline2" parent="." groups=["navigation_mesh_source_group"] instance=ExtResource("2_wb5fw")]
 
 [node name="EnterTrampolineArea" type="Area3D" parent="." node_paths=PackedStringArray("parent")]
 collision_layer = 0

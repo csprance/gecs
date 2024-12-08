@@ -1,5 +1,5 @@
 ## Evil Dolls wander randomly until they see the player, then they rush at the player choosing a path through them
-## They will also attempt to throw a knife at the player randomly if they are in the attack area
+## They will also attempt to throw a knife at the player at random intervals if they are in the attack area
 class_name EvilDollBehaviorSystem
 extends System
 
@@ -58,6 +58,8 @@ func sub_systems():
 	]
 
 
+## Fires a projectile at the target when in range attack state
+## The doll will look at the target and fire a projectile with a cooldown between 6-9 seconds
 func ranged_attack_subsystem(entity, _delta):
 	# Check if we can attack
 	var r_attacking = entity.get_relationship(Relationships.range_attacking_anything())
@@ -73,7 +75,8 @@ func ranged_attack_subsystem(entity, _delta):
 	WeaponUtils.instantiate_projectile(c_projectile, projectile_transform)
 	entity.add_component(C_RangedAttackCooldown.new(randf_range(6.0, 9.0)))
 
-## Try to attack the target	if we can
+## Performs a melee attack on the target when in attack range
+## The doll will look at the target and apply damage with a cooldown between 6-9 seconds
 func attack_subsystem(entity, _delta):
 	# look at the player
 	var r_attacking = entity.get_relationship(Relationships.attacking_anything())
@@ -85,9 +88,9 @@ func attack_subsystem(entity, _delta):
 	r_attacking.target.add_component(C_Damage.new())
 	entity.add_component(C_AttackCooldown.new(randf_range(6.0, 9.0)))
 
-
+## Controls the doll's wandering behavior when not engaged with targets
+## Every 2-3 seconds, picks a random point within a 10 unit radius to move towards
 func idle_subsystem(entity, delta):
-	# Pick a random spot to go to every 5 seconds
 	var t_state = GameState.use_state(entity, 'idle_timer', randf_range(0, 3))
 	t_state.value -= delta
 	# Pick a random spot to get interested in every 5 seconds
@@ -99,7 +102,9 @@ func idle_subsystem(entity, delta):
 		var c_look_at = C_LookAt.new(c_interested.target)
 		entity.add_components([c_interested, c_look_at])
 
-
+## Handles movement towards a point of interest
+## The doll will move at INTERESTED_SPEED towards the target until reaching within 0.1 units
+## Once reached, returns to idle state
 func interested_subsystem(entity, _delta):
 	var c_velocity = entity.get_component(C_Velocity) as C_Velocity
 	var c_trs = entity.get_component(C_Transform) as C_Transform
@@ -114,6 +119,9 @@ func interested_subsystem(entity, _delta):
 	# Set the velocity to go towards the target
 	c_velocity.velocity = (c_interested.target - c_trs.transform.origin).normalized() * INTERESTED_SPEED
 
+## Controls the doll's pursuit behavior when chasing a target
+## The doll will move at CHASE_SPEED directly towards the target while continuously looking at them
+## Overrides any interested state
 func chase_subsystem(entity, _delta):
 	# We can't be chasing and interested at the same time
 	entity.remove_component(C_Interested)

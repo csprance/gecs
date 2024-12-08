@@ -1,4 +1,5 @@
 ## Manages the interest of the entities. They can be interested in something and lose interest
+## Consists of how far away something is interesting and how long it takes to lose interest
 class_name InterestSystem
 extends System
 

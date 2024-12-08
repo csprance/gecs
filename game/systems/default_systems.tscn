@@ -1,4 +1,4 @@
-[gd_scene load_steps=33 format=3 uid="uid://ex2wx8kwwjjx"]
+[gd_scene load_steps=35 format=3 uid="uid://ex2wx8kwwjjx"]
 
 [ext_resource type="Script" path="res://game/systems/gameplay/enemy_behaviors/s_zombie_behavior.gd" id="1_a57uo"]
 [ext_resource type="Script" path="res://game/systems/input/s_player_controls.gd" id="1_e5u7d"]
@@ -13,8 +13,10 @@
 [ext_resource type="Script" path="res://game/systems/gameplay/enemy_behaviors/s_evil_doll_behavior.gd" id="4_yy88v"]
 [ext_resource type="Script" path="res://game/systems/gameplay/s_pickup.gd" id="5_kryj1"]
 [ext_resource type="Script" path="res://game/systems/physics/s_character_body_3d.gd" id="6_n8p4l"]
+[ext_resource type="PackedScene" uid="uid://bp38jvtqwpd5" path="res://game/assets/vfx/vfx_victim_ghost.tscn" id="6_rcvjr"]
 [ext_resource type="Resource" uid="uid://2fag5eywrov5" path="res://game/data/projectiles/throwing_knife_projectile.tres" id="6_ss2lc"]
 [ext_resource type="Script" path="res://game/systems/gameplay/s_transform.gd" id="7_5veey"]
+[ext_resource type="PackedScene" uid="uid://cll20mjce4sg1" path="res://game/assets/vfx/vfx_score.tscn" id="7_qp7ir"]
 [ext_resource type="Script" path="res://game/systems/ui/s_ui_visiblity.gd" id="8_xctm1"]
 [ext_resource type="Script" path="res://game/systems/gameplay/s_pending_delete.gd" id="9_bykvn"]
 [ext_resource type="Script" path="res://game/systems/gameplay/s_damage.gd" id="10_io67f"]
@@ -54,6 +56,8 @@ group = "gameplay"
 
 [node name="VictimSystem" type="Node" parent="gameplay"]
 script = ExtResource("4_emhi7")
+ghost_vfx_packed_scene = ExtResource("6_rcvjr")
+score_vfx_packed_scene = ExtResource("7_qp7ir")
 group = "gameplay"
 
 [node name="CooldownSystem" type="Node" parent="gameplay"]

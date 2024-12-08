@@ -18,6 +18,7 @@ nodes/root_name=""
 nodes/apply_root_scale=true
 nodes/root_scale=1.0
 nodes/import_as_skeleton_bones=false
+nodes/use_node_type_suffixes=true
 meshes/ensure_tangents=true
 meshes/generate_lods=true
 meshes/create_shadow_meshes=true
@@ -47,6 +48,7 @@ _subresources={
 "import/skip_import": true
 },
 "PATH:tree": {
+"generate/navmesh": 1,
 "generate/physics": true,
 "physics/shape_type": 5,
 "primitive/height": 5.0,

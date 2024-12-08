@@ -21,7 +21,7 @@ func process(entity, _delta):
         label.global_transform.origin = entity.get_component(C_Transform).transform.origin + c_debug_label.offset
     else:
         var label = create_label(c_debug_label)
-        add_child(label)
+        entity.add_child(label)
         debug_labels[entity] = label
 
 

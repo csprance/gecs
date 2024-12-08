@@ -75,7 +75,7 @@ script = ExtResource("11_w7m15")
 height = 3.22603
 radius = 3.83196
 
-[node name="EDoor" type="Node3D"]
+[node name="ESearchable" type="Node3D"]
 script = ExtResource("1_oww6f")
 component_resources = Array[ExtResource("2_ptiw5")]([SubResource("Resource_bv3gi"), SubResource("Resource_flfc2"), SubResource("Resource_fr1y0"), ExtResource("7_88b16")])
 
@@ -97,5 +97,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.334233, 0)
 shape = SubResource("CylinderShape3D_fjs6k")
 
 [node name="cabinet_01_a2" parent="." instance=ExtResource("11_ml5ta")]
+
+[node name="cabinet_01_a" parent="cabinet_01_a2" index="1" groups=["navigation_mesh_source_group"]]
 
 [editable path="cabinet_01_a2"]

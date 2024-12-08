@@ -12,3 +12,5 @@ extends Component
 @export var visuals: C_Visuals
 ## The action that is called when the item is used
 @export var action: Action = Action.new()
+## The action that is called when the item is picked up
+@export var pickup_action: Action = Action.new()

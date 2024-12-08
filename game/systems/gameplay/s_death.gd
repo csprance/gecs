@@ -10,6 +10,12 @@ func query() -> QueryBuilder:
 func process(entity: Entity, _delta: float) -> void:
 	Loggie.debug('Death!', self)
 	SoundManager.play('fx', 'kill')
+	
+	# If we have a reward, give it to the player
+	var c_reward = entity.get_component(C_Reward) as C_Reward
+	if c_reward:
+		GameState.score += c_reward.reward
+
 	var c_lives = entity.get_component(C_Lives) as C_Lives
 	if not c_lives:
 		# If we have no more lives, we are dead mark it for delete
