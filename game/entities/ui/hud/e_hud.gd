@@ -11,6 +11,7 @@ extends Ui
 
 func on_ready() -> void:
     score.text = str(GameState.score)
+    GameState.score_changed.connect(_update_score)
     GameState.inventory_item_added.connect(update_from_game_state)
     GameState.inventory_item_removed.connect(update_from_game_state)
     GameState.weapon_changed.connect(update_from_game_state)
@@ -18,6 +19,8 @@ func on_ready() -> void:
     GameState.item_used.connect(update_from_game_state)
     GameState.weapon_fired.connect(update_from_game_state)
 
+func _update_score(score: int) -> void:
+    self.score.text = str(score)
 
 func update_from_game_state(item: Entity) -> void:
     weapon_quick_bar.c_item = GameState.active_weapon.get_component(C_Weapon) if GameState.active_weapon else null
