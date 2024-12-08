@@ -2,7 +2,7 @@
 class_name CooldownSystem
 extends System
 
-var coooldown_components: Array = [C_AttackCooldown, C_RangedAttackCooldown]
+var coooldown_components: Array = [C_AttackCooldown, C_RangedAttackCooldown, C_DashCooldown, C_SprintCooldown]
 
 func sub_systems():
     return [
