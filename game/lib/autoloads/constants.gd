@@ -22,3 +22,10 @@ extends Node
 
 @export_category("Levels")
 @export var levels: Array[LevelResource]
+
+func level_by_password(password: String) -> LevelResource:
+    for level in levels:
+        if level.password == password:
+            return level
+    
+    return levels[0] # Default to the first level

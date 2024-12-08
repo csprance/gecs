@@ -1,4 +1,4 @@
-[gd_scene load_steps=40 format=3 uid="uid://n6ivo0wnpuvg"]
+[gd_scene load_steps=46 format=3 uid="uid://n6ivo0wnpuvg"]
 
 [ext_resource type="Script" path="res://game/entities/gameplay/e_enemy.gd" id="1_8mheo"]
 [ext_resource type="Script" path="res://addons/gecs/component.gd" id="2_epde0"]
@@ -22,6 +22,9 @@
 [ext_resource type="Script" path="res://game/actions/component_area_actions/aa_chase.gd" id="16_dv5eg"]
 [ext_resource type="Script" path="res://game/actions/component_area_actions/aa_attack.gd" id="18_n6h1n"]
 [ext_resource type="PackedScene" uid="uid://d2p72cr27pb2f" path="res://game/lib/hitbox_3d.tscn" id="19_iq2ko"]
+[ext_resource type="Script" path="res://game/actions/action.gd" id="20_totrq"]
+[ext_resource type="Script" path="res://game/actions/sequence_action.gd" id="22_isy5m"]
+[ext_resource type="Script" path="res://game/actions/component_area_actions/aa_action_picker.gd" id="23_rndos"]
 
 [sub_resource type="Resource" id="Resource_iixki"]
 script = ExtResource("2_tohob")
@@ -86,8 +89,29 @@ meta = {
 "name": "Evil Doll Dash"
 }
 
-[sub_resource type="Resource" id="Resource_ahgns"]
+[sub_resource type="Resource" id="Resource_a73nk"]
 script = ExtResource("16_b7nvm")
+meta = {
+"description": "This is the default action that is executed when no other action is assigned",
+"name": "Default Action"
+}
+
+[sub_resource type="Resource" id="Resource_uqpw4"]
+script = ExtResource("16_36j7f")
+dash_duration = 3.0
+dash_cooldown = 8.0
+meta = {
+"description": "This is the default action that is executed when no other action is assigned",
+"name": "Default Action"
+}
+
+[sub_resource type="Resource" id="Resource_kkmyd"]
+script = ExtResource("22_isy5m")
+actions = Array[ExtResource("20_totrq")]([SubResource("Resource_a73nk"), SubResource("Resource_uqpw4")])
+
+[sub_resource type="Resource" id="Resource_qbhou"]
+script = ExtResource("23_rndos")
+enter_actions = SubResource("Resource_kkmyd")
 meta = {
 "description": "This is the default action that is executed when no other action is assigned",
 "name": "Default Action"
@@ -117,12 +141,17 @@ transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0, 0)
 surface_material_override/0 = SubResource("StandardMaterial3D_l4yq5")
 
 [node name="ChaseLOS" parent="." node_paths=PackedStringArray("parent") instance=ExtResource("15_3bntj")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0188789, 0.0402329, 0.00146985)
 angle = 251.115
 distance = 9.92
 cone_color = Color(0.564706, 0.439216, 0, 0.501961)
 parent = NodePath("..")
 actions = Array[ExtResource("16_47dc3")]([SubResource("Resource_t4wul"), SubResource("Resource_w7x8h")])
+query_with_none = null
+query_match_for_components = null
+parent_remove_on_entered = null
 parent_add_on_exit = Array[ExtResource("2_epde0")]([])
+body_remove_on_entered = null
 body_add_on_exit = Array[ExtResource("2_epde0")]([])
 
 [node name="RangedAttackLOS" parent="." node_paths=PackedStringArray("parent") instance=ExtResource("15_3bntj")]
@@ -130,8 +159,12 @@ angle = 80.765
 distance = 8.195
 cone_color = Color(1, 0, 0, 0.501961)
 parent = NodePath("..")
-actions = Array[ExtResource("16_47dc3")]([SubResource("Resource_ahgns")])
+actions = Array[ExtResource("16_47dc3")]([SubResource("Resource_qbhou")])
+query_with_none = null
+query_match_for_components = null
+parent_remove_on_entered = null
 parent_add_on_exit = Array[ExtResource("2_epde0")]([])
+body_remove_on_entered = null
 body_add_on_exit = Array[ExtResource("2_epde0")]([])
 
 [node name="MeleeAttackLOS" parent="." node_paths=PackedStringArray("parent") instance=ExtResource("15_3bntj")]
@@ -140,7 +173,11 @@ distance = 1.1
 cone_color = Color(0.729412, 0.0117647, 0.65098, 0.501961)
 parent = NodePath("..")
 actions = Array[ExtResource("16_47dc3")]([SubResource("Resource_ffh6u")])
+query_with_none = null
+query_match_for_components = null
+parent_remove_on_entered = null
 parent_add_on_exit = Array[ExtResource("2_epde0")]([])
+body_remove_on_entered = null
 body_add_on_exit = Array[ExtResource("2_epde0")]([])
 
 [node name="HeadHitbox" parent="." node_paths=PackedStringArray("parent") instance=ExtResource("19_iq2ko")]

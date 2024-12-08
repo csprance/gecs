@@ -75,8 +75,6 @@ system_nodes_root = NodePath("DefaultSystems")
 [node name="NavigationRegion3D" type="NavigationRegion3D" parent="."]
 navigation_mesh = SubResource("NavigationMesh_o4toq")
 
-[node name="DefaultSystems" parent="." instance=ExtResource("11_dp1f4")]
-
 [node name="Entities" type="Node" parent="."]
 
 [node name="EPickup" parent="Entities" instance=ExtResource("3_b6amu")]
@@ -196,3 +194,5 @@ mesh = SubResource("BoxMesh_yvtfh")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Props/MeshInstance3D/StaticBody3D"]
 shape = SubResource("BoxShape3D_t18n4")
+
+[node name="DefaultSystems" parent="." instance=ExtResource("11_dp1f4")]

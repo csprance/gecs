@@ -8,17 +8,17 @@
 
 [sub_resource type="Resource" id="Resource_4wqba"]
 script = ExtResource("3_11r4d")
-level_name = "Test Level"
-level_description = "A Scary Test Level"
+name = "Test World"
+description = "A Test in Testing World"
 packed_scene = ExtResource("4_jtb2f")
 password = "test"
 
 [sub_resource type="Resource" id="Resource_yr8fu"]
 script = ExtResource("3_11r4d")
-level_name = "Rescue The Neighbors in: Level 1:"
-level_description = "Zombie Panic"
+name = "Level One:"
+description = "Day of the Zombie"
 packed_scene = ExtResource("5_mxcaw")
-password = ""
+password = "levelone"
 
 [node name="Constants" type="Node"]
 script = ExtResource("1_efvrk")
