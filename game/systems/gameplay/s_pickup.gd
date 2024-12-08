@@ -17,7 +17,7 @@ func process(entity: Entity, _delta):
 
 func pickup_weapon(pickup: Pickup):
 	if pickup.weapon_resource.pickup_action:
-		pickup.weapon_resource.pickup_action.run()
+		pickup.weapon_resource.pickup_action.run_action()
 	var new_weapon = Entity.new()
 	new_weapon.add_components([pickup.weapon_resource, C_InInventory.new(), C_Quantity.new(pickup.quantity)])
 	ECS.world.add_entity(new_weapon)
@@ -28,7 +28,7 @@ func pickup_weapon(pickup: Pickup):
 
 func pickup_item(pickup: Pickup):
 	if pickup.item_resource.pickup_action:
-		pickup.item_resource.pickup_action.run()
+		pickup.item_resource.pickup_action.run_action()
 	var new_item = Entity.new()
 	new_item.add_components([pickup.item_resource, C_InInventory.new(), C_Quantity.new(pickup.quantity)])
 	ECS.world.add_entity(new_item)

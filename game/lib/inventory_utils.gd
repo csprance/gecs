@@ -26,7 +26,7 @@ static func use_inventory_item(item: Entity, player: Entity):
 	Loggie.debug('Using Item', item)
 	if action:
 		# We execute the action with no entities, as the action should be able to find the entities it needs.
-		action.run([], {'item': item, 'player': player, 'from': 'InventoryUtils.use_inventory_item'})
+		action.run_action([], {'item': item, 'player': player, 'from': 'InventoryUtils.use_inventory_item'})
 	
 	remove_inventory_item(item)
 
