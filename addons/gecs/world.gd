@@ -75,11 +75,6 @@ func _initialize():
 	add_systems(_systems)
 	_worldLogger.debug('_initialize Added Systems from Scene Tree: ', _systems)
 
-	# Connect to entity relationship signals
-	for entity in entities:
-		entity.relationship_added.connect(_on_entity_relationship_added)
-		entity.relationship_removed.connect(_on_entity_relationship_removed)
-
 ## Called every frame by the [method _ECS.process] to process [System]s.[br]
 ## [param delta] The time elapsed since the last frame.
 ## [param group] The string for the group we should run. If empty runs all
@@ -118,6 +113,8 @@ func add_entity(entity: Entity, components = null) -> void:
 	# Connect to entity signals for components so we can track global component state
 	entity.component_added.connect(_on_entity_component_added)
 	entity.component_removed.connect(_on_entity_component_removed)
+	entity.relationship_added.connect(_on_entity_relationship_added)
+	entity.relationship_removed.connect(_on_entity_relationship_removed)
 
 	if components:
 		entity.add_components(components)
