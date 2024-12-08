@@ -77,7 +77,7 @@ func _run_on_enter(body: Entity, body_rid: RID, body_shape_index: int, local_sha
 	parent.remove_components(parent_remove_on_entered.map(func(x): return x.get_script()))
 
 	for action in actions:
-		action._run_on_(true, parent, body, body_rid, body_shape_index, local_shape_index)
+		action.run_on_(true, parent, body, body_rid, body_shape_index, local_shape_index)
 
 func _on_area_exited(body_rid:RID, body, body_shape_index:int, local_shape_index:int) -> void:
 	# We're only interested in entities and not if it's the parent and if it passes the exit check
@@ -95,4 +95,4 @@ func _run_on_exit(body: Entity, body_rid: RID, body_shape_index: int, local_shap
 	parent.remove_components(parent_remove_on_exit.map(func(x): return x.get_script()))
 	
 	for action in actions:
-		action._run_on_(false, parent, body, body_rid, body_shape_index, local_shape_index)
+		action.run_on_(false, parent, body, body_rid, body_shape_index, local_shape_index)

@@ -19,13 +19,13 @@ func query() -> QueryBuilder:
 
 
 ## Always Override this with your own. This is what the action does or when it's run what does it execute
-func execute(entities: Array) -> void:
+func _action(entities: Array) -> void:
     Loggie.warn('Default Action executed. You Should Probably Replace this!!')
 
 
 ## Call this if you're running the action from somewhere
-func run(entities: Array = [], _meta=null) -> void:
+func run_action(entities: Array = [], _meta=null) -> void:
     if _meta:
         meta.assign(_meta)
     Loggie.info('Running Action: ', meta)
-    execute(query().matches(entities)) 
+    _action(query().matches(entities)) 

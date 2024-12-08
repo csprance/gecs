@@ -5,7 +5,7 @@ func query() -> QueryBuilder:
 	return ECS.world.query.with_any([C_Player])
 
 # if it's the player let them on the trampoline
-func on_enter(trampoline: Entity, player: Entity, _body_rid: RID, _body_shape_index: int, _local_shape_index: int) -> void:
+func _on_enter(trampoline: Entity, player: Entity, _body_rid: RID, _body_shape_index: int, _local_shape_index: int) -> void:
 	if not player is Player or not trampoline is Trampoline:
 		assert(false, "EnterTrampolineAreaAction: on_enter: player is not a Player or trampoline is not a Trampoline")
 		return
@@ -20,7 +20,7 @@ func on_enter(trampoline: Entity, player: Entity, _body_rid: RID, _body_shape_in
 	# add the trampoline movement control
 	player.add_component(C_TrampolineControls.new())
 
-func on_exit(trampoline: Entity, player: Entity, _body_rid: RID, _body_shape_index: int, _local_shape_index: int) -> void:
+func _on_exit(trampoline: Entity, player: Entity, _body_rid: RID, _body_shape_index: int, _local_shape_index: int) -> void:
 	if not player is Player or not trampoline is Trampoline:
 		assert(false, "EnterTrampolineAreaAction: on_exit: player is not a Player or trampoline is not a Trampoline")
 		return

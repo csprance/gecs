@@ -2,7 +2,7 @@ class_name ShootActiveWeaponAction
 extends Action
 
 
-func execute(_e) -> void:
+func _action(_e) -> void:
     var active_weapon = GameState.active_weapon
     var player = GameState.player
     if not active_weapon or not player:

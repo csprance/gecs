@@ -9,7 +9,7 @@ extends ComponentAreaAction
 
 
 # Dash towards the  body if we get in the area
-func on_enter(parent: Entity, target: Entity, _body_rid: RID, _body_shape_index: int, _local_shape_index: int) -> void:
+func _on_enter(parent: Entity, target: Entity, _body_rid: RID, _body_shape_index: int, _local_shape_index: int) -> void:
 	# if we're already dashing don't dash
 	if parent.has_component(C_Dashing):
 		return
@@ -17,7 +17,7 @@ func on_enter(parent: Entity, target: Entity, _body_rid: RID, _body_shape_index:
 	parent.add_component(C_Dashing.new(dash_speed, dash_cooldown))
 
 # Stop dashing towards 
-func on_exit(parent: Entity, body: Entity, _body_rid: RID, _body_shape_index: int, _local_shape_index: int) -> void:
+func _on_exit(parent: Entity, body: Entity, _body_rid: RID, _body_shape_index: int, _local_shape_index: int) -> void:
 	pass
 	# Loggie.debug('Stopped Dashing')
 	# parent.remove_component(C_Dashing)
