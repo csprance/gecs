@@ -1,4 +1,4 @@
-[gd_scene load_steps=35 format=3 uid="uid://c8ors4ai4l4if"]
+[gd_scene load_steps=38 format=3 uid="uid://c8ors4ai4l4if"]
 
 [ext_resource type="Script" path="res://addons/gecs/world.gd" id="1_dnklw"]
 [ext_resource type="PackedScene" uid="uid://bg6jeo350r12f" path="res://game/entities/gameplay/e_door.tscn" id="2_els58"]
@@ -23,6 +23,8 @@
 [ext_resource type="Texture2D" uid="uid://bv4vlxbttsxcl" path="res://game/assets/worlds/level_one/grass.png" id="17_8l3ga"]
 [ext_resource type="Script" path="res://game/components/gameplay/c_victim.gd" id="17_eirrq"]
 [ext_resource type="PackedScene" uid="uid://bm6p3cjvxyqmy" path="res://game/entities/gameplay/e_victim.tscn" id="19_by7qk"]
+[ext_resource type="Script" path="res://game/components/gameplay/c_reward.gd" id="21_oq40v"]
+[ext_resource type="Resource" uid="uid://8qrwfaqd303r" path="res://game/data/items/i_cash_pile.tres" id="25_1kho4"]
 [ext_resource type="PackedScene" uid="uid://dt0gkq2t1eudo" path="res://game/entities/gameplay/e_searchable.tscn" id="25_ugmww"]
 
 [sub_resource type="NavigationMesh" id="NavigationMesh_o4toq"]
@@ -48,6 +50,10 @@ offset = Vector3(0, 3, 0)
 [sub_resource type="Resource" id="Resource_s8kcv"]
 script = ExtResource("17_eirrq")
 
+[sub_resource type="Resource" id="Resource_jbp1u"]
+script = ExtResource("21_oq40v")
+points = 3000
+
 [sub_resource type="BoxMesh" id="BoxMesh_leccv"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_61ucv"]
@@ -72,6 +78,10 @@ navigation_mesh = SubResource("NavigationMesh_o4toq")
 [node name="DefaultSystems" parent="." instance=ExtResource("11_dp1f4")]
 
 [node name="Entities" type="Node" parent="."]
+
+[node name="EPickup" parent="Entities" instance=ExtResource("3_b6amu")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.89069, -0.032787, 1.51655)
+item_resource = ExtResource("25_1kho4")
 
 [node name="EvilDollEnemy" parent="Entities" instance=ExtResource("3_k7roi")]
 transform = Transform3D(-0.911619, 0, -0.411037, 0, 1, 0, 0.411037, 0, -0.911619, 2.99999, -0.032787, 15.1374)
@@ -123,7 +133,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23.2039, 0, 13.5809)
 
 [node name="EVictim" parent="Entities" instance=ExtResource("19_by7qk")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.63605, -0.032787, -2.40944)
-component_resources = Array[ExtResource("13_pvfgj")]([SubResource("Resource_l81d8"), SubResource("Resource_15ijl"), SubResource("Resource_cagx0"), SubResource("Resource_s8kcv")])
+component_resources = Array[ExtResource("13_pvfgj")]([SubResource("Resource_l81d8"), SubResource("Resource_15ijl"), SubResource("Resource_cagx0"), SubResource("Resource_s8kcv"), SubResource("Resource_jbp1u")])
 
 [node name="ECamera" parent="Entities" instance=ExtResource("10_osjvc")]
 
