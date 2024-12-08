@@ -1,10 +1,8 @@
 class_name PickupPointsAction
 extends Action
 
+@export var points: int = 1
+
 
 func execute(entities: Array) -> void:
-    # whatever the first entity is give that entity points
-    var player = meta.get('player', null)
-    var pickup = meta.get('pickup', null)
-    if player and pickup:
-        GameState.score += pickup.points
+    GameState.score += points
