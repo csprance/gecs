@@ -8,7 +8,7 @@ length = 2.0
 tracks/0/type = "position_3d"
 tracks/0/imported = false
 tracks/0/enabled = true
-tracks/0/path = NodePath("Label3D")
+tracks/0/path = NodePath("score")
 tracks/0/interp = 1
 tracks/0/loop_wrap = true
 tracks/0/keys = PackedFloat32Array(0, 1, 0, 0, 0, 1.96667, 1, 0, 1.42725, 0)
@@ -18,7 +18,7 @@ length = 0.001
 tracks/0/type = "position_3d"
 tracks/0/imported = false
 tracks/0/enabled = true
-tracks/0/path = NodePath("Label3D")
+tracks/0/path = NodePath("score")
 tracks/0/interp = 1
 tracks/0/loop_wrap = true
 tracks/0/keys = PackedFloat32Array(0, 1, 0, 0, 0)
@@ -33,7 +33,8 @@ _data = {
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.114767, 0.359474, -0.12462)
 script = ExtResource("1_se02c")
 
-[node name="Label3D" type="Label3D" parent="."]
+[node name="score" type="Label3D" parent="."]
+unique_name_in_owner = true
 transform = Transform3D(1, 0, 0, 0, 0.903717, 0.428131, 0, -0.428131, 0.903717, 0, 0, 0)
 text = "3000"
 font_size = 150
