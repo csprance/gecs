@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="C_ItemSpawner" load_steps=7 format=3 uid="uid://dbwgbc3qihhjf"]
+
+[ext_resource type="Script" path="res://game/components/gameplay/item/c_item_spawner.gd" id="1_170i4"]
+[ext_resource type="Script" path="res://game/components/gameplay/item/c_item_spawner_item.gd" id="2_iy1rl"]
+[ext_resource type="Resource" uid="uid://bfpi3fqtjk6df" path="res://game/data/items/i_healthkit.tres" id="3_h6u6y"]
+[ext_resource type="Resource" uid="uid://bx7u7wpmcac6v" path="res://game/data/items/i_key.tres" id="4_b3xff"]
+
+[sub_resource type="Resource" id="Resource_fq3nb"]
+script = ExtResource("2_iy1rl")
+item = ExtResource("3_h6u6y")
+spawn_chance = 1.0
+
+[sub_resource type="Resource" id="Resource_dox8r"]
+script = ExtResource("2_iy1rl")
+item = ExtResource("4_b3xff")
+spawn_chance = 1.0
+
+[resource]
+script = ExtResource("1_170i4")
+name = "Item Spawner"
+spawner_items = Array[ExtResource("2_iy1rl")]([SubResource("Resource_fq3nb"), SubResource("Resource_dox8r")])
