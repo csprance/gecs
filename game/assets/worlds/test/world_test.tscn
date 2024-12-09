@@ -138,6 +138,12 @@ component_resources = Array[ExtResource("13_pvfgj")]([SubResource("Resource_l81d
 [node name="ESearchable" parent="Entities" instance=ExtResource("25_ugmww")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.62087, -0.032787, -7.18647)
 
+[node name="EvilDollEnemy" parent="Entities" instance=ExtResource("3_k7roi")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.28845, -0.032787, 4.59032)
+
+[node name="ZombieEnemy" parent="Entities" instance=ExtResource("4_sa7im")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.2193, -0.032787, 5.4359)
+
 [node name="Props" type="Node" parent="."]
 
 [node name="tree_01_a" parent="Props" groups=["navigation_mesh_source_group"] instance=ExtResource("12_oqyl0")]
@@ -196,9 +202,3 @@ mesh = SubResource("BoxMesh_yvtfh")
 shape = SubResource("BoxShape3D_t18n4")
 
 [node name="DefaultSystems" parent="." instance=ExtResource("11_dp1f4")]
-
-[node name="EvilDollEnemy" parent="." instance=ExtResource("3_k7roi")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.96555, -0.032787, 9.10699)
-
-[node name="ZombieEnemy" parent="." instance=ExtResource("4_sa7im")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.75709, -0.032787, -9.31633)
