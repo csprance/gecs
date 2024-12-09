@@ -8,18 +8,16 @@ extends ComponentArea3D
 @export var angle: float = 45:
 	set(value):
 		angle = value
-		if debug:
-			_create_cone_mesh()
-			_update_collision_shape()
+		_create_cone_mesh()
+		_update_collision_shape()
 	get:
 		return angle
 ## The Line of Sight distance
 @export var distance: float = 5:
 	set(value):
 		distance = value
-		if debug:
-			_create_cone_mesh()
-			_update_collision_shape()
+		_create_cone_mesh()
+		_update_collision_shape()
 	get:
 		return distance
 
@@ -29,7 +27,7 @@ extends ComponentArea3D
 	set(value):
 		debug = value
 		if cone_mesh_instance:
-			cone_mesh_instance.visible = debug
+			cone_mesh_instance.visible = _should_show_debug()
 # What color is the cone
 @export var cone_color: Color = Color(1, 0, 0, 0.5)
 
@@ -54,9 +52,11 @@ func exit_check(_body_rid: RID, body, _body_shape_index: int, _local_shape_index
 
 func _ready() -> void:
 	super._ready()
-	if debug:
+	_update_collision_shape()
+	if Engine.is_editor_hint() or debug:
 		_create_cone_mesh()
-		_update_collision_shape()
+	if cone_mesh_instance:
+		cone_mesh_instance.visible = _should_show_debug()
 
 func _process(delta: float) -> void:
 	for body in bodies.keys():
@@ -73,10 +73,12 @@ func _check_line_of_sight(body) -> bool:
 	var direction = (body.global_position - global_position).normalized()
 	var forward = global_transform.basis.z.normalized()
 	var angle_check = Utils.angle_check(direction, forward, angle)
-	var los_check = Utils.entity_has_los(parent, body, debug)
+	var los_check = Utils.entity_has_los(parent, body)
 	return angle_check and los_check
 
 func _create_cone_mesh() -> void:
+	if not (Engine.is_editor_hint() or debug):
+		return
 	if cone_mesh_instance:
 		cone_mesh_instance.queue_free()
 	cone_mesh_instance = MeshInstance3D.new()
@@ -142,3 +144,6 @@ func _update_collision_shape() -> void:
 	
 	# Update collision shape
 	collision_shape_3d.shape = shape
+
+func _should_show_debug() -> bool:
+	return Engine.is_editor_hint() or debug
