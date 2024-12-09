@@ -170,6 +170,8 @@ func remove_entity(entity) -> void:
 	
 	entity.component_added.disconnect(_on_entity_component_added)
 	entity.component_removed.disconnect(_on_entity_component_removed)
+	entity.relationship_added.disconnect(_on_entity_relationship_added)
+	entity.relationship_removed.disconnect(_on_entity_relationship_removed)
 	entity.on_destroy()
 	entity.queue_free()
 
