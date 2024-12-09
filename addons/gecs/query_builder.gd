@@ -148,7 +148,9 @@ func execute() -> Array:
 				filtered_entities.append(entity)
 		result = filtered_entities
 	clear()
-	return result
+	return result.filter(func(entity: Entity):
+		return entity.enabled == true
+	)
 
 ## Filter entities based on component queries
 func _filter_entities_by_queries(entities: Array, components: Array, queries: Array, require_all: bool) -> Array:
