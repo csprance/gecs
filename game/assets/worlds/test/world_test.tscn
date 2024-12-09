@@ -1,4 +1,4 @@
-[gd_scene load_steps=58 format=3 uid="uid://c8ors4ai4l4if"]
+[gd_scene load_steps=38 format=3 uid="uid://c8ors4ai4l4if"]
 
 [ext_resource type="Script" path="res://addons/gecs/world.gd" id="1_dnklw"]
 [ext_resource type="PackedScene" uid="uid://bg6jeo350r12f" path="res://game/entities/gameplay/e_door.tscn" id="2_els58"]
@@ -9,27 +9,19 @@
 [ext_resource type="Resource" uid="uid://bx7u7wpmcac6v" path="res://game/data/items/i_key.tres" id="5_uedm4"]
 [ext_resource type="Resource" uid="uid://c2njvh8tdqqem" path="res://game/data/weapons/w_water_pistol.tres" id="6_vtm68"]
 [ext_resource type="PackedScene" uid="uid://mfv8kghahued" path="res://game/entities/gameplay/e_player.tscn" id="7_4pqio"]
-[ext_resource type="Script" path="res://game/components/gameplay/c_animation_player.gd" id="7_uw3ht"]
-[ext_resource type="Script" path="res://game/components/physics/c_character_body_3d.gd" id="8_ab1rl"]
 [ext_resource type="PackedScene" uid="uid://x548ueo7udx1" path="res://game/entities/gameplay/e_aim_point.tscn" id="8_ib406"]
 [ext_resource type="PackedScene" uid="uid://cudyrj1egdocg" path="res://game/entities/ui/hud/e_hud.tscn" id="9_u2l4c"]
-[ext_resource type="Script" path="res://game/components/physics/c_velocity.gd" id="10_o8iva"]
 [ext_resource type="PackedScene" uid="uid://vdhm1ygxl2dx" path="res://game/entities/gameplay/e_camera.tscn" id="10_osjvc"]
 [ext_resource type="PackedScene" uid="uid://ex2wx8kwwjjx" path="res://game/systems/default_systems.tscn" id="11_dp1f4"]
 [ext_resource type="PackedScene" uid="uid://cnxv5jgoj4kw2" path="res://game/entities/gameplay/e_trampoline.tscn" id="11_jnj7n"]
-[ext_resource type="Script" path="res://game/components/gameplay/c_enemy.gd" id="11_u11rg"]
-[ext_resource type="Script" path="res://game/components/gameplay/behavior/c_interest_range.gd" id="12_ldqoq"]
 [ext_resource type="PackedScene" uid="uid://b0ctwmw006svf" path="res://game/assets/props/tree/tree_01_a.gltf" id="12_oqyl0"]
 [ext_resource type="Script" path="res://addons/gecs/component.gd" id="13_pvfgj"]
 [ext_resource type="Script" path="res://game/components/gameplay/c_transform.gd" id="14_1o3fy"]
-[ext_resource type="Script" path="res://game/components/gameplay/c_look_at.gd" id="14_pjkse"]
 [ext_resource type="Script" path="res://game/components/gameplay/c_health.gd" id="15_j7s5o"]
-[ext_resource type="Script" path="res://game/components/gameplay/behavior/c_zombie_behavior.gd" id="16_a3yri"]
 [ext_resource type="Script" path="res://game/components/debug/c_debug_label.gd" id="16_pgbbi"]
 [ext_resource type="PackedScene" uid="uid://csxwta28e2lxv" path="res://game/assets/props/gravestone/gravestone.gltf" id="17_7ar8e"]
 [ext_resource type="Texture2D" uid="uid://bv4vlxbttsxcl" path="res://game/assets/worlds/level_one/grass.png" id="17_8l3ga"]
 [ext_resource type="Script" path="res://game/components/gameplay/c_victim.gd" id="17_eirrq"]
-[ext_resource type="Script" path="res://game/components/gameplay/c_lives.gd" id="18_b5vge"]
 [ext_resource type="PackedScene" uid="uid://bm6p3cjvxyqmy" path="res://game/entities/gameplay/e_victim.tscn" id="19_by7qk"]
 [ext_resource type="Script" path="res://game/components/gameplay/c_reward.gd" id="21_oq40v"]
 [ext_resource type="Resource" uid="uid://8qrwfaqd303r" path="res://game/data/items/i_cash_pile.tres" id="25_1kho4"]
@@ -40,56 +32,6 @@ vertices = PackedVector3Array(-74.5, 0.371701, -8.25, -53.5, 0.371701, -8.25, -5
 polygons = [PackedInt32Array(1, 0, 2), PackedInt32Array(2, 0, 4), PackedInt32Array(2, 4, 3), PackedInt32Array(3, 5, 2), PackedInt32Array(7, 6, 8), PackedInt32Array(8, 6, 9), PackedInt32Array(8, 9, 10), PackedInt32Array(10, 9, 5), PackedInt32Array(10, 5, 11), PackedInt32Array(11, 5, 3), PackedInt32Array(13, 12, 14), PackedInt32Array(14, 12, 15), PackedInt32Array(18, 17, 16), PackedInt32Array(20, 19, 21), PackedInt32Array(21, 19, 12), PackedInt32Array(12, 19, 15), PackedInt32Array(15, 19, 16), PackedInt32Array(16, 19, 10), PackedInt32Array(16, 10, 11), PackedInt32Array(16, 11, 18), PackedInt32Array(23, 22, 17), PackedInt32Array(23, 17, 24), PackedInt32Array(24, 17, 18), PackedInt32Array(24, 18, 25), PackedInt32Array(27, 26, 28), PackedInt32Array(28, 26, 30), PackedInt32Array(28, 30, 29), PackedInt32Array(30, 31, 29), PackedInt32Array(29, 31, 32), PackedInt32Array(32, 31, 33), PackedInt32Array(34, 32, 35), PackedInt32Array(35, 32, 33), PackedInt32Array(31, 24, 25), PackedInt32Array(33, 31, 36), PackedInt32Array(36, 31, 25), PackedInt32Array(36, 25, 37), PackedInt32Array(39, 38, 40), PackedInt32Array(40, 38, 41), PackedInt32Array(41, 38, 37), PackedInt32Array(38, 36, 37), PackedInt32Array(42, 46, 43), PackedInt32Array(43, 46, 44), PackedInt32Array(44, 46, 45), PackedInt32Array(45, 46, 7), PackedInt32Array(20, 21, 48), PackedInt32Array(48, 21, 47), PackedInt32Array(48, 47, 45), PackedInt32Array(45, 47, 44), PackedInt32Array(44, 47, 49), PackedInt32Array(51, 50, 52), PackedInt32Array(52, 50, 53), PackedInt32Array(55, 54, 51), PackedInt32Array(51, 54, 50), PackedInt32Array(46, 53, 7), PackedInt32Array(7, 53, 50), PackedInt32Array(7, 50, 6), PackedInt32Array(59, 58, 56), PackedInt32Array(56, 58, 57), PackedInt32Array(61, 60, 43), PackedInt32Array(43, 60, 42), PackedInt32Array(67, 66, 62), PackedInt32Array(62, 66, 65), PackedInt32Array(62, 65, 63), PackedInt32Array(63, 65, 64), PackedInt32Array(14, 68, 13), PackedInt32Array(13, 68, 69), PackedInt32Array(65, 70, 64), PackedInt32Array(60, 61, 67), PackedInt32Array(67, 61, 72), PackedInt32Array(67, 72, 66), PackedInt32Array(66, 72, 71), PackedInt32Array(68, 73, 69), PackedInt32Array(69, 73, 75), PackedInt32Array(69, 75, 74), PackedInt32Array(77, 76, 78), PackedInt32Array(78, 76, 71), PackedInt32Array(74, 80, 79), PackedInt32Array(79, 80, 72), PackedInt32Array(75, 73, 81), PackedInt32Array(82, 49, 47), PackedInt32Array(80, 84, 72), PackedInt32Array(72, 84, 83), PackedInt32Array(72, 83, 78), PackedInt32Array(72, 78, 71), PackedInt32Array(79, 49, 74), PackedInt32Array(74, 49, 82), PackedInt32Array(74, 82, 69), PackedInt32Array(85, 88, 86), PackedInt32Array(86, 88, 87), PackedInt32Array(91, 90, 89), PackedInt32Array(89, 90, 84), PackedInt32Array(84, 90, 88), PackedInt32Array(84, 88, 85), PackedInt32Array(84, 85, 83), PackedInt32Array(81, 73, 92), PackedInt32Array(89, 81, 91), PackedInt32Array(91, 81, 93), PackedInt32Array(93, 94, 27), PackedInt32Array(27, 94, 26), PackedInt32Array(92, 22, 81), PackedInt32Array(81, 22, 93), PackedInt32Array(93, 22, 94), PackedInt32Array(94, 22, 23), PackedInt32Array(55, 95, 54), PackedInt32Array(54, 95, 96), PackedInt32Array(95, 98, 96), PackedInt32Array(96, 98, 97), PackedInt32Array(100, 99, 101), PackedInt32Array(101, 99, 102), PackedInt32Array(102, 99, 98), PackedInt32Array(96, 97, 1), PackedInt32Array(1, 97, 0), PackedInt32Array(0, 97, 103), PackedInt32Array(105, 104, 99), PackedInt32Array(99, 104, 98), PackedInt32Array(97, 106, 103), PackedInt32Array(95, 102, 98), PackedInt32Array(110, 109, 107), PackedInt32Array(107, 109, 108), PackedInt32Array(114, 113, 111), PackedInt32Array(111, 113, 112), PackedInt32Array(100, 101, 115), PackedInt32Array(115, 101, 116), PackedInt32Array(118, 117, 119), PackedInt32Array(119, 117, 53), PackedInt32Array(53, 117, 116), PackedInt32Array(53, 116, 52), PackedInt32Array(115, 116, 120), PackedInt32Array(120, 116, 117), PackedInt32Array(62, 63, 119), PackedInt32Array(119, 63, 118), PackedInt32Array(87, 121, 86), PackedInt32Array(86, 121, 122), PackedInt32Array(122, 121, 29), PackedInt32Array(122, 29, 123), PackedInt32Array(121, 28, 29), PackedInt32Array(123, 124, 122), PackedInt32Array(77, 125, 76), PackedInt32Array(76, 125, 126), PackedInt32Array(125, 124, 127), PackedInt32Array(127, 124, 128), PackedInt32Array(128, 124, 123), PackedInt32Array(128, 123, 129), PackedInt32Array(64, 70, 127), PackedInt32Array(127, 70, 126), PackedInt32Array(130, 127, 131), PackedInt32Array(131, 127, 128), PackedInt32Array(129, 133, 132), PackedInt32Array(128, 129, 134), PackedInt32Array(134, 129, 135), PackedInt32Array(135, 129, 132), PackedInt32Array(126, 125, 127), PackedInt32Array(130, 131, 136), PackedInt32Array(130, 136, 137), PackedInt32Array(137, 136, 138), PackedInt32Array(141, 140, 139), PackedInt32Array(138, 141, 137), PackedInt32Array(137, 141, 117), PackedInt32Array(117, 141, 139), PackedInt32Array(117, 139, 120), PackedInt32Array(145, 144, 142), PackedInt32Array(142, 144, 143), PackedInt32Array(149, 148, 146), PackedInt32Array(146, 148, 147), PackedInt32Array(105, 150, 104), PackedInt32Array(104, 150, 151), PackedInt32Array(151, 150, 152), PackedInt32Array(103, 153, 154), PackedInt32Array(154, 153, 152), PackedInt32Array(106, 153, 103), PackedInt32Array(150, 155, 152), PackedInt32Array(153, 151, 152), PackedInt32Array(140, 141, 156), PackedInt32Array(140, 156, 155), PackedInt32Array(155, 156, 134), PackedInt32Array(155, 134, 135), PackedInt32Array(155, 135, 152), PackedInt32Array(160, 159, 157), PackedInt32Array(157, 159, 158), PackedInt32Array(39, 40, 161), PackedInt32Array(161, 40, 162), PackedInt32Array(34, 35, 164), PackedInt32Array(164, 35, 163), PackedInt32Array(163, 165, 164), PackedInt32Array(164, 165, 166), PackedInt32Array(166, 165, 168), PackedInt32Array(166, 168, 167), PackedInt32Array(133, 166, 132), PackedInt32Array(132, 166, 167), PackedInt32Array(171, 170, 169), PackedInt32Array(169, 161, 171), PackedInt32Array(171, 161, 162), PackedInt32Array(171, 162, 172), PackedInt32Array(165, 170, 168), PackedInt32Array(168, 170, 171)]
 geometry_parsed_geometry_type = 1
 geometry_source_geometry_mode = 1
-
-[sub_resource type="Resource" id="Resource_iixki"]
-script = ExtResource("7_uw3ht")
-player = NodePath("")
-
-[sub_resource type="Resource" id="Resource_ypv7w"]
-script = ExtResource("8_ab1rl")
-
-[sub_resource type="Resource" id="Resource_itu4t"]
-script = ExtResource("15_j7s5o")
-total = 1
-current = 1
-
-[sub_resource type="Resource" id="Resource_05cb1"]
-script = ExtResource("10_o8iva")
-velocity = Vector3(0, 0, 0)
-
-[sub_resource type="Resource" id="Resource_6kqax"]
-script = ExtResource("11_u11rg")
-
-[sub_resource type="Resource" id="Resource_apar3"]
-script = ExtResource("12_ldqoq")
-value = 55.0
-
-[sub_resource type="Resource" id="Resource_x5chr"]
-script = ExtResource("14_1o3fy")
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
-
-[sub_resource type="Resource" id="Resource_buds4"]
-script = ExtResource("14_pjkse")
-target = Vector3(0, 0, 0)
-debug = true
-
-[sub_resource type="Resource" id="Resource_fi7jj"]
-script = ExtResource("16_pgbbi")
-text = "Debug Label"
-offset = Vector3(0, 5, 0)
-
-[sub_resource type="Resource" id="Resource_y6nof"]
-script = ExtResource("16_a3yri")
-
-[sub_resource type="Resource" id="Resource_immos"]
-script = ExtResource("21_oq40v")
-points = 10
-
-[sub_resource type="Resource" id="Resource_u77mw"]
-script = ExtResource("18_b5vge")
-lives = 3
-respawn_time = 4.0
-respawn_location = Transform3D(-0.998109, -4.26525e-05, -0.0614659, 4.09648e-05, 0.999999, -0.00135893, 0.0614659, -0.00135888, -0.998108, 4.52943, -0.0427949, 7.37862)
 
 [sub_resource type="Resource" id="Resource_l81d8"]
 script = ExtResource("14_1o3fy")
@@ -138,13 +80,7 @@ navigation_mesh = SubResource("NavigationMesh_o4toq")
 [node name="EPickup" parent="Entities" instance=ExtResource("3_b6amu")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.89069, -0.032787, 1.51655)
 item_resource = ExtResource("25_1kho4")
-
-[node name="EvilDollEnemy" parent="Entities" instance=ExtResource("3_k7roi")]
-transform = Transform3D(-0.911619, 0, -0.411037, 0, 1, 0, 0.411037, 0, -0.911619, 2.99999, -0.032787, 15.1374)
-
-[node name="ZombieEnemy" parent="Entities" instance=ExtResource("4_sa7im")]
-transform = Transform3D(-0.998109, -4.26525e-05, -0.0614659, 4.09648e-05, 0.999999, -0.00135893, 0.0614659, -0.00135888, -0.998108, 4.51864, -0.0430332, 7.20356)
-component_resources = Array[ExtResource("13_pvfgj")]([SubResource("Resource_iixki"), SubResource("Resource_ypv7w"), SubResource("Resource_itu4t"), SubResource("Resource_05cb1"), SubResource("Resource_6kqax"), SubResource("Resource_apar3"), SubResource("Resource_x5chr"), SubResource("Resource_buds4"), SubResource("Resource_fi7jj"), SubResource("Resource_y6nof"), SubResource("Resource_immos"), SubResource("Resource_u77mw")])
+enabled = null
 
 [node name="EDoor" parent="Entities" instance=ExtResource("2_els58")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15.4196, 0, 0.120034)
@@ -152,20 +88,24 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15.4196, 0, 0.120034)
 [node name="HealthkitPickup" parent="Entities" instance=ExtResource("3_b6amu")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.73383, 3.8147e-06, 2.22476)
 item_resource = ExtResource("4_vaqdj")
+enabled = null
 
 [node name="KeyPickup" parent="Entities" instance=ExtResource("3_b6amu")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.2883, 0, 1.54391)
 item_resource = ExtResource("5_uedm4")
+enabled = null
 
 [node name="KeyPickup2" parent="Entities" instance=ExtResource("3_b6amu")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.11615, 0, 1.51265)
 item_resource = ExtResource("5_uedm4")
+enabled = null
 
 [node name="SquirtGunPickup" parent="Entities" instance=ExtResource("3_b6amu")]
 transform = Transform3D(-4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 0, 0, 1, -0.404482, 0.193465, 1.79263)
 item_resource = {}
 weapon_resource = ExtResource("6_vtm68")
 quantity = 100
+enabled = null
 
 [node name="EPlayer" parent="Entities" instance=ExtResource("7_4pqio")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.57766, -3.8147e-06, -2.50553)
@@ -256,3 +196,9 @@ mesh = SubResource("BoxMesh_yvtfh")
 shape = SubResource("BoxShape3D_t18n4")
 
 [node name="DefaultSystems" parent="." instance=ExtResource("11_dp1f4")]
+
+[node name="EvilDollEnemy" parent="." instance=ExtResource("3_k7roi")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.96555, -0.032787, 9.10699)
+
+[node name="ZombieEnemy" parent="." instance=ExtResource("4_sa7im")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.75709, -0.032787, -9.31633)

@@ -50,7 +50,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 [sub_resource type="Resource" id="Resource_buds4"]
 script = ExtResource("10_0w8ek")
 target = Vector3(0, 0, 0)
-debug = true
+debug = false
 
 [sub_resource type="Resource" id="Resource_y6nof"]
 script = ExtResource("11_uit2a")
@@ -92,6 +92,7 @@ height = 1.90148
 collision_layer = 16
 collision_mask = 89
 script = ExtResource("1_s8nbc")
+enabled = null
 component_resources = Array[ExtResource("2_u03c1")]([SubResource("Resource_iixki"), SubResource("Resource_ypv7w"), SubResource("Resource_itu4t"), SubResource("Resource_05cb1"), SubResource("Resource_6kqax"), SubResource("Resource_apar3"), SubResource("Resource_x5chr"), SubResource("Resource_buds4"), SubResource("Resource_y6nof"), SubResource("Resource_immos")])
 
 [node name="Visuals" parent="." instance=ExtResource("12_ctq82")]

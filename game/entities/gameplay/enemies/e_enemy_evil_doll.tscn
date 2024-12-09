@@ -55,7 +55,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 [sub_resource type="Resource" id="Resource_buds4"]
 script = ExtResource("10_w27te")
 target = Vector3(0, 0, 0)
-debug = true
+debug = false
 
 [sub_resource type="Resource" id="Resource_u4fji"]
 script = ExtResource("11_6abnt")
@@ -126,6 +126,7 @@ height = 1.90148
 collision_layer = 16
 collision_mask = 89
 script = ExtResource("1_8mheo")
+enabled = null
 component_resources = Array[ExtResource("2_epde0")]([SubResource("Resource_iixki"), SubResource("Resource_ypv7w"), SubResource("Resource_itu4t"), SubResource("Resource_05cb1"), SubResource("Resource_6kqax"), SubResource("Resource_apar3"), SubResource("Resource_x5chr"), SubResource("Resource_buds4"), SubResource("Resource_u4fji"), SubResource("Resource_3tece")])
 
 [node name="Root Scene" parent="." instance=ExtResource("11_aqfx0")]
@@ -137,28 +138,33 @@ surface_material_override/0 = SubResource("StandardMaterial3D_l4yq5")
 [node name="ChaseLOS" parent="." node_paths=PackedStringArray("parent") instance=ExtResource("15_3bntj")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0188789, 0.0402329, 0.00146985)
 angle = 251.115
-distance = 9.92
+distance = 15.0
 cone_color = Color(0.564706, 0.439216, 0, 0.501961)
 parent = NodePath("..")
-actions = Array[ExtResource("16_47dc3")]([SubResource("Resource_t4wul"), SubResource("Resource_w7x8h")])
-query_with_none = null
+actions = Array[ExtResource("16_47dc3")]([SubResource("Resource_t4wul")])
 query_match_for_components = null
-parent_remove_on_entered = null
 parent_add_on_exit = Array[ExtResource("2_epde0")]([])
-body_remove_on_entered = null
+body_add_on_exit = Array[ExtResource("2_epde0")]([])
+
+[node name="DashLOS" parent="." node_paths=PackedStringArray("parent") instance=ExtResource("15_3bntj")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0188789, 0.0402329, 0.00146985)
+angle = 251.865
+distance = 9.715
+cone_color = Color(0, 0.542776, 0.936477, 0.501961)
+parent = NodePath("..")
+actions = Array[ExtResource("16_47dc3")]([SubResource("Resource_w7x8h")])
+query_match_for_components = null
+parent_add_on_exit = Array[ExtResource("2_epde0")]([])
 body_add_on_exit = Array[ExtResource("2_epde0")]([])
 
 [node name="RangedAttackLOS" parent="." node_paths=PackedStringArray("parent") instance=ExtResource("15_3bntj")]
 angle = 80.765
-distance = 8.195
+distance = 14.005
 cone_color = Color(1, 0, 0, 0.501961)
 parent = NodePath("..")
 actions = Array[ExtResource("16_47dc3")]([SubResource("Resource_qbhou")])
-query_with_none = null
 query_match_for_components = null
-parent_remove_on_entered = null
 parent_add_on_exit = Array[ExtResource("2_epde0")]([])
-body_remove_on_entered = null
 body_add_on_exit = Array[ExtResource("2_epde0")]([])
 
 [node name="MeleeAttackLOS" parent="." node_paths=PackedStringArray("parent") instance=ExtResource("15_3bntj")]
@@ -167,11 +173,8 @@ distance = 1.1
 cone_color = Color(0.729412, 0.0117647, 0.65098, 0.501961)
 parent = NodePath("..")
 actions = Array[ExtResource("16_47dc3")]([SubResource("Resource_ffh6u")])
-query_with_none = null
 query_match_for_components = null
-parent_remove_on_entered = null
 parent_add_on_exit = Array[ExtResource("2_epde0")]([])
-body_remove_on_entered = null
 body_add_on_exit = Array[ExtResource("2_epde0")]([])
 
 [node name="HeadHitbox" parent="." node_paths=PackedStringArray("parent") instance=ExtResource("19_iq2ko")]

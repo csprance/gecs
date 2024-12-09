@@ -1,10 +1,12 @@
 class_name TrampolineControlsSystem
 extends System
 
+var jumping_on_tramp = Relationship.new(C_BouncingOn.new(), Trampoline)
+
 func query() -> QueryBuilder:
     return q\
     .with_all([C_TrampolineControls, C_Player])\
-    .with_relationship([Relationship.new(C_BouncingOn.new(), ECS.wildcard)])
+    .with_relationship([jumping_on_tramp])
 
 
 func process(entity, delta):
