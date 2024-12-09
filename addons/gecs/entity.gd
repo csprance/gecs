@@ -37,7 +37,8 @@ signal relationship_removed(entity: Entity, relationship: Relationship)
 var components: Dictionary = {}
 ## Relationships attached to the entity
 var relationships: Array[Relationship] = []
-
+## Is this entity active? (Will show up in queries)
+var enabled: bool = true
 
 ## Logger for entities to only log to a specific domain
 var _entityLogger = GECSLogger.new().domain('Entity')
@@ -56,6 +57,10 @@ func initialize():
 	for res in component_resources:
 		add_component(res.duplicate(true))
 	on_ready()
+
+## ##################################
+## Components
+## ##################################
 
 ## Adds a single component to the entity.[br]
 ## [param component] - The subclass of [Component] to add[br]
@@ -109,6 +114,9 @@ func get_component(component: Variant) -> Component:
 func has_component(component: Variant) -> bool:
 	return components.has(component.resource_path)
 
+## ##################################
+## Relationships
+## ##################################
 
 ## Adds a relationship to this entity.[br]
 ## [param relationship] The [Relationship] to add.
@@ -168,8 +176,9 @@ func get_relationships(relationship: Relationship) -> Array:
 func has_relationship(relationship: Relationship) -> bool:
 	return get_relationship(relationship) != null
 
-
+## ##################################
 # Lifecycle methods
+## ##################################
 
 ## Called after the entity is fully initialized and ready.[br]
 ## Override this method to perform additional setup after all components have been added.
@@ -187,42 +196,15 @@ func on_update(delta: float) -> void:
 func on_destroy() -> void:
 	pass
 
+## Called when the entity is disabled.[br]
+func on_disable() -> void:
+	pass
+
+## Called when the entity is enabled.[br]
+func on_enable() -> void:
+	pass
+
 ## Define the default components in code to use (Instead of in the editor)[br]
 ## This should return a list of components to add by default when the entity is created
 func define_components() -> Array:
 	return []
-
-# Adds a single component or relationship to the entity.
-func add(item) -> void:
-	# Type check is acceptable here since 'add' is called less frequently.
-	if item is Component:
-		add_component(item)
-	elif item is Relationship:
-		add_relationship(item)
-
-# Removes a single component or relationship from the entity.
-func remove(item) -> void:
-	if item is Component:
-		remove_component(item)
-	elif item is Relationship:
-		remove_relationship(item)
-
-# The 'has' method may not be optimal for performance-critical code.
-# Use 'has_component' or 'has_relationship' directly instead.
-func has(item) -> bool:
-	# Avoid using in performance-critical code due to type checking.
-	if item is Component:
-		return has_component(item)
-	elif item is Relationship:
-		return has_relationship(item)
-	return false
-
-# The 'get' method may not be optimal for performance-critical code.
-# Use 'get_component' or 'get_relationship' directly instead.
-func get(item):
-	# Avoid using in performance-critical code due to type checking.
-	if item is Component:
-		return get_component(item)
-	elif item is Relationship:
-		return get_relationship(item)
-	return null
