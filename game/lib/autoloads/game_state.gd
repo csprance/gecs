@@ -23,21 +23,21 @@ signal weapon_fired(weapon: Entity)
 
 signal item_used(item: Entity)
 
-
+## The Local Player Entity
 var player : Entity:
 	get:
 		var players =  Queries.is_players().execute()
 		if players.size() > 0:
 			return players[0]
 		return
-
+## The Remote Second Player Entity
 var player2 : Entity:
 	get:
 		var players =  Queries.is_players().execute()
 		if players.size() > 1:
 			return players[1]
 		return
-
+## Is the game paused
 var paused :bool = false:
 	get:
 		return paused
@@ -56,6 +56,7 @@ var victims := 10:
 		if v == 0:
 			print('Game Lost All Victims Dead')
 
+## The local players score
 var score :int = 0:
 	get:
 		return score

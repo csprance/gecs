@@ -3,7 +3,7 @@ extends Component
 
 @export var target: Vector3 = Vector3.ZERO
 
-@export var debug: bool = true
+@export var debug: bool = false
 
 
 func _init(_target: Vector3 = Vector3.ZERO, _debug: bool = true) -> void:

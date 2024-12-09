@@ -1,9 +1,21 @@
-[gd_scene load_steps=2 format=3 uid="uid://wf4r34fehgpo"]
+[gd_scene load_steps=4 format=3 uid="uid://wf4r34fehgpo"]
 
 [sub_resource type="CapsuleMesh" id="CapsuleMesh_3n407"]
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_7n45u"]
+
+[sub_resource type="SphereMesh" id="SphereMesh_6lkgi"]
+radius = 0.1
+height = 0.1
 
 [node name="WaterPistolProjectileVisuals" type="Node3D"]
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="."]
 transform = Transform3D(0.1, 0, 0, 0, -1.5547e-08, -0.1, 0, 0.355673, -4.37114e-09, 0, 0, 0)
 mesh = SubResource("CapsuleMesh_3n407")
+
+[node name="GPUParticles3D" type="GPUParticles3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.382121)
+amount = 32
+process_material = SubResource("ParticleProcessMaterial_7n45u")
+draw_pass_1 = SubResource("SphereMesh_6lkgi")

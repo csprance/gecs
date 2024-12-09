@@ -33,7 +33,7 @@ component_resources = Array[ExtResource("4_x6f6h")]([SubResource("Resource_5y3bq
 
 [node name="BounceCenter" parent="." instance=ExtResource("3_xexxj")]
 unique_name_in_owner = true
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5.0505, 0)
 
 [node name="ExitRight" parent="." instance=ExtResource("3_xexxj")]
 unique_name_in_owner = true

@@ -13,11 +13,15 @@ func process(entity, delta):
     var c_velocity = entity.get_component(C_Velocity) as C_Velocity
     # Jump in the direction we press a key in
     if Input.is_action_just_pressed('move_down'):
-        c_velocity.velocity = Vector3(0, -5, -1)
+        entity.add_component(C_CharacterBody3D.new())
+        c_velocity.velocity = Vector3(0, -5, -10)
     if Input.is_action_just_pressed('move_up'):
-        c_velocity.velocity = Vector3(0, -5, 1)
+        entity.add_component(C_CharacterBody3D.new())
+        c_velocity.velocity = Vector3(0, -5, 10)
     if Input.is_action_just_pressed('move_left'):
-        c_velocity.velocity = Vector3(-1, -5, 0)
+        entity.add_component(C_CharacterBody3D.new())
+        c_velocity.velocity = Vector3(-10, -5, 0)
     if Input.is_action_just_pressed('move_right'):
-        c_velocity.velocity = Vector3(1, -5, 0)
+        entity.add_component(C_CharacterBody3D.new())
+        c_velocity.velocity = Vector3(10, -5, 0)
     

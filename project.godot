@@ -127,3 +127,7 @@ interact={
 3d_physics/layer_5="enemy"
 3d_physics/layer_6="pickup"
 3d_physics/layer_7="victim"
+
+[physics]
+
+common/physics_interpolation=true

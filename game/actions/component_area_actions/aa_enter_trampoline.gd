@@ -33,19 +33,10 @@ func _on_exit(trampoline: Entity, player: Entity, _body_rid: RID, _body_shape_in
 
 func move_to_center(trampoline: Entity, player: Entity) -> void:
 	var c_player_trs = player.get_component(C_Transform) as C_Transform
-	var c_tramp_trs = trampoline.get_component(C_Transform) as C_Transform
+	var start_position = c_player_trs.transform.origin
+	var end_position = trampoline.bounce_center.global_position
 	player.remove_component(C_CharacterBody3D)
-	var duration = 1.0  # Duration in seconds
-	var elapsed_time = 0.0
-	var start_position :Vector3= c_player_trs.transform.origin
-	var target_position :Vector3 = trampoline.bounce_center.global_position
-	print("EnterTrampolineAreaAction: move_to_center: start_position: ",start_position," target_position: ", target_position )
-	while elapsed_time < duration:
-		var t = elapsed_time / duration
-		c_player_trs.transform.origin = start_position.lerp(target_position, t)
-		print("EnterTrampolineAreaAction: move_to_center: c_player_trs.transform.origin: ",c_player_trs.transform.origin," start: ", start_position, " target: ", target_position, " t: ", t)
-		await player.get_tree().process_frame
-		elapsed_time += player.get_process_delta_time()
-	# Ensure the player is exactly at the target position
-	c_player_trs.transform.origin = target_position
-	player.add_component(C_CharacterBody3D.new())
+	var tween = player.create_tween()
+	tween.tween_method(func(new_position): c_player_trs.transform.origin = new_position, start_position, end_position, 1.0)
+	await tween.finished
+

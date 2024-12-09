@@ -80,7 +80,6 @@ navigation_mesh = SubResource("NavigationMesh_o4toq")
 [node name="EPickup" parent="Entities" instance=ExtResource("3_b6amu")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.89069, -0.032787, 1.51655)
 item_resource = ExtResource("25_1kho4")
-enabled = null
 
 [node name="EDoor" parent="Entities" instance=ExtResource("2_els58")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15.4196, 0, 0.120034)
@@ -88,24 +87,19 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15.4196, 0, 0.120034)
 [node name="HealthkitPickup" parent="Entities" instance=ExtResource("3_b6amu")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.73383, 3.8147e-06, 2.22476)
 item_resource = ExtResource("4_vaqdj")
-enabled = null
 
 [node name="KeyPickup" parent="Entities" instance=ExtResource("3_b6amu")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.2883, 0, 1.54391)
 item_resource = ExtResource("5_uedm4")
-enabled = null
 
 [node name="KeyPickup2" parent="Entities" instance=ExtResource("3_b6amu")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.11615, 0, 1.51265)
 item_resource = ExtResource("5_uedm4")
-enabled = null
 
 [node name="SquirtGunPickup" parent="Entities" instance=ExtResource("3_b6amu")]
 transform = Transform3D(-4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 0, 0, 1, -0.404482, 0.193465, 1.79263)
-item_resource = {}
 weapon_resource = ExtResource("6_vtm68")
 quantity = 100
-enabled = null
 
 [node name="EPlayer" parent="Entities" instance=ExtResource("7_4pqio")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.57766, -3.8147e-06, -2.50553)

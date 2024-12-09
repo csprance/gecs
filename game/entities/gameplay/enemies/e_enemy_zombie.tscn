@@ -1,4 +1,4 @@
-[gd_scene load_steps=37 format=3 uid="uid://cgl874p46o3qf"]
+[gd_scene load_steps=39 format=3 uid="uid://cgl874p46o3qf"]
 
 [ext_resource type="Script" path="res://game/entities/gameplay/e_enemy.gd" id="1_s8nbc"]
 [ext_resource type="Script" path="res://game/components/gameplay/c_animation_player.gd" id="2_bv4ns"]
@@ -13,6 +13,7 @@
 [ext_resource type="Script" path="res://game/components/gameplay/behavior/c_zombie_behavior.gd" id="11_uit2a"]
 [ext_resource type="PackedScene" uid="uid://cvroricp14108" path="res://game/assets/characters/models/characterMedium.fbx" id="12_ctq82"]
 [ext_resource type="Texture2D" uid="uid://bnvcgfhim0vqp" path="res://game/assets/characters/skins/zombieA.png" id="13_7shsy"]
+[ext_resource type="Script" path="res://game/components/gameplay/c_lives.gd" id="13_8klft"]
 [ext_resource type="Script" path="res://game/components/gameplay/c_reward.gd" id="13_xpf4g"]
 [ext_resource type="PackedScene" uid="uid://cblqfvanyrdd4" path="res://game/lib/line_of_sight_3d.tscn" id="15_kbo0c"]
 [ext_resource type="Script" path="res://game/actions/component_area_actions/component_area_action.gd" id="16_qr2lg"]
@@ -60,6 +61,12 @@ script = ExtResource("11_uit2a")
 script = ExtResource("13_xpf4g")
 points = 10
 
+[sub_resource type="Resource" id="Resource_84c7y"]
+script = ExtResource("13_8klft")
+lives = 3
+respawn_time = 4.0
+respawn_location = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_3du5i"]
 albedo_texture = ExtResource("13_7shsy")
 
@@ -93,7 +100,7 @@ height = 1.90148
 collision_layer = 16
 collision_mask = 89
 script = ExtResource("1_s8nbc")
-component_resources = Array[ExtResource("2_u03c1")]([SubResource("Resource_iixki"), SubResource("Resource_ypv7w"), SubResource("Resource_itu4t"), SubResource("Resource_05cb1"), SubResource("Resource_6kqax"), SubResource("Resource_apar3"), SubResource("Resource_x5chr"), SubResource("Resource_buds4"), SubResource("Resource_y6nof"), SubResource("Resource_immos")])
+component_resources = Array[ExtResource("2_u03c1")]([SubResource("Resource_iixki"), SubResource("Resource_ypv7w"), SubResource("Resource_itu4t"), SubResource("Resource_05cb1"), SubResource("Resource_6kqax"), SubResource("Resource_apar3"), SubResource("Resource_x5chr"), SubResource("Resource_buds4"), SubResource("Resource_y6nof"), SubResource("Resource_immos"), SubResource("Resource_84c7y")])
 
 [node name="Visuals" parent="." instance=ExtResource("12_ctq82")]
 transform = Transform3D(0.8, 0, 0, 0, 0.8, 0, 0, 0, 0.8, 0, 0, 0)
