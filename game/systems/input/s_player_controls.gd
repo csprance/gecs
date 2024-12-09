@@ -5,6 +5,10 @@ extends System
 
 const AIM_OFFSET = Vector3(0, 1, 0)
 
+func setup():
+	# Anytime the player controls system is run this hides the mouse
+	Input.set_mouse_mode(Input.MOUSE_MODE_CONFINED_HIDDEN)
+
 func sub_systems():
 	return [
 		## Movement Subsystem
@@ -53,6 +57,7 @@ func player_input_subsystem(_3d_playersentity: Entity, _delta: float) -> void:
 
 	if Input.is_action_just_pressed('pause_toggle'):
 		GameState.paused = not GameState.paused
+		Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE if GameState.paused else Input.MOUSE_MODE_CONFINED_HIDDEN)
 
 
 func item_subsystem(entity: Entity, _delta: float) -> void:
