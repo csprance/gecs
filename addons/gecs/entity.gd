@@ -30,6 +30,8 @@ signal relationship_added(entity: Entity, relationship: Relationship)
 ## Emit when a [Relationship] is removed from the [Entity]
 signal relationship_removed(entity: Entity, relationship: Relationship)
 
+## Is this entity active? (Will show up in queries)
+@export var enabled: bool = true
 ## [Component]s to be attached to the entity set in the editor. These will be loaded for you and added to the [Entity]
 @export var component_resources: Array[Component] = []
 
@@ -37,8 +39,6 @@ signal relationship_removed(entity: Entity, relationship: Relationship)
 var components: Dictionary = {}
 ## Relationships attached to the entity
 var relationships: Array[Relationship] = []
-## Is this entity active? (Will show up in queries)
-var enabled: bool = true
 
 ## Logger for entities to only log to a specific domain
 var _entityLogger = GECSLogger.new().domain('Entity')
