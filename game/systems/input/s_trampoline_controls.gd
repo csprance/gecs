@@ -4,7 +4,7 @@ extends System
 func query() -> QueryBuilder:
     return q\
     .with_all([C_TrampolineControls, C_Player])\
-    .with_relationship([Relationship.new(C_BouncingOn.new(), Trampoline)])
+    .with_relationship([Relationship.new(C_BouncingOn.new(), ECS.wildcard)])
 
 
 func process(entity, delta):

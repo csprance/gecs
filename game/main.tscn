@@ -1,4 +1,4 @@
-[gd_scene load_steps=29 format=3 uid="uid://cgyawfqrsaqdd"]
+[gd_scene load_steps=31 format=3 uid="uid://cgyawfqrsaqdd"]
 
 [ext_resource type="Script" path="res://game/main.gd" id="1_2dpkv"]
 [ext_resource type="PackedScene" uid="uid://ufipo5bjo0f8" path="res://game/assets/worlds/main_menu/world_main_menu.tscn" id="2_jfvff"]
@@ -10,6 +10,7 @@
 [ext_resource type="AudioStream" uid="uid://dptuwjwr4wwjf" path="res://addons/kenney impact sounds/footstep_snow_003.ogg" id="7_r0v48"]
 [ext_resource type="AudioStream" uid="uid://dn5tq22uvabcv" path="res://addons/kenney impact sounds/footstep_snow_002.ogg" id="8_u3xve"]
 [ext_resource type="AudioStream" uid="uid://bn0mmmtnem0t1" path="res://addons/kenney impact sounds/footstep_snow_004.ogg" id="9_xwrxi"]
+[ext_resource type="AudioStream" uid="uid://76slew1j7tk6" path="res://game/assets/audio/wilhelm-scream.ogg" id="11_vkr5h"]
 [ext_resource type="Script" path="res://addons/resonate/music_manager/music_bank.gd" id="11_w8yu0"]
 [ext_resource type="Script" path="res://addons/resonate/music_manager/music_track_resource.gd" id="12_1u81k"]
 [ext_resource type="Script" path="res://addons/resonate/music_manager/music_stem_resource.gd" id="13_oodgr"]
@@ -60,6 +61,14 @@ volume = -66.2
 pitch = 1.0
 streams = Array[AudioStream]([SubResource("AudioStreamRandomizer_svov3")])
 
+[sub_resource type="Resource" id="Resource_hi6xb"]
+script = ExtResource("3_acroa")
+name = "victim_death"
+bus = ""
+volume = 0.0
+pitch = 1.0
+streams = Array[AudioStream]([ExtResource("11_vkr5h")])
+
 [sub_resource type="Resource" id="Resource_7nam2"]
 script = ExtResource("13_oodgr")
 name = "action1"
@@ -102,7 +111,7 @@ script = ExtResource("1_2dpkv")
 [node name="SoundBank" type="Node" parent="."]
 script = ExtResource("2_sqmfr")
 label = "fx"
-events = Array[ExtResource("3_acroa")]([SubResource("Resource_qhgwi"), SubResource("Resource_ni5bo"), SubResource("Resource_7mu7w")])
+events = Array[ExtResource("3_acroa")]([SubResource("Resource_qhgwi"), SubResource("Resource_ni5bo"), SubResource("Resource_7mu7w"), SubResource("Resource_hi6xb")])
 
 [node name="MusicBank" type="Node" parent="."]
 script = ExtResource("11_w8yu0")

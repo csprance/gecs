@@ -9,8 +9,10 @@ extends Node
 
 ## Emitted when an entity is added
 signal entity_added(entity: Entity)
+signal entity_enabled(entity: Entity)
 ## Emitted when an entity is removed
 signal entity_removed(entity: Entity)
+signal entity_disabled(entity: Entity)
 ## Emitted when a system is added
 signal system_added(system: System)
 ## Emitted when a system is removed
@@ -128,6 +130,76 @@ func add_entities(_entities: Array, components = null):
 	for _entity in _entities:
 		add_entity(_entity, components)
 
+
+## Removes an [Entity] from the world.[br]
+## [param entity] The [Entity] to remove.[br]
+## [b]Example:[/b]
+##      [codeblock]world.remove_entity(player_entity)[/codeblock]
+func remove_entity(entity) -> void:
+	entity = entity as Entity
+	entity_removed.emit(entity)
+	_worldLogger.debug('remove_entity Removing Entity: ', entity)
+	entities.erase(entity) # FIXME: This doesn't always work for some reason?
+	# Update index
+	for component_key in entity.components.keys():
+		_remove_entity_from_index(entity, component_key)
+	
+	entity.component_added.disconnect(_on_entity_component_added)
+	entity.component_removed.disconnect(_on_entity_component_removed)
+	entity.relationship_added.disconnect(_on_entity_relationship_added)
+	entity.relationship_removed.disconnect(_on_entity_relationship_removed)
+	entity.on_destroy()
+	entity.queue_free()
+
+## Disable an [Entity] from the world. Disable entities don't run process or physics,[br] 
+## are hidden and removed the entities list and the[br]
+## [param entity] The [Entity] to disable.[br]
+## [b]Example:[/b]
+##      [codeblock]world.disable_entity(player_entity)[/codeblock]
+func disable_entity(entity) -> Entity:
+	entity = entity as Entity
+	entity.enabled = false
+	entity_disabled.emit(entity)
+	_worldLogger.debug('disable_entity Disabling Entity: ', entity)
+	entity.component_added.disconnect(_on_entity_component_added)
+	entity.component_removed.disconnect(_on_entity_component_removed)
+	entity.relationship_added.disconnect(_on_entity_relationship_added)
+	entity.relationship_removed.disconnect(_on_entity_relationship_removed)
+	entity.on_disable()
+	entity.set_process(false)
+	entity.set_physics_process(false)
+	return entity
+
+## Enables a single [Entity] to the world.[br]
+## [param entity] The [Entity] to enable.[br]
+## [param components] The optional list of [Component] to add to the entity.[br]
+## [b]Example:[/b]
+## [codeblock] 
+## # enable just an entity
+## world.enable_entity(player_entity)
+## # enable an entity with some components
+## world.enable_entity(other_entity, [component_a, component_b])
+## [/codeblock]
+func enable_entity(entity: Entity, components = null) -> void:
+	# Update index
+	_worldLogger.debug('enable_entity Enabling Entity to World: ', entity)
+	entity.enabled = true
+	entity_enabled.emit(entity)
+
+	# Connect to entity signals for components so we can track global component state
+	entity.component_added.connect(_on_entity_component_added)
+	entity.component_removed.connect(_on_entity_component_removed)
+	entity.relationship_added.connect(_on_entity_relationship_added)
+	entity.relationship_removed.connect(_on_entity_relationship_removed)
+
+	if components:
+		entity.add_components(components)
+	
+	entity.set_process(true)
+	entity.set_physics_process(true)
+	entity.on_enable()
+	
+
 ## Adds a single system to the world.
 ##
 ## @param system The system to add.
@@ -154,26 +226,6 @@ func add_system(system: System) -> void:
 func add_systems(_systems: Array):
 	for _system in _systems:
 		add_system(_system)
-
-## Removes an [Entity] from the world.[br]
-## [param entity] The [Entity] to remove.[br]
-## [b]Example:[/b]
-##      [codeblock]world.remove_entity(player_entity)[/codeblock]
-func remove_entity(entity) -> void:
-	entity = entity as Entity
-	entity_removed.emit(entity)
-	_worldLogger.debug('remove_entity Removing Entity: ', entity)
-	entities.erase(entity) # FIXME: This doesn't always work for some reason?
-	# Update index
-	for component_key in entity.components.keys():
-		_remove_entity_from_index(entity, component_key)
-	
-	entity.component_added.disconnect(_on_entity_component_added)
-	entity.component_removed.disconnect(_on_entity_component_removed)
-	entity.relationship_added.disconnect(_on_entity_relationship_added)
-	entity.relationship_removed.disconnect(_on_entity_relationship_removed)
-	entity.on_destroy()
-	entity.queue_free()
 
 ## Removes a [System] from the world.[br]
 ## [param system] The [System] to remove.[br]

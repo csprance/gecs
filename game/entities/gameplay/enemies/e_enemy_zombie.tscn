@@ -112,11 +112,8 @@ distance = 15.0
 cone_color = Color(0.647059, 0.505882, 0, 0.501961)
 parent = NodePath("..")
 actions = Array[ExtResource("16_qr2lg")]([SubResource("Resource_t4wul")])
-query_with_none = null
 query_match_for_components = null
-parent_remove_on_entered = null
 parent_add_on_exit = Array[ExtResource("2_u03c1")]([])
-body_remove_on_entered = null
 body_add_on_exit = Array[ExtResource("2_u03c1")]([])
 
 [node name="AttackLOS" parent="." node_paths=PackedStringArray("parent") instance=ExtResource("15_kbo0c")]
@@ -125,11 +122,8 @@ distance = 1.44
 cone_color = Color(0.819608, 0, 0.760784, 0.501961)
 parent = NodePath("..")
 actions = Array[ExtResource("16_qr2lg")]([SubResource("Resource_bibud")])
-query_with_none = null
 query_match_for_components = null
-parent_remove_on_entered = null
 parent_add_on_exit = Array[ExtResource("2_u03c1")]([])
-body_remove_on_entered = null
 body_add_on_exit = Array[ExtResource("2_u03c1")]([])
 
 [node name="BodyHitbox" parent="." node_paths=PackedStringArray("parent") instance=ExtResource("19_v7nx8")]
@@ -143,6 +137,12 @@ color = Color(0, 0.635294, 0.427451, 0.501961)
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.926148, 0)
 shape = SubResource("CapsuleShape3D_pjpad")
 
+[node name="VisibleOnScreenEnabler3D" type="VisibleOnScreenEnabler3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5544, 0)
+aabb = AABB(-1.46329, -1.69021, -1.51593, 2.92658, 3.38042, 3.03186)
+
 [connection signal="hitbox_entered" from="BodyHitbox" to="." method="_on_body_hitbox_hitbox_entered"]
+[connection signal="screen_entered" from="VisibleOnScreenEnabler3D" to="." method="_on_visible_on_screen_enabler_3d_screen_entered"]
+[connection signal="screen_exited" from="VisibleOnScreenEnabler3D" to="." method="_on_visible_on_screen_enabler_3d_screen_exited"]
 
 [editable path="Visuals"]

@@ -47,6 +47,7 @@ group = "input"
 [node name="TrampolineControlsSystem" type="Node" parent="input"]
 script = ExtResource("2_fwg0y")
 group = "input"
+active = false
 
 [node name="gameplay" type="Node" parent="."]
 
