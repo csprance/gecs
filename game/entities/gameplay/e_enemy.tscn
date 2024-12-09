@@ -1,4 +1,4 @@
-[gd_scene load_steps=29 format=3 uid="uid://bv4lxxnenah0s"]
+[gd_scene load_steps=30 format=3 uid="uid://bv4lxxnenah0s"]
 
 [ext_resource type="Script" path="res://game/entities/gameplay/e_enemy.gd" id="1_k0hdh"]
 [ext_resource type="Script" path="res://addons/gecs/component.gd" id="2_6xfg5"]
@@ -13,6 +13,7 @@
 [ext_resource type="PackedScene" uid="uid://cblqfvanyrdd4" path="res://game/lib/line_of_sight_3d.tscn" id="12_f8y1n"]
 [ext_resource type="PackedScene" uid="uid://d2p72cr27pb2f" path="res://game/lib/hitbox_3d.tscn" id="12_mjcjh"]
 [ext_resource type="Script" path="res://game/actions/component_area_actions/component_area_action.gd" id="12_ybnf2"]
+[ext_resource type="PackedScene" uid="uid://dnkm23kafd5qn" path="res://game/lib/entity_visible_on_screen_enabler_3d.tscn" id="16_1r055"]
 [ext_resource type="Script" path="res://game/actions/component_area_actions/aa_attack.gd" id="18_8lilb"]
 [ext_resource type="Script" path="res://game/actions/component_area_actions/aa_chase.gd" id="19_j3onr"]
 
@@ -25,8 +26,7 @@ script = ExtResource("3_tiohx")
 
 [sub_resource type="Resource" id="Resource_05cb1"]
 script = ExtResource("5_oxxxc")
-direction = Vector3(0, 0, 0)
-speed = 0.0
+velocity = Vector3(0, 0, 0)
 
 [sub_resource type="Resource" id="Resource_buds4"]
 script = ExtResource("10_b7f7k")
@@ -47,16 +47,14 @@ value = 55.0
 
 [sub_resource type="Resource" id="Resource_iixki"]
 script = ExtResource("2_ee2ni")
-anim_player = NodePath("AnimationPlayer")
-anim_name = ""
-anim_speed = ""
+player = NodePath("")
 
 [sub_resource type="Animation" id="Animation_axjf3"]
 resource_name = "new_animation"
 
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_qrdbm"]
 _data = {
-"new_animation": SubResource("Animation_axjf3")
+&"new_animation": SubResource("Animation_axjf3")
 }
 
 [sub_resource type="Resource" id="Resource_t4wul"]
@@ -87,7 +85,7 @@ component_resources = Array[ExtResource("2_6xfg5")]([SubResource("Resource_x5chr
 [node name="AnimationPlayer" type="AnimationPlayer" parent="."]
 root_node = NodePath("")
 libraries = {
-"": SubResource("AnimationLibrary_qrdbm")
+&"": SubResource("AnimationLibrary_qrdbm")
 }
 
 [node name="ChaseLOS" parent="." node_paths=PackedStringArray("parent") instance=ExtResource("12_f8y1n")]
@@ -129,3 +127,6 @@ color = Color(0.054902, 0.533333, 0.972549, 0.501961)
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.41763, 0)
 shape = SubResource("CapsuleShape3D_nflbs")
+
+[node name="EntityVisibleOnScreenEnabler3D" parent="." instance=ExtResource("16_1r055")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.55594, 0)

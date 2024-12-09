@@ -1,4 +1,4 @@
-[gd_scene load_steps=44 format=3 uid="uid://n6ivo0wnpuvg"]
+[gd_scene load_steps=45 format=3 uid="uid://n6ivo0wnpuvg"]
 
 [ext_resource type="Script" path="res://game/entities/gameplay/e_enemy.gd" id="1_8mheo"]
 [ext_resource type="Script" path="res://addons/gecs/component.gd" id="2_epde0"]
@@ -24,6 +24,7 @@
 [ext_resource type="Script" path="res://game/actions/action.gd" id="20_totrq"]
 [ext_resource type="Script" path="res://game/actions/sequence_action.gd" id="22_isy5m"]
 [ext_resource type="Script" path="res://game/actions/component_area_actions/aa_action_picker.gd" id="23_rndos"]
+[ext_resource type="PackedScene" uid="uid://dnkm23kafd5qn" path="res://game/lib/entity_visible_on_screen_enabler_3d.tscn" id="25_agyb3"]
 
 [sub_resource type="Resource" id="Resource_iixki"]
 script = ExtResource("2_tohob")
@@ -205,5 +206,9 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.926148, 0)
 shape = SubResource("CapsuleShape3D_pjpad")
 
 [node name="NavigationAgent3D" type="NavigationAgent3D" parent="."]
+
+[node name="EntityVisibleOnScreenEnabler3D" parent="." instance=ExtResource("25_agyb3")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.01089, 0)
+aabb = AABB(-0.854186, -1.01743, -0.884104, 1.70837, 2.03486, 1.76821)
 
 [editable path="Root Scene"]
