@@ -1,4 +1,4 @@
-[gd_scene load_steps=46 format=3 uid="uid://n6ivo0wnpuvg"]
+[gd_scene load_steps=44 format=3 uid="uid://n6ivo0wnpuvg"]
 
 [ext_resource type="Script" path="res://game/entities/gameplay/e_enemy.gd" id="1_8mheo"]
 [ext_resource type="Script" path="res://addons/gecs/component.gd" id="2_epde0"]
@@ -12,7 +12,6 @@
 [ext_resource type="Script" path="res://game/components/gameplay/c_look_at.gd" id="10_w27te"]
 [ext_resource type="Script" path="res://game/components/gameplay/behavior/c_evil_doll_behavior.gd" id="11_6abnt"]
 [ext_resource type="PackedScene" uid="uid://cdoq0qjcutvy3" path="res://game/assets/characters/models/characterSmall.fbx" id="11_aqfx0"]
-[ext_resource type="Script" path="res://game/components/debug/c_debug_label.gd" id="11_xj56r"]
 [ext_resource type="Texture2D" uid="uid://d4asuwe8kpb3y" path="res://game/assets/characters/skins/alienB.png" id="12_8ivd6"]
 [ext_resource type="Script" path="res://game/components/gameplay/c_reward.gd" id="13_uhf02"]
 [ext_resource type="PackedScene" uid="uid://cblqfvanyrdd4" path="res://game/lib/line_of_sight_3d.tscn" id="15_3bntj"]
@@ -57,11 +56,6 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 script = ExtResource("10_w27te")
 target = Vector3(0, 0, 0)
 debug = true
-
-[sub_resource type="Resource" id="Resource_fi7jj"]
-script = ExtResource("11_xj56r")
-text = "Debug Label"
-offset = Vector3(0, 5, 0)
 
 [sub_resource type="Resource" id="Resource_u4fji"]
 script = ExtResource("11_6abnt")
@@ -132,7 +126,7 @@ height = 1.90148
 collision_layer = 16
 collision_mask = 89
 script = ExtResource("1_8mheo")
-component_resources = Array[ExtResource("2_epde0")]([SubResource("Resource_iixki"), SubResource("Resource_ypv7w"), SubResource("Resource_itu4t"), SubResource("Resource_05cb1"), SubResource("Resource_6kqax"), SubResource("Resource_apar3"), SubResource("Resource_x5chr"), SubResource("Resource_buds4"), SubResource("Resource_fi7jj"), SubResource("Resource_u4fji"), SubResource("Resource_3tece")])
+component_resources = Array[ExtResource("2_epde0")]([SubResource("Resource_iixki"), SubResource("Resource_ypv7w"), SubResource("Resource_itu4t"), SubResource("Resource_05cb1"), SubResource("Resource_6kqax"), SubResource("Resource_apar3"), SubResource("Resource_x5chr"), SubResource("Resource_buds4"), SubResource("Resource_u4fji"), SubResource("Resource_3tece")])
 
 [node name="Root Scene" parent="." instance=ExtResource("11_aqfx0")]
 transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0, 0)

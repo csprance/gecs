@@ -43,10 +43,10 @@ func sub_systems():
 func player_input_subsystem(_3d_playersentity: Entity, _delta: float) -> void:
 	if Input.is_action_just_pressed('change_item'):
 		# change to the next item in the list of the player's items
-		Loggie.debug('Change Item')
+		InventoryUtils.cycle_inventory_item()
 
 	if Input.is_action_just_pressed('change_weapon'):
-		Loggie.debug('Change Weapon')
+		InventoryUtils.cycle_inventory_weapon()
 	
 	if Input.is_action_just_pressed('radar_toggle'):
 		GameState.radar_toggled.emit()

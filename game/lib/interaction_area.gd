@@ -24,4 +24,5 @@ func _on_area_entered(_body_id: RID, body, _body_shape: int, _area_shape: int) -
             body.add_relationship(Relationship.new(C_CanInteractWith.new(), parent))
 
 func _on_area_exited(_body_id: RID, body, _body_shape: int, _area_shape: int) -> void:
-    body.remove_relationship(Relationship.new(C_CanInteractWith.new(), parent))
+    if parent:
+        body.remove_relationship(Relationship.new(C_CanInteractWith.new(), parent))

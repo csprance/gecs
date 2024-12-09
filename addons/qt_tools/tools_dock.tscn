@@ -4,8 +4,11 @@
 
 [node name="QTTools" type="Control"]
 layout_mode = 3
-anchors_preset = 0
-offset_bottom = 40.0
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 script = ExtResource("1_2llme")
 
 [node name="HBoxContainer" type="HBoxContainer" parent="."]
@@ -16,7 +19,6 @@ size_flags_vertical = 0
 
 [node name="CheckBox" type="CheckBox" parent="HBoxContainer"]
 layout_mode = 2
-button_pressed = true
 
 [node name="MarginContainer" type="MarginContainer" parent="HBoxContainer"]
 layout_mode = 2

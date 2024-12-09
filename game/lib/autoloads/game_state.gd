@@ -101,6 +101,8 @@ var active_item: Entity :
 		GameState.player.add_component(C_HasActiveItem.new())
 		item_changed.emit(v)
 
+var actions = []
+
 ## This is like Reacts useState hook, it allows you to store state on an entity
 ## entity (Entity): The entity to associate the state with.
 ## key (String): The key identifying the state.

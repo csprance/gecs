@@ -19,6 +19,7 @@ func pickup_weapon(pickup: Pickup):
 	if pickup.weapon_resource.pickup_action:
 		pickup.weapon_resource.pickup_action.run_action()
 	var new_weapon = Entity.new()
+	new_weapon.name = pickup.weapon_resource.name
 	new_weapon.add_components([pickup.weapon_resource, C_InInventory.new(), C_Quantity.new(pickup.quantity)])
 	ECS.world.add_entity(new_weapon)
 	if not GameState.active_weapon:
@@ -30,6 +31,7 @@ func pickup_item(pickup: Pickup):
 	if pickup.item_resource.pickup_action:
 		pickup.item_resource.pickup_action.run_action()
 	var new_item = Entity.new()
+	new_item.name = '-'.join([pickup.item_resource.name, pickup.get_instance_id()])
 	new_item.add_components([pickup.item_resource, C_InInventory.new(), C_Quantity.new(pickup.quantity)])
 	ECS.world.add_entity(new_item)
 	GameState.inventory_item_added.emit(new_item)

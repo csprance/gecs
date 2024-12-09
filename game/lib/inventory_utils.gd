@@ -78,3 +78,16 @@ static func cycle_inventory_item():
 			if index >= items.size():
 				index = 0
 			GameState.active_item = items[index]
+
+## Cycles to the next item in the player's inventory.
+static func cycle_inventory_weapon():
+	var weapons =  Queries.all_weapons_in_inventory().execute()
+	if weapons.size() > 0:
+		var index = weapons.find(GameState.player.get_component(C_HasActiveWeapon))
+		if index == -1:
+			GameState.active_weapon = weapons[0]
+		else:
+			index += 1
+			if index >= weapons.size():
+				index = 0
+			GameState.active_weapon = weapons[index]

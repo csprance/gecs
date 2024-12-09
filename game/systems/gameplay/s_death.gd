@@ -24,7 +24,15 @@ func process(entity: Entity, _delta: float) -> void:
 	# If we have lives, check to see if we can respawn and mark it for respawn
 	c_lives.lives -= 1
 	if c_lives.lives > 0:
-		entity.add_component(C_NeedsRespawn.new()) # mark for respawn
+		var new_entity = entity.duplicate() # duplicate the entity
+		new_entity.remove_component(C_Death) # remove the death component
+		# mark for delete
+		entity.add_component(C_IsPendingDelete.new()) 
+		# Add entity to the world after the respawn time
+		await ECS.world.get_tree().create_timer(c_lives.respawn_time).timeout
+		ECS.world.add_entity(new_entity)
+		new_entity.add_components([C_Transform.new(c_lives.respawn_location), C_Lives.new(c_lives.lives, c_lives.respawn_time, c_lives.respawn_location)])
+		Utils.sync_from_transform(new_entity) # sync the transform
 		return
 	if c_lives.lives <= 0:
 		entity.add_component(C_IsPendingDelete.new()) # mark for deletion

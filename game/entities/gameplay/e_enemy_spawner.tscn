@@ -1,12 +1,13 @@
-[gd_scene load_steps=3 format=3 uid="uid://qm2mcmivb2gc"]
+[gd_scene load_steps=4 format=3 uid="uid://qm2mcmivb2gc"]
 
 [ext_resource type="Script" path="res://game/entities/gameplay/e_enemy_spawner.gd" id="1_gbogh"]
+[ext_resource type="PackedScene" uid="uid://cgl874p46o3qf" path="res://game/entities/gameplay/enemies/e_enemy_zombie.tscn" id="2_e85t8"]
 
 [sub_resource type="CapsuleMesh" id="CapsuleMesh_1g0i4"]
 
-[node name="EEnemySpawner" type="Node3D" node_paths=PackedStringArray("enemies")]
+[node name="EEnemySpawner" type="Node3D"]
 script = ExtResource("1_gbogh")
-enemies = [null]
+enemy_scene = ExtResource("2_e85t8")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.979288, 0)
