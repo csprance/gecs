@@ -5,3 +5,7 @@ extends Component
 @export var direction: Vector3 = Vector3.DOWN
 ## How strong is gravity
 @export var value: float = 9.8
+
+var gravity: Vector3:
+    get:
+        return direction * value
