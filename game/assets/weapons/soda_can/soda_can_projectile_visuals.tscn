@@ -1,0 +1,68 @@
+[gd_scene load_steps=8 format=3 uid="uid://numyqbtifv4q"]
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_kis2y"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_rd7k1"]
+albedo_color = Color(1, 0, 0, 1)
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_7n45u"]
+
+[sub_resource type="SphereMesh" id="SphereMesh_6lkgi"]
+radius = 0.1
+height = 0.1
+
+[sub_resource type="Animation" id="Animation_5ugae"]
+resource_name = "flying"
+length = 15.0
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("MeshInstance3D:rotation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 14.8667),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Vector3(0, 0, 0), Vector3(136.921, 0.575959, 0.261799)]
+}
+
+[sub_resource type="Animation" id="Animation_6dw1d"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("MeshInstance3D:rotation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector3(2.26436, 0, 0)]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_q5y36"]
+_data = {
+&"RESET": SubResource("Animation_6dw1d"),
+&"flying": SubResource("Animation_5ugae")
+}
+
+[node name="WaterPistolProjectileVisuals" type="Node3D"]
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.3, 0, 0, 0, -0.156623, -0.230693, 0, 0.188399, -0.191783, 0, 0.275488, 0)
+mesh = SubResource("CylinderMesh_kis2y")
+surface_material_override/0 = SubResource("StandardMaterial3D_rd7k1")
+
+[node name="GPUParticles3D" type="GPUParticles3D" parent="MeshInstance3D"]
+transform = Transform3D(3.01475, 0, 1.42211, 0, 4.08163, 0, -1.42211, 0, 3.01475, -0.156617, 0.789874, 0.135003)
+amount = 32
+process_material = SubResource("ParticleProcessMaterial_7n45u")
+draw_pass_1 = SubResource("SphereMesh_6lkgi")
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+libraries = {
+&"": SubResource("AnimationLibrary_q5y36")
+}
+autoplay = "flying"

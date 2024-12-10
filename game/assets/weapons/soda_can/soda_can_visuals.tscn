@@ -1,0 +1,38 @@
+[gd_scene load_steps=3 format=3 uid="uid://l383lhwgqwth"]
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_flipe"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_8l53f"]
+albedo_color = Color(1, 0, 0, 1)
+
+[node name="SodaCanVisuals" type="Node3D"]
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.271328, 0, -0.12799, 0, 0.245, 0, 0.12799, 0, 0.271328, 0.288767, 0.25298, 0.106679)
+mesh = SubResource("CylinderMesh_flipe")
+surface_material_override/0 = SubResource("StandardMaterial3D_8l53f")
+
+[node name="MeshInstance3D2" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.271328, 0, -0.12799, 0, 0.245, 0, 0.12799, 0, 0.271328, 0.0171146, 0.25298, -0.0238606)
+mesh = SubResource("CylinderMesh_flipe")
+surface_material_override/0 = SubResource("StandardMaterial3D_8l53f")
+
+[node name="MeshInstance3D3" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.271328, 0, -0.12799, 0, 0.245, 0, 0.12799, 0, 0.271328, -0.26026, 0.25298, -0.168412)
+mesh = SubResource("CylinderMesh_flipe")
+surface_material_override/0 = SubResource("StandardMaterial3D_8l53f")
+
+[node name="MeshInstance3D4" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.271328, 0, -0.12799, 0, 0.245, 0, 0.12799, 0, 0.271328, -0.362945, 0.25298, 0.115522)
+mesh = SubResource("CylinderMesh_flipe")
+surface_material_override/0 = SubResource("StandardMaterial3D_8l53f")
+
+[node name="MeshInstance3D5" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.271328, 0, -0.12799, 0, 0.245, 0, 0.12799, 0, 0.271328, -0.0909386, 0.25298, 0.269746)
+mesh = SubResource("CylinderMesh_flipe")
+surface_material_override/0 = SubResource("StandardMaterial3D_8l53f")
+
+[node name="MeshInstance3D6" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.271328, 0, -0.12799, 0, 0.245, 0, 0.12799, 0, 0.271328, 0.197308, 0.25298, 0.41298)
+mesh = SubResource("CylinderMesh_flipe")
+surface_material_override/0 = SubResource("StandardMaterial3D_8l53f")
