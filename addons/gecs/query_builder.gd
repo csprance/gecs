@@ -199,6 +199,9 @@ func _matches_component_query(component: Component, query: Dictionary) -> bool:
 		
 		for operator in property_query:
 			match operator:
+				"func":
+					if not property_query[operator].call(property_value):
+						return false
 				"_eq":
 					if property_value != property_query[operator]:
 						return false
