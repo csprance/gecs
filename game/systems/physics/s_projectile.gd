@@ -1,3 +1,6 @@
+# The ProjectileSystem handles the movement and collision of projectile entities.
+# It processes projectiles' travel and interactions with other entities or the environment.
+# This system is used within the physics systems to manage all projectile-related behaviors.
 class_name ProjectileSystem
 extends System
 
@@ -6,7 +9,7 @@ func sub_systems():
 		[
 			ECS.world.query
 			.with_all([C_Projectile, C_Velocity, C_Transform, C_CharacterBody3D, C_Collision]),
-			projectile_collision_subsy
+			projectile_collision_subsys
 		],
 		[
 			ECS.world.query.with_all([C_Projectile, C_Velocity, C_Transform, C_CharacterBody3D]),
@@ -14,41 +17,51 @@ func sub_systems():
 		],
 	]
 
-func projectile_collision_subsy(entity, _delta: float):
-	var c_projectile = entity.get_component(C_Projectile) as C_Projectile
-	var c_collision = entity.get_component(C_Collision) as C_Collision
-	var hitbox = c_collision.collision.get_collider()
-	if hitbox is Hitbox3D:
-		hitbox.parent.add_component(C_Damage.new(c_projectile.damage_component.amount))
-		c_projectile.cur_pass_through_hitboxes += 1
-	else:
-		ECS.world.remove_entity(entity)
-		return
-	
-	if c_projectile.cur_pass_through_hitboxes >= c_projectile.pass_through_hitboxes:
-		ECS.world.remove_entity(entity)
-	else:
-		entity.remove_component(C_Collision)
-
-func travelling_subsys(entity, _delta: float):
-	var c_velocity = entity.get_component(C_Velocity) as C_Velocity
+## Runs as the projectile is travelling through the air
+func travelling_subsys(e_projectile, delta: float):
+	e_projectile = e_projectile as CharacterBody3D
+	var c_velocity = e_projectile.get_component(C_Velocity) as C_Velocity
+	var c_gravity = e_projectile.get_component(C_Gravity) as C_Gravity
+	# Apply gravity if the projectile is affected by gravity
+	if c_gravity:
+		c_velocity.velocity += c_gravity.gravity * delta
 	# Set the velocity from the velocity component
-
-	entity.velocity = c_velocity.velocity
-	# Move the entity
-	if entity.move_and_slide():
-		var c_collision = C_Collision.new()
-		var col = entity.get_last_slide_collision() as KinematicCollision3D
-		var layer = col.get_collider().collision_layer
-		Loggie.debug("Projectile hit layer: %s" % layer)
-		# Hit the world layer
-		if layer == 1:
-			ECS.world.remove_entity(entity)
-			return
-
-		c_collision.collision = col
-		entity.add_component(c_collision)
+	e_projectile.velocity = c_velocity.velocity
+	# Move the entity and if it collides add a collision
+	if e_projectile.move_and_slide():
+		var c_collision = C_Collision.new(e_projectile.get_last_slide_collision())
+		e_projectile.add_component(c_collision)
 	# Set the velocity from the entity to the component
-	c_velocity.velocity = entity.velocity
-	# Sync the transform back to the entity
-	Utils.sync_transform(entity)
+	c_velocity.velocity = e_projectile.velocity
+	# Sync the transform component with the data from the CharacterBody3D simulation
+	Utils.sync_transform(e_projectile)
+
+## We handle all the different things that can happen with a projectile collision and then finally call handle impact
+func projectile_collision_subsys(e_projectile, _delta: float):
+	var c_projectile = e_projectile.get_component(C_Projectile) as C_Projectile
+	var c_collision = e_projectile.get_component(C_Collision) as C_Collision
+	var collider = c_collision.collision.get_collider()
+	
+	# If it's a hitbox damage the parent entity of the hitbox
+	if collider is Hitbox3D:
+		var hitbox = collider as Hitbox3D
+		hitbox.parent.add_component(C_Damage.new(c_projectile.damage_component.amount))
+	
+	# If it's an explosive we need to damage all entities within the explosion radius
+	if c_projectile.explosive_radius > 0:
+		for body in e_projectile.explosion_radius.get_overlapping_bodies():
+			if body is Entity:
+				body.add_component(C_Damage.new(c_projectile.damage_component.amount))
+
+	# end of the road if we didn't return we crashed into something and can't move anymore
+	_handle_impact(e_projectile, c_projectile, c_collision)
+
+## Spawns the impact effect and removes the projectile entity
+func _handle_impact(e_projectile, c_projectile: C_Projectile, c_collision: C_Collision):
+	if c_projectile.impact_effect:
+		var impact = c_projectile.impact_effect.instantiate()
+		impact.global_transform.origin = c_collision.collision.get_position()
+		e_projectile.get_parent().add_child(impact)
+	
+	ECS.world.remove_entity(e_projectile)
+
