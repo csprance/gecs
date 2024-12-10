@@ -1,3 +1,6 @@
+# The ShootActiveWeaponAction handles the shooting mechanism of the active weapon.
+# It decreases ammunition, calculates the shooting direction, creates projectiles, and emits firing events.
+# This action is used when the player initiates a shoot action with their current weapon.
 class_name ShootActiveWeaponAction
 extends Action
 
