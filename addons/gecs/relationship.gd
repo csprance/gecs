@@ -27,7 +27,7 @@ var relation
 var target
 
 func _init(_relation = null, _target = null):
-	# Assert for class reference vs instance for relation
+	 # Assert for class reference vs instance for relation
 	assert(not (_relation != null and (_relation is GDScript or _relation is Script)),
 		"Relation must be an instance of Component (did you forget to call .new()?)")
 	
@@ -36,7 +36,7 @@ func _init(_relation = null, _target = null):
 		"Relation must be null or a Component instance")
 	
 	# Assert for class reference vs instance for target
-	assert(not (_target != null and _target is GDScript and _target.new() is Component),
+	assert(not (_target != null and _target is GDScript and _target is Component),
 		"Target must be an instance of Component (did you forget to call .new()?)")
 	
 	# Assert for target type
