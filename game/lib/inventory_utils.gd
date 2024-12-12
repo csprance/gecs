@@ -1,26 +1,11 @@
 class_name InventoryUtils
 
-
-## Adds an item to the player's inventory.
-## c_item (C_Item): The item component to add.
-## quantity (int): The quantity of the item to add.
-static func add_inventory_c_item(c_item: C_Item, quantity: int = 1):
-	var new_item = Item.new()
-	new_item.add_components([c_item, C_InInventory.new(), C_Quantity.new(quantity)])
-	ECS.world.add_entity(new_item)
-	GameState.inventory_item_added.emit(new_item)
-	Loggie.debug('Added item to inventory: ', new_item.name, ' Quantity: ', quantity)
-	return new_item
-
-static func get_item_quantity(item: Entity) -> int:
-	if not item:
-		return 0
-	var c_qty = item.get_component(C_Quantity) as C_Quantity
-	return c_qty.value if c_qty else 1
-
 ## Uses an item from the player's inventory.
-## 
-## 	item (Entity): The item entity to use.
+## This is the main way we interact with items in the player's inventory.
+## Calls the run_action method on the item's [Action].
+## Parameters:
+##   - item: The item [Entity] to use.
+##   - player: The player [Entity] using the [C_Item] from the `item`.
 static func use_inventory_item(item: Entity, player: Entity):
 	var action = get_item_action(item)
 	Loggie.debug('Using Item', item)
@@ -30,12 +15,48 @@ static func use_inventory_item(item: Entity, player: Entity):
 	
 	remove_inventory_item(item)
 
+## Adds an item to the player's inventory.
+## Parameters:
+##   - c_item: The item component to add.
+##   - quantity: The quantity of the item to add.
+## Returns:
+##   - The new item entity added to the inventory.
+static func add_inventory_c_item(c_item: C_Item, quantity: int = 1):
+	var new_item = Item.new()
+	new_item.add_components([c_item, C_InInventory.new(), C_Quantity.new(quantity)])
+	ECS.world.add_entity(new_item)
+	GameState.inventory_item_added.emit(new_item)
+	Loggie.debug('Added item to inventory: ', new_item.name, ' Quantity: ', quantity)
+	return new_item
+
+## Gets the quantity of the specified item.
+## Parameters:
+##   - item: The item entity.
+## Returns:
+##   - The quantity of the item.
+static func get_item_quantity(item: Entity) -> int:
+	if not item:
+		return 0
+	var c_qty = item.get_component(C_Quantity) as C_Quantity
+	return c_qty.value if c_qty else 1
+
+## Gets the action associated with the item.
+## Parameters:
+##   - item: The item entity.
+## Returns:
+##   - The action associated with the item.
 static func get_item_action(item: Entity) -> Action:
 	var c_item_weapon = get_item_or_weapon(item)
 	if c_item_weapon:
 		return c_item_weapon.action
+	assert(false, 'Item does not have an action')
 	return
 
+## Gets the item or weapon component from the entity.
+## Parameters:
+##   - item: The item entity.
+## Returns:
+##   - The item or weapon component.
 static func get_item_or_weapon(item:Entity):
 	var c_item = item.get_component(C_Item) as C_Item
 	var c_weapon = item.get_component(C_Weapon) as C_Weapon
@@ -46,10 +67,9 @@ static func get_item_or_weapon(item:Entity):
 	return
 
 ## Removes a specified quantity of an item from the player's inventory.
-##
-##	Parameters:
-##		item (Entity): The item entity to remove.
-##		remove_quantity (int): The quantity to remove.
+## Parameters:
+##   - item: The item entity to remove.
+##   - remove_quantity: The quantity to remove.
 static func remove_inventory_item(item: Entity, remove_quantity = 1):	
 	var c_item_weapon = get_item_or_weapon(item)
 	var c_qty = item.get_component(C_Quantity) as C_Quantity
@@ -79,7 +99,7 @@ static func cycle_inventory_item():
 				index = 0
 			GameState.active_item = items[index]
 
-## Cycles to the next item in the player's inventory.
+## Cycles to the next weapon in the player's inventory.
 static func cycle_inventory_weapon():
 	var weapons =  Queries.all_weapons_in_inventory().execute()
 	if weapons.size() > 0:
