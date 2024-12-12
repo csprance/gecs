@@ -87,7 +87,6 @@ item_resource = ExtResource("4_nyenq")
 
 [node name="SquirtGunPickup" parent="Entities" instance=ExtResource("2_8fx5w")]
 transform = Transform3D(-4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 0, 0, 1, -30.5311, 0.193465, 10.0846)
-item_resource = null
 weapon_resource = ExtResource("5_8l0mn")
 quantity = 100
 
