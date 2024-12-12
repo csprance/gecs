@@ -14,3 +14,5 @@ extends Component
 @export var action: Action = Action.new()
 ## The action that is called when the item is picked up
 @export var pickup_action: Action = Action.new()
+## The action that is called when the item is dropped
+@export var drop_action: Action = Action.new()
