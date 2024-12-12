@@ -1,4 +1,4 @@
-[gd_scene load_steps=40 format=3 uid="uid://mfv8kghahued"]
+[gd_scene load_steps=61 format=3 uid="uid://mfv8kghahued"]
 
 [ext_resource type="Script" path="res://game/entities/gameplay/e_player.gd" id="1_tt02t"]
 [ext_resource type="Script" path="res://game/components/gameplay/player/c_player.gd" id="2_c0i32"]
@@ -19,8 +19,11 @@
 [ext_resource type="Texture2D" uid="uid://b8nxaawqihe0h" path="res://game/assets/characters/skins/fantasyFemaleB.png" id="12_xpjul"]
 [ext_resource type="Script" path="res://game/components/gameplay/c_lives.gd" id="13_sr0ek"]
 [ext_resource type="Script" path="res://game/components/gameplay/c_interactor.gd" id="14_0ymwf"]
+[ext_resource type="Script" path="res://game/components/gameplay/c_play_animation.gd" id="15_jv8qf"]
+[ext_resource type="Script" path="res://game/components/gameplay/c_animation_tree.gd" id="16_cv0mn"]
 [ext_resource type="PackedScene" uid="uid://bkowq6t404w7y" path="res://game/assets/weapons/water_pistol/water_pistol_visuals.tscn" id="16_m1h6p"]
 [ext_resource type="PackedScene" uid="uid://d2p72cr27pb2f" path="res://game/lib/hitbox_3d.tscn" id="17_2q1ty"]
+[ext_resource type="AnimationLibrary" uid="uid://cssb0iu530xnq" path="res://game/assets/animations/default_anim_lib.res" id="17_qcmwa"]
 
 [sub_resource type="Resource" id="Resource_w7h0e"]
 script = ExtResource("2_c0i32")
@@ -43,7 +46,7 @@ speed = 10.0
 
 [sub_resource type="Resource" id="Resource_d0axv"]
 script = ExtResource("7_ha3ux")
-player = NodePath("")
+player = NodePath("AnimationPlayer")
 
 [sub_resource type="Resource" id="Resource_el2pk"]
 script = ExtResource("8_fqkey")
@@ -57,6 +60,7 @@ current = 10
 [sub_resource type="Resource" id="Resource_urpic"]
 script = ExtResource("10_pvi0u")
 target = Vector3(0, 0, 0)
+turn_speed = 5.0
 debug = false
 
 [sub_resource type="Resource" id="Resource_l86ta"]
@@ -66,21 +70,100 @@ value = 0
 [sub_resource type="Resource" id="Resource_wlyhe"]
 script = ExtResource("13_sr0ek")
 lives = 3
+respawn_time = 4.0
+respawn_location = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 
 [sub_resource type="Resource" id="Resource_gr314"]
 script = ExtResource("14_0ymwf")
 
+[sub_resource type="Resource" id="Resource_7i31c"]
+script = ExtResource("15_jv8qf")
+anim_name = "default_anim_lib/Root_Idle"
+anim_speed = 1.0
+loop = true
+callback = Callable()
+
+[sub_resource type="Resource" id="Resource_qkti0"]
+script = ExtResource("16_cv0mn")
+anim_tree = NodePath("AnimationTree")
+
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wmgev"]
 albedo_texture = ExtResource("12_xpjul")
 
-[sub_resource type="Animation" id="Animation_7ev53"]
-resource_name = "idle"
-loop_mode = 1
+[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_vv4g7"]
+animation = &"player/attack"
 
-[sub_resource type="AnimationLibrary" id="AnimationLibrary_ug0p1"]
-_data = {
-&"idle": SubResource("Animation_7ev53")
-}
+[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_j8wcg"]
+animation = &"player/death"
+
+[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_r38mk"]
+animation = &"player/idle"
+
+[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_j5vd3"]
+animation = &"player/interact_ground"
+
+[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_60wx1"]
+animation = &"player/run"
+
+[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_g2uef"]
+animation = &"player/shoot"
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_5h5mj"]
+switch_mode = 2
+advance_mode = 2
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_n7til"]
+switch_mode = 2
+advance_mode = 2
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_fehgy"]
+switch_mode = 2
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_kw7tf"]
+switch_mode = 2
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_b1j8b"]
+switch_mode = 2
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_sjpam"]
+switch_mode = 2
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_v13v6"]
+switch_mode = 2
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_m27wt"]
+switch_mode = 2
+advance_mode = 2
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_6fxpg"]
+switch_mode = 2
+advance_mode = 2
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_6yqod"]
+switch_mode = 2
+advance_mode = 2
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_h4wje"]
+switch_mode = 2
+advance_mode = 2
+
+[sub_resource type="AnimationNodeStateMachine" id="AnimationNodeStateMachine_h6vds"]
+states/End/position = Vector2(1346, 148)
+states/Start/position = Vector2(61, 80)
+states/player_attack/node = SubResource("AnimationNodeAnimation_vv4g7")
+states/player_attack/position = Vector2(829, 70)
+states/player_death/node = SubResource("AnimationNodeAnimation_j8wcg")
+states/player_death/position = Vector2(1107, 264)
+states/player_idle/node = SubResource("AnimationNodeAnimation_r38mk")
+states/player_idle/position = Vector2(667, 272)
+states/player_interact_ground/node = SubResource("AnimationNodeAnimation_j5vd3")
+states/player_interact_ground/position = Vector2(609, 70)
+states/player_run/node = SubResource("AnimationNodeAnimation_60wx1")
+states/player_run/position = Vector2(233, 272)
+states/player_shoot/node = SubResource("AnimationNodeAnimation_g2uef")
+states/player_shoot/position = Vector2(1052, 148)
+transitions = ["Start", "player_idle", SubResource("AnimationNodeStateMachineTransition_5h5mj"), "player_death", "End", SubResource("AnimationNodeStateMachineTransition_n7til"), "player_idle", "player_shoot", SubResource("AnimationNodeStateMachineTransition_fehgy"), "player_idle", "player_death", SubResource("AnimationNodeStateMachineTransition_kw7tf"), "player_idle", "player_interact_ground", SubResource("AnimationNodeStateMachineTransition_b1j8b"), "player_idle", "player_attack", SubResource("AnimationNodeStateMachineTransition_sjpam"), "player_idle", "player_run", SubResource("AnimationNodeStateMachineTransition_v13v6"), "player_interact_ground", "player_idle", SubResource("AnimationNodeStateMachineTransition_m27wt"), "player_attack", "player_idle", SubResource("AnimationNodeStateMachineTransition_6fxpg"), "player_shoot", "player_idle", SubResource("AnimationNodeStateMachineTransition_6yqod"), "player_run", "player_idle", SubResource("AnimationNodeStateMachineTransition_h4wje")]
+graph_offset = Vector2(-145, 10)
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_k6h10"]
 radius = 0.725818
@@ -98,7 +181,7 @@ cull_mask = 1048575
 h_offset = 0.0
 v_offset = 0.0
 projection = 0
-fov = 75.0
+fov = 80.0
 size = 1.0
 frustum_offset = Vector2(0, 0)
 near = 0.05
@@ -108,35 +191,84 @@ far = 4000.0
 collision_layer = 8
 collision_mask = 121
 script = ExtResource("1_tt02t")
-component_resources = Array[ExtResource("2_mdxt7")]([SubResource("Resource_w7h0e"), SubResource("Resource_m0ng3"), SubResource("Resource_j1swe"), SubResource("Resource_l36gj"), SubResource("Resource_qysxq"), SubResource("Resource_d0axv"), SubResource("Resource_el2pk"), SubResource("Resource_4axd2"), SubResource("Resource_urpic"), SubResource("Resource_l86ta"), SubResource("Resource_wlyhe"), SubResource("Resource_gr314")])
+component_resources = Array[ExtResource("2_mdxt7")]([SubResource("Resource_w7h0e"), SubResource("Resource_m0ng3"), SubResource("Resource_j1swe"), SubResource("Resource_l36gj"), SubResource("Resource_qysxq"), SubResource("Resource_d0axv"), SubResource("Resource_el2pk"), SubResource("Resource_4axd2"), SubResource("Resource_urpic"), SubResource("Resource_l86ta"), SubResource("Resource_wlyhe"), SubResource("Resource_gr314"), SubResource("Resource_7i31c"), SubResource("Resource_qkti0")])
 
 [node name="Visuals" parent="." instance=ExtResource("11_l3h6n")]
+
+[node name="Skeleton3D" parent="Visuals/RootNode/Root" index="0"]
+bones/0/rotation = Quaternion(-0.428388, -0.562569, 0.562569, 0.428388)
+bones/2/rotation = Quaternion(0.015736, -0.00207783, 0.994625, -0.102322)
+bones/5/rotation = Quaternion(0.5, 0.5, -0.5, 0.5)
+bones/9/position = Vector3(-0.0020752, -0.000304607, 0.00193205)
+bones/9/rotation = Quaternion(-0.527626, -0.470756, 0.470756, 0.527626)
+bones/14/rotation = Quaternion(0.5, 0.5, -0.5, 0.5)
+bones/18/position = Vector3(-4.99155e-07, -0.00104, 0.0148206)
+bones/18/rotation = Quaternion(-0.000954656, -0.707106, 0.707106, -0.0010862)
+bones/19/rotation = Quaternion(5.29002e-05, -0.0277724, 0.999613, 0.00144513)
+bones/20/rotation = Quaternion(-0.00436648, -1.02281e-08, -1.09991e-08, 0.999991)
+bones/21/rotation = Quaternion(0.0623484, -0.0448529, -0.00280481, 0.997042)
+bones/22/rotation = Quaternion(0.0940942, -3.90999e-09, -2.641e-10, 0.995563)
+bones/23/rotation = Quaternion(0.0766157, -2.68545e-09, 1.05083e-09, 0.997061)
+bones/24/rotation = Quaternion(-0.108831, 0.0437293, -0.0103631, 0.993044)
+bones/26/rotation = Quaternion(0.597656, 0.395508, 0.565647, -0.407951)
+bones/27/rotation = Quaternion(-0.359615, 0.67303, -0.240337, 0.599955)
+bones/28/rotation = Quaternion(0.351215, -0.0730593, -0.07077, 0.930754)
+bones/29/rotation = Quaternion(-0.0150854, 0.72436, -0.0315801, 0.688534)
+bones/31/rotation = Quaternion(0.771668, 0.0466405, 0.00196556, 0.634311)
+bones/32/rotation = Quaternion(0.410935, -0.0278593, 0.0125054, 0.911153)
+bones/34/rotation = Quaternion(-0.213061, 0.695039, 0.358431, 0.585707)
+bones/35/rotation = Quaternion(0.660648, -0.0754557, 0.119352, 0.737296)
+bones/37/rotation = Quaternion(0.678187, -0.48571, 0.463529, 0.298814)
+bones/38/rotation = Quaternion(0.0472979, 0.906256, 0.401212, -0.12447)
+bones/39/rotation = Quaternion(-0.0678256, -0.02108, 0.351795, 0.933379)
+bones/40/rotation = Quaternion(-0.0108135, 0.109294, -0.0332856, 0.993393)
+bones/41/rotation = Quaternion(-0.0328437, -0.0775467, -8.59453e-05, 0.996448)
+bones/42/rotation = Quaternion(-0.7474, 0.0422068, 0.00765555, 0.662988)
+bones/43/rotation = Quaternion(-0.410937, -0.0278581, -0.0125049, 0.911152)
+bones/45/rotation = Quaternion(-0.23102, 0.802493, -0.347127, -0.426776)
+bones/46/rotation = Quaternion(-0.595143, 0.0459218, 0.310654, 0.739723)
+bones/48/rotation = Quaternion(0.996598, 0.0689332, -0.00274987, 0.0451)
+bones/48/scale = Vector3(1, 0.999999, 1)
+bones/49/rotation = Quaternion(0.34591, 0.0305003, 0.12914, 0.928837)
+bones/49/scale = Vector3(0.999999, 1, 1)
+bones/50/rotation = Quaternion(-0.660568, -0.159216, -0.157469, 0.716592)
+bones/51/rotation = Quaternion(-0.0198192, 0.952286, -0.298255, 0.0616581)
+bones/53/rotation = Quaternion(0.972735, -0.0543278, -0.152305, 0.166251)
+bones/54/rotation = Quaternion(0.391448, 0.0105369, -0.166705, 0.904913)
+bones/55/rotation = Quaternion(-0.617624, 0.218594, 0.171985, 0.735649)
 
 [node name="characterLargeFemale" parent="Visuals/RootNode/Root/Skeleton3D" index="0"]
 surface_material_override/0 = SubResource("StandardMaterial3D_wmgev")
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+root_node = NodePath("../Visuals")
 libraries = {
-&"": SubResource("AnimationLibrary_ug0p1")
+&"player": ExtResource("17_qcmwa")
 }
+autoplay = "player/attack"
+
+[node name="AnimationTree" type="AnimationTree" parent="."]
+root_node = NodePath("../Visuals")
+tree_root = SubResource("AnimationNodeStateMachine_h6vds")
+anim_player = NodePath("../AnimationPlayer")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.61647, 0)
 shape = SubResource("CapsuleShape3D_k6h10")
 
 [node name="PhantomCamera3D" type="Node3D" parent="." node_paths=PackedStringArray("follow_target")]
-transform = Transform3D(0.999609, 0.0243971, -0.0135793, 0, 0.486335, 0.873772, 0.0279216, -0.873431, 0.486146, -0.0135793, 11.8738, 5.48615)
+transform = Transform3D(0.999999, 0, 0, 0, 0.173648, 0.984808, 0, -0.984807, 0.173648, 0, 0, 0)
 top_level = true
 script = ExtResource("9_jx5cx")
 follow_mode = 5
-follow_target = NodePath("..")
+follow_target = NodePath("../CollisionShape3D")
 tween_resource = SubResource("Resource_rjka7")
 tween_on_load = false
 camera_3d_resource = SubResource("Resource_4bwhh")
-follow_offset = Vector3(0, 11, 5)
+follow_offset = Vector3(0, 18, 6)
 
 [node name="WeaponAttachment" type="BoneAttachment3D" parent="."]
-transform = Transform3D(0.925774, -99.3322, -11.5032, -7.96633, -11.5403, 99.0121, -99.6785, -0.000196554, -8.01989, -1.14137, 2.24607, 0.0772056)
+transform = Transform3D(7.91295, -16.2146, -98.3598, -25.0814, -95.8177, 13.7781, -96.4798, 23.5804, -11.6487, -0.505718, 1.28946, 0.0571123)
 bone_name = "RightHand"
 bone_idx = 40
 use_external_skeleton = true
