@@ -45,10 +45,7 @@ static func instantiate_projectile(c_projectile: C_Projectile, transform: Transf
 	var c_projectile_visuals = C_Visuals.new(c_projectile.visuals.packed_scene)
 
 	# Set up the velocity component using initial_velocity or calculated speed.
-	var initial_velocity = c_projectile.initial_velocity
-	if initial_velocity == Vector3.ZERO:
-		initial_velocity = -transform.basis.z * c_projectile.speed
-	var c_velocity = C_Velocity.new(initial_velocity)
+	var c_velocity = C_Velocity.new(-transform.basis.z * c_projectile.speed + c_projectile.initial_velocity )
 
 	# Add initial components to the projectile entity.
 	e_projectile.add_components([c_trs, c_projectile, c_projectile_visuals, c_velocity, c_lifetime])
