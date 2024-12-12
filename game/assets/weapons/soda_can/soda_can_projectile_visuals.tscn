@@ -51,7 +51,7 @@ _data = {
 [node name="WaterPistolProjectileVisuals" type="Node3D"]
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="."]
-transform = Transform3D(0.3, 0, 0, 0, -0.156623, -0.230693, 0, 0.188399, -0.191783, 0, 0.275488, 0)
+transform = Transform3D(0.3, 0, 0, 0, -0.156624, -0.230692, 0, 0.188398, -0.191784, 0, 0.275488, 0)
 mesh = SubResource("CylinderMesh_kis2y")
 surface_material_override/0 = SubResource("StandardMaterial3D_rd7k1")
 
