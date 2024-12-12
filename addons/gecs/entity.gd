@@ -151,7 +151,7 @@ func get_relationship(relationship: Relationship, single=true):
 	var to_remove = []
 	for rel in relationships:
 		# Check if the target is still valid
-		if rel.target is Object and not is_instance_valid(rel.target):
+		if not is_instance_valid(rel.target) and rel.target is Object:
 			to_remove.append(rel)
 			continue
 		if rel.matches(relationship):
