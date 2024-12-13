@@ -9,7 +9,6 @@ func _meta():
     }
 
 func _action(_e) -> void:
-    print(meta)
     var active_weapon = meta.get('item') as Entity
     var player = meta.get('player') as Entity
     if not active_weapon or not player:
