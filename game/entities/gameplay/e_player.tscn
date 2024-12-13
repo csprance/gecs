@@ -257,10 +257,10 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.61647, 0)
 shape = SubResource("CapsuleShape3D_k6h10")
 
 [node name="PhantomCamera3D" type="Node3D" parent="." node_paths=PackedStringArray("follow_target")]
-transform = Transform3D(0.999999, 0, 0, 0, 0.173648, 0.984808, 0, -0.984807, 0.173648, 0, 0, 0)
+transform = Transform3D(0.999999, 0, 0, 0, 0.173648, 0.984808, 0, -0.984807, 0.173648, 0, 19.6165, 6)
 top_level = true
 script = ExtResource("9_jx5cx")
-follow_mode = 5
+follow_mode = 2
 follow_target = NodePath("../CollisionShape3D")
 tween_resource = SubResource("Resource_rjka7")
 tween_on_load = false
