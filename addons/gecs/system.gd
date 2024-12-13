@@ -110,7 +110,6 @@ func _handle_subsystems(delta: float):
 			for entity in entities:
 				did_run = true
 				sub_sys_process.call(entity, delta)
-				entity.on_update(delta)
 		if did_run:
 			# Log the whole thing
 			_log_handle(entities)
