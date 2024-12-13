@@ -121,6 +121,7 @@ func has_component(component: Variant) -> bool:
 ## Adds a relationship to this entity.[br]
 ## [param relationship] The [Relationship] to add.
 func add_relationship(relationship: Relationship) -> void:
+	relationship.source = self
 	relationships.append(relationship)
 	relationship_added.emit(self, relationship)
 
@@ -150,8 +151,8 @@ func get_relationship(relationship: Relationship, single=true):
 	var results = []
 	var to_remove = []
 	for rel in relationships:
-		# Check if the target is still valid
-		if not is_instance_valid(rel.target) and rel.target is Object:
+		# Check if the target is not null and is still valid
+		if rel.target != null and not is_instance_valid(rel.target):
 			to_remove.append(rel)
 			continue
 		if rel.matches(relationship):
