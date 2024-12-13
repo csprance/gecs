@@ -12,6 +12,12 @@ static func could_be_weapon_or_item():
 static func in_inventory():
 	return ECS.world.query.with_all([C_InInventory])
 
+static func shows_in_quickbar():
+	return ECS.world.query.with_none([C_HideInQuickBar])
+
+static func in_inventory_of_entity(entity: Entity):
+	return in_inventory().with_relationship([Relationship.new(C_OwnedBy.new(), entity)])
+
 static func is_active_weapon():
 	return ECS.world.query.with_all([C_IsActiveWeapon])
 
