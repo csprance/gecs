@@ -15,6 +15,8 @@ func on_ready() -> void:
 	GameState.inventory_item_added.connect(update_from_game_state)
 	GameState.inventory_item_removed.connect(update_from_game_state)
 	GameState.weapon_changed.connect(update_from_game_state)
+	GameState.inventory_weapon_removed.connect(update_from_game_state)
+	GameState.inventory_weapon_added.connect(update_from_game_state)
 	GameState.item_changed.connect(update_from_game_state)
 	GameState.item_used.connect(update_from_game_state)
 	GameState.weapon_fired.connect(update_from_game_state)
