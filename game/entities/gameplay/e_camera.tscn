@@ -2,15 +2,15 @@
 
 [ext_resource type="Script" path="res://addons/gecs/entity.gd" id="1_1rh60"]
 [ext_resource type="Script" path="res://addons/gecs/component.gd" id="2_l8med"]
-[ext_resource type="Script" path="res://game/components/physics/c_character_body_3d.gd" id="2_ofpu0"]
 [ext_resource type="Script" path="res://addons/phantom_camera/scripts/phantom_camera_host/phantom_camera_host.gd" id="3_8t7gq"]
+[ext_resource type="Script" path="res://game/components/gameplay/c_camera.gd" id="3_qrdxt"]
 
-[sub_resource type="Resource" id="Resource_ld4w6"]
-script = ExtResource("2_ofpu0")
+[sub_resource type="Resource" id="Resource_6eulk"]
+script = ExtResource("3_qrdxt")
 
 [node name="ECamera" type="Node3D"]
 script = ExtResource("1_1rh60")
-component_resources = Array[ExtResource("2_l8med")]([SubResource("Resource_ld4w6")])
+component_resources = Array[ExtResource("2_l8med")]([SubResource("Resource_6eulk")])
 
 [node name="MainCamera3D" type="Camera3D" parent="."]
 unique_name_in_owner = true
