@@ -9,4 +9,5 @@ func _process(_delta: float) -> void:
     if not visible:
         return
     if draw_in_game or Engine.is_editor_hint() or visible:
-        DebugDraw3D.draw_gizmo(global_transform, DebugDraw3D.empty_color, true)
+        pass
+        # DebugDraw3D.draw_gizmo(global_transform, DebugDraw3D.empty_color, true)

@@ -62,7 +62,8 @@ static func has_los(from: Vector3, to: Vector3, debug = false) -> bool:
 	var query = PhysicsRayQueryParameters3D.create(from, to, 2) # Only check against hitboxes
 	var result = space_state.intersect_ray(query)
 	if debug:
-		DebugDraw3D.draw_line(from, to, Color(1, 0, 0) if result.has('collider') else Color(0, 1, 0), 15)
+		pass
+		# DebugDraw3D.draw_line(from, to, Color(1, 0, 0) if result.has('collider') else Color(0, 1, 0), 15)
 	return not result.has('collider')
 
 

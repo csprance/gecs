@@ -12,4 +12,5 @@ func process(entity: Entity, _delta: float) -> void:
         var c_transform = entity.get_component(C_Transform) as C_Transform
         var aim_from = c_transform.transform.origin
         var aim_at = c_look_at.target
-        DebugDraw3D.draw_arrow(aim_from, aim_at, Color.RED, 1.0, true)
+        
+        # DebugDraw3D.draw_arrow(aim_from, aim_at, Color.RED, 1.0, true)
