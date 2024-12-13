@@ -87,6 +87,9 @@ var active_weapon : Entity :
 	set(v):
 		for e in  Queries.active_weapons().execute():
 			e.remove_component(C_IsActiveWeapon)
+		if v == null:
+			weapon_changed.emit()
+			return
 		v.add_component(C_IsActiveWeapon.new())
 		GameState.player.add_component(C_HasActiveWeapon.new())
 		weapon_changed.emit(v)
@@ -102,6 +105,9 @@ var active_item: Entity :
 		Loggie.debug('Setting active item: ', v)
 		for e in  Queries.active_items().execute():
 			e.remove_component(C_IsActiveItem)
+		if v == null:
+			item_changed.emit()
+			return
 		v.add_component(C_IsActiveItem.new())
 		GameState.player.add_component(C_HasActiveItem.new())
 		item_changed.emit(v)
