@@ -88,26 +88,60 @@ static func remove_inventory_item(item: Entity, remove_quantity = 1):
 
 ## Cycles to the next item in the player's inventory.
 static func cycle_inventory_item():
-	var items =  Queries.all_items_in_inventory().execute()
-	if items.size() > 0:
-		var index = items.find(GameState.player.get_component(C_HasActiveItem))
-		if index == -1:
-			GameState.active_item = items[0]
+	consolidate_inventory()
+	var items =  Queries.in_inventory_of_entity(GameState.player).combine(Queries.is_item()).combine(Queries.shows_in_quickbar()).execute()
+	# Find the active item and set the next item as the active item
+	for item in items:
+		if item.has_component(C_IsActiveItem):
+			var next_index = (items.find(item) + 1) % items.size()
+			GameState.active_item = items[next_index]
+			return
 		else:
-			index += 1
-			if index >= items.size():
-				index = 0
-			GameState.active_item = items[index]
+			GameState.active_item = items[0]
+
 
 ## Cycles to the next weapon in the player's inventory.
 static func cycle_inventory_weapon():
-	var weapons =  Queries.all_weapons_in_inventory().execute()
-	if weapons.size() > 0:
-		var index = weapons.find(GameState.player.get_component(C_HasActiveWeapon))
-		if index == -1:
-			GameState.active_weapon = weapons[0]
+	consolidate_inventory()
+	var weapons =  Queries.in_inventory_of_entity(GameState.player).combine(Queries.is_weapon()).combine(Queries.shows_in_quickbar()).execute()
+	# Find the active weapon and set the next weapon as the active weapon
+	for weapon in weapons:
+		if weapon.has_component(C_IsActiveWeapon):
+			var next_index = (weapons.find(weapon) + 1) % weapons.size()
+			GameState.active_weapon = weapons[next_index]
+			return
 		else:
-			index += 1
-			if index >= weapons.size():
-				index = 0
-			GameState.active_weapon = weapons[index]
+			GameState.active_weapon = weapons[0]
+
+## Consolidates the player's inventory.
+## This will consolidate all items that have the same item component.
+## This is useful for when the player picks up multiple items of the same type.
+static func consolidate_inventory():
+	var inventory_entities = Queries.in_inventory_of_entity(GameState.player).execute()
+	var item_quantities = {}
+	var entities_to_remove = []
+
+	# Sum quantities for each unique c_item
+	for entity in inventory_entities:
+		var c_item = get_item_or_weapon(entity)
+		if c_item:
+			var quantity = get_item_quantity(entity)
+			if c_item in item_quantities:
+				# Add quantity to existing entry
+				item_quantities[c_item]["quantity"] += quantity
+				entities_to_remove.append(entity)  # Mark duplicate entity for removal
+			else:
+				# Create new entry for unique item
+				item_quantities[c_item] = {"entity": entity, "quantity": quantity}
+
+	# Remove duplicate entities
+	for entity in entities_to_remove:
+		ECS.world.remove_entity(entity)
+
+	# Update quantities of remaining entities
+	for item_data in item_quantities.values():
+		var entity = item_data["entity"]
+		var qty = item_data["quantity"]
+		entity.add_component(C_Quantity.new(qty))
+
+
