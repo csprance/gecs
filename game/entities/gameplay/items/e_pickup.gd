@@ -31,6 +31,7 @@ func _show_visuals():
 func _on_area_3d_body_shape_entered(body_rid:RID, body, body_shape_index:int, local_shape_index:int) -> void:
 	if body is Player:
 		add_component(C_PickedUp.new())
+		add_relationship(Relationship.new(C_OwnedBy.new(), body))
 
 func _enter_tree() -> void:
 	if Engine.is_editor_hint():
