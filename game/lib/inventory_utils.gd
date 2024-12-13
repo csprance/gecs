@@ -105,8 +105,10 @@ static func remove_inventory_item(item: Entity, remove_quantity = 1):
 			quantity -= remove_quantity
 		if quantity == 0:
 			item.add_component(C_IsPendingDelete.new())
-			# TODO: Swap this to a different item?
-			GameState.player.remove_component(C_HasActiveItem)
+			if item.has_component(C_IsActiveItem) :
+				GameState.active_item = null
+			if item.has_component(C_IsActiveWeapon):
+				GameState.active_weapon = null
 
 		Loggie.debug('Removing Item', c_item_weapon)
 		GameState.inventory_item_removed.emit(item)
