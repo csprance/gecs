@@ -6,6 +6,10 @@ signal radar_toggled
 signal inventory_item_added(item: Entity)
 signal inventory_item_removed(item: Entity)
 
+signal inventory_weapon_added(item: Entity)
+signal inventory_weapon_removed(item: Entity)
+
+
 signal game_paused
 signal game_unpaused
 
