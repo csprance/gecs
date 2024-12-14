@@ -17,8 +17,25 @@ static func sync_from_transform(entity: Entity):
 	var trs: C_Transform = entity.get_component(C_Transform)
 	if trs:
 		entity.global_transform = trs.transform
-	
 
+
+static func sync_selected_to_c_transform(c_transform: C_Transform):
+	c_transform.transform = Utils.get_selected_node_transform()
+
+static func sync_selected_from_c_transform(c_transform: C_Transform):
+	var selected_nodes = EditorInterface.get_selection().get_selected_nodes()
+	assert(selected_nodes.size() > 0, 'No node selected')
+	selected_nodes[0].global_transform = c_transform.transform
+
+## Gets the selected node's global transform
+static func get_selected_node_transform() -> Transform3D:
+	var selected_nodes = EditorInterface.get_selection().get_selected_nodes()
+	assert(selected_nodes.size() > 0, 'No node selected')
+	
+	var selected_node: Node = selected_nodes[0]
+	# assert(not selected_node.get_property_list().map(func(x): return x['name']).has('global_transform'), 'Node lacks global_transform property')
+	
+	return selected_node.global_transform
 
 ## Python like all function. Goes through an array and if any of the values are nothing it's false
 ## Otherwise it's true if every value is something
