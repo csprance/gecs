@@ -67,7 +67,7 @@ Before diving into the usage of the GECS addon, it's important to understand the
 
 - **World Query**: A way to query for specific entities in the world based on the components they contain or the relationships they have. 
 
-_ **Component Query** In A world query we can define how the components property values should match specific criteria. Allowing us to further refine world queries beyond just presence of components. See more: [Component_Queries.md](./addons/gecs/COMPONENT_QUERIES.md)
+- **Component Query** In A world query we can define  criteria. Allowing us to further refine world queries beyond just presence of components. See more: [Component_Queries.md](./addons/gecs/COMPONENT_QUERIES.md)
 
 - **Relationship**: A resource that represents a relationship between a target and a source based on a relation. See more: [Relations.md](./addons/gecs/RELATIONSHIPS.md)
 
