@@ -60,9 +60,13 @@ static func instantiate_projectile(c_projectile: C_Projectile, transform: Transf
 	# set the collision shape radius after it's ready (since it's an onready var)
 	
 	# FIXME: we should move the projectile forward the amount of the radius so we don't hit the player
-	e_projectile.collision_shape_3d.shape.radius = c_projectile.collision_radius
+	var collision_shape = SphereShape3D.new()
+	collision_shape.radius = c_projectile.collision_radius
+	e_projectile.collision_shape_3d.shape = collision_shape
 
 	# Set the explosion radius shape radius to the projectile's explosive radius so we can capture anything inside the explosion
-	e_projectile.explosion_radius_shape_3d.shape.radius = c_projectile.explosive_radius
+	var explosion_shape = SphereShape3D.new()
+	explosion_shape.radius = c_projectile.explosive_radius
+	e_projectile.explosion_radius_shape_3d.shape = explosion_shape
 
 	return e_projectile
