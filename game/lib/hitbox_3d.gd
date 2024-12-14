@@ -33,4 +33,3 @@ func _process(_delta: float) -> void:
 	if debug:
 		pass
 		# DebugDraw3D.draw_box_xf(collision_shape_3d.global_transform, color)
-

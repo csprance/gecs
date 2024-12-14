@@ -172,5 +172,3 @@ static func consolidate_inventory():
 		var entity = item_data["entity"]
 		var qty = item_data["quantity"]
 		entity.add_component(C_Quantity.new(qty))
-
-
