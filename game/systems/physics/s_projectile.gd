@@ -49,9 +49,10 @@ func projectile_collision_subsys(e_projectile, _delta: float):
 	
 	# If it's an explosive we need to damage all entities within the explosion radius
 	if c_projectile.explosive_radius > 0:
-		for body in e_projectile.explosion_radius.get_overlapping_bodies():
-			if body is Entity:
-				body.add_component(C_Damage.new(c_projectile.damage_component.amount))
+		var bodies = e_projectile.explosion_radius.get_overlapping_bodies()
+		for body in bodies:
+			if body is Hitbox3D:
+				body.parent.add_component(C_Damage.new(c_projectile.damage_component.amount))
 
 	# end of the road if we didn't return we crashed into something and can't move anymore
 	_handle_impact(e_projectile, c_projectile, c_collision)
@@ -64,4 +65,3 @@ func _handle_impact(e_projectile, c_projectile: C_Projectile, c_collision: C_Col
 		e_projectile.get_parent().add_child(impact)
 	
 	ECS.world.remove_entity(e_projectile)
-
