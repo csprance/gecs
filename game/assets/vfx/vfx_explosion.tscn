@@ -1,3 +1,26 @@
-[gd_scene format=3 uid="uid://btba2p445ljld"]
+[gd_scene load_steps=8 format=3 uid="uid://btba2p445ljld"]
 
-[node name="VfxExplosion" type="Node3D"]
+[ext_resource type="Shader" uid="uid://bcedlxrjdrn5t" path="res://shd_explosion_cloud.tres" id="1_iacuh"]
+[ext_resource type="Script" path="res://game/assets/vfx/vfx_explosion.gd" id="1_k5jn6"]
+[ext_resource type="Script" path="res://addons/gecs/component.gd" id="2_7t8yg"]
+[ext_resource type="Script" path="res://game/components/gameplay/c_transform.gd" id="3_j24le"]
+
+[sub_resource type="Resource" id="Resource_hjblf"]
+script = ExtResource("3_j24le")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_j63ml"]
+render_priority = 0
+shader = ExtResource("1_iacuh")
+
+[sub_resource type="SphereMesh" id="SphereMesh_1myto"]
+radius = 3.0
+height = 6.0
+
+[node name="Node3D" type="Node3D"]
+script = ExtResource("1_k5jn6")
+component_resources = Array[ExtResource("2_7t8yg")]([SubResource("Resource_hjblf")])
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+material_override = SubResource("ShaderMaterial_j63ml")
+mesh = SubResource("SphereMesh_1myto")
