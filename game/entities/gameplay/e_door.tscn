@@ -8,7 +8,7 @@
 [ext_resource type="Script" path="res://game/lib/static_queries/static_query.gd" id="5_h832r"]
 [ext_resource type="Script" path="res://game/components/gameplay/c_interactable.gd" id="5_nythy"]
 [ext_resource type="Script" path="res://game/lib/static_queries/sq_is_player.gd" id="6_lyyj0"]
-[ext_resource type="Script" path="res://game/components/gameplay/c_animation_player.gd" id="6_wbsw5"]
+[ext_resource type="Script" path="res://game/components/animation/c_animation_player.gd" id="6_wbsw5"]
 [ext_resource type="PackedScene" uid="uid://dx7av6n5xik2f" path="res://game/assets/props/doors/door_01_a.gltf" id="6_yqfw2"]
 [ext_resource type="Script" path="res://game/lib/static_queries/sq_is_interactor.gd" id="10_bif8j"]
 

@@ -1,6 +1,6 @@
 [gd_resource type="Resource" script_class="C_Item" load_steps=7 format=3 uid="uid://8qrwfaqd303r"]
 
-[ext_resource type="Script" path="res://game/components/gameplay/item/c_item.gd" id="1_ddpo1"]
+[ext_resource type="Script" path="res://game/components/item/c_item.gd" id="1_ddpo1"]
 [ext_resource type="Script" path="res://game/actions/a_pickup_points.gd" id="1_v6rta"]
 [ext_resource type="PackedScene" uid="uid://dur5w2e1pycyk" path="res://game/assets/items/cash_pile_visuals.tscn" id="2_ybfme"]
 [ext_resource type="Script" path="res://game/components/rendering/c_visuals.gd" id="3_uj5fo"]

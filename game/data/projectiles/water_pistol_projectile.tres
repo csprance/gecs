@@ -1,8 +1,8 @@
 [gd_resource type="Resource" script_class="C_Projectile" load_steps=7 format=3 uid="uid://crekuuaar4m8l"]
 
-[ext_resource type="Script" path="res://game/components/gameplay/weapon/c_damage.gd" id="1_jg2nh"]
+[ext_resource type="Script" path="res://game/components/weapon/c_damage.gd" id="1_jg2nh"]
 [ext_resource type="PackedScene" uid="uid://wf4r34fehgpo" path="res://game/assets/weapons/water_pistol/water_pistol_projectile_visuals.tscn" id="2_gmm5o"]
-[ext_resource type="Script" path="res://game/components/gameplay/weapon/c_projectile.gd" id="3_ntjnw"]
+[ext_resource type="Script" path="res://game/components/weapon/c_projectile.gd" id="3_ntjnw"]
 [ext_resource type="Script" path="res://game/components/rendering/c_visuals.gd" id="4_7tbj6"]
 
 [sub_resource type="Resource" id="Resource_rkuw3"]

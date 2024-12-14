@@ -5,7 +5,7 @@
 [ext_resource type="Script" path="res://game/components/gameplay/c_door.gd" id="3_ad5ln"]
 [ext_resource type="Script" path="res://game/actions/interactions/i_open_door.gd" id="4_jjnrs"]
 [ext_resource type="Script" path="res://game/components/gameplay/c_interactable.gd" id="5_v1peb"]
-[ext_resource type="Script" path="res://game/components/gameplay/c_animation_player.gd" id="6_ym5c4"]
+[ext_resource type="Script" path="res://game/components/animation/c_animation_player.gd" id="6_ym5c4"]
 [ext_resource type="Resource" uid="uid://dbwgbc3qihhjf" path="res://game/data/spawners/item_spawner.tres" id="7_88b16"]
 [ext_resource type="Script" path="res://game/lib/interaction_area.gd" id="8_8l4da"]
 [ext_resource type="Script" path="res://game/lib/static_queries/static_query.gd" id="9_xacoh"]
