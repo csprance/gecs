@@ -4,6 +4,7 @@ extends Interaction
 @export var key: C_Item
 
 func _interaction(interactable: Entity, interactors: Array, meta: Dictionary = {}) -> bool:
+    assert(key, "Key Type is not set")
     # check to see if at least one of the interactors has a key
     var e_key: Entity
     for i in interactors:
