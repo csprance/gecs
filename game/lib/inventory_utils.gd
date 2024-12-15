@@ -9,12 +9,10 @@ class_name InventoryUtils
 ##   - item: The item [Entity] to use.[br]
 ##   - player: The player [Entity] using the [C_Item] from the `item`.
 static func use_inventory_item(item: Entity, player: Entity):
-	var action = get_item_action(item)
-	if action:
-		# pass in the item and the player.
+	var action = get_item_action(item) as InventoryAction
+	if action and action.has_method('run_inventory_action'):
+		# pass in the item and the player. The action is responsible for removing the item
 		action.run_inventory_action([item], player)
-
-	remove_inventory_item(item)
 
 ## Helper function to handle picking up resources (weapons and items).
 static func add_to_inventory(player: Entity, c_item: C_Item, quantity: int, inventory_signal: Signal, active_resource_property: String):
@@ -27,19 +25,18 @@ static func add_to_inventory(player: Entity, c_item: C_Item, quantity: int, inve
 		GameState.set(active_resource_property, new_entity)
 	return new_entity
 
-static func pickup_resource(pickup: Pickup, resource_property: String, inventory_signal: Signal, active_resource_property: String):
+static func pickup_resource(pickup: Pickup, c_item: Component, inventory_signal: Signal, active_resource_property: String):
 	var player = pickup.get_relationship(Relationship.new(C_OwnedBy.new(), Player)).target
 	assert(player, 'Player not found')
-	var resource = pickup.get(resource_property)
-	if resource.pickup_action:
-		resource.pickup_action.run_action()
-	return add_to_inventory(player, resource, pickup.quantity, inventory_signal, active_resource_property)
+	if c_item.pickup_action:
+		c_item.pickup_action.run_action()
+	return add_to_inventory(player, c_item, pickup.quantity, inventory_signal, active_resource_property)
 
 ## Adds a weapon to the player's inventory.
 static func pickup_weapon(pickup: Pickup):
 	return pickup_resource(
 		pickup,
-		"weapon_resource",
+		pickup.weapon_resource,
 		GameState.inventory_weapon_added,
 		"active_weapon"
 	)
@@ -48,7 +45,7 @@ static func pickup_weapon(pickup: Pickup):
 static func pickup_item(pickup: Pickup):
 	return pickup_resource(
 		pickup,
-		"item_resource",
+		pickup.item_resource,
 		GameState.inventory_item_added,
 		"active_item"
 	)
@@ -103,8 +100,8 @@ static func remove_inventory_item(item: Entity, remove_quantity = 1):
 	var quantity = c_qty.value if c_qty else 1
 	if c_item_weapon:
 		if quantity >= remove_quantity:
-			quantity -= remove_quantity
-		if quantity == 0:
+			c_qty.value -= remove_quantity
+		if c_qty.value == 0:
 			item.add_component(C_IsPendingDelete.new())
 			if item.has_component(C_IsActiveItem) :
 				GameState.active_item = null
