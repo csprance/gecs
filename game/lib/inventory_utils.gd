@@ -15,46 +15,50 @@ static func use_inventory_item(item: Entity, player: Entity):
 	
 	remove_inventory_item(item)
 
-## Adds an item to the player's inventory.
-## Parameters:
-##   - c_item: The item component to add.
-##   - quantity: The quantity of the item to add.
-## Returns:
-##   - The new item entity added to the inventory.
-static func pickup_weapon(pickup: Pickup):
+## Helper function to handle picking up resources (weapons and items).
+static func pickup_resource(pickup: Pickup, resource_property: String, inventory_signal: Signal, active_resource_property: String):
 	var player = pickup.get_relationship(Relationship.new(C_OwnedBy.new(), Player)).target
 	assert(player, 'Player not found')
-	if pickup.weapon_resource.pickup_action:
-		pickup.weapon_resource.pickup_action.run_action()
-	var new_weapon = Entity.new()
-	new_weapon.name = pickup.weapon_resource.name
-	new_weapon.add_components([pickup.weapon_resource, C_InInventory.new(), C_Quantity.new(pickup.quantity)])
-	new_weapon.add_relationship(Relationship.new(C_OwnedBy.new(), player))
-	Loggie.debug('Added item to inventory: ', new_weapon.name, ' Quantity: ', pickup.quantity)
-	ECS.world.add_entity(new_weapon)
-	GameState.inventory_weapon_added.emit(new_weapon)
-	if not GameState.active_weapon:
-		GameState.active_weapon = new_weapon
-	
-	return new_weapon
 
+	var resource = pickup.get(resource_property)
+	if resource.pickup_action:
+		resource.pickup_action.run_action()
+
+	var new_entity = Entity.new()
+	new_entity.name = '-'.join([resource.name, str(pickup.get_instance_id())])
+
+	new_entity.add_components([resource, C_InInventory.new(), C_Quantity.new(pickup.quantity)])
+	if resource.hidden:
+		new_entity.add_component(C_HideInQuickBar.new())
+	new_entity.add_relationship(Relationship.new(C_OwnedBy.new(), player))
+
+	ECS.world.add_entity(new_entity)
+	inventory_signal.emit(new_entity)
+	Loggie.debug('Added item to inventory: ', new_entity.name, ' Quantity: ', pickup.quantity)
+
+	if not GameState.get(active_resource_property):
+		GameState.set(active_resource_property, new_entity)
+
+	return new_entity
+
+## Adds a weapon to the player's inventory.
+static func pickup_weapon(pickup: Pickup):
+	return pickup_resource(
+		pickup,
+		"weapon_resource",
+		GameState.inventory_weapon_added,
+		"active_weapon"
+	)
+
+## Adds an item to the player's inventory.
 static func pickup_item(pickup: Pickup):
-	var player = pickup.get_relationship(Relationship.new(C_OwnedBy.new(), Player)).target
-	assert(player, 'Player not found')
-	if pickup.item_resource.pickup_action:
-		pickup.item_resource.pickup_action.run_action()
-	var new_item = Entity.new()
-	new_item.name = '-'.join([pickup.item_resource.name, pickup.get_instance_id()])
-	new_item.add_components([pickup.item_resource, C_InInventory.new(), C_Quantity.new(pickup.quantity)])
-	new_item.add_relationship(Relationship.new(C_OwnedBy.new(), player))
-	ECS.world.add_entity(new_item)
-	GameState.inventory_item_added.emit(new_item)
-	Loggie.debug('Added item to inventory: ', new_item.name, ' Quantity: ', pickup.quantity)
-	GameState.inventory_item_added.emit(new_item)
-	if not GameState.active_item:
-		GameState.active_item = new_item
-	
-	return new_item
+	return pickup_resource(
+		pickup,
+		"item_resource",
+		GameState.inventory_item_added,
+		"active_item"
+	)
+
 ## Gets the quantity of the specified item.
 ## Parameters:
 ##   - item: The item entity.
