@@ -3,7 +3,7 @@ extends Action
 
 
 func _use_item(item: Entity, player: Entity) -> void:
-	assert(false, 'You must override this function in your inventory action')
+	Loggie.debug('Using this item has no effect because nothing was set in: ', self.meta.name)
 
 ## Call this if you're running the action from somewhere
 ## We only run the action on the entities that are passed in that match the query
