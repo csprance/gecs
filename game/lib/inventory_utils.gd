@@ -17,30 +17,23 @@ static func use_inventory_item(item: Entity, player: Entity):
 	remove_inventory_item(item)
 
 ## Helper function to handle picking up resources (weapons and items).
+static func add_to_inventory(player: Entity, c_item: C_Item, quantity: int, inventory_signal: Signal, active_resource_property: String):
+	var new_entity = c_item.make_entity(quantity)
+	new_entity.add_relationship(Relationship.new(C_OwnedBy.new(), player))
+	ECS.world.add_entity(new_entity)
+	inventory_signal.emit(new_entity)
+	Loggie.debug('Added item to inventory: ', new_entity.name, ' Quantity: ', quantity)
+	if not GameState.get(active_resource_property):
+		GameState.set(active_resource_property, new_entity)
+	return new_entity
+
 static func pickup_resource(pickup: Pickup, resource_property: String, inventory_signal: Signal, active_resource_property: String):
 	var player = pickup.get_relationship(Relationship.new(C_OwnedBy.new(), Player)).target
 	assert(player, 'Player not found')
-
 	var resource = pickup.get(resource_property)
 	if resource.pickup_action:
 		resource.pickup_action.run_action()
-
-	var new_entity = Entity.new()
-	new_entity.name = '-'.join([resource.name, str(pickup.get_instance_id())])
-
-	new_entity.add_components([resource, C_InInventory.new(), C_Quantity.new(pickup.quantity)])
-	if resource.hidden:
-		new_entity.add_component(C_HideInQuickBar.new())
-	new_entity.add_relationship(Relationship.new(C_OwnedBy.new(), player))
-
-	ECS.world.add_entity(new_entity)
-	inventory_signal.emit(new_entity)
-	Loggie.debug('Added item to inventory: ', new_entity.name, ' Quantity: ', pickup.quantity)
-
-	if not GameState.get(active_resource_property):
-		GameState.set(active_resource_property, new_entity)
-
-	return new_entity
+	return add_to_inventory(player, resource, pickup.quantity, inventory_signal, active_resource_property)
 
 ## Adds a weapon to the player's inventory.
 static func pickup_weapon(pickup: Pickup):
