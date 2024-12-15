@@ -182,6 +182,10 @@ static func consolidate_inventory():
 		var qty = item_data["quantity"]
 		entity.add_component(C_Quantity.new(qty))
 
+## Check and see if an entity has a specific item in their inventory.[br]
+## Parameters:[br]
+##   - [player]: The entity with an inventory.[br]
+##   - [c_item]: The item resource to get.
 static func get_item(player: Entity, c_item: C_Item) -> Entity:
 	var items = Queries.in_inventory_of_entity(player).combine(Queries.is_item()).execute()
 	for item in items:
