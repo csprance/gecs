@@ -1,10 +1,12 @@
+## This class is the main class for interacting with the player's inventory.[br]
+## It consists of all static methods that are used to interact with any item in any player's inventory.[br]
 class_name InventoryUtils
 
-## Uses an item from the player's inventory.
-## This is the main way we interact with items in the player's inventory.
-## Calls the run_inventory_action method on the item's [Action].
-## Parameters:
-##   - item: The item [Entity] to use.
+## Uses an item from the player's inventory.[br]
+## This is the main way we interact with items in the player's inventory.[br]
+## Calls the run_inventory_action method on the item's [Action].[br]
+## Parameters:[br]
+##   - item: The item [Entity] to use.[br]
 ##   - player: The player [Entity] using the [C_Item] from the `item`.
 static func use_inventory_item(item: Entity, player: Entity):
 	var action = get_item_action(item)
@@ -58,10 +60,10 @@ static func pickup_item(pickup: Pickup):
 		"active_item"
 	)
 
-## Gets the quantity of the specified item.
-## Parameters:
-##   - item: The item entity.
-## Returns:
+## Gets the quantity of the specified item.[br]
+## Parameters:[br]
+##   - item: The item entity.[br]
+## Returns:[br]
 ##   - The quantity of the item.
 static func get_item_quantity(item: Entity) -> int:
 	if not item:
@@ -69,10 +71,10 @@ static func get_item_quantity(item: Entity) -> int:
 	var c_qty = item.get_component(C_Quantity) as C_Quantity
 	return c_qty.value if c_qty else 1
 
-## Gets the action associated with the item.
-## Parameters:
-##   - item: The item entity.
-## Returns:
+## Gets the action associated with the item.[br]
+## Parameters:[br]
+##   - item: The item entity.[br]
+## Returns:[br]
 ##   - The action associated with the item.
 static func get_item_action(item: Entity) -> Action:
 	var c_item_weapon = get_item_or_weapon(item)
@@ -81,24 +83,25 @@ static func get_item_action(item: Entity) -> Action:
 	assert(false, 'Item does not have an action')
 	return
 
-## Gets the item or weapon component from the entity.
-## Parameters:
-##   - item: The item entity.
-## Returns:
-##   - The item or weapon component.
+## Gets the item or weapon component from the entity.[br]
+## Parameters:[br]
+##   - [item]: The item entity.[br]
+## Returns:[br]
+##   - The [C_Item] or [C_Weapon] [Component].
 static func get_item_or_weapon(item:Entity):
 	var c_item = item.get_component(C_Item) as C_Item
-	var c_weapon = item.get_component(C_Weapon) as C_Weapon
 	if c_item:
 		return c_item
+	var c_weapon = item.get_component(C_Weapon) as C_Weapon
 	if c_weapon:
 		return c_weapon
 	return
 
-## Removes a specified quantity of an item from the player's inventory.
-## Parameters:
-##   - item: The item entity to remove.
-##   - remove_quantity: The quantity to remove.
+## Removes a specified quantity of an item from the player's inventory.[br]
+## If the quantity is 0, the item is removed from the player's inventory.[br]
+## Parameters:[br]
+##   - [item]: The item entity to remove.[br]
+##   - [remove_quantity]: The quantity to remove.
 static func remove_inventory_item(item: Entity, remove_quantity = 1):	
 	var c_item_weapon = get_item_or_weapon(item)
 	var c_qty = item.get_component(C_Quantity) as C_Quantity
@@ -145,9 +148,10 @@ static func cycle_inventory_weapon():
 		else:
 			GameState.active_weapon = weapons[0]
 
-## Consolidates the player's inventory.
-## This will consolidate all items that have the same item component.
-## This is useful for when the player picks up multiple items of the same type.
+## Consolidates the player's inventory.[br]
+## This will consolidate all items that have the same item component.[br]
+## This is useful for when the player picks up multiple items of the same type.[br]
+## For example, if the player picks up 3 health potions, this will consolidate them into a single entity with a quantity of 3.
 static func consolidate_inventory():
 	var inventory_entities = Queries.in_inventory_of_entity(GameState.player).execute()
 	var item_quantities = {}
