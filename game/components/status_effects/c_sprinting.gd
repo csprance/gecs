@@ -3,7 +3,7 @@ extends Component
 
 # The speed multiplier of the dashing
 @export var speed_mult: float = 1.5
-# The duration of the dashing
+# The duration of the sprinting
 @export var duration: float = 0.5
 # The cooldown of the dashing (How long between dashes[can Only have one Dash Component at a time])
 @export var cooldown: float = 1.0
