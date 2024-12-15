@@ -1,4 +1,4 @@
-[gd_scene load_steps=38 format=3 uid="uid://c8ors4ai4l4if"]
+[gd_scene load_steps=37 format=3 uid="uid://c8ors4ai4l4if"]
 
 [ext_resource type="Script" path="res://addons/gecs/world.gd" id="1_dnklw"]
 [ext_resource type="PackedScene" uid="uid://bg6jeo350r12f" path="res://game/entities/gameplay/e_door.tscn" id="2_els58"]
@@ -7,6 +7,7 @@
 [ext_resource type="Resource" uid="uid://bx7u7wpmcac6v" path="res://game/data/items/i_key.tres" id="5_uedm4"]
 [ext_resource type="Resource" uid="uid://c2njvh8tdqqem" path="res://game/data/weapons/w_water_pistol.tres" id="6_vtm68"]
 [ext_resource type="PackedScene" uid="uid://mfv8kghahued" path="res://game/entities/gameplay/e_player.tscn" id="7_4pqio"]
+[ext_resource type="Resource" uid="uid://32qy231kdit2" path="res://game/data/items/i_speed_shoes.tres" id="7_nqkuy"]
 [ext_resource type="Resource" uid="uid://ryfenvkpu8gj" path="res://game/data/weapons/w_soda_can.tres" id="8_f7emr"]
 [ext_resource type="PackedScene" uid="uid://x548ueo7udx1" path="res://game/entities/gameplay/e_aim_point.tscn" id="8_ib406"]
 [ext_resource type="PackedScene" uid="uid://cudyrj1egdocg" path="res://game/entities/ui/hud/e_hud.tscn" id="9_u2l4c"]
@@ -24,8 +25,6 @@
 [ext_resource type="Script" path="res://game/components/gameplay/c_reward.gd" id="21_oq40v"]
 [ext_resource type="Resource" uid="uid://8qrwfaqd303r" path="res://game/data/items/i_cash_pile.tres" id="25_1kho4"]
 [ext_resource type="PackedScene" uid="uid://dt0gkq2t1eudo" path="res://game/entities/gameplay/e_searchable.tscn" id="25_ugmww"]
-[ext_resource type="PackedScene" uid="uid://n6ivo0wnpuvg" path="res://game/entities/gameplay/enemies/e_enemy_evil_doll.tscn" id="26_dl5bq"]
-[ext_resource type="PackedScene" uid="uid://cgl874p46o3qf" path="res://game/entities/gameplay/enemies/e_enemy_zombie.tscn" id="27_jvbx4"]
 
 [sub_resource type="NavigationMesh" id="NavigationMesh_o4toq"]
 vertices = PackedVector3Array(-74.5, 0.371701, -8.25, -53.5, 0.371701, -8.25, -53.25, 0.371701, -10.75, -49.75, 0.371701, -52, -74.5, 0.371701, -52, -50, 0.371701, -10.75, -48.25, 0.371701, -10, -29.25, 0.371701, -10.25, -29.25, 0.371701, -11.25, -48.5, 0.371701, -10.75, -28.25, 0.371701, -11.75, -28.25, 0.371701, -52, -21.75, 0.371701, -10, -21.5, 0.371701, -9, -19.75, 0.371701, -9, -19.25, 0.371701, -10.25, -18, 0.371701, -10.25, -17.5, 0.371701, -9.75, -17.5, 0.371701, -52, -27, 0.371701, -11.25, -27, 0.371701, -10.25, -24, 0.371701, -10, -17.5, 0.371701, -8.75, -11, 0.371701, -8.25, -9.5, 0.371701, -8.5, -9.5, 0.371701, -52, -10.5, 0.371701, -6, -14.75, 0.371701, -2, -14.75, 0.371701, -1, -6.5, 0.371701, 12.25, -8.25, 0.371701, -6.25, -8.25, 0.371701, -8.25, 6.75, 0.371701, 12.25, 20.75, 0.371701, 11, 7, 0.371701, 13.25, 20.5, 0.371701, 13.25, 23.25, 0.371701, 11, 23.25, 0.371701, -52, 25.5, 0.371701, 11, 25.75, 0.371701, 12.75, 74.5, 0.371701, 12.5, 74.5, 0.371701, -52, -28, 0.371701, -2.5, -26.25, 0.371701, -3.25, -26, 0.371701, -4.75, -28.75, 0.371701, -9.5, -29.25, 0.371701, -2.5, -24.25, 0.371701, -8.5, -27.5, 0.371701, -9.5, -24.5, 0.371701, -4.75, -48.25, 0.371701, -5.75, -48.5, 0.371701, -2.75, -48.25, 0.371701, -1.75, -29.75, 0.371701, -1.75, -51.5, 0.371701, -5.5, -51.5, 0.371701, -2.75, -52.5, 0.871701, -9.75, -52.5, 0.871701, -6.5, -49.25, 0.871701, -6.5, -49.25, 0.871701, -9.75, -27.5, 0.371701, -2, -26, 0.371701, -2.75, -28.75, 0.371701, -0.25, -30.25, 0.371701, 4.75, -29.5, 0.371701, 5.5, -26.25, 0.371701, 3, -26, 0.371701, 1.25, -27.5, 0.371701, -0.75, -19.75, 0.371701, -8.25, -21.75, 0.371701, -8, -25.75, 0.371701, 3.25, -23.75, 0.371701, 1.25, -23.75, 0.371701, -2.75, -19, 0.371701, -8, -22, 0.371701, -4.5, -19.5, 0.371701, -4.75, -23.5, 0.371701, 2.25, -20.75, 0.371701, 2.25, -20.75, 0.371701, 1.5, -23.5, 0.371701, -4.5, -22, 0.371701, -3, -19.25, 0.371701, -4.25, -24, 0.371701, -8, -20.25, 0.371701, 1.25, -20.25, 0.371701, -2.75, -18.25, 0.371701, 1.25, -18, 0.371701, 1.75, -16.25, 0.371701, -0.25, -17, 0.371701, -0.75, -19.25, 0.371701, -3, -17, 0.371701, -2, -16.5, 0.371701, -2.5, -18, 0.371701, -8, -15, 0.371701, -2.5, -11, 0.371701, -6.25, -53.5, 0.371701, -2.5, -53.5, 0.371701, -5.75, -61.25, 0.371701, 5, -56.5, 0.371701, 5, -53.5, 0.371701, 5.25, -51, 0.371701, 5, -51, 0.371701, 2.5, -53.5, 0.371701, 2.25, -74.5, 0.371701, 7.75, -56.25, 0.371701, 8.25, -53.5, 0.371701, 8.25, -61.5, 0.371701, 7.75, -10, 2.3717, -7.5, -10, 2.3717, -7, -9.25, 2.3717, -7, -9.25, 2.3717, -7.5, -52.5, 0.871701, -1.75, -52.5, 0.871701, 1.5, -49.25, 0.871701, 1.5, -49.25, 0.871701, -1.75, -48.5, 0.371701, 5, -48.25, 0.371701, 2.25, -31.75, 0.371701, 5.5, -31.25, 0.371701, 4.75, -29.75, 0.371701, -0.5, -48.25, 0.371701, 5.5, -15.25, 0.371701, -0.25, -18, 0.371701, 3, -7, 0.371701, 12.75, -18.5, 0.371701, 3.25, -20.5, 0.371701, 3.25, -23.75, 0.371701, 3.25, -29.75, 0.371701, 7, -32.75, 0.371701, 14, -6.75, 0.371701, 14.5, -31, 0.371701, 7, -32.75, 0.371701, 12.75, -4.75, 0.371701, 52, -4.75, 0.371701, 14.5, -33.75, 0.371701, 14.5, -33.75, 0.371701, 52, -33, 0.371701, 12.25, -31.75, 0.371701, 6.5, -34.5, 0.371701, 12.25, -48.25, 0.371701, 10, -48.75, 0.371701, 10.25, -35, 0.371701, 13, -60.5, 0.871701, 6, -60.5, 0.871701, 9.25, -57.25, 0.871701, 9.25, -57.25, 0.871701, 6, -52.5, 0.871701, 6, -52.5, 0.871701, 9.25, -49.25, 0.871701, 9.25, -49.25, 0.871701, 6, -53.25, 0.371701, 10.25, -56.5, 0.371701, 10.25, -49.75, 0.371701, 52, -61.25, 0.371701, 10.25, -74.5, 0.371701, 52, -50, 0.371701, 10.25, -35, 0.371701, 13.75, 21.5, 0.871701, 12, 21.5, 0.871701, 15.25, 24.75, 0.871701, 15.25, 24.75, 0.871701, 12, 25.75, 0.371701, 14.5, 74.5, 0.371701, 14.75, 20.5, 0.371701, 16, 6.75, 0.371701, 14.5, 22.25, 0.371701, 16.25, 4.75, 0.371701, 14.5, 4.75, 0.371701, 52, 22, 0.371701, 52, 25.5, 0.371701, 16.25, 24, 0.371701, 16.25, 24.25, 0.371701, 52, 74.5, 0.371701, 52)
@@ -92,6 +91,10 @@ item_resource = ExtResource("4_vaqdj")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.2883, 0, 1.54391)
 item_resource = ExtResource("5_uedm4")
 
+[node name="SpeedShoesPickup" parent="Entities" instance=ExtResource("3_b6amu")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.43543, 0, 2.12321)
+item_resource = ExtResource("7_nqkuy")
+
 [node name="KeyPickup2" parent="Entities" instance=ExtResource("3_b6amu")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.11615, 0, 1.51265)
 item_resource = ExtResource("5_uedm4")
@@ -121,42 +124,6 @@ component_resources = Array[ExtResource("13_pvfgj")]([SubResource("Resource_l81d
 
 [node name="ESearchable" parent="Entities" instance=ExtResource("25_ugmww")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.62087, -0.032787, -7.18647)
-
-[node name="EvilDollEnemy" parent="Entities" instance=ExtResource("26_dl5bq")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11.843, -0.032787, 10.5606)
-
-[node name="EvilDollEnemy2" parent="Entities" instance=ExtResource("26_dl5bq")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.3432, -0.032787, 18.9502)
-
-[node name="EvilDollEnemy3" parent="Entities" instance=ExtResource("26_dl5bq")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.1081, -0.0327861, 21.0468)
-
-[node name="EvilDollEnemy4" parent="Entities" instance=ExtResource("26_dl5bq")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -21.483, -0.0327861, 10.9543)
-
-[node name="ZombieEnemy" parent="Entities" instance=ExtResource("27_jvbx4")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13.0164, -0.032787, 15.9941)
-
-[node name="ZombieEnemy2" parent="Entities" instance=ExtResource("27_jvbx4")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17.6194, -0.032787, 7.28098)
-
-[node name="ZombieEnemy3" parent="Entities" instance=ExtResource("27_jvbx4")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.57885, -0.032787, 9.06653)
-
-[node name="ZombieEnemy4" parent="Entities" instance=ExtResource("27_jvbx4")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.08059, -0.032787, 18.5692)
-
-[node name="ZombieEnemy5" parent="Entities" instance=ExtResource("27_jvbx4")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.17045, -0.032787, 18.2963)
-
-[node name="ZombieEnemy6" parent="Entities" instance=ExtResource("27_jvbx4")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.39862, -0.032787, 7.67507)
-
-[node name="ZombieEnemy7" parent="Entities" instance=ExtResource("27_jvbx4")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -19.6797, -0.032787, 17.7306)
-
-[node name="ZombieEnemy8" parent="Entities" instance=ExtResource("27_jvbx4")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -19.6797, -0.032787, 17.7306)
 
 [node name="Props" type="Node" parent="."]
 
