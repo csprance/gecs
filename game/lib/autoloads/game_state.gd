@@ -89,6 +89,7 @@ var active_weapon : Entity :
 			e.remove_component(C_IsActiveWeapon)
 		if v == null:
 			weapon_changed.emit()
+			GameState.player.remove_component(C_HasActiveWeapon)
 			return
 		v.add_component(C_IsActiveWeapon.new())
 		GameState.player.add_component(C_HasActiveWeapon.new())
@@ -107,6 +108,7 @@ var active_item: Entity :
 			e.remove_component(C_IsActiveItem)
 		if v == null:
 			item_changed.emit()
+			GameState.player.remove_component(C_HasActiveItem)
 			return
 		v.add_component(C_IsActiveItem.new())
 		GameState.player.add_component(C_HasActiveItem.new())
