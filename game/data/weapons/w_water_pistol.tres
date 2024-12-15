@@ -1,14 +1,14 @@
 [gd_resource type="Resource" script_class="C_Weapon" load_steps=10 format=3 uid="uid://c2njvh8tdqqem"]
 
-[ext_resource type="Script" path="res://game/components/weapon/c_weapon.gd" id="1_4my2w"]
-[ext_resource type="Script" path="res://game/actions/inventory_actions/a_shoot_projectile.gd" id="1_8cl40"]
+[ext_resource type="Script" path="res://game/actions/inventory_actions/a_shoot_projectile.gd" id="1_uymtc"]
 [ext_resource type="Resource" uid="uid://crekuuaar4m8l" path="res://game/data/projectiles/water_pistol_projectile.tres" id="2_4r66g"]
 [ext_resource type="Texture2D" uid="uid://duwf6x4ujse6x" path="res://game/assets/weapons/water_pistol/water_pistol_icon.png" id="2_aahy4"]
 [ext_resource type="PackedScene" uid="uid://bkowq6t404w7y" path="res://game/assets/weapons/water_pistol/water_pistol_visuals.tscn" id="2_uapeg"]
+[ext_resource type="Script" path="res://game/components/weapon/c_weapon.gd" id="4_3qolq"]
 [ext_resource type="Script" path="res://game/components/rendering/c_visuals.gd" id="5_qor2e"]
 
 [sub_resource type="Resource" id="Resource_sm65s"]
-script = ExtResource("1_8cl40")
+script = ExtResource("1_uymtc")
 meta = {
 "description": "This is the default action that is executed when no other action is assigned",
 "name": "Default Action"
@@ -23,7 +23,7 @@ script = ExtResource("5_qor2e")
 packed_scene = ExtResource("2_uapeg")
 
 [resource]
-script = ExtResource("1_4my2w")
+script = ExtResource("4_3qolq")
 weapon_visuals = SubResource("Resource_7dmsf")
 projectile = ExtResource("2_4r66g")
 icon = ExtResource("2_aahy4")
@@ -31,3 +31,4 @@ name = "Water Pistol"
 description = "The ultra holy water pistol"
 visuals = SubResource("Resource_101dj")
 action = SubResource("Resource_sm65s")
+hidden = false
