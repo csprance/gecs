@@ -97,8 +97,10 @@ static func get_item_or_weapon(item:Entity):
 		return c_weapon
 	return
 
-## Removes a specified quantity of an item from the player's inventory.[br]
-## If the quantity is 0, the item is removed from the player's inventory.[br]
+## Removes a specified quantity of an item from the world.[br]
+## If the quantity is 0, the item is removed from the world.[br]
+## Since items have no explicit dependency of being in the player's inventory, [br]
+## this method can be used to remove items from the world or in an inventory.[br]
 ## Parameters:[br]
 ##   - [item]: The item entity to remove.[br]
 ##   - [remove_quantity]: The quantity to remove.
@@ -179,3 +181,10 @@ static func consolidate_inventory():
 		var entity = item_data["entity"]
 		var qty = item_data["quantity"]
 		entity.add_component(C_Quantity.new(qty))
+
+static func get_item(player: Entity, c_item: C_Item) -> Entity:
+	var items = Queries.in_inventory_of_entity(player).combine(Queries.is_item()).execute()
+	for item in items:
+		if c_item.equals(item.get_component(C_Item)):
+			return item
+	return null
