@@ -11,11 +11,11 @@ extends Component
 ## The visuals for the item as it exists in the world
 @export var visuals: C_Visuals
 ## The inventory action that is called when the item is used
-@export var action: Action = InventoryAction.new()
+@export var action: InventoryAction
 ## The action that is called when the item is picked up
-@export var pickup_action: Action = Action.new()
+@export var pickup_action: Action
 ## The action that is called when the item is dropped
-@export var drop_action: Action = Action.new()
+@export var drop_action: Action
 ## Marks this item as hidden. Which means it will not be displayed in the inventory
 @export var hidden:= false
 
