@@ -18,3 +18,13 @@ extends Component
 @export var drop_action: Action = Action.new()
 ## Marks this item as hidden. Which means it will not be displayed in the inventory
 @export var hidden:= false
+
+## Creates a barebones entity with the item component and returns it
+func make_entity(qty: int) -> Entity:
+	var entity = Entity.new()
+	entity.name = '-'.join([name, entity.get_instance_id()])
+	entity.add_components([self, C_InInventory.new(), C_Quantity.new(qty)])
+	if hidden:
+		entity.add_component(C_HideInQuickBar.new())
+	
+	return entity
