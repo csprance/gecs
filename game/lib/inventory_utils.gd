@@ -23,7 +23,8 @@ static func add_to_inventory(player: Entity, c_item: C_Item, quantity: int, inve
 	Loggie.debug('Added item to inventory: ', new_entity.name, ' Quantity: ', quantity)
 	if not GameState.get(active_resource_property):
 		GameState.set(active_resource_property, new_entity)
-	return new_entity
+	consolidate_inventory()
+	return true
 
 static func pickup_resource(pickup: Pickup, c_item: Component, inventory_signal: Signal, active_resource_property: String):
 	var player = pickup.get_relationship(Relationship.new(C_OwnedBy.new(), Player)).target
@@ -113,32 +114,24 @@ static func remove_inventory_item(item: Entity, remove_quantity = 1):
 	else:
 		Loggie.debug('Item does not have a C_Item component')
 
+static func cycle_inventory(current_active: Entity, query_filter: QueryBuilder) -> Entity:
+	consolidate_inventory()
+	var items = Queries.in_inventory_of_entity(GameState.player).combine(query_filter).combine(Queries.shows_in_quickbar()).execute()
+	if items.size() == 0:
+		return null
+	var index = -1
+	if current_active:
+		index = items.find(current_active)
+	var next_index = (index + 1) % items.size()
+	return items[next_index]
+
 ## Cycles to the next item in the player's inventory.
 static func cycle_inventory_item():
-	consolidate_inventory()
-	var items =  Queries.in_inventory_of_entity(GameState.player).combine(Queries.is_item()).combine(Queries.shows_in_quickbar()).execute()
-	# Find the active item and set the next item as the active item
-	for item in items:
-		if item.has_component(C_IsActiveItem):
-			var next_index = (items.find(item) + 1) % items.size()
-			GameState.active_item = items[next_index]
-			return
-		else:
-			GameState.active_item = items[0]
-
+	GameState.active_item = cycle_inventory(GameState.active_item, Queries.is_item())
 
 ## Cycles to the next weapon in the player's inventory.
 static func cycle_inventory_weapon():
-	consolidate_inventory()
-	var weapons =  Queries.in_inventory_of_entity(GameState.player).combine(Queries.is_weapon()).combine(Queries.shows_in_quickbar()).execute()
-	# Find the active weapon and set the next weapon as the active weapon
-	for weapon in weapons:
-		if weapon.has_component(C_IsActiveWeapon):
-			var next_index = (weapons.find(weapon) + 1) % weapons.size()
-			GameState.active_weapon = weapons[next_index]
-			return
-		else:
-			GameState.active_weapon = weapons[0]
+	GameState.active_weapon = cycle_inventory(GameState.active_weapon, Queries.is_weapon())
 
 ## Consolidates the player's inventory.[br]
 ## This will consolidate all items that have the same item component.[br]
