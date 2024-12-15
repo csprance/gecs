@@ -62,6 +62,6 @@ func _handle_impact(e_projectile, c_projectile: C_Projectile, c_collision: C_Col
 	if c_projectile.impact_effect:
 		var impact = c_projectile.impact_effect.instantiate()
 		impact.global_transform.origin = c_collision.collision.get_position()
-		e_projectile.get_parent().add_child(impact)
+		ECS.world.add_entity(impact)
 	
 	ECS.world.remove_entity(e_projectile)
