@@ -10,8 +10,8 @@ extends Component
 @export var description:= '|EMPTY|'
 ## The visuals for the item as it exists in the world
 @export var visuals: C_Visuals
-## The action that is called when the item is used
-@export var action: Action = Action.new()
+## The inventory action that is called when the item is used
+@export var action: Action = InventoryAction.new()
 ## The action that is called when the item is picked up
 @export var pickup_action: Action = Action.new()
 ## The action that is called when the item is dropped

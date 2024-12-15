@@ -1,6 +1,6 @@
 
 class_name ShootProjectileAction
-extends Action
+extends InventoryAction
 
 func _meta():
     return {
@@ -8,12 +8,7 @@ func _meta():
         'description': "Shoots a projectile based on the passed in metdata of [Weapon,Shooter].",
     }
 
-func _action(_e) -> void:
-    var active_weapon = meta.get('item') as Entity
-    var player = meta.get('player') as Entity
-    if not active_weapon or not player:
-        return
-
+func _use_item(active_weapon: Entity, player: Entity) -> void:
     # Decrease the quantity of the active weapon.
     var c_qty = active_weapon.get_component(C_Quantity) as C_Quantity
     if c_qty:

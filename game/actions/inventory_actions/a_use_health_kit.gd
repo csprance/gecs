@@ -1,5 +1,5 @@
 class_name UseHealthKitAction
-extends Action
+extends InventoryAction
 
 func _meta():
     return {
@@ -8,12 +8,7 @@ func _meta():
     }
 
 
-func _action(_e) -> void:
-    var health_kit = meta.get('item') as Entity
-    var player = meta.get('player') as Entity
-    if not health_kit or not player:
-        return
-
+func _use_item(health_kit: Entity, player: Entity) -> void:
     var c_health = player.get_component(C_Health) as C_Health
     c_health.current = c_health.total
     GameState.health_changed.emit(c_health.current)

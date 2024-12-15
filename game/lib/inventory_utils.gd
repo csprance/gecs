@@ -2,17 +2,16 @@ class_name InventoryUtils
 
 ## Uses an item from the player's inventory.
 ## This is the main way we interact with items in the player's inventory.
-## Calls the run_action method on the item's [Action].
+## Calls the run_inventory_action method on the item's [Action].
 ## Parameters:
 ##   - item: The item [Entity] to use.
 ##   - player: The player [Entity] using the [C_Item] from the `item`.
 static func use_inventory_item(item: Entity, player: Entity):
 	var action = get_item_action(item)
-	Loggie.debug('Using Item', item)
 	if action:
-		# We execute the action with no entities, as the action should be able to find the entities it needs.
-		action.run_action([], {'item': item, 'player': player, 'from': 'InventoryUtils.use_inventory_item'})
-	
+		# pass in the item and the player.
+		action.run_inventory_action([item], player)
+
 	remove_inventory_item(item)
 
 ## Helper function to handle picking up resources (weapons and items).
