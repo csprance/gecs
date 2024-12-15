@@ -21,7 +21,7 @@ func _interaction(interactable: Entity, interactors: Array, meta: Dictionary = {
         i.remove_component(C_Interacting)
      # doors only work once
     interactable.remove_component(C_Interactable)
-    # remove the key from the key bearer
+    # remove the key from the world
     InventoryUtils.remove_inventory_item(e_key, 1)
     return true
     
