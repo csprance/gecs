@@ -29,7 +29,7 @@ static func create_projectile_transform(entity: Entity, direction: Vector3):
 
 
 # Instantiates the projectile entity and initializes its components.
-static func instantiate_projectile(c_projectile: C_Projectile, transform: Transform3D):
+static func instantiate_projectile(c_projectile: C_Projectile, transform: Transform3D) -> Projectile:
 	var e_projectile = Constants.projectile_scene.instantiate() as Projectile
 	if not e_projectile:
 		assert(false, "Failed to instantiate projectile entity.")
