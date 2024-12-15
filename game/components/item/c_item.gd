@@ -16,3 +16,5 @@ extends Component
 @export var pickup_action: Action = Action.new()
 ## The action that is called when the item is dropped
 @export var drop_action: Action = Action.new()
+## Marks this item as hidden. Which means it will not be displayed in the inventory
+@export var hidden:= false
