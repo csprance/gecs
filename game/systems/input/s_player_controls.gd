@@ -76,26 +76,26 @@ func movement_subsystem(entity: Entity, _delta: float) -> void:
 	var player = entity as Player
 	# Get the velocity component from the entity
 	var c_velocity = player.get_component(C_Velocity) as C_Velocity
-	var movement = player.get_component(C_PlayerMovement) as C_PlayerMovement
+	var c_movement = player.get_component(C_PlayerMovement) as C_PlayerMovement
 
 	# Reset our movement
-	movement.direction = Vector3.ZERO
+	c_movement.direction = Vector3.ZERO
 
 	# Determine the move axis
 	if Input.is_action_pressed('move_left'):
-		movement.direction += Vector3.LEFT
+		c_movement.direction += Vector3.LEFT
 	if Input.is_action_pressed('move_right'):
-		movement.direction += Vector3.RIGHT
+		c_movement.direction += Vector3.RIGHT
 	if Input.is_action_pressed('move_up'):
-		movement.direction += Vector3.FORWARD
+		c_movement.direction += Vector3.FORWARD
 	if Input.is_action_pressed('move_down'):
-		movement.direction += Vector3.BACK
+		c_movement.direction += Vector3.BACK
 
-	if movement.direction != Vector3.ZERO:
-		movement.direction = movement.direction.normalized()
+	if c_movement.direction != Vector3.ZERO:
+		c_movement.direction = c_movement.direction.normalized()
 
 	# Update velocity based on the move axis and speed
-	c_velocity.velocity = movement.direction * (movement.speed if movement.direction != Vector3.ZERO else 0.0)
+	c_velocity.velocity = c_movement.direction * (c_movement.speed if c_movement.direction != Vector3.ZERO else 0.0)
 
 
 
