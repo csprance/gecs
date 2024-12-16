@@ -3,4 +3,4 @@ class_name C_AnimationPlayer
 extends Component
 
 ## The path to the animation player node
-@export var player: NodePath
+@export_node_path('AnimationPlayer') var player: NodePath
