@@ -8,7 +8,7 @@ class_name DamageSystem
 extends System
 
 func query() -> QueryBuilder:
-	return q.with_all([C_Damage, C_Health]).with_none([C_Death])
+	return q.with_all([C_Damage, C_Health]).with_none([C_Death, C_Invunerable])
 
 
 func process(entity: Entity, _delta: float):
