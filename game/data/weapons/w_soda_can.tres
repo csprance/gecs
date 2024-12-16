@@ -29,3 +29,4 @@ name = "Soda Cans"
 description = "La Croix Blessed by a priest"
 visuals = SubResource("Resource_101dj")
 action = SubResource("Resource_8d8hl")
+hidden = false
