@@ -83,12 +83,18 @@ item_resource = ExtResource("25_1kho4")
 [node name="EDoor" parent="Entities" instance=ExtResource("2_els58")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15.4196, 0, 0.120034)
 
+[node name="EDoor2" parent="Entities" instance=ExtResource("2_els58")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22.0847, 0, 0.120034)
+
+[node name="EDoor3" parent="Entities" instance=ExtResource("2_els58")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 27.7655, 0, 0.120034)
+
 [node name="HealthkitPickup" parent="Entities" instance=ExtResource("3_b6amu")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.73383, 3.8147e-06, 2.22476)
 item_resource = ExtResource("4_vaqdj")
 
 [node name="KeyPickup" parent="Entities" instance=ExtResource("3_b6amu")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.2883, 0, 1.54391)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17.1763, 0, 2.45135)
 item_resource = ExtResource("5_uedm4")
 
 [node name="SpeedShoesPickup" parent="Entities" instance=ExtResource("3_b6amu")]
@@ -96,7 +102,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.43543, 0, 2.12321)
 item_resource = ExtResource("7_nqkuy")
 
 [node name="KeyPickup2" parent="Entities" instance=ExtResource("3_b6amu")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.11615, 0, 1.51265)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23.7481, 0, 2.75081)
 item_resource = ExtResource("5_uedm4")
 
 [node name="SquirtGunPickup" parent="Entities" instance=ExtResource("3_b6amu")]
@@ -105,12 +111,12 @@ weapon_resource = ExtResource("6_vtm68")
 quantity = 100
 
 [node name="SodaCanPickup" parent="Entities" instance=ExtResource("3_b6amu")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.95962, 0.193465, -2.87373)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.11548, 0.193465, 6.80734)
 weapon_resource = ExtResource("8_f7emr")
 quantity = 99
 
 [node name="EPlayer" parent="Entities" instance=ExtResource("7_4pqio")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.57766, -3.8147e-06, -2.50553)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.195613, -3.8147e-06, 1.705)
 
 [node name="EAimPoint" parent="Entities" instance=ExtResource("8_ib406")]
 

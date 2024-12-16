@@ -1,10 +1,11 @@
 class_name OpenDoorInteraction
 extends Interaction
 
-@export var key: C_Item
+@export_file("*.tres") var key_path
 
 func _interaction(interactable: Entity, interactors: Array, meta: Dictionary = {}) -> bool:
-	assert(key, "Key Type on Door Interation is not set on Entity: %s" % interactable)
+	var key = load(key_path)
+	assert(key, "Key Type on Door Interation is not set or invalid on Entity: %s" % interactable)
 	# check to see if at least one of the interactors has a key
 	var e_key: Entity
 	for i in interactors:

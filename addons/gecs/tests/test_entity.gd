@@ -55,6 +55,3 @@ func test_add_get_has_relationship():
 	var class_retrieved_relationship = entityb.get_relationship(Relationship.new(C_TestA.new(), entitya))
 	assert_str(type_string(typeof(class_retrieved_relationship))).is_equal(type_string(typeof(r_testa_entitya)))
 	assert_str(type_string(typeof(class_retrieved_relationship))).is_equal(type_string(typeof(Relationship.new(C_TestA.new(), entitya))))
-
-
-

@@ -1,9 +1,8 @@
-[gd_scene load_steps=23 format=3 uid="uid://bg6jeo350r12f"]
+[gd_scene load_steps=22 format=3 uid="uid://bg6jeo350r12f"]
 
 [ext_resource type="Script" path="res://addons/gecs/entity.gd" id="1_0jg53"]
 [ext_resource type="Script" path="res://addons/gecs/component.gd" id="2_yxdgp"]
 [ext_resource type="Script" path="res://game/components/gameplay/c_door.gd" id="3_wqx1b"]
-[ext_resource type="Resource" uid="uid://bx7u7wpmcac6v" path="res://game/data/items/i_key.tres" id="4_5wo8f"]
 [ext_resource type="Script" path="res://game/actions/interactions/i_open_door.gd" id="4_e0wl6"]
 [ext_resource type="Script" path="res://game/lib/interaction_area.gd" id="4_his00"]
 [ext_resource type="Script" path="res://game/lib/static_queries/static_query.gd" id="5_h832r"]
@@ -18,7 +17,7 @@ script = ExtResource("3_wqx1b")
 
 [sub_resource type="Resource" id="Resource_8516g"]
 script = ExtResource("4_e0wl6")
-key = ExtResource("4_5wo8f")
+key_path = "res://game/data/items/i_key.tres"
 meta = {
 "description": "Opening the door for e_door",
 "name": "Open Door"
@@ -55,8 +54,8 @@ tracks/0/keys = PackedFloat32Array(0, 1, 0, 0, 0, 1)
 
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_ry413"]
 _data = {
-&"open_door": SubResource("Animation_tuih5"),
-&"RESET": SubResource("Animation_b7o2a")
+&"RESET": SubResource("Animation_b7o2a"),
+&"open_door": SubResource("Animation_tuih5")
 }
 
 [sub_resource type="Resource" id="Resource_ew57s"]

@@ -12,7 +12,7 @@
             "debug_collisions": true,
             "debug_paths": true,
             "debug_navigation": true,
-            "additional_options": ""
+            "additional_options": "-m --screen 2"
         }
     ]
 }
