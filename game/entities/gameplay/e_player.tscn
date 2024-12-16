@@ -1,4 +1,4 @@
-[gd_scene load_steps=61 format=3 uid="uid://mfv8kghahued"]
+[gd_scene load_steps=64 format=3 uid="uid://mfv8kghahued"]
 
 [ext_resource type="Script" path="res://game/entities/gameplay/e_player.gd" id="1_tt02t"]
 [ext_resource type="Script" path="res://game/components/player/c_player.gd" id="2_c0i32"]
@@ -24,6 +24,8 @@
 [ext_resource type="PackedScene" uid="uid://bkowq6t404w7y" path="res://game/assets/weapons/water_pistol/water_pistol_visuals.tscn" id="16_m1h6p"]
 [ext_resource type="PackedScene" uid="uid://d2p72cr27pb2f" path="res://game/lib/hitbox_3d.tscn" id="17_2q1ty"]
 [ext_resource type="AnimationLibrary" uid="uid://cssb0iu530xnq" path="res://game/assets/animations/default_anim_lib.res" id="17_qcmwa"]
+[ext_resource type="Script" path="res://game/components/item/c_gear.gd" id="17_v1vbg"]
+[ext_resource type="PackedScene" uid="uid://oidd8isg4ovc" path="res://game/lib/gear.tscn" id="17_ximur"]
 
 [sub_resource type="Resource" id="Resource_w7h0e"]
 script = ExtResource("2_c0i32")
@@ -86,6 +88,11 @@ callback = Callable()
 [sub_resource type="Resource" id="Resource_qkti0"]
 script = ExtResource("16_cv0mn")
 anim_tree = NodePath("AnimationTree")
+
+[sub_resource type="Resource" id="Resource_8bws4"]
+script = ExtResource("17_v1vbg")
+skeleton_path = NodePath("Visuals/RootNode/Root/Skeleton3D")
+gear_items = Array[PackedScene]([ExtResource("17_ximur")])
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wmgev"]
 albedo_texture = ExtResource("12_xpjul")
@@ -153,7 +160,7 @@ states/Start/position = Vector2(61, 80)
 states/player_attack/node = SubResource("AnimationNodeAnimation_vv4g7")
 states/player_attack/position = Vector2(829, 70)
 states/player_death/node = SubResource("AnimationNodeAnimation_j8wcg")
-states/player_death/position = Vector2(1107, 264)
+states/player_death/position = Vector2(1107, 265)
 states/player_idle/node = SubResource("AnimationNodeAnimation_r38mk")
 states/player_idle/position = Vector2(667, 272)
 states/player_interact_ground/node = SubResource("AnimationNodeAnimation_j5vd3")
@@ -191,7 +198,7 @@ far = 4000.0
 collision_layer = 8
 collision_mask = 121
 script = ExtResource("1_tt02t")
-component_resources = Array[ExtResource("2_mdxt7")]([SubResource("Resource_w7h0e"), SubResource("Resource_m0ng3"), SubResource("Resource_j1swe"), SubResource("Resource_l36gj"), SubResource("Resource_qysxq"), SubResource("Resource_d0axv"), SubResource("Resource_el2pk"), SubResource("Resource_4axd2"), SubResource("Resource_urpic"), SubResource("Resource_l86ta"), SubResource("Resource_wlyhe"), SubResource("Resource_gr314"), SubResource("Resource_7i31c"), SubResource("Resource_qkti0")])
+component_resources = Array[ExtResource("2_mdxt7")]([SubResource("Resource_w7h0e"), SubResource("Resource_m0ng3"), SubResource("Resource_j1swe"), SubResource("Resource_l36gj"), SubResource("Resource_qysxq"), SubResource("Resource_d0axv"), SubResource("Resource_el2pk"), SubResource("Resource_4axd2"), SubResource("Resource_urpic"), SubResource("Resource_l86ta"), SubResource("Resource_wlyhe"), SubResource("Resource_gr314"), SubResource("Resource_7i31c"), SubResource("Resource_qkti0"), SubResource("Resource_8bws4")])
 
 [node name="Visuals" parent="." instance=ExtResource("11_l3h6n")]
 

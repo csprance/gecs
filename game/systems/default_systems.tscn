@@ -1,4 +1,4 @@
-[gd_scene load_steps=36 format=3 uid="uid://ex2wx8kwwjjx"]
+[gd_scene load_steps=37 format=3 uid="uid://ex2wx8kwwjjx"]
 
 [ext_resource type="Script" path="res://game/systems/gameplay/enemy_behaviors/s_zombie_behavior.gd" id="1_a57uo"]
 [ext_resource type="Script" path="res://game/systems/input/s_player_controls.gd" id="1_e5u7d"]
@@ -35,6 +35,7 @@
 [ext_resource type="Script" path="res://game/systems/gameplay/s_interaction.gd" id="21_shyms"]
 [ext_resource type="Script" path="res://game/systems/debug/s_debug_camera.gd" id="21_srdyu"]
 [ext_resource type="Script" path="res://game/systems/gameplay/s_interactables.gd" id="22_ck7qi"]
+[ext_resource type="Script" path="res://game/systems/gameplay/s_gear.gd" id="26_vo5t7"]
 
 [node name="Systems" type="Node"]
 script = ExtResource("1_vjpkg")
@@ -50,6 +51,10 @@ script = ExtResource("2_fwg0y")
 group = "input"
 
 [node name="gameplay" type="Node" parent="."]
+
+[node name="GearSystem" type="Node" parent="gameplay"]
+script = ExtResource("26_vo5t7")
+group = "gameplay"
 
 [node name="SprintingSystem" type="Node" parent="gameplay"]
 script = ExtResource("4_ulc1v")
