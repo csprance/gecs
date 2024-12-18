@@ -1,0 +1,16 @@
+[gd_scene load_steps=3 format=3 uid="uid://dqiifeyicokb4"]
+
+[ext_resource type="PackedScene" uid="uid://b57t36pdkc5au" path="res://game/assets/gear/gear_base.tscn" id="1_4xdrc"]
+[ext_resource type="PackedScene" uid="uid://co8bmqxti3w7u" path="res://game/assets/characters/accesories/militaryHelmet.fbx" id="2_rqj1y"]
+
+[node name="Gear" instance=ExtResource("1_4xdrc")]
+
+[node name="BoneAttachment3D" type="BoneAttachment3D" parent="." index="3"]
+transform = Transform3D(100, -6.90939e-07, 2.40494e-05, 3.04807e-06, 99.5077, -9.90915, -2.38727e-05, 9.90915, 99.5078, 0.00101893, 3.0822, 0.0973856)
+bone_name = "Head_end"
+bone_idx = 25
+use_external_skeleton = true
+external_skeleton = NodePath("../DefaultSkeleton")
+
+[node name="Root Scene" parent="BoneAttachment3D" index="0" instance=ExtResource("2_rqj1y")]
+transform = Transform3D(0.005, 0, 0, 0, 0.005, 0, 0, 0, 0.005, 0, 0, 0)

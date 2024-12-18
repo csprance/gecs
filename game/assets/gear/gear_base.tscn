@@ -1,7 +1,6 @@
-[gd_scene load_steps=3 format=3 uid="uid://b57t36pdkc5au"]
+[gd_scene load_steps=2 format=3 uid="uid://b57t36pdkc5au"]
 
 [ext_resource type="Script" path="res://game/lib/gear.gd" id="1_sgea8"]
-[ext_resource type="PackedScene" uid="uid://dxustsdjbbpp7" path="res://game/assets/characters/accesories/astroHelmet.fbx" id="2_7ajsr"]
 
 [node name="Gear" type="Node3D"]
 script = ExtResource("1_sgea8")
@@ -415,16 +414,14 @@ bones/57/position = Vector3(0, 0.00213236, 0)
 bones/57/rotation = Quaternion(-3.46945e-18, 8.67362e-19, 1.38778e-17, 1)
 bones/57/scale = Vector3(1, 1, 1)
 
-[node name="BoneAttachment3D" type="BoneAttachment3D" parent="."]
-transform = Transform3D(100, -6.90939e-07, 2.40494e-05, 3.04807e-06, 99.5077, -9.90915, -2.38727e-05, 9.90915, 99.5078, 0.00101893, 3.0822, 0.0973856)
-bone_name = "Head_end"
-bone_idx = 25
-use_external_skeleton = true
-external_skeleton = NodePath("../DefaultSkeleton")
-
-[node name="Root Scene" parent="BoneAttachment3D" instance=ExtResource("2_7ajsr")]
-transform = Transform3D(0.007, 7.77156e-17, -3.10862e-16, -7.77156e-17, 0.007, 2.44472e-10, 3.10862e-16, -2.44472e-10, 0.007, 0, 0, 0)
-
 [node name="Inputs" type="Node3D" parent="."]
+unique_name_in_owner = true
+
+[node name="Backpack" type="Node3D" parent="Inputs"]
+transform = Transform3D(100, -6.91038e-07, 2.3962e-05, -2.86951e-07, 99.9168, 4.07902, -2.39702e-05, -4.07902, 99.9168, 0.00101894, 2.18969, -0.0704373)
 
 [node name="Outputs" type="Node3D" parent="."]
+unique_name_in_owner = true
+
+[node name="Backpack" type="Node3D" parent="Outputs"]
+transform = Transform3D(1, -7.19338e-09, 2.38974e-07, 2.01628e-10, 0.999599, 0.0283013, -2.39183e-07, -0.0283013, 0.999599, 0.00101894, 1.93181, -0.136444)
