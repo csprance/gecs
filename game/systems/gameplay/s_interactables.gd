@@ -3,12 +3,12 @@ class_name InteractablesSystem
 extends System
 
 func query() -> QueryBuilder:
-    return q.with_all([C_Interactable]).with_relationship([Relationship.new(C_BeingInteractedWith.new(), ECS.wildcard)])
+	return q.with_all([C_Interactable]).with_relationship([Relationship.new(C_BeingInteractedWith.new(), ECS.wildcard)])
 
-func process(entity: Entity, delta: float) -> void:
-    var c_interactable = entity.get_component(C_Interactable) as C_Interactable
-    var r_interactors = entity.get_relationships(Relationship.new(C_BeingInteractedWith.new(), ECS.wildcard))
-    # Call the interaction with all the entities interacting with it.
-    c_interactable.action.run_interaction.call(entity, r_interactors.map(func(x): return x.target))
-    # Remove the being interacted with relationship
-    entity.remove_relationships(r_interactors)
+func process(interactable: Entity, delta: float) -> void:
+	var c_interactable = interactable.get_component(C_Interactable) as C_Interactable
+	var r_interactors = interactable.get_relationships(Relationship.new(C_BeingInteractedWith.new(), ECS.wildcard))
+	# Call the interaction with all the entities interacting with it.
+	c_interactable.action.run_interaction.call(interactable, r_interactors.map(func(x): return x.target))
+	# Remove the being interacted with relationship
+	interactable.remove_relationships(r_interactors)
