@@ -67,7 +67,7 @@ static func zip(sequence_x, sequence_y):
 	var result = []
 	for y in sequence_y:
 		for x in sequence_x:
-			result.append(Vector2(x, y))
+			result.append([x, y])
 	return result
 
 ## Can we see from one point to another
