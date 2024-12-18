@@ -17,6 +17,7 @@ script = ExtResource("3_wqx1b")
 
 [sub_resource type="Resource" id="Resource_8516g"]
 script = ExtResource("4_e0wl6")
+locked = true
 key_path = "res://game/data/items/i_key.tres"
 meta = {
 "description": "Opening the door for e_door",
@@ -54,8 +55,8 @@ tracks/0/keys = PackedFloat32Array(0, 1, 0, 0, 0, 1)
 
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_ry413"]
 _data = {
-&"RESET": SubResource("Animation_b7o2a"),
-&"open_door": SubResource("Animation_tuih5")
+&"open_door": SubResource("Animation_tuih5"),
+&"RESET": SubResource("Animation_b7o2a")
 }
 
 [sub_resource type="Resource" id="Resource_ew57s"]
