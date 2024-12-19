@@ -1,20 +1,20 @@
 [gd_scene load_steps=28 format=3 uid="uid://dt0gkq2t1eudo"]
 
-[ext_resource type="Script" path="res://addons/gecs/entity.gd" id="1_oww6f"]
-[ext_resource type="Script" path="res://addons/gecs/component.gd" id="2_ptiw5"]
-[ext_resource type="Script" path="res://game/components/gameplay/c_door.gd" id="3_ad5ln"]
-[ext_resource type="Script" path="res://game/actions/interactions/i_open_door.gd" id="4_jjnrs"]
-[ext_resource type="Script" path="res://game/components/gameplay/c_interactable.gd" id="5_v1peb"]
-[ext_resource type="Script" path="res://game/components/animation/c_animation_player.gd" id="6_ym5c4"]
-[ext_resource type="Script" path="res://game/components/item/c_item_spawner.gd" id="7_qnspb"]
-[ext_resource type="Script" path="res://game/lib/interaction_area.gd" id="8_8l4da"]
-[ext_resource type="Script" path="res://game/components/item/c_item_spawner_variants.gd" id="8_abre4"]
+[ext_resource type="Script" uid="uid://b4qy8pu8pki0r" path="res://addons/gecs/entity.gd" id="1_oww6f"]
+[ext_resource type="Script" uid="uid://bfu07s1ax0rkp" path="res://addons/gecs/component.gd" id="2_ptiw5"]
+[ext_resource type="Script" uid="uid://rj871t1qsro7" path="res://game/components/gameplay/c_door.gd" id="3_ad5ln"]
+[ext_resource type="Script" uid="uid://dl32a7gqu63q8" path="res://game/actions/interactions/i_open_door.gd" id="4_jjnrs"]
+[ext_resource type="Script" uid="uid://cohci2wwtbn0w" path="res://game/components/gameplay/c_interactable.gd" id="5_v1peb"]
+[ext_resource type="Script" uid="uid://daokf017kcgld" path="res://game/components/animation/c_animation_player.gd" id="6_ym5c4"]
+[ext_resource type="Script" uid="uid://66nr41bfys86" path="res://game/components/item/c_item_spawner.gd" id="7_qnspb"]
+[ext_resource type="Script" uid="uid://cg2bf1msh7hjy" path="res://game/lib/interaction_area.gd" id="8_8l4da"]
+[ext_resource type="Script" uid="uid://dgbxrssdkduj0" path="res://game/components/item/c_item_spawner_variants.gd" id="8_abre4"]
 [ext_resource type="Resource" uid="uid://bfpi3fqtjk6df" path="res://game/data/items/i_healthkit.tres" id="9_0s325"]
-[ext_resource type="Script" path="res://game/lib/static_queries/static_query.gd" id="9_xacoh"]
-[ext_resource type="Script" path="res://game/components/item/c_item_spawner_item.gd" id="10_725ed"]
-[ext_resource type="Script" path="res://game/lib/static_queries/sq_is_player.gd" id="10_ojkrc"]
+[ext_resource type="Script" uid="uid://clqiy38fitb8g" path="res://game/lib/static_queries/static_query.gd" id="9_xacoh"]
+[ext_resource type="Script" uid="uid://b6awjk1o60a0" path="res://game/components/item/c_item_spawner_item.gd" id="10_725ed"]
+[ext_resource type="Script" uid="uid://77f1h76yb31y" path="res://game/lib/static_queries/sq_is_player.gd" id="10_ojkrc"]
 [ext_resource type="PackedScene" uid="uid://dmehwuect8hlf" path="res://game/assets/props/searchables/cabinet_01_a.gltf" id="11_ml5ta"]
-[ext_resource type="Script" path="res://game/lib/static_queries/sq_is_interactor.gd" id="11_w7m15"]
+[ext_resource type="Script" uid="uid://w0ddoxd38mg" path="res://game/lib/static_queries/sq_is_interactor.gd" id="11_w7m15"]
 
 [sub_resource type="Resource" id="Resource_bv3gi"]
 script = ExtResource("3_ad5ln")
@@ -76,8 +76,8 @@ tracks/0/keys = PackedFloat32Array(0, 1, 0, 0, 0)
 
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_ry413"]
 _data = {
-&"open_door": SubResource("Animation_tuih5"),
-&"RESET": SubResource("Animation_b7o2a")
+&"RESET": SubResource("Animation_b7o2a"),
+&"open_door": SubResource("Animation_tuih5")
 }
 
 [sub_resource type="Resource" id="Resource_ew57s"]
@@ -88,7 +88,7 @@ script = ExtResource("11_w7m15")
 
 [sub_resource type="CylinderShape3D" id="CylinderShape3D_fjs6k"]
 height = 3.22603
-radius = 3.83196
+radius = 2.01709
 
 [node name="ESearchable" type="Node3D"]
 script = ExtResource("1_oww6f")
@@ -108,11 +108,15 @@ parent = NodePath("..")
 can_interact_query = Array[ExtResource("9_xacoh")]([SubResource("Resource_ew57s"), SubResource("Resource_gde14")])
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="InteractionArea"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.334233, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.334233, -0.0416217)
 shape = SubResource("CylinderShape3D_fjs6k")
+debug_color = Color(0, 0.6, 0.7, 0.42)
 
 [node name="cabinet_01_a2" parent="." instance=ExtResource("11_ml5ta")]
 
 [node name="cabinet_01_a" parent="cabinet_01_a2" index="1" groups=["navigation_mesh_source_group"]]
+
+[node name="CollisionShape3D" parent="cabinet_01_a2/cabinet_01_a/StaticBody3D" index="0"]
+debug_color = Color(0, 0.6, 0.7, 0.42)
 
 [editable path="cabinet_01_a2"]

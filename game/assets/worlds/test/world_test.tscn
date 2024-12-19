@@ -1,6 +1,6 @@
-[gd_scene load_steps=37 format=3 uid="uid://c8ors4ai4l4if"]
+[gd_scene load_steps=38 format=3 uid="uid://c8ors4ai4l4if"]
 
-[ext_resource type="Script" path="res://addons/gecs/world.gd" id="1_dnklw"]
+[ext_resource type="Script" uid="uid://bj4jhwf7epig1" path="res://addons/gecs/world.gd" id="1_dnklw"]
 [ext_resource type="PackedScene" uid="uid://bg6jeo350r12f" path="res://game/entities/gameplay/e_door.tscn" id="2_els58"]
 [ext_resource type="PackedScene" uid="uid://o00dv6xya8el" path="res://game/entities/gameplay/items/e_pickup.tscn" id="3_b6amu"]
 [ext_resource type="Resource" uid="uid://bfpi3fqtjk6df" path="res://game/data/items/i_healthkit.tres" id="4_vaqdj"]
@@ -14,17 +14,18 @@
 [ext_resource type="PackedScene" uid="uid://vdhm1ygxl2dx" path="res://game/entities/gameplay/e_camera.tscn" id="10_osjvc"]
 [ext_resource type="PackedScene" uid="uid://ex2wx8kwwjjx" path="res://game/systems/default_systems.tscn" id="11_dp1f4"]
 [ext_resource type="PackedScene" uid="uid://b0ctwmw006svf" path="res://game/assets/props/tree/tree_01_a.gltf" id="12_oqyl0"]
-[ext_resource type="Script" path="res://addons/gecs/component.gd" id="13_pvfgj"]
-[ext_resource type="Script" path="res://game/components/gameplay/c_transform.gd" id="14_1o3fy"]
-[ext_resource type="Script" path="res://game/components/gameplay/c_health.gd" id="15_j7s5o"]
-[ext_resource type="Script" path="res://game/components/debug/c_debug_label.gd" id="16_pgbbi"]
+[ext_resource type="Script" uid="uid://bfu07s1ax0rkp" path="res://addons/gecs/component.gd" id="13_pvfgj"]
+[ext_resource type="Script" uid="uid://cfgtuqp33xgi4" path="res://game/components/gameplay/c_transform.gd" id="14_1o3fy"]
+[ext_resource type="Script" uid="uid://b8k88v7a4ip2e" path="res://game/components/gameplay/c_health.gd" id="15_j7s5o"]
+[ext_resource type="Script" uid="uid://mxpqfqg7cpob" path="res://game/components/debug/c_debug_label.gd" id="16_pgbbi"]
 [ext_resource type="PackedScene" uid="uid://csxwta28e2lxv" path="res://game/assets/props/gravestone/gravestone.gltf" id="17_7ar8e"]
 [ext_resource type="Texture2D" uid="uid://bv4vlxbttsxcl" path="res://game/assets/worlds/level_one/grass.png" id="17_8l3ga"]
-[ext_resource type="Script" path="res://game/components/gameplay/c_victim.gd" id="17_eirrq"]
+[ext_resource type="Script" uid="uid://depmnwmm1rvkp" path="res://game/components/gameplay/c_victim.gd" id="17_eirrq"]
 [ext_resource type="PackedScene" uid="uid://bm6p3cjvxyqmy" path="res://game/entities/gameplay/e_victim.tscn" id="19_by7qk"]
-[ext_resource type="Script" path="res://game/components/gameplay/c_reward.gd" id="21_oq40v"]
+[ext_resource type="Script" uid="uid://c21kqchymmdw7" path="res://game/components/gameplay/c_reward.gd" id="21_oq40v"]
 [ext_resource type="Resource" uid="uid://8qrwfaqd303r" path="res://game/data/items/i_cash_pile.tres" id="25_1kho4"]
 [ext_resource type="PackedScene" uid="uid://dt0gkq2t1eudo" path="res://game/entities/gameplay/e_searchable.tscn" id="25_ugmww"]
+[ext_resource type="PackedScene" uid="uid://cnxv5jgoj4kw2" path="res://game/entities/gameplay/e_trampoline.tscn" id="26_pnngy"]
 
 [sub_resource type="NavigationMesh" id="NavigationMesh_o4toq"]
 vertices = PackedVector3Array(-74.5, 0.371701, -8.25, -53.5, 0.371701, -8.25, -53.25, 0.371701, -10.75, -49.75, 0.371701, -52, -74.5, 0.371701, -52, -50, 0.371701, -10.75, -48.25, 0.371701, -10, -29.25, 0.371701, -10.25, -29.25, 0.371701, -11.25, -48.5, 0.371701, -10.75, -28.25, 0.371701, -11.75, -28.25, 0.371701, -52, -21.75, 0.371701, -10, -21.5, 0.371701, -9, -19.75, 0.371701, -9, -19.25, 0.371701, -10.25, -18, 0.371701, -10.25, -17.5, 0.371701, -9.75, -17.5, 0.371701, -52, -27, 0.371701, -11.25, -27, 0.371701, -10.25, -24, 0.371701, -10, -17.5, 0.371701, -8.75, -11, 0.371701, -8.25, -9.5, 0.371701, -8.5, -9.5, 0.371701, -52, -10.5, 0.371701, -6, -14.75, 0.371701, -2, -14.75, 0.371701, -1, -6.5, 0.371701, 12.25, -8.25, 0.371701, -6.25, -8.25, 0.371701, -8.25, 6.75, 0.371701, 12.25, 20.75, 0.371701, 11, 7, 0.371701, 13.25, 20.5, 0.371701, 13.25, 23.25, 0.371701, 11, 23.25, 0.371701, -52, 25.5, 0.371701, 11, 25.75, 0.371701, 12.75, 74.5, 0.371701, 12.5, 74.5, 0.371701, -52, -28, 0.371701, -2.5, -26.25, 0.371701, -3.25, -26, 0.371701, -4.75, -28.75, 0.371701, -9.5, -29.25, 0.371701, -2.5, -24.25, 0.371701, -8.5, -27.5, 0.371701, -9.5, -24.5, 0.371701, -4.75, -48.25, 0.371701, -5.75, -48.5, 0.371701, -2.75, -48.25, 0.371701, -1.75, -29.75, 0.371701, -1.75, -51.5, 0.371701, -5.5, -51.5, 0.371701, -2.75, -52.5, 0.871701, -9.75, -52.5, 0.871701, -6.5, -49.25, 0.871701, -6.5, -49.25, 0.871701, -9.75, -27.5, 0.371701, -2, -26, 0.371701, -2.75, -28.75, 0.371701, -0.25, -30.25, 0.371701, 4.75, -29.5, 0.371701, 5.5, -26.25, 0.371701, 3, -26, 0.371701, 1.25, -27.5, 0.371701, -0.75, -19.75, 0.371701, -8.25, -21.75, 0.371701, -8, -25.75, 0.371701, 3.25, -23.75, 0.371701, 1.25, -23.75, 0.371701, -2.75, -19, 0.371701, -8, -22, 0.371701, -4.5, -19.5, 0.371701, -4.75, -23.5, 0.371701, 2.25, -20.75, 0.371701, 2.25, -20.75, 0.371701, 1.5, -23.5, 0.371701, -4.5, -22, 0.371701, -3, -19.25, 0.371701, -4.25, -24, 0.371701, -8, -20.25, 0.371701, 1.25, -20.25, 0.371701, -2.75, -18.25, 0.371701, 1.25, -18, 0.371701, 1.75, -16.25, 0.371701, -0.25, -17, 0.371701, -0.75, -19.25, 0.371701, -3, -17, 0.371701, -2, -16.5, 0.371701, -2.5, -18, 0.371701, -8, -15, 0.371701, -2.5, -11, 0.371701, -6.25, -53.5, 0.371701, -2.5, -53.5, 0.371701, -5.75, -61.25, 0.371701, 5, -56.5, 0.371701, 5, -53.5, 0.371701, 5.25, -51, 0.371701, 5, -51, 0.371701, 2.5, -53.5, 0.371701, 2.25, -74.5, 0.371701, 7.75, -56.25, 0.371701, 8.25, -53.5, 0.371701, 8.25, -61.5, 0.371701, 7.75, -10, 2.3717, -7.5, -10, 2.3717, -7, -9.25, 2.3717, -7, -9.25, 2.3717, -7.5, -52.5, 0.871701, -1.75, -52.5, 0.871701, 1.5, -49.25, 0.871701, 1.5, -49.25, 0.871701, -1.75, -48.5, 0.371701, 5, -48.25, 0.371701, 2.25, -31.75, 0.371701, 5.5, -31.25, 0.371701, 4.75, -29.75, 0.371701, -0.5, -48.25, 0.371701, 5.5, -15.25, 0.371701, -0.25, -18, 0.371701, 3, -7, 0.371701, 12.75, -18.5, 0.371701, 3.25, -20.5, 0.371701, 3.25, -23.75, 0.371701, 3.25, -29.75, 0.371701, 7, -32.75, 0.371701, 14, -6.75, 0.371701, 14.5, -31, 0.371701, 7, -32.75, 0.371701, 12.75, -4.75, 0.371701, 52, -4.75, 0.371701, 14.5, -33.75, 0.371701, 14.5, -33.75, 0.371701, 52, -33, 0.371701, 12.25, -31.75, 0.371701, 6.5, -34.5, 0.371701, 12.25, -48.25, 0.371701, 10, -48.75, 0.371701, 10.25, -35, 0.371701, 13, -60.5, 0.871701, 6, -60.5, 0.871701, 9.25, -57.25, 0.871701, 9.25, -57.25, 0.871701, 6, -52.5, 0.871701, 6, -52.5, 0.871701, 9.25, -49.25, 0.871701, 9.25, -49.25, 0.871701, 6, -53.25, 0.371701, 10.25, -56.5, 0.371701, 10.25, -49.75, 0.371701, 52, -61.25, 0.371701, 10.25, -74.5, 0.371701, 52, -50, 0.371701, 10.25, -35, 0.371701, 13.75, 21.5, 0.871701, 12, 21.5, 0.871701, 15.25, 24.75, 0.871701, 15.25, 24.75, 0.871701, 12, 25.75, 0.371701, 14.5, 74.5, 0.371701, 14.75, 20.5, 0.371701, 16, 6.75, 0.371701, 14.5, 22.25, 0.371701, 16.25, 4.75, 0.371701, 14.5, 4.75, 0.371701, 52, 22, 0.371701, 52, 25.5, 0.371701, 16.25, 24, 0.371701, 16.25, 24.25, 0.371701, 52, 74.5, 0.371701, 52)
@@ -169,6 +170,7 @@ surface_material_override/0 = SubResource("StandardMaterial3D_61ucv")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Props/Floor/StaticBody3D"]
 shape = SubResource("BoxShape3D_36kud")
+debug_color = Color(0, 0.6, 0.7, 0.42)
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="Props" groups=["navigation_mesh_source_group"]]
 transform = Transform3D(12.8185, 0, 0, 0, 3.2566, 0, 0, 0, 1, 0, 0, 13.3139)
@@ -178,6 +180,7 @@ mesh = SubResource("BoxMesh_yvtfh")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Props/MeshInstance3D/StaticBody3D"]
 shape = SubResource("BoxShape3D_t18n4")
+debug_color = Color(0, 0.6, 0.7, 0.42)
 
 [node name="DefaultSystems" parent="." instance=ExtResource("11_dp1f4")]
 
@@ -189,3 +192,6 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 26.3988, 0, 0.0633965)
 
 [node name="EDoor3" parent="." instance=ExtResource("2_els58")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.66897, 0, 0.0633965)
+
+[node name="ETrampoline" parent="." instance=ExtResource("26_pnngy")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.665156, 0, 18.4895)

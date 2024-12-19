@@ -1,3 +1,4 @@
+## We use these in the constants so we can define level order, names and any other metdata about a level
 class_name LevelResource
 extends Resource
 

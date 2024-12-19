@@ -1,10 +1,10 @@
 [gd_resource type="Resource" script_class="C_Projectile" load_steps=8 format=3 uid="uid://xmd82sx71kx"]
 
-[ext_resource type="Script" path="res://game/components/weapon/c_damage.gd" id="1_2ig3o"]
+[ext_resource type="Script" uid="uid://bejjtxtdkaie0" path="res://game/components/weapon/c_damage.gd" id="1_2ig3o"]
 [ext_resource type="PackedScene" uid="uid://btba2p445ljld" path="res://game/assets/vfx/vfx_explosion.tscn" id="2_11g72"]
-[ext_resource type="Script" path="res://game/components/weapon/c_projectile.gd" id="2_tteva"]
+[ext_resource type="Script" uid="uid://clow0hpmfunsb" path="res://game/components/weapon/c_projectile.gd" id="2_tteva"]
 [ext_resource type="PackedScene" uid="uid://numyqbtifv4q" path="res://game/assets/weapons/soda_can/soda_can_projectile_visuals.tscn" id="3_5hphh"]
-[ext_resource type="Script" path="res://game/components/rendering/c_visuals.gd" id="4_637je"]
+[ext_resource type="Script" uid="uid://gkijbkdiaclu" path="res://game/components/rendering/c_visuals.gd" id="4_637je"]
 
 [sub_resource type="Resource" id="Resource_he5hq"]
 script = ExtResource("1_2ig3o")

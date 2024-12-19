@@ -1,16 +1,16 @@
 [gd_scene load_steps=22 format=3 uid="uid://bg6jeo350r12f"]
 
-[ext_resource type="Script" path="res://addons/gecs/entity.gd" id="1_0jg53"]
-[ext_resource type="Script" path="res://addons/gecs/component.gd" id="2_yxdgp"]
-[ext_resource type="Script" path="res://game/components/gameplay/c_door.gd" id="3_wqx1b"]
-[ext_resource type="Script" path="res://game/actions/interactions/i_open_door.gd" id="4_e0wl6"]
-[ext_resource type="Script" path="res://game/lib/interaction_area.gd" id="4_his00"]
-[ext_resource type="Script" path="res://game/lib/static_queries/static_query.gd" id="5_h832r"]
-[ext_resource type="Script" path="res://game/components/gameplay/c_interactable.gd" id="5_nythy"]
-[ext_resource type="Script" path="res://game/lib/static_queries/sq_is_player.gd" id="6_lyyj0"]
-[ext_resource type="Script" path="res://game/components/animation/c_animation_player.gd" id="6_wbsw5"]
+[ext_resource type="Script" uid="uid://b4qy8pu8pki0r" path="res://addons/gecs/entity.gd" id="1_0jg53"]
+[ext_resource type="Script" uid="uid://bfu07s1ax0rkp" path="res://addons/gecs/component.gd" id="2_yxdgp"]
+[ext_resource type="Script" uid="uid://rj871t1qsro7" path="res://game/components/gameplay/c_door.gd" id="3_wqx1b"]
+[ext_resource type="Script" uid="uid://dl32a7gqu63q8" path="res://game/actions/interactions/i_open_door.gd" id="4_e0wl6"]
+[ext_resource type="Script" uid="uid://cg2bf1msh7hjy" path="res://game/lib/interaction_area.gd" id="4_his00"]
+[ext_resource type="Script" uid="uid://clqiy38fitb8g" path="res://game/lib/static_queries/static_query.gd" id="5_h832r"]
+[ext_resource type="Script" uid="uid://cohci2wwtbn0w" path="res://game/components/gameplay/c_interactable.gd" id="5_nythy"]
+[ext_resource type="Script" uid="uid://77f1h76yb31y" path="res://game/lib/static_queries/sq_is_player.gd" id="6_lyyj0"]
+[ext_resource type="Script" uid="uid://daokf017kcgld" path="res://game/components/animation/c_animation_player.gd" id="6_wbsw5"]
 [ext_resource type="PackedScene" uid="uid://dx7av6n5xik2f" path="res://game/assets/props/doors/door_01_a.gltf" id="6_yqfw2"]
-[ext_resource type="Script" path="res://game/lib/static_queries/sq_is_interactor.gd" id="10_bif8j"]
+[ext_resource type="Script" uid="uid://w0ddoxd38mg" path="res://game/lib/static_queries/sq_is_interactor.gd" id="10_bif8j"]
 
 [sub_resource type="Resource" id="Resource_bv3gi"]
 script = ExtResource("3_wqx1b")
@@ -55,8 +55,8 @@ tracks/0/keys = PackedFloat32Array(0, 1, 0, 0, 0, 1)
 
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_ry413"]
 _data = {
-&"open_door": SubResource("Animation_tuih5"),
-&"RESET": SubResource("Animation_b7o2a")
+&"RESET": SubResource("Animation_b7o2a"),
+&"open_door": SubResource("Animation_tuih5")
 }
 
 [sub_resource type="Resource" id="Resource_ew57s"]
@@ -67,7 +67,7 @@ script = ExtResource("10_bif8j")
 
 [sub_resource type="CylinderShape3D" id="CylinderShape3D_fjs6k"]
 height = 3.22603
-radius = 3.83196
+radius = 2.37891
 
 [node name="EDoor" type="Node3D"]
 script = ExtResource("1_0jg53")
@@ -81,7 +81,6 @@ libraries = {
 [node name="door_01_a2" parent="." instance=ExtResource("6_yqfw2")]
 
 [node name="InteractionArea" type="Area3D" parent="." node_paths=PackedStringArray("parent")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0205323, 1.21281, 1.50528)
 collision_layer = 0
 collision_mask = 24
 script = ExtResource("4_his00")
@@ -89,5 +88,6 @@ parent = NodePath("..")
 can_interact_query = Array[ExtResource("5_h832r")]([SubResource("Resource_ew57s"), SubResource("Resource_gde14")])
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="InteractionArea"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.334233, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.44109, 1.77188, 0.0288247)
 shape = SubResource("CylinderShape3D_fjs6k")
+debug_color = Color(0, 0.6, 0.7, 0.42)
