@@ -9,4 +9,4 @@ func process_all(entities, delta):
     var gravities = ECS.get_components(entities, C_Gravity) as Array[C_Gravity]
     for i in range(entities.size()):
         # apply gravity
-        velocitys[i].velocity += gravities[i].direction * gravities[i].value * delta
+        velocitys[i].velocity += gravities[i].direction * gravities[i].value

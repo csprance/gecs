@@ -11,17 +11,23 @@ func query() -> QueryBuilder:
 
 func process(entity, delta):
     var c_velocity = entity.get_component(C_Velocity) as C_Velocity
+    var moved = false
     # Jump in the direction we press a key in
     if Input.is_action_just_pressed('move_down'):
-        entity.add_component(C_CharacterBody3D.new())
-        c_velocity.velocity = Vector3(0, -5, -10)
+        moved = true
+        c_velocity.velocity = Vector3(0, 1, 1)
     if Input.is_action_just_pressed('move_up'):
-        entity.add_component(C_CharacterBody3D.new())
-        c_velocity.velocity = Vector3(0, -5, 10)
+        moved = true
+        c_velocity.velocity = Vector3(0, 1, -1)
     if Input.is_action_just_pressed('move_left'):
-        entity.add_component(C_CharacterBody3D.new())
-        c_velocity.velocity = Vector3(-10, -5, 0)
+        moved = true
+        c_velocity.velocity = Vector3(-1, 1, 0)
     if Input.is_action_just_pressed('move_right'):
-        entity.add_component(C_CharacterBody3D.new())
-        c_velocity.velocity = Vector3(10, -5, 0)
+        moved = true
+        c_velocity.velocity = Vector3(1, 1, 0)
     
+    if moved:
+        entity.add_component(C_CharacterBody3D.new())
+        entity.add_component(C_Gravity.new())
+        c_velocity.velocity = c_velocity.velocity.normalized() * 30
+        c_velocity.velocity.y *= 5

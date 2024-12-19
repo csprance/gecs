@@ -1,4 +1,4 @@
-[gd_scene load_steps=65 format=3 uid="uid://mfv8kghahued"]
+[gd_scene load_steps=63 format=3 uid="uid://mfv8kghahued"]
 
 [ext_resource type="Script" uid="uid://cosjfot65m4ot" path="res://game/entities/gameplay/e_player.gd" id="1_tt02t"]
 [ext_resource type="Script" uid="uid://bp8jokrg7v1oa" path="res://game/components/player/c_player.gd" id="2_c0i32"]
@@ -6,7 +6,6 @@
 [ext_resource type="Script" uid="uid://dv0psgbb8gd8y" path="res://game/components/physics/c_velocity.gd" id="3_01fnx"]
 [ext_resource type="Script" uid="uid://cfgtuqp33xgi4" path="res://game/components/gameplay/c_transform.gd" id="4_1iiu1"]
 [ext_resource type="Script" uid="uid://cf1dbubnp3yk8" path="res://game/components/physics/c_character_body_3d.gd" id="5_xne1k"]
-[ext_resource type="Script" uid="uid://c1cmval35b3ix" path="res://game/components/player/c_player_movement.gd" id="6_ukqv2"]
 [ext_resource type="Script" uid="uid://daokf017kcgld" path="res://game/components/animation/c_animation_player.gd" id="7_ha3ux"]
 [ext_resource type="Script" uid="uid://dtdgl42bqkhb4" path="res://game/components/player/c_player_direction.gd" id="8_fqkey"]
 [ext_resource type="Script" uid="uid://b8k88v7a4ip2e" path="res://game/components/gameplay/c_health.gd" id="9_ckw1g"]
@@ -42,11 +41,6 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 [sub_resource type="Resource" id="Resource_l36gj"]
 script = ExtResource("5_xne1k")
 
-[sub_resource type="Resource" id="Resource_qysxq"]
-script = ExtResource("6_ukqv2")
-direction = Vector3(0, 0, 0)
-speed = 10.0
-
 [sub_resource type="Resource" id="Resource_d0axv"]
 script = ExtResource("7_ha3ux")
 player = NodePath("AnimationPlayer")
@@ -70,6 +64,11 @@ debug = false
 script = ExtResource("12_6akc0")
 value = 0
 
+[sub_resource type="Resource" id="Resource_8bws4"]
+script = ExtResource("17_v1vbg")
+skeleton_path = NodePath("Visuals/RootNode/Root/Skeleton3D")
+gear_items = Array[PackedScene]([ExtResource("17_vndgd"), ExtResource("18_pgu6s")])
+
 [sub_resource type="Resource" id="Resource_wlyhe"]
 script = ExtResource("13_sr0ek")
 lives = 3
@@ -89,11 +88,6 @@ callback = Callable()
 [sub_resource type="Resource" id="Resource_qkti0"]
 script = ExtResource("16_cv0mn")
 anim_tree = NodePath("AnimationTree")
-
-[sub_resource type="Resource" id="Resource_8bws4"]
-script = ExtResource("17_v1vbg")
-skeleton_path = NodePath("Visuals/RootNode/Root/Skeleton3D")
-gear_items = Array[PackedScene]([ExtResource("17_vndgd"), ExtResource("18_pgu6s")])
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wmgev"]
 albedo_texture = ExtResource("12_xpjul")
@@ -199,7 +193,7 @@ far = 4000.0
 collision_layer = 8
 collision_mask = 121
 script = ExtResource("1_tt02t")
-component_resources = Array[ExtResource("2_mdxt7")]([SubResource("Resource_w7h0e"), SubResource("Resource_m0ng3"), SubResource("Resource_j1swe"), SubResource("Resource_l36gj"), SubResource("Resource_qysxq"), SubResource("Resource_d0axv"), SubResource("Resource_el2pk"), SubResource("Resource_4axd2"), SubResource("Resource_urpic"), SubResource("Resource_l86ta"), SubResource("Resource_wlyhe"), SubResource("Resource_gr314"), SubResource("Resource_7i31c"), SubResource("Resource_qkti0"), SubResource("Resource_8bws4")])
+component_resources = Array[ExtResource("2_mdxt7")]([SubResource("Resource_w7h0e"), SubResource("Resource_m0ng3"), SubResource("Resource_j1swe"), SubResource("Resource_l36gj"), SubResource("Resource_d0axv"), SubResource("Resource_el2pk"), SubResource("Resource_4axd2"), SubResource("Resource_urpic"), SubResource("Resource_l86ta"), SubResource("Resource_8bws4"), SubResource("Resource_wlyhe"), SubResource("Resource_gr314"), SubResource("Resource_7i31c"), SubResource("Resource_qkti0")])
 
 [node name="Visuals" parent="." instance=ExtResource("11_l3h6n")]
 
@@ -263,7 +257,6 @@ anim_player = NodePath("../AnimationPlayer")
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.61647, 0)
 shape = SubResource("CapsuleShape3D_k6h10")
-debug_color = Color(0, 0.6, 0.7, 0.42)
 
 [node name="PhantomCamera3D" type="Node3D" parent="." node_paths=PackedStringArray("follow_target")]
 transform = Transform3D(0.999999, 0, 0, 0, 0.173648, 0.984808, 0, -0.984807, 0.173648, 0, 19.6165, 6)

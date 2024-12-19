@@ -7,13 +7,14 @@ func query() -> QueryBuilder:
 
 func process(entity: Entity, delta: float):
     var c_sprinting = entity.get_component(C_Sprinting) as C_Sprinting
+    var c_movement = entity.get_component(C_Movement) as C_Movement
     var c_velocity = entity.get_component(C_Velocity) as C_Velocity
-    
-    c_velocity.velocity *= c_sprinting.speed_mult
-    
+
     c_sprinting.timer += delta
-    
-    # End dash when duration is up
+    c_velocity.velocity = c_velocity.velocity.move_toward(c_velocity.velocity.normalized() * c_movement.speed * c_sprinting.speed_mult, delta)
+
+
+    # End sprint when duration is up
     if c_sprinting.timer >= c_sprinting.duration:
         entity.remove_component(C_Sprinting)
         entity.add_component(C_SprintCooldown.new(c_sprinting.cooldown))

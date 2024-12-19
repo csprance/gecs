@@ -72,30 +72,31 @@ func weapon_subsystem(entity: Entity, _delta: float) -> void:
 			InventoryUtils.use_inventory_item(GameState.active_weapon, entity)
 
 
-func movement_subsystem(entity: Entity, _delta: float) -> void:
+func movement_subsystem(entity: Entity, delta: float) -> void:
 	var player = entity as Player
-	# Get the velocity component from the entity
 	var c_velocity = player.get_component(C_Velocity) as C_Velocity
-	var c_movement = player.get_component(C_PlayerMovement) as C_PlayerMovement
+	var c_movement = player.get_component(C_Movement) as C_Movement
 
-	# Reset our movement
-	c_movement.direction = Vector3.ZERO
-
-	# Determine the move axis
+	# Determine the input direction
+	var input_direction = Vector3.ZERO
 	if Input.is_action_pressed('move_left'):
-		c_movement.direction += Vector3.LEFT
+		input_direction += Vector3.LEFT
 	if Input.is_action_pressed('move_right'):
-		c_movement.direction += Vector3.RIGHT
+		input_direction += Vector3.RIGHT
 	if Input.is_action_pressed('move_up'):
-		c_movement.direction += Vector3.FORWARD
+		input_direction += Vector3.FORWARD
 	if Input.is_action_pressed('move_down'):
-		c_movement.direction += Vector3.BACK
+		input_direction += Vector3.BACK
 
-	if c_movement.direction != Vector3.ZERO:
-		c_movement.direction = c_movement.direction.normalized()
+	if input_direction != Vector3.ZERO:
+		input_direction = input_direction.normalized()
 
-	# Update velocity based on the move axis and speed
-	c_velocity.velocity = c_movement.direction * (c_movement.speed if c_movement.direction != Vector3.ZERO else 0.0)
+	# Calculate the target velocity based on input
+	var target_velocity = input_direction * c_movement.speed
+
+	# Adjust current velocity towards the target velocity using acceleration
+	var acceleration = 80.0  # Adjust this value as needed
+	c_velocity.velocity = c_velocity.velocity.move_toward(target_velocity, acceleration * delta)
 
 
 
