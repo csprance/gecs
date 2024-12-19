@@ -14,7 +14,7 @@ func sub_systems():
 		## Movement Subsystem
 		[
 			## Entity has a velocity and player movement component and is the player
-			ECS.world.query.with_all([C_Player, C_Velocity, C_PlayerMovement]), 
+			ECS.world.query.with_all([C_Player, C_Velocity, C_Movement]), 
 			movement_subsystem
 		],
 		## Weapon Subsystem
