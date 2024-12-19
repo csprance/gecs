@@ -1,10 +1,10 @@
 [gd_resource type="Resource" script_class="C_Weapon" load_steps=9 format=3 uid="uid://ryfenvkpu8gj"]
 
-[ext_resource type="Script" uid="uid://b3qc0y8htmlc5" path="res://game/actions/inventory_actions/a_shoot_projectile.gd" id="1_y7rgi"]
+[ext_resource type="Script" path="res://game/actions/inventory_actions/a_shoot_projectile.gd" id="1_y7rgi"]
 [ext_resource type="Resource" uid="uid://xmd82sx71kx" path="res://game/data/projectiles/soda_can_projectile.tres" id="2_aaxpr"]
 [ext_resource type="PackedScene" uid="uid://l383lhwgqwth" path="res://game/assets/weapons/soda_can/soda_can_visuals.tscn" id="4_fshm8"]
-[ext_resource type="Script" uid="uid://dubx2mul07spa" path="res://game/components/weapon/c_weapon.gd" id="4_p6yl1"]
-[ext_resource type="Script" uid="uid://gkijbkdiaclu" path="res://game/components/rendering/c_visuals.gd" id="6_8xuxh"]
+[ext_resource type="Script" path="res://game/components/weapon/c_weapon.gd" id="4_p6yl1"]
+[ext_resource type="Script" path="res://game/components/rendering/c_visuals.gd" id="6_8xuxh"]
 
 [sub_resource type="Resource" id="Resource_8d8hl"]
 script = ExtResource("1_y7rgi")

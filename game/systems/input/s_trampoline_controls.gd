@@ -31,3 +31,8 @@ func process(entity, delta):
         entity.add_component(C_Gravity.new())
         c_velocity.velocity = c_velocity.velocity.normalized() * 30
         c_velocity.velocity.y *= 5
+        # remove controls and relationship to trampoline
+        entity.remove_component(C_TrampolineControls)
+        entity.remove_relationship(Relationship.new(C_BouncingOn.new(), ECS.wildcard))
+        # add player movement control back
+        entity.add_component(C_Movement.new())

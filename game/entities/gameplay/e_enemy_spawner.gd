@@ -6,6 +6,3 @@ extends Entity
 @export var spawn_count: int = 5
 
 @export var spawn_interval: float = 1.0
-
-
-

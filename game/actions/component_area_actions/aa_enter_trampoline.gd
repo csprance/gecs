@@ -10,7 +10,7 @@ func _on_enter(trampoline: Entity, player: Entity, _body_rid: RID, _body_shape_i
 		assert(false, "EnterTrampolineAreaAction: on_enter: player is not a Player or trampoline is not a Trampoline")
 		return
 	# remove the player movement control
-	player.remove_component(C_PlayerMovement)
+	player.remove_component(C_Movement)
 	# Move the player to the center of the trampoline but over time and then return control back
 	await move_to_center(trampoline, player)
 
@@ -27,8 +27,6 @@ func _on_exit(trampoline: Entity, player: Entity, _body_rid: RID, _body_shape_in
 	# remove controls and relationship to trampoline
 	player.remove_component(C_TrampolineControls)
 	player.remove_relationship(Relationship.new(C_BouncingOn.new(), trampoline))
-	# add player movement control back
-	player.add_component(C_PlayerMovement.new())
 
 
 func move_to_center(trampoline: Entity, player: Entity) -> void:

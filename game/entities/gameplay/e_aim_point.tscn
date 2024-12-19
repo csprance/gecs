@@ -1,7 +1,8 @@
-[gd_scene load_steps=7 format=3 uid="uid://x548ueo7udx1"]
+[gd_scene load_steps=8 format=3 uid="uid://x548ueo7udx1"]
 
 [ext_resource type="Script" path="res://game/entities/gameplay/e_aim_point.gd" id="1_wk5r3"]
 [ext_resource type="Script" path="res://game/components/weapon/c_aim_point.gd" id="2_epkc6"]
+[ext_resource type="Script" path="res://addons/gecs/component.gd" id="2_x224r"]
 [ext_resource type="Texture2D" uid="uid://cpome3d7x5eg8" path="res://game/assets/icons/crosshair.svg" id="4_gt1d0"]
 [ext_resource type="Script" path="res://game/components/gameplay/c_screen_position.gd" id="4_qcj34"]
 
@@ -15,7 +16,7 @@ position = Vector2(0, 0)
 [node name="EAimPoint" type="Node3D"]
 script = ExtResource("1_wk5r3")
 color = Color(0.847059, 0.223529, 0.552941, 1)
-component_resources = Array[Resource("res://addons/gecs/component.gd")]([SubResource("Resource_5qig2"), SubResource("Resource_1ylns")])
+component_resources = Array[ExtResource("2_x224r")]([SubResource("Resource_5qig2"), SubResource("Resource_1ylns")])
 
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
 follow_viewport_enabled = true

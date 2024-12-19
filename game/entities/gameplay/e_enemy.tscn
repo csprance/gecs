@@ -31,6 +31,7 @@ velocity = Vector3(0, 0, 0)
 [sub_resource type="Resource" id="Resource_buds4"]
 script = ExtResource("10_b7f7k")
 target = Vector3(0, 0, 0)
+turn_speed = 5.0
 debug = true
 
 [sub_resource type="Resource" id="Resource_6kqax"]

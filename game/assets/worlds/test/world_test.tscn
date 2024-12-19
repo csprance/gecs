@@ -1,6 +1,6 @@
 [gd_scene load_steps=38 format=3 uid="uid://c8ors4ai4l4if"]
 
-[ext_resource type="Script" uid="uid://bj4jhwf7epig1" path="res://addons/gecs/world.gd" id="1_dnklw"]
+[ext_resource type="Script" path="res://addons/gecs/world.gd" id="1_dnklw"]
 [ext_resource type="PackedScene" uid="uid://bg6jeo350r12f" path="res://game/entities/gameplay/e_door.tscn" id="2_els58"]
 [ext_resource type="PackedScene" uid="uid://o00dv6xya8el" path="res://game/entities/gameplay/items/e_pickup.tscn" id="3_b6amu"]
 [ext_resource type="Resource" uid="uid://bfpi3fqtjk6df" path="res://game/data/items/i_healthkit.tres" id="4_vaqdj"]
@@ -14,15 +14,15 @@
 [ext_resource type="PackedScene" uid="uid://vdhm1ygxl2dx" path="res://game/entities/gameplay/e_camera.tscn" id="10_osjvc"]
 [ext_resource type="PackedScene" uid="uid://ex2wx8kwwjjx" path="res://game/systems/default_systems.tscn" id="11_dp1f4"]
 [ext_resource type="PackedScene" uid="uid://b0ctwmw006svf" path="res://game/assets/props/tree/tree_01_a.gltf" id="12_oqyl0"]
-[ext_resource type="Script" uid="uid://bfu07s1ax0rkp" path="res://addons/gecs/component.gd" id="13_pvfgj"]
-[ext_resource type="Script" uid="uid://cfgtuqp33xgi4" path="res://game/components/gameplay/c_transform.gd" id="14_1o3fy"]
-[ext_resource type="Script" uid="uid://b8k88v7a4ip2e" path="res://game/components/gameplay/c_health.gd" id="15_j7s5o"]
-[ext_resource type="Script" uid="uid://mxpqfqg7cpob" path="res://game/components/debug/c_debug_label.gd" id="16_pgbbi"]
+[ext_resource type="Script" path="res://addons/gecs/component.gd" id="13_pvfgj"]
+[ext_resource type="Script" path="res://game/components/gameplay/c_transform.gd" id="14_1o3fy"]
+[ext_resource type="Script" path="res://game/components/gameplay/c_health.gd" id="15_j7s5o"]
+[ext_resource type="Script" path="res://game/components/debug/c_debug_label.gd" id="16_pgbbi"]
 [ext_resource type="PackedScene" uid="uid://csxwta28e2lxv" path="res://game/assets/props/gravestone/gravestone.gltf" id="17_7ar8e"]
 [ext_resource type="Texture2D" uid="uid://bv4vlxbttsxcl" path="res://game/assets/worlds/level_one/grass.png" id="17_8l3ga"]
-[ext_resource type="Script" uid="uid://depmnwmm1rvkp" path="res://game/components/gameplay/c_victim.gd" id="17_eirrq"]
+[ext_resource type="Script" path="res://game/components/gameplay/c_victim.gd" id="17_eirrq"]
 [ext_resource type="PackedScene" uid="uid://bm6p3cjvxyqmy" path="res://game/entities/gameplay/e_victim.tscn" id="19_by7qk"]
-[ext_resource type="Script" uid="uid://c21kqchymmdw7" path="res://game/components/gameplay/c_reward.gd" id="21_oq40v"]
+[ext_resource type="Script" path="res://game/components/gameplay/c_reward.gd" id="21_oq40v"]
 [ext_resource type="Resource" uid="uid://8qrwfaqd303r" path="res://game/data/items/i_cash_pile.tres" id="25_1kho4"]
 [ext_resource type="PackedScene" uid="uid://dt0gkq2t1eudo" path="res://game/entities/gameplay/e_searchable.tscn" id="25_ugmww"]
 [ext_resource type="PackedScene" uid="uid://cnxv5jgoj4kw2" path="res://game/entities/gameplay/e_trampoline.tscn" id="26_pnngy"]
@@ -170,7 +170,6 @@ surface_material_override/0 = SubResource("StandardMaterial3D_61ucv")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Props/Floor/StaticBody3D"]
 shape = SubResource("BoxShape3D_36kud")
-debug_color = Color(0, 0.6, 0.7, 0.42)
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="Props" groups=["navigation_mesh_source_group"]]
 transform = Transform3D(12.8185, 0, 0, 0, 3.2566, 0, 0, 0, 1, 0, 0, 13.3139)
@@ -180,7 +179,6 @@ mesh = SubResource("BoxMesh_yvtfh")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Props/MeshInstance3D/StaticBody3D"]
 shape = SubResource("BoxShape3D_t18n4")
-debug_color = Color(0, 0.6, 0.7, 0.42)
 
 [node name="DefaultSystems" parent="." instance=ExtResource("11_dp1f4")]
 
@@ -194,4 +192,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 26.3988, 0, 0.0633965)
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.66897, 0, 0.0633965)
 
 [node name="ETrampoline" parent="." instance=ExtResource("26_pnngy")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.665156, 0, 18.4895)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.665156, 0, 16.3682)
+
+[node name="ETrampoline2" parent="." instance=ExtResource("26_pnngy")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.665156, 0, 10.0919)

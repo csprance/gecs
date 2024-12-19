@@ -24,8 +24,8 @@ meta = {
 "name": "Enter Trampoline Action"
 }
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_valwx"]
-size = Vector3(6.27211, 7.72647, 6.23056)
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_hqi1i"]
+radius = 2.5781
 
 [node name="ETrampoline" type="Node3D"]
 script = ExtResource("1_ct15j")
@@ -61,7 +61,7 @@ parent = NodePath("..")
 actions = Array[ExtResource("7_qrgsl")]([SubResource("Resource_eimkc")])
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="EnterTrampolineArea"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0167617, 3.36324, -0.0668545)
-shape = SubResource("BoxShape3D_valwx")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0167617, 0.579913, -0.0668545)
+shape = SubResource("CylinderShape3D_hqi1i")
 
 [editable path="trampoline2"]
