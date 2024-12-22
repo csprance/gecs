@@ -61,12 +61,16 @@ func player_input_subsystem(_3d_playersentity: Entity, _delta: float) -> void:
 
 
 func item_subsystem(entity: Entity, _delta: float) -> void:
+	if GameState.paused:
+		return
 	if Input.is_action_just_pressed('use_item'):
 		if GameState.active_item:
 			InventoryUtils.use_inventory_item(GameState.active_item, entity)
 
 
 func weapon_subsystem(entity: Entity, _delta: float) -> void:
+	if GameState.paused:
+		return
 	if Input.is_action_just_pressed('use_weapon'):
 		if GameState.active_weapon:
 			InventoryUtils.use_inventory_item(GameState.active_weapon, entity)
@@ -76,6 +80,7 @@ func movement_subsystem(entity: Entity, delta: float) -> void:
 	var player = entity as Player
 	var c_velocity = player.get_component(C_Velocity) as C_Velocity
 	var c_movement = player.get_component(C_Movement) as C_Movement
+	var y_vel := float(c_velocity.velocity.y)
 
 	# Determine the input direction
 	var input_direction = Vector3.ZERO
@@ -93,10 +98,17 @@ func movement_subsystem(entity: Entity, delta: float) -> void:
 
 	# Calculate the target velocity based on input
 	var target_velocity = input_direction * c_movement.speed
-
+	# if we're in the air we can't move as fast
+	if not player.is_on_floor():
+		target_velocity *= 0.1
+	else:
+		y_vel = 0.0
+		
 	# Adjust current velocity towards the target velocity using acceleration
-	var acceleration = 80.0  # Adjust this value as needed
+	var acceleration = 150.0  # Adjust this value as needed
 	c_velocity.velocity = c_velocity.velocity.move_toward(target_velocity, acceleration * delta)
+	c_velocity.velocity.y = y_vel
+	c_movement.direction = input_direction
 
 
 
