@@ -5,25 +5,22 @@
 class_name InteractionSystem
 extends System
 
+var r_can_interact_with_anything = Relationship.new(C_CanInteractWith.new(), ECS.wildcard)
 
 func query() -> QueryBuilder:
-	return q.with_all([C_Interactor]).with_relationship([Relationship.new(C_CanInteractWith.new(), ECS.wildcard)]).with_none([C_Interacting])
+	return q.with_all([C_Interactor]).with_relationship([r_can_interact_with_anything]).with_none([C_Interacting])
 
 
 func process(interactor: Entity, delta: float) -> void:
-	# if the interactor pressed the interact button start the interaction process
-	if Input.is_action_just_pressed('interact'):
-		# Get all the entities that the interactor can interact with
-		var r_interactables = interactor.get_relationships(Relationship.new(C_CanInteractWith.new(), ECS.wildcard))
-		for r in r_interactables:
-			var interactable = r.target
-			# FIXME: This isn't being added to the interactable's relationships
-			# Add the being interacted with relationship to the interactable with the interactor
-			interactable.add_relationship(Relationship.new(C_BeingInteractedWith.new(), interactor))
-			# This kicks it over to the interactables system to run the interaction
-			# remove the can interact with relationship
-			interactor.remove_relationship(r)
-			# specify we're interacting with the interactable
-			interactor.add_component(C_Interacting.new())
-	
-	
+	var e_interactable = interactor.get_relationship(r_can_interact_with_anything).target
+	var c_interactable = e_interactable.get_component(C_Interactable) as C_Interactable
+	# Check if the interaction should start
+	if c_interactable.action.should_start_interaction.call(interactor, delta):
+		# Add the being interacted with relationship to the interactable with the interactor
+		e_interactable.add_relationship(Relationship.new(C_BeingInteractedWith.new(), interactor))
+		# This kicks it over to the interactables system to run the interaction
+		# remove the can interact with relationship
+		interactor.remove_relationship(r_can_interact_with_anything)
+		# specify we're interacting with the interactable
+		interactor.add_component(C_Interacting.new())
+		
