@@ -12,7 +12,7 @@ func _on_enter(trampoline: Entity, player: Entity, _body_rid: RID, _body_shape_i
 	# remove the player movement control
 	player.remove_component(C_Movement)
 	# Move the player to the center of the trampoline but over time and then return control back
-	await move_to_center(trampoline, player)
+	await move_to_center(trampoline, player, 1.0 if player.is_on_floor() else 0.1)
 
 	# add the bounce component to the player
 	player.add_relationship(Relationship.new(C_BouncingOn.new(), trampoline))
@@ -29,12 +29,11 @@ func _on_exit(trampoline: Entity, player: Entity, _body_rid: RID, _body_shape_in
 	player.remove_relationship(Relationship.new(C_BouncingOn.new(), trampoline))
 
 
-func move_to_center(trampoline: Entity, player: Entity) -> void:
+func move_to_center(trampoline: Entity, player: Entity, time: float) -> void:
 	var c_player_trs = player.get_component(C_Transform) as C_Transform
 	var start_position = c_player_trs.transform.origin
 	var end_position = trampoline.bounce_center.global_position
 	player.remove_component(C_CharacterBody3D)
 	var tween = player.create_tween()
-	tween.tween_method(func(new_position): c_player_trs.transform.origin = new_position, start_position, end_position, 1.0)
+	tween.tween_method(func(new_position): c_player_trs.transform.origin = new_position, start_position, end_position, time)
 	await tween.finished
-
