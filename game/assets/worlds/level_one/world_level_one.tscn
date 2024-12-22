@@ -1,4 +1,4 @@
-[gd_scene load_steps=18 format=3 uid="uid://dmwx5l6qp3hgj"]
+[gd_scene load_steps=19 format=3 uid="uid://dmwx5l6qp3hgj"]
 
 [ext_resource type="Script" path="res://addons/gecs/world.gd" id="1_q7jtq"]
 [ext_resource type="PackedScene" uid="uid://mfv8kghahued" path="res://game/entities/gameplay/e_player.tscn" id="2_3jqhy"]
@@ -10,13 +10,16 @@
 [ext_resource type="PackedScene" uid="uid://cudyrj1egdocg" path="res://game/entities/ui/hud/e_hud.tscn" id="4_y7ehf"]
 [ext_resource type="Resource" uid="uid://c2njvh8tdqqem" path="res://game/data/weapons/w_water_pistol.tres" id="5_8l0mn"]
 [ext_resource type="PackedScene" uid="uid://vdhm1ygxl2dx" path="res://game/entities/gameplay/e_camera.tscn" id="5_xr84t"]
-[ext_resource type="PackedScene" uid="uid://bv4lxxnenah0s" path="res://game/entities/gameplay/e_enemy.tscn" id="6_2sg1q"]
+[ext_resource type="PackedScene" uid="uid://cnxv5jgoj4kw2" path="res://game/entities/gameplay/e_trampoline.tscn" id="9_0n3jw"]
 [ext_resource type="PackedScene" uid="uid://b0ctwmw006svf" path="res://game/assets/props/tree/tree_01_a.gltf" id="12_qgq0w"]
-[ext_resource type="PackedScene" uid="uid://yx4evyedjcbm" path="res://game/assets/props/trampoline/trampoline.gltf" id="14_oqqgs"]
-[ext_resource type="PackedScene" uid="uid://dx7av6n5xik2f" path="res://game/assets/props/doors/door_01_a.gltf" id="15_62pqm"]
+[ext_resource type="PackedScene" uid="uid://cgl874p46o3qf" path="res://game/entities/gameplay/enemies/e_enemy_zombie.tscn" id="13_y4b5g"]
+[ext_resource type="PackedScene" uid="uid://bg6jeo350r12f" path="res://game/entities/gameplay/e_door.tscn" id="14_gdsc2"]
+[ext_resource type="PackedScene" uid="uid://dt0gkq2t1eudo" path="res://game/entities/gameplay/e_searchable.tscn" id="15_6yqih"]
 [ext_resource type="PackedScene" uid="uid://ex2wx8kwwjjx" path="res://game/systems/default_systems.tscn" id="16_2mwmf"]
-[ext_resource type="PackedScene" uid="uid://dmehwuect8hlf" path="res://game/assets/props/searchables/cabinet_01_a.gltf" id="16_5puje"]
 [ext_resource type="PackedScene" uid="uid://csxwta28e2lxv" path="res://game/assets/props/gravestone/gravestone.gltf" id="17_nn70n"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_ddahy"]
+size = Vector3(100.186, 3.05606, 56.6013)
 
 [node name="World" type="Node"]
 script = ExtResource("1_q7jtq")
@@ -24,54 +27,6 @@ entity_nodes_root = NodePath("Entities")
 system_nodes_root = NodePath("Systems")
 
 [node name="Entities" type="Node" parent="."]
-
-[node name="ZombieEnemy" parent="Entities" instance=ExtResource("6_2sg1q")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -34.9544, 0, -1.09044)
-
-[node name="ZombieEnemy2" parent="Entities" instance=ExtResource("6_2sg1q")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -41.9668, 0, 5.56332)
-
-[node name="ZombieEnemy3" parent="Entities" instance=ExtResource("6_2sg1q")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -19.9546, 0, 18.7396)
-
-[node name="ZombieEnemy9" parent="Entities" instance=ExtResource("6_2sg1q")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.81856, -3.8147e-06, -16.9426)
-
-[node name="ZombieEnemy10" parent="Entities" instance=ExtResource("6_2sg1q")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13.3787, -3.8147e-06, -24.979)
-
-[node name="ZombieEnemy11" parent="Entities" instance=ExtResource("6_2sg1q")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22.6743, -3.8147e-06, -22.1559)
-
-[node name="ZombieEnemy12" parent="Entities" instance=ExtResource("6_2sg1q")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11.2173, -3.8147e-06, -12.0302)
-
-[node name="ZombieEnemy13" parent="Entities" instance=ExtResource("6_2sg1q")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.76716, -3.8147e-06, -2.09822)
-
-[node name="ZombieEnemy14" parent="Entities" instance=ExtResource("6_2sg1q")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23.0463, -3.8147e-06, -3.83245)
-
-[node name="ZombieEnemy15" parent="Entities" instance=ExtResource("6_2sg1q")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 38.244, -3.8147e-06, -6.47926)
-
-[node name="ZombieEnemy16" parent="Entities" instance=ExtResource("6_2sg1q")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13.0038, -3.8147e-06, 10.0859)
-
-[node name="ZombieEnemy4" parent="Entities" instance=ExtResource("6_2sg1q")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.4408, 0, 11.6332)
-
-[node name="ZombieEnemy5" parent="Entities" instance=ExtResource("6_2sg1q")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -25.739, 0, -5.21744)
-
-[node name="ZombieEnemy6" parent="Entities" instance=ExtResource("6_2sg1q")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18.2207, 0, -3.44982)
-
-[node name="ZombieEnemy7" parent="Entities" instance=ExtResource("6_2sg1q")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.7573, -8.72361, 9.35187)
-
-[node name="ZombieEnemy8" parent="Entities" instance=ExtResource("6_2sg1q")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -35.8393, -8.72361, -31.9556)
 
 [node name="HealthkitPickup" parent="Entities" instance=ExtResource("2_8fx5w")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40.0387, 3.8147e-06, -26.8543)
@@ -97,7 +52,85 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -27.7749, -1.90735e-06, 10.12
 
 [node name="EHud" parent="Entities" instance=ExtResource("4_y7ehf")]
 
+[node name="EDoor" parent="Entities" instance=ExtResource("14_gdsc2")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -17.4941, -0.0292895, -23.9156)
+
+[node name="EDoor2" parent="Entities" instance=ExtResource("14_gdsc2")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28.4462, -0.0292895, -23.9156)
+
+[node name="ESearchable" parent="Entities" instance=ExtResource("15_6yqih")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20.9485, -4.76837e-07, -29.386)
+
+[node name="ESearchable2" parent="Entities" instance=ExtResource("15_6yqih")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 26.0769, -4.76837e-07, -29.386)
+
+[node name="ETrampoline5" parent="Entities" instance=ExtResource("9_0n3jw")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.151, 0, 8.68946)
+
+[node name="ETrampoline" parent="Entities" instance=ExtResource("9_0n3jw")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.38272, 0, -4.74875)
+
+[node name="ETrampoline2" parent="Entities" instance=ExtResource("9_0n3jw")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.61308, 0, -11.3906)
+
+[node name="ETrampoline3" parent="Entities" instance=ExtResource("9_0n3jw")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.31412, 0, -11.3906)
+
+[node name="ETrampoline4" parent="Entities" instance=ExtResource("9_0n3jw")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.42551, 0, -19.6148)
+
 [node name="ECamera" parent="Entities" instance=ExtResource("5_xr84t")]
+
+[node name="ZombieEnemy" parent="Entities" instance=ExtResource("13_y4b5g")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -42.7057, 0, -3.42914)
+
+[node name="ZombieEnemy2" parent="Entities" instance=ExtResource("13_y4b5g")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -36.179, 0, 19.9182)
+
+[node name="ZombieEnemy3" parent="Entities" instance=ExtResource("13_y4b5g")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -17.0287, 0, 8.43285)
+
+[node name="ZombieEnemy4" parent="Entities" instance=ExtResource("13_y4b5g")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.6298, 0, 7.4956)
+
+[node name="ZombieEnemy5" parent="Entities" instance=ExtResource("13_y4b5g")]
+transform = Transform3D(0.00715579, 0, -0.999974, 0, 1, 0, 0.999974, 0, 0.00715579, -2.81317, 0, 19.5543)
+
+[node name="ZombieEnemy6" parent="Entities" instance=ExtResource("13_y4b5g")]
+transform = Transform3D(0.00715579, 0, -0.999974, 0, 1, 0, 0.999974, 0, 0.00715579, 13.6339, 0, 11.617)
+
+[node name="ZombieEnemy7" parent="Entities" instance=ExtResource("13_y4b5g")]
+transform = Transform3D(0.965573, 0, -0.260134, 0, 1, 0, 0.260134, 0, 0.965573, 11.0944, 0, -6.64905)
+
+[node name="ZombieEnemy8" parent="Entities" instance=ExtResource("13_y4b5g")]
+transform = Transform3D(0.965573, 0, -0.260134, 0, 1, 0, 0.260134, 0, 0.965573, 23.841, 0, -6.27629)
+
+[node name="ZombieEnemy9" parent="Entities" instance=ExtResource("13_y4b5g")]
+transform = Transform3D(0.965573, 0, -0.260134, 0, 1, 0, 0.260134, 0, 0.965573, 12.1139, 0, -16.0265)
+
+[node name="ZombieEnemy10" parent="Entities" instance=ExtResource("13_y4b5g")]
+transform = Transform3D(0.965573, 0, -0.260134, 0, 1, 0, 0.260134, 0, 0.965573, 30.3608, 0, -28.7278)
+
+[node name="ZombieEnemy11" parent="Entities" instance=ExtResource("13_y4b5g")]
+transform = Transform3D(0.965573, 0, -0.260134, 0, 1, 0, 0.260134, 0, 0.965573, 36.7429, 0, -22.2604)
+
+[node name="ZombieEnemy12" parent="Entities" instance=ExtResource("13_y4b5g")]
+transform = Transform3D(0.965573, 0, -0.260134, 0, 1, 0, 0.260134, 0, 0.965573, -5.94523, 0, -27.7574)
+
+[node name="ZombieEnemy13" parent="Entities" instance=ExtResource("13_y4b5g")]
+transform = Transform3D(0.965573, 0, -0.260134, 0, 1, 0, 0.260134, 0, 0.965573, -25.5886, 0, -27.219)
+
+[node name="ZombieEnemy14" parent="Entities" instance=ExtResource("13_y4b5g")]
+transform = Transform3D(0.965573, 0, -0.260134, 0, 1, 0, 0.260134, 0, 0.965573, -35.5739, 0, -14.6381)
+
+[node name="ZombieEnemy15" parent="Entities" instance=ExtResource("13_y4b5g")]
+transform = Transform3D(0.113862, 0, -0.993497, 0, 1, 0, 0.993497, 0, 0.113862, -12.0045, 0, -11.8298)
+
+[node name="ZombieEnemy16" parent="Entities" instance=ExtResource("13_y4b5g")]
+transform = Transform3D(0.113862, 0, -0.993497, 0, 1, 0, 0.993497, 0, 0.113862, -4.75303, 0, 0.369644)
+
+[node name="ZombieEnemy17" parent="Entities" instance=ExtResource("13_y4b5g")]
+transform = Transform3D(0.113862, 0, -0.993497, 0, 1, 0, 0.993497, 0, 0.113862, -32.0837, 0, 19.0569)
 
 [node name="Systems" parent="." instance=ExtResource("16_2mwmf")]
 
@@ -151,32 +184,14 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20.3434, -0.616597, -15.2232)
 [node name="level-one" parent="Props" instance=ExtResource("3_njsrj")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -2.72389)
 
+[node name="StaticBody3D" type="StaticBody3D" parent="Props/level-one"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Props/level-one/StaticBody3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.520615, -1.51246, -0.0982668)
+shape = SubResource("BoxShape3D_ddahy")
+
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="Props"]
 transform = Transform3D(0.15095, 0.748929, -0.645228, 0, 0.652707, 0.75761, 0.988541, -0.114361, 0.0985262, -0.643284, 5.4899, 3.87359)
-
-[node name="trampoline2" parent="Props" instance=ExtResource("14_oqqgs")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.38272, 0, -4.74875)
-
-[node name="trampoline3" parent="Props" instance=ExtResource("14_oqqgs")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.61308, 0, -11.3906)
-
-[node name="trampoline4" parent="Props" instance=ExtResource("14_oqqgs")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.31412, 0, -11.3906)
-
-[node name="trampoline5" parent="Props" instance=ExtResource("14_oqqgs")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.42551, 0, -19.6148)
-
-[node name="door_01_a2" parent="Props" instance=ExtResource("15_62pqm")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -17.4941, -0.0292895, -23.9156)
-
-[node name="door_01_a3" parent="Props" instance=ExtResource("15_62pqm")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28.4462, -0.0292895, -23.9156)
-
-[node name="cabinet_01_a2" parent="Props" instance=ExtResource("16_5puje")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20.9485, -4.76837e-07, -29.386)
-
-[node name="cabinet_01_a3" parent="Props" instance=ExtResource("16_5puje")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 26.0769, -4.76837e-07, -29.386)
 
 [node name="gravestone2" parent="Props" instance=ExtResource("17_nn70n")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -46.0623, 0, 17.8377)
@@ -321,6 +336,3 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 37.0539, 0, -14.4257)
 
 [node name="gravestone47" parent="Props" instance=ExtResource("17_nn70n")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40.7512, 0, -14.458)
-
-[node name="trampoline6" parent="Props" instance=ExtResource("14_oqqgs")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.151, 0, 8.68946)

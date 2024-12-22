@@ -11,6 +11,21 @@ albedo_color = Color(1, 0, 0, 1)
 radius = 0.1
 height = 0.1
 
+[sub_resource type="Animation" id="Animation_6dw1d"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("MeshInstance3D:rotation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector3(2.26436, 0, 0)]
+}
+
 [sub_resource type="Animation" id="Animation_5ugae"]
 resource_name = "flying"
 length = 15.0
@@ -27,25 +42,10 @@ tracks/0/keys = {
 "values": [Vector3(0, 0, 0), Vector3(136.921, 0.575959, 0.261799)]
 }
 
-[sub_resource type="Animation" id="Animation_6dw1d"]
-length = 0.001
-tracks/0/type = "value"
-tracks/0/imported = false
-tracks/0/enabled = true
-tracks/0/path = NodePath("MeshInstance3D:rotation")
-tracks/0/interp = 1
-tracks/0/loop_wrap = true
-tracks/0/keys = {
-"times": PackedFloat32Array(0),
-"transitions": PackedFloat32Array(1),
-"update": 0,
-"values": [Vector3(2.26436, 0, 0)]
-}
-
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_q5y36"]
 _data = {
-&"RESET": SubResource("Animation_6dw1d"),
-&"flying": SubResource("Animation_5ugae")
+&"flying": SubResource("Animation_5ugae"),
+&"RESET": SubResource("Animation_6dw1d")
 }
 
 [node name="WaterPistolProjectileVisuals" type="Node3D"]

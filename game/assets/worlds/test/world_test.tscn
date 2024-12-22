@@ -1,7 +1,7 @@
 [gd_scene load_steps=38 format=3 uid="uid://c8ors4ai4l4if"]
 
 [ext_resource type="Script" path="res://addons/gecs/world.gd" id="1_dnklw"]
-[ext_resource type="PackedScene" uid="uid://bg6jeo350r12f" path="res://game/entities/gameplay/e_door.tscn" id="2_els58"]
+[ext_resource type="PackedScene" uid="uid://bsys3gtandv0e" path="res://game/entities/gameplay/e_door.tscn" id="2_els58"]
 [ext_resource type="PackedScene" uid="uid://o00dv6xya8el" path="res://game/entities/gameplay/items/e_pickup.tscn" id="3_b6amu"]
 [ext_resource type="Resource" uid="uid://bfpi3fqtjk6df" path="res://game/data/items/i_healthkit.tres" id="4_vaqdj"]
 [ext_resource type="Resource" uid="uid://bx7u7wpmcac6v" path="res://game/data/items/i_key.tres" id="5_uedm4"]
