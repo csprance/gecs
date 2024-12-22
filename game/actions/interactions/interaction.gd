@@ -2,6 +2,14 @@
 class_name Interaction
 extends Action
 
+enum InteractionMode {
+	PRESS,
+	HOLD,
+	RAPID_PRESS
+}
+
+@export var interaction_mode := InteractionMode.PRESS
+
 ## This method should be overidden in your own action to handle the interaction it is called when the interaction is triggered.
 ## It should return true if the interaction was successful and false if it was not.
 func _interaction(interactable: Entity, interactors: Array, meta: Dictionary = {}) -> bool:
@@ -15,6 +23,13 @@ func run_interaction(interactable: Entity, interactors: Array, meta: Dictionary 
 		interactor.remove_component(C_Interacting)
 	return _interaction(interactable, interactors, meta)
 
+## This method is called by the interaction system to see if the interaction should execute
+## It generally checks if the interact button was pressed and if the interaction mode is correct.
+func should_start_interaction(interactor: Entity, delta: float) -> bool:
+	if Input.is_action_just_pressed("interact"):
+		if interaction_mode == InteractionMode.PRESS:
+			return true
+	return false
 
 func run_action(_e=[], _m=[]) -> void:
 	assert(false, 'You should instead run the run_interaction for an interaction')
