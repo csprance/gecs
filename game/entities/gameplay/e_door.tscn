@@ -1,4 +1,4 @@
-[gd_scene load_steps=22 format=3 uid="uid://bg6jeo350r12f"]
+[gd_scene load_steps=22 format=3 uid="uid://bsys3gtandv0e"]
 
 [ext_resource type="Script" path="res://addons/gecs/entity.gd" id="1_0jg53"]
 [ext_resource type="Script" path="res://addons/gecs/component.gd" id="2_yxdgp"]
@@ -19,6 +19,7 @@ script = ExtResource("3_wqx1b")
 script = ExtResource("4_e0wl6")
 locked = true
 key_path = "res://game/data/items/i_key.tres"
+interaction_mode = 0
 meta = {
 "description": "Opening the door for e_door",
 "name": "Open Door"
@@ -27,21 +28,10 @@ meta = {
 [sub_resource type="Resource" id="Resource_flfc2"]
 script = ExtResource("5_nythy")
 action = SubResource("Resource_8516g")
-input_action = "F"
 
 [sub_resource type="Resource" id="Resource_fr1y0"]
 script = ExtResource("6_wbsw5")
 player = NodePath("AnimationPlayer")
-
-[sub_resource type="Animation" id="Animation_b7o2a"]
-length = 0.001
-tracks/0/type = "rotation_3d"
-tracks/0/imported = false
-tracks/0/enabled = true
-tracks/0/path = NodePath("door_01_a2")
-tracks/0/interp = 1
-tracks/0/loop_wrap = true
-tracks/0/keys = PackedFloat32Array(0, 1, 0, 0, 0, 1)
 
 [sub_resource type="Animation" id="Animation_tuih5"]
 resource_name = "open_door"
@@ -53,10 +43,20 @@ tracks/0/interp = 1
 tracks/0/loop_wrap = true
 tracks/0/keys = PackedFloat32Array(0, 1, 0, 0, 0, 1, 1, 1, 0, -0.721349, 0, 0.692571)
 
+[sub_resource type="Animation" id="Animation_b7o2a"]
+length = 0.001
+tracks/0/type = "rotation_3d"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("door_01_a2")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = PackedFloat32Array(0, 1, 0, 0, 0, 1)
+
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_ry413"]
 _data = {
-&"RESET": SubResource("Animation_b7o2a"),
-&"open_door": SubResource("Animation_tuih5")
+&"open_door": SubResource("Animation_tuih5"),
+&"RESET": SubResource("Animation_b7o2a")
 }
 
 [sub_resource type="Resource" id="Resource_ew57s"]
