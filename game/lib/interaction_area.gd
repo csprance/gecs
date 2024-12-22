@@ -21,6 +21,8 @@ func _ready():
 
 func _on_area_entered(_body_id: RID, body, _body_shape: int, _area_shape: int) -> void:
     if body is Entity:
+        if not parent.has_component(C_Interactable):
+            return
         # Check if the body matches the query
         if not get_can_interact_query().matches([body]).is_empty():
             body.add_relationship(Relationship.new(C_CanInteractWith.new(), parent))
