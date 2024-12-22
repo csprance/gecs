@@ -17,7 +17,7 @@ func _use_item(active_weapon: Entity, player: Entity) -> void:
 	# add the player's velocity to the projectile ( So we can't run into it)
 	var projectile_c_vel = e_projectile.get_component(C_Velocity) as C_Velocity
 	var player_c_vel = player.get_component(C_Velocity) as C_Velocity
-	projectile_c_vel.velocity += player_c_vel.velocity
+	projectile_c_vel.velocity += player_c_vel.velocity * .75
 
 	var c_play_anim = C_PlayAnimation.new("player/shoot")
 	c_play_anim.callback = func (): player.add_component(C_PlayAnimation.new("player/idle", 1, true))
