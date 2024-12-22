@@ -21,18 +21,12 @@ func sub_systems():
 func travelling_subsys(e_projectile, delta: float):
 	e_projectile = e_projectile as CharacterBody3D
 	var c_velocity = e_projectile.get_component(C_Velocity) as C_Velocity
-	var c_gravity = e_projectile.get_component(C_Gravity) as C_Gravity
-	# Apply gravity if the projectile is affected by gravity
-	if c_gravity:
-		c_velocity.velocity += c_gravity.gravity * delta
 	# Set the velocity from the velocity component
 	e_projectile.velocity = c_velocity.velocity
 	# Move the entity and if it collides add a collision
 	if e_projectile.move_and_slide():
 		var c_collision = C_Collision.new(e_projectile.get_last_slide_collision())
 		e_projectile.add_component(c_collision)
-	# Set the velocity from the entity to the component
-	c_velocity.velocity = e_projectile.velocity
 	# Sync the transform component with the data from the CharacterBody3D simulation
 	Utils.sync_transform(e_projectile)
 
