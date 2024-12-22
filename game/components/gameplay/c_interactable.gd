@@ -3,6 +3,5 @@
 class_name C_Interactable
 extends Component
 
+## What interaction should we run
 @export var action: Interaction
-
-@export var input_action: String
