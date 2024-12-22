@@ -1,4 +1,4 @@
-[gd_scene load_steps=66 format=3 uid="uid://mfv8kghahued"]
+[gd_scene load_steps=68 format=3 uid="uid://mfv8kghahued"]
 
 [ext_resource type="Script" path="res://game/entities/gameplay/e_player.gd" id="1_tt02t"]
 [ext_resource type="Script" path="res://game/components/player/c_player.gd" id="2_c0i32"]
@@ -19,7 +19,6 @@
 [ext_resource type="Texture2D" uid="uid://b8nxaawqihe0h" path="res://game/assets/characters/skins/fantasyFemaleB.png" id="12_xpjul"]
 [ext_resource type="Script" path="res://game/components/gameplay/c_lives.gd" id="13_sr0ek"]
 [ext_resource type="Script" path="res://game/components/gameplay/c_interactor.gd" id="14_0ymwf"]
-[ext_resource type="Script" path="res://game/components/animation/c_play_animation.gd" id="15_jv8qf"]
 [ext_resource type="Script" path="res://game/components/animation/c_animation_tree.gd" id="16_cv0mn"]
 [ext_resource type="PackedScene" uid="uid://bkowq6t404w7y" path="res://game/assets/weapons/water_pistol/water_pistol_visuals.tscn" id="16_m1h6p"]
 [ext_resource type="PackedScene" uid="uid://d2p72cr27pb2f" path="res://game/lib/hitbox_3d.tscn" id="17_2q1ty"]
@@ -27,6 +26,8 @@
 [ext_resource type="Script" path="res://game/components/item/c_gear.gd" id="17_v1vbg"]
 [ext_resource type="PackedScene" uid="uid://c5772me2l26mi" path="res://game/assets/gear/g_astro_helmet.tscn" id="17_vndgd"]
 [ext_resource type="PackedScene" uid="uid://dff0wsmml1c7p" path="res://game/assets/gear/g_astro_backpack.tscn" id="18_pgu6s"]
+[ext_resource type="Script" path="res://game/components/physics/c_gravity.gd" id="20_doj3v"]
+[ext_resource type="Script" path="res://game/components/physics/c_friction.gd" id="21_wmib5"]
 
 [sub_resource type="Resource" id="Resource_w7h0e"]
 script = ExtResource("2_c0i32")
@@ -46,6 +47,10 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 
 [sub_resource type="Resource" id="Resource_l36gj"]
 script = ExtResource("5_xne1k")
+
+[sub_resource type="Resource" id="Resource_qkti0"]
+script = ExtResource("16_cv0mn")
+anim_tree = NodePath("AnimationTree")
 
 [sub_resource type="Resource" id="Resource_d0axv"]
 script = ExtResource("7_ha3ux")
@@ -84,21 +89,19 @@ respawn_location = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 [sub_resource type="Resource" id="Resource_gr314"]
 script = ExtResource("14_0ymwf")
 
-[sub_resource type="Resource" id="Resource_7i31c"]
-script = ExtResource("15_jv8qf")
-anim_name = "default_anim_lib/Root_Idle"
-anim_speed = 1.0
-loop = true
-callback = Callable()
-
-[sub_resource type="Resource" id="Resource_qkti0"]
-script = ExtResource("16_cv0mn")
-anim_tree = NodePath("AnimationTree")
-
 [sub_resource type="Resource" id="Resource_7khwn"]
 script = ExtResource("5_ja8g2")
 speed = 10.0
 sprint_speed = 15.0
+
+[sub_resource type="Resource" id="Resource_dns7y"]
+script = ExtResource("20_doj3v")
+direction = Vector3(0, -1, 0)
+value = 9.8
+
+[sub_resource type="Resource" id="Resource_owl15"]
+script = ExtResource("21_wmib5")
+coefficient = 0.998
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wmgev"]
 albedo_texture = ExtResource("12_xpjul")
@@ -204,7 +207,7 @@ far = 4000.0
 collision_layer = 8
 collision_mask = 121
 script = ExtResource("1_tt02t")
-component_resources = Array[ExtResource("2_mdxt7")]([SubResource("Resource_w7h0e"), SubResource("Resource_m0ng3"), SubResource("Resource_4kic6"), SubResource("Resource_j1swe"), SubResource("Resource_l36gj"), SubResource("Resource_d0axv"), SubResource("Resource_el2pk"), SubResource("Resource_4axd2"), SubResource("Resource_urpic"), SubResource("Resource_l86ta"), SubResource("Resource_8bws4"), SubResource("Resource_wlyhe"), SubResource("Resource_gr314"), SubResource("Resource_7i31c"), SubResource("Resource_qkti0"), SubResource("Resource_7khwn")])
+component_resources = Array[ExtResource("2_mdxt7")]([SubResource("Resource_w7h0e"), SubResource("Resource_m0ng3"), SubResource("Resource_4kic6"), SubResource("Resource_j1swe"), SubResource("Resource_l36gj"), SubResource("Resource_qkti0"), SubResource("Resource_d0axv"), SubResource("Resource_el2pk"), SubResource("Resource_4axd2"), SubResource("Resource_urpic"), SubResource("Resource_l86ta"), SubResource("Resource_8bws4"), SubResource("Resource_wlyhe"), SubResource("Resource_gr314"), SubResource("Resource_7khwn"), SubResource("Resource_dns7y"), SubResource("Resource_owl15")])
 
 [node name="Visuals" parent="." instance=ExtResource("11_l3h6n")]
 
