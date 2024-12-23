@@ -40,6 +40,8 @@ GameState="*res://game/lib/autoloads/game_state.gd"
 
 file_logging/enable_file_logging=true
 settings/stdout/verbose_stdout=true
+gdscript/warnings/unused_parameter=0
+gdscript/warnings/unused_signal=0
 
 [display]
 
