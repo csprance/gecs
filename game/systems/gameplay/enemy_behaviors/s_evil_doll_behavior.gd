@@ -112,12 +112,12 @@ func interested_subsystem(entity, _delta):
 	
 	# Check if we're close enough to the target and then idle
 	if c_trs.transform.origin.distance_to(c_interested.target) < 0.1:
-		entity.remove_component(C_Interested)
+		entity.remove_components([C_Interested, C_PathFindTo])
 		c_velocity.velocity = Vector3.ZERO
 		return
 	
-	# Set the velocity to go towards the target
-	c_velocity.velocity = (c_interested.target - c_trs.transform.origin).normalized() * INTERESTED_SPEED
+	# Path find to the target
+	entity.add_component(C_PathFindTo.new(c_interested.target))
 
 ## Controls the doll's pursuit behavior when chasing a target
 ## The doll will move at CHASE_SPEED directly towards the target while continuously looking at them
@@ -125,15 +125,13 @@ func interested_subsystem(entity, _delta):
 func chase_subsystem(entity, _delta):
 	# We can't be chasing and interested at the same time
 	entity.remove_component(C_Interested)
-	var c_velocity = entity.get_component(C_Velocity) as C_Velocity
-	var c_trs = entity.get_component(C_Transform) as C_Transform
 	var r_chasing = entity.get_relationship(Relationships.chasing_anything())
 
 	var chase_target = r_chasing.target
 	var chase_target_trs = (chase_target.get_component(C_Transform) as C_Transform).transform
 
-	# Set the velocity to go towards the target
-	c_velocity.velocity = (chase_target_trs.origin - c_trs.transform.origin).normalized() * CHASE_SPEED
+	# Path find to the target
+	entity.add_component(C_PathFindTo.new(chase_target_trs.origin))
 
 	# Look at the chase target
 	var c_look_at = C_LookAt.new(chase_target_trs.origin)
