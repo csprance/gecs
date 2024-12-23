@@ -1,4 +1,4 @@
-[gd_scene load_steps=45 format=3 uid="uid://n6ivo0wnpuvg"]
+[gd_scene load_steps=54 format=3 uid="uid://n6ivo0wnpuvg"]
 
 [ext_resource type="Script" path="res://game/entities/gameplay/e_enemy.gd" id="1_8mheo"]
 [ext_resource type="Script" path="res://addons/gecs/component.gd" id="2_epde0"]
@@ -6,6 +6,7 @@
 [ext_resource type="Script" path="res://game/components/physics/c_character_body_3d.gd" id="3_so838"]
 [ext_resource type="Script" path="res://game/components/gameplay/c_health.gd" id="4_itxjs"]
 [ext_resource type="Script" path="res://game/components/physics/c_velocity.gd" id="5_1ks0t"]
+[ext_resource type="Script" path="res://game/components/animation/c_animation_tree.gd" id="5_p3i3t"]
 [ext_resource type="Script" path="res://game/components/gameplay/c_enemy.gd" id="6_5bwmr"]
 [ext_resource type="Script" path="res://game/components/ai/c_interest_range.gd" id="7_15lua"]
 [ext_resource type="Script" path="res://game/components/gameplay/c_transform.gd" id="9_gbgln"]
@@ -13,8 +14,10 @@
 [ext_resource type="Script" path="res://game/components/ai/c_evil_doll_behavior.gd" id="11_6abnt"]
 [ext_resource type="PackedScene" uid="uid://cdoq0qjcutvy3" path="res://game/assets/characters/models/characterSmall.fbx" id="11_aqfx0"]
 [ext_resource type="Texture2D" uid="uid://d4asuwe8kpb3y" path="res://game/assets/characters/skins/alienB.png" id="12_8ivd6"]
+[ext_resource type="Script" path="res://game/components/gameplay/c_nav_agent_3d.gd" id="13_3x7ee"]
 [ext_resource type="Script" path="res://game/components/gameplay/c_reward.gd" id="13_uhf02"]
 [ext_resource type="PackedScene" uid="uid://cblqfvanyrdd4" path="res://game/lib/line_of_sight_3d.tscn" id="15_3bntj"]
+[ext_resource type="Script" path="res://game/components/gameplay/c_movement.gd" id="15_5qphw"]
 [ext_resource type="Script" path="res://game/actions/component_area_actions/aa_dash.gd" id="16_36j7f"]
 [ext_resource type="Script" path="res://game/actions/component_area_actions/component_area_action.gd" id="16_47dc3"]
 [ext_resource type="Script" path="res://game/actions/component_area_actions/aa_ranged_attack.gd" id="16_b7nvm"]
@@ -25,6 +28,17 @@
 [ext_resource type="Script" path="res://game/actions/sequence_action.gd" id="22_isy5m"]
 [ext_resource type="Script" path="res://game/actions/component_area_actions/aa_action_picker.gd" id="23_rndos"]
 [ext_resource type="PackedScene" uid="uid://dnkm23kafd5qn" path="res://game/lib/entity_visible_on_screen_enabler_3d.tscn" id="25_agyb3"]
+[ext_resource type="AnimationLibrary" uid="uid://cssb0iu530xnq" path="res://game/assets/animations/default_anim_lib.res" id="27_73pui"]
+
+[sub_resource type="Resource" id="Resource_6kqax"]
+script = ExtResource("6_5bwmr")
+
+[sub_resource type="Resource" id="Resource_u4fji"]
+script = ExtResource("11_6abnt")
+
+[sub_resource type="Resource" id="Resource_ssdfn"]
+script = ExtResource("5_p3i3t")
+anim_tree = NodePath("AnimationTree")
 
 [sub_resource type="Resource" id="Resource_iixki"]
 script = ExtResource("2_tohob")
@@ -42,16 +56,18 @@ current = 3
 script = ExtResource("5_1ks0t")
 velocity = Vector3(0, 0, 0)
 
-[sub_resource type="Resource" id="Resource_6kqax"]
-script = ExtResource("6_5bwmr")
-
 [sub_resource type="Resource" id="Resource_apar3"]
 script = ExtResource("7_15lua")
 value = 55.0
 
 [sub_resource type="Resource" id="Resource_x5chr"]
 script = ExtResource("9_gbgln")
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11.5843, 0, 9.42997)
+
+[sub_resource type="Resource" id="Resource_vwamr"]
+script = ExtResource("15_5qphw")
+speed = 10.0
+sprint_speed = 15.0
 
 [sub_resource type="Resource" id="Resource_buds4"]
 script = ExtResource("10_w27te")
@@ -59,12 +75,18 @@ target = Vector3(0, 0, 0)
 turn_speed = 5.0
 debug = false
 
-[sub_resource type="Resource" id="Resource_u4fji"]
-script = ExtResource("11_6abnt")
-
 [sub_resource type="Resource" id="Resource_3tece"]
 script = ExtResource("13_uhf02")
-points = 50
+points = 75
+
+[sub_resource type="Resource" id="Resource_cwy64"]
+script = ExtResource("13_3x7ee")
+nav_agent_path = NodePath("NavigationAgent3D")
+
+[sub_resource type="Resource" id="Resource_osk37"]
+script = ExtResource("15_5qphw")
+speed = 7.0
+sprint_speed = 10.0
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_l4yq5"]
 albedo_texture = ExtResource("12_8ivd6")
@@ -124,16 +146,58 @@ meta = {
 radius = 0.518612
 height = 1.90148
 
+[sub_resource type="AnimationNodeStateMachine" id="AnimationNodeStateMachine_s4ouk"]
+
 [node name="EvilDollEnemy" type="CharacterBody3D"]
 collision_layer = 16
 collision_mask = 89
 script = ExtResource("1_8mheo")
-component_resources = Array[ExtResource("2_epde0")]([SubResource("Resource_iixki"), SubResource("Resource_ypv7w"), SubResource("Resource_itu4t"), SubResource("Resource_05cb1"), SubResource("Resource_6kqax"), SubResource("Resource_apar3"), SubResource("Resource_x5chr"), SubResource("Resource_buds4"), SubResource("Resource_u4fji"), SubResource("Resource_3tece")])
+component_resources = Array[ExtResource("2_epde0")]([SubResource("Resource_6kqax"), SubResource("Resource_u4fji"), SubResource("Resource_ssdfn"), SubResource("Resource_iixki"), SubResource("Resource_ypv7w"), SubResource("Resource_itu4t"), SubResource("Resource_05cb1"), SubResource("Resource_apar3"), SubResource("Resource_x5chr"), SubResource("Resource_vwamr"), SubResource("Resource_buds4"), SubResource("Resource_3tece"), SubResource("Resource_cwy64"), SubResource("Resource_osk37")])
 
-[node name="Root Scene" parent="." instance=ExtResource("11_aqfx0")]
+[node name="NavigationAgent3D" type="NavigationAgent3D" parent="."]
+
+[node name="Visuals" parent="." instance=ExtResource("11_aqfx0")]
 transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0, 0)
 
-[node name="characterSmall" parent="Root Scene/RootNode/Root/Skeleton3D" index="0"]
+[node name="Skeleton3D" parent="Visuals/RootNode/Root" index="0"]
+bones/0/rotation = Quaternion(-0.5, -0.5, 0.5, 0.5)
+bones/1/rotation = Quaternion(-0.507455, 0.508134, -0.491989, -0.492175)
+bones/5/rotation = Quaternion(0.5, 0.5, -0.5, 0.5)
+bones/9/rotation = Quaternion(-0.5, -0.5, 0.5, 0.5)
+bones/10/rotation = Quaternion(-0.507767, 0.507971, -0.491669, -0.49234)
+bones/11/rotation = Quaternion(0.0158259, 0.00119138, 0.994622, 0.102349)
+bones/14/rotation = Quaternion(0.5, 0.5, -0.5, 0.5)
+bones/18/rotation = Quaternion(0.000954657, 0.707106, -0.707106, 0.0010862)
+bones/19/rotation = Quaternion(9.30143e-05, -2.63832e-07, 0.999999, 0.0014431)
+bones/20/rotation = Quaternion(-0.0548708, -9.52209e-09, -9.49668e-09, 0.998493)
+bones/22/rotation = Quaternion(0.0767175, -1.18859e-07, 9.14541e-09, 0.997053)
+bones/23/rotation = Quaternion(0.0897621, 1.18729e-07, 1.07004e-08, 0.995963)
+bones/24/rotation = Quaternion(-0.0829316, -1.18799e-07, -9.88619e-09, 0.996555)
+bones/26/rotation = Quaternion(0.586882, 0.410653, 0.548295, -0.431631)
+bones/27/rotation = Quaternion(0.0613062, 0.712201, 0.049309, 0.697553)
+bones/28/rotation = Quaternion(0.0395462, 0.0167578, 0.0226912, 0.998819)
+bones/29/rotation = Quaternion(-0.00398746, 0.717466, -0.0202262, 0.696289)
+bones/31/rotation = Quaternion(0.0680005, 0.0605938, 0.0277907, 0.995456)
+bones/32/rotation = Quaternion(0.0303364, -0.0335142, 0.0179315, 0.998817)
+bones/34/rotation = Quaternion(-0.342398, 0.646603, 0.431278, 0.527889)
+bones/37/rotation = Quaternion(0.658379, -0.507611, 0.459993, 0.311887)
+bones/38/rotation = Quaternion(-0.00247435, 0.960992, -0.0786369, -0.26515)
+bones/39/rotation = Quaternion(0.0220789, -0.140868, 0.0398912, 0.988978)
+bones/40/rotation = Quaternion(-0.0110399, 0.119641, -0.0174104, 0.992603)
+bones/42/rotation = Quaternion(-0.0675559, 0.0733307, 0.0288555, 0.994599)
+bones/43/rotation = Quaternion(-0.0313179, -0.0275268, 0.0161554, 0.999)
+bones/45/rotation = Quaternion(-0.363895, 0.743, -0.413301, -0.380413)
+bones/46/rotation = Quaternion(-0.15789, -0.0291167, 0.0402881, 0.986205)
+bones/48/rotation = Quaternion(0.999757, 0.00697809, -0.00446265, -0.0204392)
+bones/48/scale = Vector3(0.999989, 0.999999, 0.999996)
+bones/49/rotation = Quaternion(0.184157, 0.0410161, 0.00270021, 0.982037)
+bones/49/scale = Vector3(1, 1, 1)
+bones/51/rotation = Quaternion(-0.0137828, 0.953026, -0.295826, 0.0635438)
+bones/53/rotation = Quaternion(0.999205, -0.015638, 0.0305008, -0.0203645)
+bones/54/rotation = Quaternion(0.184483, 0.00268093, -0.0110732, 0.98277)
+bones/56/rotation = Quaternion(0.0221593, 0.954752, -0.295316, -0.0273097)
+
+[node name="characterSmall" parent="Visuals/RootNode/Root/Skeleton3D" index="0"]
 surface_material_override/0 = SubResource("StandardMaterial3D_l4yq5")
 
 [node name="ChaseLOS" parent="." node_paths=PackedStringArray("parent") instance=ExtResource("15_3bntj")]
@@ -206,10 +270,20 @@ color = Color(0.054902, 0.533333, 0.972549, 0.501961)
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.926148, 0)
 shape = SubResource("CapsuleShape3D_pjpad")
 
-[node name="NavigationAgent3D" type="NavigationAgent3D" parent="."]
-
 [node name="EntityVisibleOnScreenEnabler3D" parent="." instance=ExtResource("25_agyb3")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.01089, 0)
 aabb = AABB(-0.854186, -1.01743, -0.884104, 1.70837, 2.03486, 1.76821)
 
-[editable path="Root Scene"]
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+root_node = NodePath("../Visuals")
+libraries = {
+&"default_anim_lib": ExtResource("27_73pui")
+}
+autoplay = "default_anim_lib/idle"
+
+[node name="AnimationTree" type="AnimationTree" parent="."]
+root_node = NodePath("../Visuals")
+tree_root = SubResource("AnimationNodeStateMachine_s4ouk")
+anim_player = NodePath("../AnimationPlayer")
+
+[editable path="Visuals"]
