@@ -53,9 +53,15 @@ func _ready() -> void:
 func initialize():
 	_entityLogger.trace('_ready Entity Initializing Components: ', self)
 	component_resources.append_array(define_components())
+	# remove any component_resources that are already defined in components
+	# This is useful for when you instantiate an entity from a scene and want to overide components
+	for component in component_resources:
+		if has_component(component.get_script()):
+			component_resources.erase(component)
 	# Initialize components from the exported array
 	for res in component_resources:
 		add_component(res.duplicate(true))
+
 	on_ready()
 
 ## ##################################
