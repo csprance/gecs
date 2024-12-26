@@ -1,0 +1,36 @@
+[gd_scene load_steps=11 format=3 uid="uid://dimw2k47rnfve"]
+
+[ext_resource type="Script" path="res://game/entities/gameplay/e_breakable.gd" id="1_otw50"]
+[ext_resource type="Script" path="res://addons/gecs/component.gd" id="2_n4l8c"]
+[ext_resource type="Script" path="res://game/components/gameplay/c_health.gd" id="3_2542u"]
+[ext_resource type="Script" path="res://game/components/gameplay/c_transform.gd" id="4_8h06f"]
+[ext_resource type="Script" path="res://game/components/gameplay/c_breakable.gd" id="5_iki8a"]
+[ext_resource type="PackedScene" uid="uid://d2p72cr27pb2f" path="res://game/lib/hitbox_3d.tscn" id="6_krknl"]
+
+[sub_resource type="Resource" id="Resource_tunuy"]
+script = ExtResource("3_2542u")
+total = 1
+current = 1
+
+[sub_resource type="Resource" id="Resource_80umw"]
+script = ExtResource("4_8h06f")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+
+[sub_resource type="Resource" id="Resource_ym1yo"]
+script = ExtResource("5_iki8a")
+
+[sub_resource type="BoxMesh" id="BoxMesh_dv0h0"]
+size = Vector3(1, 2, 1)
+
+[node name="EBreakable" type="Node3D"]
+script = ExtResource("1_otw50")
+component_resources = Array[ExtResource("2_n4l8c")]([SubResource("Resource_tunuy"), SubResource("Resource_80umw"), SubResource("Resource_ym1yo")])
+
+[node name="Hitbox3D" parent="." node_paths=PackedStringArray("parent") instance=ExtResource("6_krknl")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.406683, 0)
+parent = NodePath("..")
+hitbox_scale = Vector3(1, 2, 1)
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.406683, 0)
+mesh = SubResource("BoxMesh_dv0h0")
