@@ -8,6 +8,10 @@ extends Node
 ## The base scene for the enemy entity
 @export var enemy_scene: PackedScene
 
+@export_category("Entities")
+@export var pickup_scene: PackedScene
+
+
 @export_category("Gameplay")
 ## How fast the player can move
 @export var player_speed: float = 200.0
