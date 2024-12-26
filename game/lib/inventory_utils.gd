@@ -37,7 +37,7 @@ static func pickup_resource(pickup: Pickup, c_item: Component, inventory_signal:
 static func pickup_weapon(pickup: Pickup):
 	return pickup_resource(
 		pickup,
-		pickup.weapon_resource,
+		pickup.item_resource,
 		GameState.inventory_weapon_added,
 		"active_weapon"
 	)
