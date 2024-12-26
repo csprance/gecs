@@ -44,7 +44,7 @@ func sub_systems():
 	]
 
 
-func player_input_subsystem(_3d_playersentity: Entity, _delta: float) -> void:
+func player_input_subsystem(entity: Entity, _delta: float) -> void:
 	if Input.is_action_just_pressed('change_item'):
 		# change to the next item in the list of the player's items
 		InventoryUtils.cycle_inventory_item()
@@ -58,6 +58,14 @@ func player_input_subsystem(_3d_playersentity: Entity, _delta: float) -> void:
 	if Input.is_action_just_pressed('pause_toggle'):
 		GameState.paused = not GameState.paused
 		Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE if GameState.paused else Input.MOUSE_MODE_CONFINED_HIDDEN)
+
+	var up_strength = Input.get_action_strength("cursor_up")
+	var left_strength = Input.get_action_strength("cursor_left")
+	var down_strength = Input.get_action_strength("cursor_down")
+	var right_strength = Input.get_action_strength("cursor_right")
+	var mouse_pos = get_viewport().get_mouse_position()
+	mouse_pos += Vector2(right_strength - left_strength, down_strength - up_strength) * 25
+	Input.warp_mouse(mouse_pos)
 
 
 func item_subsystem(entity: Entity, _delta: float) -> void:
