@@ -1,9 +1,9 @@
-[gd_scene load_steps=28 format=3 uid="uid://dt0gkq2t1eudo"]
+[gd_scene load_steps=34 format=3 uid="uid://dt0gkq2t1eudo"]
 
 [ext_resource type="Script" path="res://addons/gecs/entity.gd" id="1_oww6f"]
 [ext_resource type="Script" path="res://addons/gecs/component.gd" id="2_ptiw5"]
 [ext_resource type="Script" path="res://game/components/gameplay/c_door.gd" id="3_ad5ln"]
-[ext_resource type="Script" path="res://game/actions/interactions/i_open_door.gd" id="4_jjnrs"]
+[ext_resource type="Script" path="res://game/actions/interactions/i_open_searchable.gd" id="4_0xx0m"]
 [ext_resource type="Script" path="res://game/components/gameplay/c_interactable.gd" id="5_v1peb"]
 [ext_resource type="Script" path="res://game/components/animation/c_animation_player.gd" id="6_ym5c4"]
 [ext_resource type="Script" path="res://game/components/item/c_item_spawner.gd" id="7_qnspb"]
@@ -13,25 +13,26 @@
 [ext_resource type="Script" path="res://game/lib/static_queries/static_query.gd" id="9_xacoh"]
 [ext_resource type="Script" path="res://game/components/item/c_item_spawner_item.gd" id="10_725ed"]
 [ext_resource type="Script" path="res://game/lib/static_queries/sq_is_player.gd" id="10_ojkrc"]
+[ext_resource type="Resource" uid="uid://8qrwfaqd303r" path="res://game/data/items/i_cash_pile.tres" id="11_htdod"]
 [ext_resource type="PackedScene" uid="uid://dmehwuect8hlf" path="res://game/assets/props/searchables/cabinet_01_a.gltf" id="11_ml5ta"]
 [ext_resource type="Script" path="res://game/lib/static_queries/sq_is_interactor.gd" id="11_w7m15"]
+[ext_resource type="Resource" uid="uid://c2njvh8tdqqem" path="res://game/data/weapons/w_water_pistol.tres" id="12_babqg"]
+[ext_resource type="Script" path="res://game/components/gameplay/c_transform.gd" id="13_163pm"]
 
 [sub_resource type="Resource" id="Resource_bv3gi"]
 script = ExtResource("3_ad5ln")
 
-[sub_resource type="Resource" id="Resource_8516g"]
-script = ExtResource("4_jjnrs")
-locked = false
-key_path = null
+[sub_resource type="Resource" id="Resource_sx4g7"]
+script = ExtResource("4_0xx0m")
+interaction_mode = 0
 meta = {
-"description": "Opening the door for e_door",
-"name": "Open Door"
+"description": "Open the searchable from e_searchable",
+"name": "Open Searchable"
 }
 
 [sub_resource type="Resource" id="Resource_flfc2"]
 script = ExtResource("5_v1peb")
-action = SubResource("Resource_8516g")
-input_action = "F"
+action = SubResource("Resource_sx4g7")
 
 [sub_resource type="Resource" id="Resource_fr1y0"]
 script = ExtResource("6_ym5c4")
@@ -42,23 +43,27 @@ script = ExtResource("10_725ed")
 item = ExtResource("9_0s325")
 spawn_chance = 1.0
 
+[sub_resource type="Resource" id="Resource_pnqnt"]
+script = ExtResource("10_725ed")
+item = ExtResource("11_htdod")
+spawn_chance = 1.0
+
+[sub_resource type="Resource" id="Resource_o7to1"]
+script = ExtResource("10_725ed")
+item = ExtResource("12_babqg")
+spawn_chance = 1.0
+
 [sub_resource type="Resource" id="Resource_3om2b"]
 script = ExtResource("7_qnspb")
 name = "Spawner Name"
-spawner_items = Array[ExtResource("8_abre4")]([SubResource("Resource_dfn38")])
+spawner_items = Array[ExtResource("8_abre4")]([SubResource("Resource_dfn38"), SubResource("Resource_pnqnt"), SubResource("Resource_o7to1")])
 
-[sub_resource type="Animation" id="Animation_b7o2a"]
-length = 0.001
-tracks/0/type = "position_3d"
-tracks/0/imported = false
-tracks/0/enabled = true
-tracks/0/path = NodePath("cabinet_01_a2/cabinet_01_a_door")
-tracks/0/interp = 1
-tracks/0/loop_wrap = true
-tracks/0/keys = PackedFloat32Array(0, 1, 0, 0, 0)
+[sub_resource type="Resource" id="Resource_fby00"]
+script = ExtResource("13_163pm")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15.7861, -0.032787, -7.18647)
 
 [sub_resource type="Animation" id="Animation_tuih5"]
-resource_name = "open_door"
+resource_name = "open"
 tracks/0/type = "position_3d"
 tracks/0/imported = false
 tracks/0/enabled = false
@@ -74,10 +79,20 @@ tracks/1/interp = 1
 tracks/1/loop_wrap = true
 tracks/1/keys = PackedFloat32Array(0, 1, 0, 0, 0, 1, 1, 1, 0, -0.487479, 0, 0.873135)
 
+[sub_resource type="Animation" id="Animation_b7o2a"]
+length = 0.001
+tracks/0/type = "position_3d"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("cabinet_01_a2/cabinet_01_a_door")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = PackedFloat32Array(0, 1, 0, 0, 0)
+
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_ry413"]
 _data = {
-&"RESET": SubResource("Animation_b7o2a"),
-&"open_door": SubResource("Animation_tuih5")
+&"open": SubResource("Animation_tuih5"),
+&"RESET": SubResource("Animation_b7o2a")
 }
 
 [sub_resource type="Resource" id="Resource_ew57s"]
@@ -92,7 +107,7 @@ radius = 2.01709
 
 [node name="ESearchable" type="Node3D"]
 script = ExtResource("1_oww6f")
-component_resources = Array[ExtResource("2_ptiw5")]([SubResource("Resource_bv3gi"), SubResource("Resource_flfc2"), SubResource("Resource_fr1y0"), SubResource("Resource_3om2b")])
+component_resources = Array[ExtResource("2_ptiw5")]([SubResource("Resource_bv3gi"), SubResource("Resource_flfc2"), SubResource("Resource_fr1y0"), SubResource("Resource_3om2b"), SubResource("Resource_fby00")])
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="."]
 libraries = {
@@ -114,5 +129,8 @@ shape = SubResource("CylinderShape3D_fjs6k")
 [node name="cabinet_01_a2" parent="." instance=ExtResource("11_ml5ta")]
 
 [node name="cabinet_01_a" parent="cabinet_01_a2" index="1" groups=["navigation_mesh_source_group"]]
+
+[node name="Marker3D" type="Marker3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.78736, 0, 1.13224)
 
 [editable path="cabinet_01_a2"]
