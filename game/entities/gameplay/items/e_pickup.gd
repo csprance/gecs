@@ -34,9 +34,12 @@ func _enter_tree() -> void:
 	if Engine.is_editor_hint():
 		_show_visuals()
 
+## Creates a pickup entity with the specified item and quantity[br]
+## This uses the Pickup Scene rather than just the pickup entity[br]
+## If you want to spawn a pickup this is what you want!
 static func make_pickup(c_item: C_Item, _quantity: int) -> Pickup:
 	var e_pickup = Constants.pickup_scene.instantiate()
 	e_pickup.item_resource = c_item
 	e_pickup.quantity = _quantity
 	return e_pickup
-        
+		
