@@ -8,9 +8,10 @@ func query() -> QueryBuilder:
 
 func process(entity: Entity, _delta):
 	var pickup = entity as Pickup
-	if pickup.weapon_resource:
+	
+	if pickup.item_resource is C_Weapon:
 		InventoryUtils.pickup_weapon(pickup)	
-	if pickup.item_resource:
+	elif pickup.item_resource is C_Item:
 		InventoryUtils.pickup_item(pickup)	
 	
 	# Remove the pickup entity from the world.
