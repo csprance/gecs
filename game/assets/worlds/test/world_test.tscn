@@ -1,4 +1,4 @@
-[gd_scene load_steps=38 format=3 uid="uid://c8ors4ai4l4if"]
+[gd_scene load_steps=58 format=3 uid="uid://c8ors4ai4l4if"]
 
 [ext_resource type="Script" path="res://addons/gecs/world.gd" id="1_dnklw"]
 [ext_resource type="PackedScene" uid="uid://bsys3gtandv0e" path="res://game/entities/gameplay/e_door.tscn" id="2_els58"]
@@ -7,6 +7,7 @@
 [ext_resource type="Resource" uid="uid://bx7u7wpmcac6v" path="res://game/data/items/i_key.tres" id="5_uedm4"]
 [ext_resource type="Resource" uid="uid://c2njvh8tdqqem" path="res://game/data/weapons/w_water_pistol.tres" id="6_vtm68"]
 [ext_resource type="PackedScene" uid="uid://mfv8kghahued" path="res://game/entities/gameplay/e_player.tscn" id="7_4pqio"]
+[ext_resource type="Resource" uid="uid://i85ck4obkc86" path="res://game/data/weapons/w_rocket_launcher.tres" id="7_41myo"]
 [ext_resource type="Resource" uid="uid://32qy231kdit2" path="res://game/data/items/i_speed_shoes.tres" id="7_nqkuy"]
 [ext_resource type="Resource" uid="uid://ryfenvkpu8gj" path="res://game/data/weapons/w_soda_can.tres" id="8_f7emr"]
 [ext_resource type="PackedScene" uid="uid://x548ueo7udx1" path="res://game/entities/gameplay/e_aim_point.tscn" id="8_ib406"]
@@ -21,11 +22,19 @@
 [ext_resource type="PackedScene" uid="uid://csxwta28e2lxv" path="res://game/assets/props/gravestone/gravestone.gltf" id="17_7ar8e"]
 [ext_resource type="Texture2D" uid="uid://bv4vlxbttsxcl" path="res://game/assets/worlds/level_one/grass.png" id="17_8l3ga"]
 [ext_resource type="Script" path="res://game/components/gameplay/c_victim.gd" id="17_eirrq"]
+[ext_resource type="Script" path="res://game/components/gameplay/c_door.gd" id="19_18n5e"]
 [ext_resource type="PackedScene" uid="uid://bm6p3cjvxyqmy" path="res://game/entities/gameplay/e_victim.tscn" id="19_by7qk"]
+[ext_resource type="Script" path="res://game/components/gameplay/c_interactable.gd" id="21_j4usw"]
 [ext_resource type="Script" path="res://game/components/gameplay/c_reward.gd" id="21_oq40v"]
+[ext_resource type="Script" path="res://game/actions/interactions/i_open_searchable.gd" id="22_wcms8"]
+[ext_resource type="Script" path="res://game/components/animation/c_animation_player.gd" id="22_wt82m"]
 [ext_resource type="Resource" uid="uid://8qrwfaqd303r" path="res://game/data/items/i_cash_pile.tres" id="25_1kho4"]
+[ext_resource type="Script" path="res://game/components/item/c_item_spawner.gd" id="25_oumgv"]
 [ext_resource type="PackedScene" uid="uid://dt0gkq2t1eudo" path="res://game/entities/gameplay/e_searchable.tscn" id="25_ugmww"]
+[ext_resource type="Script" path="res://game/components/item/c_item_spawner_variants.gd" id="26_gbkuy"]
 [ext_resource type="PackedScene" uid="uid://cnxv5jgoj4kw2" path="res://game/entities/gameplay/e_trampoline.tscn" id="26_pnngy"]
+[ext_resource type="Script" path="res://game/components/item/c_item_spawner_item.gd" id="27_bht2x"]
+[ext_resource type="PackedScene" uid="uid://dimw2k47rnfve" path="res://game/entities/gameplay/e_breakable.tscn" id="29_lvp5t"]
 
 [sub_resource type="NavigationMesh" id="NavigationMesh_o4toq"]
 vertices = PackedVector3Array(-29.25, 0.3717, -11.25, -28.25, 0.3717, -11.75, -28.25, 0.3717, -52, -74.5, 0.3717, -52, -74.5, 0.3717, -10.75, -29.25, 0.3717, -10.75, -21.75, 0.3717, -10, -21.5, 0.3717, -9, -19.75, 0.3717, -9, -19.25, 0.3717, -10.25, -18, 0.3717, -10.25, -17.5, 0.3717, -9.75, -17.5, 0.3717, -52, -27, 0.3717, -11.25, -27.25, 0.3717, -9.75, -24.25, 0.3717, -9.5, -24, 0.3717, -10, -17.5, 0.3717, -8.75, -11, 0.3717, -8.25, -9.5, 0.3717, -8.5, -9.5, 0.3717, -52, 1.75, 0.3717, 7.5, 2, 0.3717, 12.25, 6.75, 0.3717, 12.25, -8.25, 0.3717, -8.25, -8.25, 0.3717, -6.5, -2.75, 0.3717, 7.5, 7, 0.3717, 13.25, 74.5, 0.3717, 13.25, 74.5, 0.3717, -52, -28, 0.3717, -2.5, -26.25, 0.3717, -3.25, -26, 0.3717, -4.75, -24.25, 0.3717, -8.5, -29.25, 0.3717, -2.5, -28.75, 0.3717, -9.5, -24.5, 0.3717, -4.75, -74.5, 0.3717, -2.5, -27.5, 0.3717, -2, -26, 0.3717, -2.75, -28.75, 0.3717, -0.25, -30.25, 0.3717, 4.75, -29.5, 0.3717, 5.5, -26.25, 0.3717, 3, -26, 0.3717, 1.25, -27.5, 0.3717, -0.75, -19.75, 0.3717, -8.25, -21.75, 0.3717, -8, -25.75, 0.3717, 3.25, -23.75, 0.3717, 1.25, -23.75, 0.3717, -2.75, -19, 0.3717, -8, -22, 0.3717, -4.5, -19.5, 0.3717, -4.75, -23.5, 0.3717, 2.25, -20.75, 0.3717, 2.25, -20.75, 0.3717, 1.5, -23.5, 0.3717, -4.5, -22, 0.3717, -3, -19.25, 0.3717, -4.25, -24, 0.3717, -8, -20.25, 0.3717, 1.25, -20.25, 0.3717, -2.75, -18.25, 0.3717, 1.25, -18, 0.3717, 1.75, -16.25, 0.3717, -0.25, -17, 0.3717, -0.75, -19.25, 0.3717, -3, -17, 0.3717, -2, -16.5, 0.3717, -2.5, -18, 0.3717, -8, -15, 0.3717, -2.5, -14.75, 0.3717, -2, -10.5, 0.3717, -6, -11, 0.3717, -6.25, -10, 2.3717, -7.5, -10, 2.3717, -7, -9.25, 2.3717, -7, -9.25, 2.3717, -7.5, -14.75, 0.3717, -0.75, -3.25, 0.3717, 8, -8.5, 0.3717, -6, -15.5, 0.3717, -0.25, -29.75, 0.3717, -0.5, -31.75, 0.3717, 5.25, -33.25, 0.3717, 12.25, -31, 0.3717, 7, -31.75, 0.3717, 6.5, -34.5, 0.3717, 12.25, -29.75, 0.3717, -2, -74.5, 0.3717, 13.25, -35, 0.3717, 13.25, -18, 0.3717, 3, -6.75, 0.3717, 12.25, -3.25, 0.3717, 12.25, -18.5, 0.3717, 3.25, -7, 0.3717, 12.75, -20.5, 0.3717, 3.25, -23.75, 0.3717, 3.25, -6.75, 0.3717, 14.5, -29.75, 0.3717, 7, -32.75, 0.3717, 12.5, -3, 0.3717, 19, -3.25, 0.3717, 14.5, -32.75, 0.3717, 14, -0.5, 0.3717, 52, -0.5, 0.3717, 19, -33.75, 0.3717, 14.5, -33.75, 0.3717, 52, -2.25, 0.8717, 8.5, -2.25, 0.8717, 11.75, 1, 0.8717, 11.75, 1, 0.8717, 8.5, -35, 0.3717, 13.75, -74.5, 0.3717, 52, 6.75, 0.3717, 14.5, 2, 0.3717, 14.5, 2, 0.3717, 18.75, 74.5, 0.3717, 52, -2.25, 0.8717, 14.75, -2.25, 0.8717, 18, 1, 0.8717, 18, 1, 0.8717, 14.75)
@@ -53,6 +62,57 @@ script = ExtResource("17_eirrq")
 [sub_resource type="Resource" id="Resource_jbp1u"]
 script = ExtResource("21_oq40v")
 points = 3000
+
+[sub_resource type="Resource" id="Resource_bv3gi"]
+script = ExtResource("19_18n5e")
+
+[sub_resource type="Resource" id="Resource_sx4g7"]
+script = ExtResource("22_wcms8")
+interaction_mode = 0
+meta = {
+"description": "Open the searchable from e_searchable",
+"name": "Open Searchable"
+}
+
+[sub_resource type="Resource" id="Resource_flfc2"]
+script = ExtResource("21_j4usw")
+action = SubResource("Resource_sx4g7")
+
+[sub_resource type="Resource" id="Resource_fr1y0"]
+script = ExtResource("22_wt82m")
+player = NodePath("AnimationPlayer")
+
+[sub_resource type="Resource" id="Resource_dfn38"]
+script = ExtResource("27_bht2x")
+item = ExtResource("4_vaqdj")
+spawn_chance = 1.0
+
+[sub_resource type="Resource" id="Resource_pnqnt"]
+script = ExtResource("27_bht2x")
+item = ExtResource("25_1kho4")
+spawn_chance = 1.0
+
+[sub_resource type="Resource" id="Resource_o7to1"]
+script = ExtResource("27_bht2x")
+item = ExtResource("6_vtm68")
+spawn_chance = 1.0
+
+[sub_resource type="Resource" id="Resource_3om2b"]
+script = ExtResource("25_oumgv")
+name = "Spawner Name"
+spawner_items = Array[ExtResource("26_gbkuy")]([SubResource("Resource_dfn38"), SubResource("Resource_pnqnt"), SubResource("Resource_o7to1")])
+
+[sub_resource type="Resource" id="Resource_htn1n"]
+script = ExtResource("14_1o3fy")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.278821, -0.032787, -7.18647)
+
+[sub_resource type="Resource" id="Resource_qn2nw"]
+script = ExtResource("14_1o3fy")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.17543, -0.032787, -7.18647)
+
+[sub_resource type="Resource" id="Resource_cua02"]
+script = ExtResource("14_1o3fy")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15.7861, -0.032787, -7.18647)
 
 [sub_resource type="BoxMesh" id="BoxMesh_leccv"]
 
@@ -97,18 +157,23 @@ item_resource = ExtResource("7_nqkuy")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23.7481, 0, 2.75081)
 item_resource = ExtResource("5_uedm4")
 
+[node name="KeyPickup3" parent="Entities" instance=ExtResource("3_b6amu")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.3588, -1.90735e-06, 4.14358)
+item_resource = ExtResource("7_41myo")
+quantity = 55
+
 [node name="SquirtGunPickup" parent="Entities" instance=ExtResource("3_b6amu")]
 transform = Transform3D(-4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 0, 0, 1, -0.404482, 0.193465, 1.79263)
-weapon_resource = ExtResource("6_vtm68")
+item_resource = ExtResource("6_vtm68")
 quantity = 100
 
 [node name="SodaCanPickup" parent="Entities" instance=ExtResource("3_b6amu")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.11548, 0.193465, 6.80734)
-weapon_resource = ExtResource("8_f7emr")
+item_resource = ExtResource("8_f7emr")
 quantity = 99
 
 [node name="EPlayer" parent="Entities" instance=ExtResource("7_4pqio")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.195613, -3.8147e-06, 1.705)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -21.3265, -3.8147e-06, 2.30034)
 
 [node name="EAimPoint" parent="Entities" instance=ExtResource("8_ib406")]
 
@@ -122,6 +187,21 @@ component_resources = Array[ExtResource("13_pvfgj")]([SubResource("Resource_l81d
 
 [node name="ESearchable" parent="Entities" instance=ExtResource("25_ugmww")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.62087, -0.032787, -7.18647)
+
+[node name="ESearchable2" parent="Entities" instance=ExtResource("25_ugmww")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.278821, -0.032787, -7.18647)
+component_resources = Array[ExtResource("13_pvfgj")]([SubResource("Resource_bv3gi"), SubResource("Resource_flfc2"), SubResource("Resource_fr1y0"), SubResource("Resource_3om2b"), SubResource("Resource_htn1n")])
+
+[node name="ESearchable3" parent="Entities" instance=ExtResource("25_ugmww")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.17543, -0.032787, -7.18647)
+component_resources = Array[ExtResource("13_pvfgj")]([SubResource("Resource_bv3gi"), SubResource("Resource_flfc2"), SubResource("Resource_fr1y0"), SubResource("Resource_3om2b"), SubResource("Resource_qn2nw")])
+
+[node name="ESearchable4" parent="Entities" instance=ExtResource("25_ugmww")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15.7861, -0.032787, -7.18647)
+component_resources = Array[ExtResource("13_pvfgj")]([SubResource("Resource_bv3gi"), SubResource("Resource_flfc2"), SubResource("Resource_fr1y0"), SubResource("Resource_3om2b"), SubResource("Resource_cua02")])
+
+[node name="EBreakable" parent="Entities" instance=ExtResource("29_lvp5t")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.4632, 0, 9.58293)
 
 [node name="Props" type="Node" parent="."]
 
