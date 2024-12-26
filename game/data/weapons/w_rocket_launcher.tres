@@ -1,0 +1,34 @@
+[gd_resource type="Resource" script_class="C_Weapon" load_steps=10 format=3 uid="uid://i85ck4obkc86"]
+
+[ext_resource type="Script" path="res://game/components/weapon/c_weapon.gd" id="1_a85vg"]
+[ext_resource type="Script" path="res://game/actions/inventory_actions/a_shoot_projectile.gd" id="1_hlcla"]
+[ext_resource type="Texture2D" uid="uid://dr5wn4pcfwurv" path="res://game/assets/weapons/rocket_launcher/rocketlauncher.png" id="2_ajl1u"]
+[ext_resource type="Resource" uid="uid://co66mdtvcy37t" path="res://game/data/projectiles/rocket_launcher_projectile.tres" id="3_cbra0"]
+[ext_resource type="PackedScene" uid="uid://hcr8mnmw21fr" path="res://game/assets/weapons/rocket_launcher/rocket_launcher_visuals.tscn" id="4_1c1q6"]
+[ext_resource type="Script" path="res://game/components/rendering/c_visuals.gd" id="5_ghwit"]
+
+[sub_resource type="Resource" id="Resource_rpn2k"]
+script = ExtResource("1_hlcla")
+meta = {
+"description": "This is the default action that is executed when no other action is assigned",
+"name": "Default Action"
+}
+
+[sub_resource type="Resource" id="Resource_f0rlj"]
+script = ExtResource("5_ghwit")
+packed_scene = ExtResource("4_1c1q6")
+
+[sub_resource type="Resource" id="Resource_fhhfc"]
+script = ExtResource("5_ghwit")
+packed_scene = ExtResource("4_1c1q6")
+
+[resource]
+script = ExtResource("1_a85vg")
+weapon_visuals = SubResource("Resource_fhhfc")
+projectile = ExtResource("3_cbra0")
+icon = ExtResource("2_ajl1u")
+name = "Rocket Launcher"
+description = "YOOO! A ROCKET LAUNCHER!"
+visuals = SubResource("Resource_f0rlj")
+action = SubResource("Resource_rpn2k")
+hidden = false

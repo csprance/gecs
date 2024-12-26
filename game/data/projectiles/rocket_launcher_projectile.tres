@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="C_Projectile" load_steps=8 format=3 uid="uid://co66mdtvcy37t"]
+
+[ext_resource type="Script" path="res://game/components/weapon/c_heavy_damage.gd" id="1_pj2qk"]
+[ext_resource type="Script" path="res://game/components/weapon/c_projectile.gd" id="1_xwudj"]
+[ext_resource type="PackedScene" uid="uid://btba2p445ljld" path="res://game/assets/vfx/vfx_explosion.tscn" id="2_r2xnh"]
+[ext_resource type="PackedScene" uid="uid://xwnxhfr0n461" path="res://game/assets/weapons/rocket_launcher/projectile_rocket_launcher_visuals.tscn" id="4_nlv7b"]
+[ext_resource type="Script" path="res://game/components/rendering/c_visuals.gd" id="5_n4f7h"]
+
+[sub_resource type="Resource" id="Resource_qn251"]
+script = ExtResource("1_pj2qk")
+amount = 5
+
+[sub_resource type="Resource" id="Resource_yvmaf"]
+script = ExtResource("5_n4f7h")
+packed_scene = ExtResource("4_nlv7b")
+
+[resource]
+script = ExtResource("1_xwudj")
+visuals = SubResource("Resource_yvmaf")
+damage_component = SubResource("Resource_qn251")
+collision_radius = 0.1
+speed = 10.0
+lifetime = 7.0
+affected_by_gravity = false
+explosive_radius = 2.0
+initial_velocity = Vector3(0, 0, 3)
+impact_effect = ExtResource("2_r2xnh")
