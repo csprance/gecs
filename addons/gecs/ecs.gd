@@ -45,6 +45,10 @@ func _on_world_exited() -> void:
 
 ## Are we in debug mode?
 var debug := false
+## This is an array of functions that get called on the entities when they get added to the world (but before they are ready)
+var entity_preprocessors: Array[Callable] = []
+## This is an array of functions that get called on the entities right before they get removed from the world
+var entity_postprocessors : Array[Callable]= []
 
 ## This is called to process the current active [World] instance and the [System]s within it.
 ## You would call this in _process or _physics_process to update the [_ECS] system.[br]

@@ -120,6 +120,9 @@ func add_entity(entity: Entity, components = null) -> void:
 
 	if components:
 		entity.add_components(components)
+	
+	for processor in ECS.entity_preprocessors:
+		processor.call(entity)
 
 ## Adds multiple entities to the world.[br]
 ## @param _entities An array of entities to add.[br]
@@ -137,6 +140,8 @@ func add_entities(_entities: Array, components = null):
 ##      [codeblock]world.remove_entity(player_entity)[/codeblock]
 func remove_entity(entity) -> void:
 	entity = entity as Entity
+	for processor in ECS.entity_postprocessors:
+		processor.call(entity)
 	entity_removed.emit(entity)
 	_worldLogger.debug('remove_entity Removing Entity: ', entity)
 	entities.erase(entity) # FIXME: This doesn't always work for some reason?
