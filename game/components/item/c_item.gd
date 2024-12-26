@@ -20,10 +20,11 @@ extends Component
 @export var hidden:= false
 
 ## Creates a barebones entity with the item component and returns it
-func make_entity(qty: int) -> Entity:
+func make_entity(qty: int, extra_components= [C_InInventory.new()]) -> Entity:
 	var entity = Entity.new()
 	entity.name = '-'.join([name, entity.get_instance_id()])
-	entity.add_components([self, C_InInventory.new(), C_Quantity.new(qty)])
+	entity.add_components([self, C_Quantity.new(qty)])
+	entity.add_components(extra_components)
 	if hidden:
 		entity.add_component(C_HideInQuickBar.new())
 	
