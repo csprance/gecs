@@ -39,7 +39,7 @@ func projectile_collision_subsys(e_projectile, _delta: float):
 	# If it's a hitbox damage the parent entity of the hitbox
 	if collider is Hitbox3D:
 		var hitbox = collider as Hitbox3D
-		hitbox.parent.add_component(C_Damage.new(c_projectile.damage_component.amount))
+		hitbox.parent.add_component(c_projectile.damage_component)
 	
 	# If it's an explosive we need to damage all entities within the explosion radius
 	if c_projectile.explosive_radius > 0:
