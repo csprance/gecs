@@ -46,7 +46,7 @@ func projectile_collision_subsys(e_projectile, _delta: float):
 		var bodies = e_projectile.explosion_radius.get_overlapping_bodies()
 		for body in bodies:
 			if body is Hitbox3D:
-				body.parent.add_component(C_Damage.new(c_projectile.damage_component.amount))
+				body.parent.add_component(c_projectile.damage_component)
 
 	# end of the road if we didn't return we crashed into something and can't move anymore
 	_handle_impact(e_projectile, c_projectile, c_collision)
