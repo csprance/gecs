@@ -1,3 +1,4 @@
+@icon('res://game/assets/icons/anchor.svg')
 extends Node
 
 @export_category("Scenes")
@@ -10,15 +11,12 @@ extends Node
 
 @export_category("Entities")
 @export var pickup_scene: PackedScene
-
+@export var exit_door_scene: PackedScene
+@export var main_menu_scene: PackedScene
+@export var level_intro_screen: PackedScene
 
 @export_category("Gameplay")
-## How fast the player can move
-@export var player_speed: float = 200.0
-## How fast the zombies can move
-@export var zombie_speed: float = 100.0
-## How much faster the zombies can sprint towards you
-@export var zombie_sprint_mult: float = 200.0
+
 
 @export_category("Colors")
 @export var color_black: Color = Color(0, 0, 0, 1)
@@ -33,3 +31,4 @@ func level_by_password(password: String) -> LevelResource:
 			return level
 	
 	return levels[0] # Default to the first level
+	
