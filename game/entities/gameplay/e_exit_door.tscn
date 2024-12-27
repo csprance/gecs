@@ -1,0 +1,54 @@
+[gd_scene load_steps=12 format=3 uid="uid://b6o74bgvdggyd"]
+
+[ext_resource type="Script" path="res://addons/gecs/entity.gd" id="1_b5bk4"]
+[ext_resource type="Script" path="res://addons/gecs/component.gd" id="2_hkl5a"]
+[ext_resource type="Script" path="res://game/components/gameplay/c_transform.gd" id="3_xqnx1"]
+[ext_resource type="Script" path="res://game/lib/component_area.gd" id="4_kvinh"]
+[ext_resource type="Script" path="res://game/actions/component_area_actions/component_area_action.gd" id="5_38t2m"]
+[ext_resource type="Script" path="res://game/actions/component_area_actions/aa_exit_level.gd" id="6_nb4pa"]
+
+[sub_resource type="Resource" id="Resource_alafj"]
+script = ExtResource("3_xqnx1")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+
+[sub_resource type="Resource" id="Resource_h4bpg"]
+script = ExtResource("6_nb4pa")
+meta = {
+"description": "The player is exiting the level",
+"name": "Exit Level"
+}
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_m07fp"]
+size = Vector3(2.13503, 3.18524, 0.64191)
+
+[sub_resource type="BoxMesh" id="BoxMesh_dhb21"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_7mxop"]
+albedo_color = Color(0, 0, 0, 1)
+
+[node name="EExitDoor" type="Node3D"]
+script = ExtResource("1_b5bk4")
+component_resources = Array[ExtResource("2_hkl5a")]([SubResource("Resource_alafj")])
+
+[node name="Label3D" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1.0873, 0, 0, 0, 0.201152, -0.00196075, 3.74019, 0.00500456)
+text = "EXIT"
+font_size = 120
+uppercase = true
+
+[node name="Area3D" type="Area3D" parent="." node_paths=PackedStringArray("parent")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.836624, 0)
+collision_layer = 0
+collision_mask = 8
+script = ExtResource("4_kvinh")
+parent = NodePath("..")
+actions = Array[ExtResource("5_38t2m")]([SubResource("Resource_h4bpg")])
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Area3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0202539, 0.861176, -0.0177323)
+shape = SubResource("BoxShape3D_m07fp")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+transform = Transform3D(2, 0, 0, 0, 3.242, 0, 0, 0, 0.402, 0, 1.63657, 0)
+mesh = SubResource("BoxMesh_dhb21")
+surface_material_override/0 = SubResource("StandardMaterial3D_7mxop")
