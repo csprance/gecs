@@ -23,5 +23,5 @@ speed = 10.0
 lifetime = 7.0
 affected_by_gravity = false
 explosive_radius = 2.0
-initial_velocity = Vector3(0, 0, 3)
+initial_velocity = Vector3(0, 0, 0)
 impact_effect = ExtResource("2_r2xnh")
