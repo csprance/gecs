@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="C_ItemSpawner" load_steps=5 format=3 uid="uid://dbx4h3g85ew4h"]
+
+[ext_resource type="Script" path="res://game/components/item/c_item_spawner.gd" id="1_y01oi"]
+[ext_resource type="Script" path="res://game/components/item/c_item_spawner_item.gd" id="2_hhx86"]
+[ext_resource type="Resource" uid="uid://c2njvh8tdqqem" path="res://game/data/weapons/w_water_pistol.tres" id="3_oalae"]
+
+[sub_resource type="Resource" id="Resource_1x5gi"]
+script = ExtResource("2_hhx86")
+item = ExtResource("3_oalae")
+spawn_chance = 1.0
+
+[resource]
+script = ExtResource("1_y01oi")
+name = "Weapon Spawner"
+spawner_items = Array[ExtResource("2_hhx86")]([SubResource("Resource_1x5gi")])

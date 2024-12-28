@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="C_Item" load_steps=8 format=3 uid="uid://32qy231kdit2"]
+
+[ext_resource type="Script" path="res://game/actions/inventory_actions/a_use_speed_shoes.gd" id="1_38muk"]
+[ext_resource type="Texture2D" uid="uid://b4ueuif8f8npe" path="res://game/assets/icons/icon.svg" id="1_pf2f1"]
+[ext_resource type="Script" path="res://game/components/item/c_item.gd" id="1_yrnd5"]
+[ext_resource type="PackedScene" uid="uid://bjxfku3ofhku" path="res://game/assets/items/speed_shoes_visuals.tscn" id="3_a8j6c"]
+[ext_resource type="Script" path="res://game/components/rendering/c_visuals.gd" id="4_vtaap"]
+
+[sub_resource type="Resource" id="Resource_pa28e"]
+script = ExtResource("1_38muk")
+meta = {
+"description": "Use the speed shoes and apply a sprinting component for a specific time",
+"name": "Use Speed Shoes"
+}
+
+[sub_resource type="Resource" id="Resource_mc7lk"]
+script = ExtResource("4_vtaap")
+packed_scene = ExtResource("3_a8j6c")
+
+[resource]
+script = ExtResource("1_yrnd5")
+icon = ExtResource("1_pf2f1")
+name = "Speed Shoes"
+description = "These shoes make you run fast like sanic"
+visuals = SubResource("Resource_mc7lk")
+action = SubResource("Resource_pa28e")
+hidden = false

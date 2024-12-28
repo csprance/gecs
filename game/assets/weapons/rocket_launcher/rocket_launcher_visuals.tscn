@@ -1,0 +1,9 @@
+[gd_scene load_steps=2 format=3 uid="uid://hcr8mnmw21fr"]
+
+[ext_resource type="PackedScene" uid="uid://rlkb0vhajit0" path="res://game/assets/weapons/rocket_launcher/rocket_launcher.fbx" id="1_jawkl"]
+
+[node name="Visuals" type="Node3D"]
+
+[node name="rocket_launcher" parent="." instance=ExtResource("1_jawkl")]
+
+[editable path="rocket_launcher"]

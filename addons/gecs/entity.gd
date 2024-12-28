@@ -30,6 +30,8 @@ signal relationship_added(entity: Entity, relationship: Relationship)
 ## Emit when a [Relationship] is removed from the [Entity]
 signal relationship_removed(entity: Entity, relationship: Relationship)
 
+## Is this entity active? (Will show up in queries)
+@export var enabled: bool = true
 ## [Component]s to be attached to the entity set in the editor. These will be loaded for you and added to the [Entity]
 @export var component_resources: Array[Component] = []
 
@@ -37,7 +39,6 @@ signal relationship_removed(entity: Entity, relationship: Relationship)
 var components: Dictionary = {}
 ## Relationships attached to the entity
 var relationships: Array[Relationship] = []
-
 
 ## Logger for entities to only log to a specific domain
 var _entityLogger = GECSLogger.new().domain('Entity')
@@ -52,10 +53,20 @@ func _ready() -> void:
 func initialize():
 	_entityLogger.trace('_ready Entity Initializing Components: ', self)
 	component_resources.append_array(define_components())
+	# remove any component_resources that are already defined in components
+	# This is useful for when you instantiate an entity from a scene and want to overide components
+	for component in component_resources:
+		if has_component(component.get_script()):
+			component_resources.erase(component)
 	# Initialize components from the exported array
 	for res in component_resources:
 		add_component(res.duplicate(true))
+
 	on_ready()
+
+## ##################################
+## Components
+## ##################################
 
 ## Adds a single component to the entity.[br]
 ## [param component] - The subclass of [Component] to add[br]
@@ -109,10 +120,14 @@ func get_component(component: Variant) -> Component:
 func has_component(component: Variant) -> bool:
 	return components.has(component.resource_path)
 
+## ##################################
+## Relationships
+## ##################################
 
 ## Adds a relationship to this entity.[br]
 ## [param relationship] The [Relationship] to add.
 func add_relationship(relationship: Relationship) -> void:
+	relationship.source = self
 	relationships.append(relationship)
 	relationship_added.emit(self, relationship)
 
@@ -138,29 +153,39 @@ func remove_relationships(_relationships: Array):
 ## Retrieves a specific [Relationship] from the entity.
 ## [param relationship] The [Relationship] to retrieve.
 ## [param return] - The FIRST matching [Relationship] if it exists, otherwise `null`.
-func get_relationship(relationship: Relationship) -> Relationship:
+func get_relationship(relationship: Relationship, single=true):
+	var results = []
 	var to_remove = []
 	for rel in relationships:
-		# Check if the target is still valid
-		if rel.target is Object and not is_instance_valid(rel.target):
+		# Check if the relationship is valid
+		if not rel.valid():
 			to_remove.append(rel)
 			continue
 		if rel.matches(relationship):
-			return rel
+			if single:
+				return rel
+			results.append(rel)
 	# Remove invalid relationships
 	for rel in to_remove:
 		relationships.erase(rel)
 		relationship_removed.emit(self, rel)
-	return null
+	
+	return null if results.is_empty() else results
 
+## Retrieves [Relationship]s from the entity.
+## [param relationship] The [Relationship]s to retrieve.
+## [param return] - All matching [Relationship]s if it exists, otherwise `null`.
+func get_relationships(relationship: Relationship) -> Array:
+	return get_relationship(relationship, false)
 
 ## Checks if the entity has a specific relationship.[br]
 ## [param relationship] The [Relationship] to check for.
 func has_relationship(relationship: Relationship) -> bool:
 	return get_relationship(relationship) != null
 
-
+## ##################################
 # Lifecycle methods
+## ##################################
 
 ## Called after the entity is fully initialized and ready.[br]
 ## Override this method to perform additional setup after all components have been added.
@@ -178,42 +203,15 @@ func on_update(delta: float) -> void:
 func on_destroy() -> void:
 	pass
 
+## Called when the entity is disabled.[br]
+func on_disable() -> void:
+	pass
+
+## Called when the entity is enabled.[br]
+func on_enable() -> void:
+	pass
+
 ## Define the default components in code to use (Instead of in the editor)[br]
 ## This should return a list of components to add by default when the entity is created
 func define_components() -> Array:
 	return []
-
-# Adds a single component or relationship to the entity.
-func add(item) -> void:
-	# Type check is acceptable here since 'add' is called less frequently.
-	if item is Component:
-		add_component(item)
-	elif item is Relationship:
-		add_relationship(item)
-
-# Removes a single component or relationship from the entity.
-func remove(item) -> void:
-	if item is Component:
-		remove_component(item)
-	elif item is Relationship:
-		remove_relationship(item)
-
-# The 'has' method may not be optimal for performance-critical code.
-# Use 'has_component' or 'has_relationship' directly instead.
-func has(item) -> bool:
-	# Avoid using in performance-critical code due to type checking.
-	if item is Component:
-		return has_component(item)
-	elif item is Relationship:
-		return has_relationship(item)
-	return false
-
-# The 'get' method may not be optimal for performance-critical code.
-# Use 'get_component' or 'get_relationship' directly instead.
-func get(item):
-	# Avoid using in performance-critical code due to type checking.
-	if item is Component:
-		return get_component(item)
-	elif item is Relationship:
-		return get_relationship(item)
-	return null

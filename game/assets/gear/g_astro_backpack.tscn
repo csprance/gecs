@@ -1,0 +1,19 @@
+[gd_scene load_steps=3 format=3 uid="uid://dff0wsmml1c7p"]
+
+[ext_resource type="PackedScene" uid="uid://b57t36pdkc5au" path="res://game/assets/gear/gear_base.tscn" id="1_losit"]
+[ext_resource type="PackedScene" uid="uid://bpg3kuydxxarh" path="res://game/assets/characters/accesories/astroBackpack.fbx" id="2_vjaol"]
+
+[node name="Gear" instance=ExtResource("1_losit")]
+
+[node name="BackpackBA" type="BoneAttachment3D" parent="." index="1"]
+transform = Transform3D(100, -7.13166e-07, 2.39509e-05, -2.86951e-07, 99.9168, 4.07902, -2.39702e-05, -4.07902, 99.9168, 0.00101894, 2.18969, 0.0253248)
+bone_name = "UpperChest"
+bone_idx = 22
+use_external_skeleton = true
+external_skeleton = NodePath("../DefaultSkeleton")
+
+[node name="backpack" parent="BackpackBA" index="0" instance=ExtResource("2_vjaol")]
+transform = Transform3D(0.008, 1.77027e-12, 8.87512e-13, -6.93889e-18, 0.008, -5.23869e-10, 0, 2.91038e-11, 0.008, 2.31012e-10, 3.90615e-05, -0.000956824)
+
+[node name="Backpack" parent="Outputs" index="0"]
+transform = Transform3D(1, -7.19337e-09, 2.38974e-07, 1.47673e-08, 0.999467, -0.0326535, -2.38713e-07, 0.0326535, 0.999467, 0.00101894, 1.93181, -0.136444)

@@ -1,0 +1,33 @@
+[gd_resource type="Resource" script_class="C_ItemSpawner" load_steps=11 format=3 uid="uid://dbwgbc3qihhjf"]
+
+[ext_resource type="Script" path="res://game/components/item/c_item_spawner.gd" id="1_170i4"]
+[ext_resource type="Script" path="res://game/components/item/c_item_spawner_item.gd" id="2_iy1rl"]
+[ext_resource type="Resource" uid="uid://bfpi3fqtjk6df" path="res://game/data/items/i_healthkit.tres" id="3_h6u6y"]
+[ext_resource type="Resource" uid="uid://8qrwfaqd303r" path="res://game/data/items/i_cash_pile.tres" id="4_iylq1"]
+[ext_resource type="Resource" uid="uid://ryfenvkpu8gj" path="res://game/data/weapons/w_soda_can.tres" id="5_k6nyf"]
+[ext_resource type="Resource" uid="uid://c2njvh8tdqqem" path="res://game/data/weapons/w_water_pistol.tres" id="6_fpn4d"]
+
+[sub_resource type="Resource" id="Resource_fq3nb"]
+script = ExtResource("2_iy1rl")
+item = ExtResource("3_h6u6y")
+spawn_chance = 1.0
+
+[sub_resource type="Resource" id="Resource_txoxp"]
+script = ExtResource("2_iy1rl")
+item = ExtResource("4_iylq1")
+spawn_chance = 1.0
+
+[sub_resource type="Resource" id="Resource_tutlp"]
+script = ExtResource("2_iy1rl")
+item = ExtResource("5_k6nyf")
+spawn_chance = 1.0
+
+[sub_resource type="Resource" id="Resource_ycoji"]
+script = ExtResource("2_iy1rl")
+item = ExtResource("6_fpn4d")
+spawn_chance = 1.0
+
+[resource]
+script = ExtResource("1_170i4")
+name = "All Item Spawner"
+spawner_items = Array[ExtResource("2_iy1rl")]([SubResource("Resource_fq3nb"), SubResource("Resource_txoxp"), SubResource("Resource_tutlp"), SubResource("Resource_ycoji")])

@@ -11,8 +11,8 @@
             "project": "${workspaceFolder}",
             "debug_collisions": true,
             "debug_paths": true,
-            "debug_navigation": true,
-            "additional_options": ""
+            "debug_navigation": false,
+            "additional_options": "-m --screen 2"
         }
     ]
 }

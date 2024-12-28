@@ -1,0 +1,47 @@
+[gd_scene load_steps=5 format=3 uid="uid://cll20mjce4sg1"]
+
+[ext_resource type="Script" path="res://game/assets/vfx/vfx_score.gd" id="1_se02c"]
+
+[sub_resource type="Animation" id="Animation_3jgvw"]
+resource_name = "rise"
+length = 2.0
+tracks/0/type = "position_3d"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("score")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = PackedFloat32Array(0, 1, 0, 0, 0, 1.96667, 1, 0, 1.42725, 0)
+
+[sub_resource type="Animation" id="Animation_ahvsv"]
+length = 0.001
+tracks/0/type = "position_3d"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("score")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = PackedFloat32Array(0, 1, 0, 0, 0)
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_213eu"]
+_data = {
+&"rise": SubResource("Animation_3jgvw"),
+&"RESET": SubResource("Animation_ahvsv")
+}
+
+[node name="VfxScore" type="Node3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.114767, 0.359474, -0.12462)
+script = ExtResource("1_se02c")
+
+[node name="score" type="Label3D" parent="."]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, 0.903717, 0.428131, 0, -0.428131, 0.903717, 0, 0, 0)
+text = "3000"
+font_size = 150
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+unique_name_in_owner = true
+libraries = {
+&"": SubResource("AnimationLibrary_213eu")
+}
+autoplay = "rise"

@@ -1,0 +1,28 @@
+[gd_scene load_steps=3 format=3 uid="uid://dur5w2e1pycyk"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_wq1vt"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_cka57"]
+albedo_color = Color(0, 0.286275, 0, 1)
+
+[node name="CashPileVisuals" type="Node3D"]
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.441571, 0, 0.562228, 0, 0.237973, 0, -0.300204, 0, 0.826982, 0.293617, 0.0720987, -0.423206)
+mesh = SubResource("BoxMesh_wq1vt")
+surface_material_override/0 = SubResource("StandardMaterial3D_cka57")
+
+[node name="MeshInstance3D2" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.307583, 0, 0.817416, 0, 0.237973, 0, -0.436463, 0, 0.576047, 0.16529, 0.0720985, 0.372667)
+mesh = SubResource("BoxMesh_wq1vt")
+surface_material_override/0 = SubResource("StandardMaterial3D_cka57")
+
+[node name="MeshInstance3D3" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.524891, 0, -0.183471, 0, 0.237973, 0, 0.0979652, 0, 0.983025, 0.342319, 0.310477, -0.157432)
+mesh = SubResource("BoxMesh_wq1vt")
+surface_material_override/0 = SubResource("StandardMaterial3D_cka57")
+
+[node name="MeshInstance3D4" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.524891, 0, -0.183471, 0, 0.237973, 0, 0.0979652, 0, 0.983025, 1.09762, 0.0599104, -0.11051)
+mesh = SubResource("BoxMesh_wq1vt")
+surface_material_override/0 = SubResource("StandardMaterial3D_cka57")

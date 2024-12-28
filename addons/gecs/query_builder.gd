@@ -148,7 +148,9 @@ func execute() -> Array:
 				filtered_entities.append(entity)
 		result = filtered_entities
 	clear()
-	return result
+	return result.filter(func(entity: Entity):
+		return entity.enabled == true
+	)
 
 ## Filter entities based on component queries
 func _filter_entities_by_queries(entities: Array, components: Array, queries: Array, require_all: bool) -> Array:
@@ -197,6 +199,9 @@ func _matches_component_query(component: Component, query: Dictionary) -> bool:
 		
 		for operator in property_query:
 			match operator:
+				"func":
+					if not property_query[operator].call(property_value):
+						return false
 				"_eq":
 					if property_value != property_query[operator]:
 						return false
@@ -224,11 +229,14 @@ func _matches_component_query(component: Component, query: Dictionary) -> bool:
 	
 	return true
 
-## Filters a provided list of entities using the current query criteria.
-## Unlike execute(), this doesn't query the world but instead filters the provided entities.
-## [param entities] Array of entities to filter
-## [param returns] Array of entities that match the query criteria
+## Filters a provided list of entities using the current query criteria.[br]
+## Unlike execute(), this doesn't query the world but instead filters the provided entities.[br][br]
+## [param entities] Array of entities to filter[br]
+## [param returns] Array of entities that match the query criteria[br]
 func matches(entities: Array) -> Array:
+	# if the query is empty all entities match
+	if is_empty():
+		return entities
 	var result = []
 	
 	for entity in entities:
@@ -289,3 +297,10 @@ func combine(other: QueryBuilder) -> QueryBuilder:
 
 func as_array() -> Array:
 	return [_all_components, _any_components, _exclude_components, _relationships, _exclude_relationships]
+
+func is_empty() -> bool:
+	return _all_components.is_empty() and _any_components.is_empty() and _exclude_components.is_empty() and _relationships.is_empty() and _exclude_relationships.is_empty()
+
+
+func compile(query: String) -> QueryBuilder:
+	return QueryBuilder.new(_world)

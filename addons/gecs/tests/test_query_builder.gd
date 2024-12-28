@@ -570,5 +570,3 @@ func test_query_with_component_queries():
 		C_TestD, C_TestE, C_TestA
 	]).execute()
 	assert_array(result).has_size(0)  # Should match no entities
-
-
