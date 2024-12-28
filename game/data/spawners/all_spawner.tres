@@ -1,9 +1,0 @@
-[gd_resource type="Resource" script_class="C_ItemSpawner" load_steps=3 format=3 uid="uid://du0w80med3mj4"]
-
-[ext_resource type="Script" path="res://game/components/item/c_item_spawner.gd" id="1_ri8b1"]
-[ext_resource type="Script" path="res://game/components/item/c_item_spawner_variants.gd" id="2_gfebm"]
-
-[resource]
-script = ExtResource("1_ri8b1")
-name = "All Spawner"
-spawner_items = Array[ExtResource("2_gfebm")]([])

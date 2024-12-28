@@ -1,2 +1,0 @@
-class_name C_RangedAttackCooldown
-extends C_Cooldown
