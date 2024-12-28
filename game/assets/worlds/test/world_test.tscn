@@ -192,18 +192,18 @@ component_resources = Array[ExtResource("13_pvfgj")]([SubResource("Resource_l81d
 [node name="ECamera" parent="Entities" instance=ExtResource("10_osjvc")]
 
 [node name="ESearchable" parent="Entities" instance=ExtResource("25_ugmww")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.62087, -0.032787, -7.18647)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.28904, -0.032787, -6.924)
 
 [node name="ESearchable2" parent="Entities" instance=ExtResource("25_ugmww")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.278821, -0.032787, -7.18647)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.58947, -0.032787, -6.93046)
 component_resources = Array[ExtResource("13_pvfgj")]([SubResource("Resource_bv3gi"), SubResource("Resource_flfc2"), SubResource("Resource_fr1y0"), SubResource("Resource_3om2b"), SubResource("Resource_htn1n")])
 
 [node name="ESearchable3" parent="Entities" instance=ExtResource("25_ugmww")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.17543, -0.032787, -7.18647)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.03732, -0.032787, -6.94327)
 component_resources = Array[ExtResource("13_pvfgj")]([SubResource("Resource_bv3gi"), SubResource("Resource_flfc2"), SubResource("Resource_fr1y0"), SubResource("Resource_3om2b"), SubResource("Resource_qn2nw")])
 
 [node name="ESearchable4" parent="Entities" instance=ExtResource("25_ugmww")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15.7861, -0.032787, -7.18647)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.6706, -0.0472485, -7.1242)
 component_resources = Array[ExtResource("13_pvfgj")]([SubResource("Resource_bv3gi"), SubResource("Resource_flfc2"), SubResource("Resource_fr1y0"), SubResource("Resource_3om2b"), SubResource("Resource_cua02")])
 
 [node name="EBreakable" parent="Entities" instance=ExtResource("29_lvp5t")]
@@ -247,7 +247,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -19.3405, 0, 2.23345)
 [node name="gravestone51" parent="Props" groups=["navigation_mesh_source_group"] instance=ExtResource("17_7ar8e")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -22.9894, -1.90735e-06, -8.87887)
 
-[node name="Floor" type="MeshInstance3D" parent="Props" groups=["navigation_mesh_source_group"]]
+[node name="Floor" type="MeshInstance3D" parent="Props"]
 transform = Transform3D(150, 0, 0, 0, 1, 0, 0, 0, 105, 0, -0.532787, 0)
 mesh = SubResource("BoxMesh_leccv")
 surface_material_override/0 = SubResource("StandardMaterial3D_61ucv")
