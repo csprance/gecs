@@ -1,6 +1,6 @@
 [gd_scene load_steps=34 format=3 uid="uid://dt0gkq2t1eudo"]
 
-[ext_resource type="Script" path="res://addons/gecs/entity.gd" id="1_oww6f"]
+[ext_resource type="Script" path="res://game/entities/gameplay/e_searchable.gd" id="1_3tips"]
 [ext_resource type="Script" path="res://addons/gecs/component.gd" id="2_ptiw5"]
 [ext_resource type="Script" path="res://game/components/gameplay/c_door.gd" id="3_ad5ln"]
 [ext_resource type="Script" path="res://game/actions/interactions/i_open_searchable.gd" id="4_0xx0m"]
@@ -106,7 +106,8 @@ height = 3.22603
 radius = 2.01709
 
 [node name="ESearchable" type="Node3D"]
-script = ExtResource("1_oww6f")
+script = ExtResource("1_3tips")
+enabled = null
 component_resources = Array[ExtResource("2_ptiw5")]([SubResource("Resource_bv3gi"), SubResource("Resource_flfc2"), SubResource("Resource_fr1y0"), SubResource("Resource_3om2b"), SubResource("Resource_fby00")])
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="."]
