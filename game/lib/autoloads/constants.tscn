@@ -12,19 +12,19 @@
 [ext_resource type="PackedScene" uid="uid://bqk4e5e2yfpdf" path="res://game/entities/ui/e_main_menu.tscn" id="7_p5mbr"]
 [ext_resource type="PackedScene" uid="uid://b64rp4jgyoa7r" path="res://game/entities/ui/e_level_intro.tscn" id="8_jpkk2"]
 
-[sub_resource type="Resource" id="Resource_4wqba"]
-script = ExtResource("3_11r4d")
-name = "Test World"
-description = "A Test in Testing World"
-packed_scene = ExtResource("4_jtb2f")
-password = "test"
-
 [sub_resource type="Resource" id="Resource_yr8fu"]
 script = ExtResource("3_11r4d")
 name = "Level One: A Month of Mundane Rage"
 description = "Wait... I thought they were supposed to be fast?"
 packed_scene = ExtResource("5_mxcaw")
 password = "levelone"
+
+[sub_resource type="Resource" id="Resource_4wqba"]
+script = ExtResource("3_11r4d")
+name = "Test World"
+description = "A Test in Testing World"
+packed_scene = ExtResource("4_jtb2f")
+password = "test"
 
 [node name="Constants" type="Node"]
 script = ExtResource("1_efvrk")
@@ -35,4 +35,4 @@ pickup_scene = ExtResource("5_473q0")
 exit_door_scene = ExtResource("6_hfhbw")
 main_menu_scene = ExtResource("7_p5mbr")
 level_intro_screen = ExtResource("8_jpkk2")
-levels = Array[ExtResource("3_11r4d")]([SubResource("Resource_4wqba"), SubResource("Resource_yr8fu")])
+levels = Array[ExtResource("3_11r4d")]([SubResource("Resource_yr8fu"), SubResource("Resource_4wqba")])
