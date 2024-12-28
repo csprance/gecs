@@ -16,7 +16,7 @@ func sub_systems():
 	]
 
 func breakable_damage_subsys(entity, delta):
-	var c_heavy_damage = entity.get_component(C_Damage) as C_Damage
+	var c_heavy_damage = entity.get_component(C_HeavyDamage) as C_HeavyDamage
 	var c_health = entity.get_component(C_Health) as C_Health
 
 	c_health.current -= c_heavy_damage.amount
@@ -46,4 +46,3 @@ func health_damage_subsys(entity: Entity, _delta: float):
 	
 	if entity is Player:
 		GameState.health_changed.emit(c_health.current)
-
