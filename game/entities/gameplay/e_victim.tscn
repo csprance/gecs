@@ -1,4 +1,4 @@
-[gd_scene load_steps=20 format=3 uid="uid://bm6p3cjvxyqmy"]
+[gd_scene load_steps=22 format=3 uid="uid://bm6p3cjvxyqmy"]
 
 [ext_resource type="Script" path="res://game/entities/gameplay/e_victim.gd" id="1_7dyc1"]
 [ext_resource type="PackedScene" uid="uid://cvroricp14108" path="res://game/assets/characters/models/characterMedium.fbx" id="2_df2ty"]
@@ -10,6 +10,7 @@
 [ext_resource type="Script" path="res://game/actions/component_area_actions/component_area_action.gd" id="5_160ya"]
 [ext_resource type="Script" path="res://game/components/debug/c_debug_label.gd" id="5_nvb7j"]
 [ext_resource type="Script" path="res://game/components/gameplay/c_reward.gd" id="6_f4e75"]
+[ext_resource type="Script" path="res://game/components/gameplay/c_victim.gd" id="7_5mwmj"]
 [ext_resource type="Script" path="res://game/actions/component_area_actions/aa_kill_or_save.gd" id="10_d8660"]
 
 [sub_resource type="Resource" id="Resource_l81d8"]
@@ -29,6 +30,9 @@ offset = Vector3(0, 3, 0)
 [sub_resource type="Resource" id="Resource_el3mr"]
 script = ExtResource("6_f4e75")
 points = 500
+
+[sub_resource type="Resource" id="Resource_y8epx"]
+script = ExtResource("7_5mwmj")
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_l2ami"]
 albedo_texture = ExtResource("3_wimem")
@@ -50,7 +54,7 @@ height = 3.44898
 
 [node name="EVictim" type="Node3D"]
 script = ExtResource("1_7dyc1")
-component_resources = Array[ExtResource("2_f45rw")]([SubResource("Resource_l81d8"), SubResource("Resource_15ijl"), SubResource("Resource_cagx0"), SubResource("Resource_el3mr")])
+component_resources = Array[ExtResource("2_f45rw")]([SubResource("Resource_l81d8"), SubResource("Resource_15ijl"), SubResource("Resource_cagx0"), SubResource("Resource_el3mr"), SubResource("Resource_y8epx")])
 
 [node name="Root Scene" parent="." instance=ExtResource("2_df2ty")]
 

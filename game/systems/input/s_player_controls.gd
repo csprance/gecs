@@ -41,7 +41,18 @@ func sub_systems():
 			ECS.world.query.with_all([C_Player, C_PlayerDirection, C_Transform, C_LookAt]),
 			player_direction_subsystem
 		],
+		## Controller Subsystem
+		[
+			## Entity is the player and has a controller component
+			ECS.world.query.with_all([C_Player, {C_ControlScheme: {'control_scheme': {"_eq": C_ControlScheme.ControlScheme.CONTROLLER}}}]),
+			controller_subsystem
+		],
 	]
+
+func controller_subsystem(entity: Entity, _delta: float) -> void:
+	if Input.is_action_just_pressed('controller_toggle'):
+		var c_control_scheme = entity.get_component(C_ControlScheme) as C_ControlScheme
+		c_control_scheme.control_scheme = C_ControlScheme.ControlScheme.CONTROLLER
 
 
 func player_input_subsystem(entity: Entity, _delta: float) -> void:
@@ -58,14 +69,6 @@ func player_input_subsystem(entity: Entity, _delta: float) -> void:
 	if Input.is_action_just_pressed('pause_toggle'):
 		GameState.paused = not GameState.paused
 		Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE if GameState.paused else Input.MOUSE_MODE_CONFINED_HIDDEN)
-
-	var up_strength = Input.get_action_strength("cursor_up")
-	var left_strength = Input.get_action_strength("cursor_left")
-	var down_strength = Input.get_action_strength("cursor_down")
-	var right_strength = Input.get_action_strength("cursor_right")
-	var mouse_pos = get_viewport().get_mouse_position()
-	mouse_pos += Vector2(right_strength - left_strength, down_strength - up_strength) * 25
-	Input.warp_mouse(mouse_pos)
 
 
 func item_subsystem(entity: Entity, _delta: float) -> void:

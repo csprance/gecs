@@ -1,0 +1,34 @@
+[gd_resource type="Resource" script_class="C_Weapon" load_steps=10 format=3 uid="uid://dbkfjl3onrmo7"]
+
+[ext_resource type="Texture2D" uid="uid://bewu12lynpslo" path="res://game/assets/weapons/shotgun/shotgun.png" id="1_3upns"]
+[ext_resource type="Script" path="res://game/components/weapon/c_weapon.gd" id="1_5gyoy"]
+[ext_resource type="Script" path="res://game/actions/inventory_actions/a_shoot_projectile.gd" id="1_fx50v"]
+[ext_resource type="PackedScene" uid="uid://cq6udbven0r3x" path="res://game/assets/weapons/shotgun/shotgun_visuals.tscn" id="3_3ug76"]
+[ext_resource type="Resource" uid="uid://huyhpv7ieg4q" path="res://game/data/projectiles/shotgun_projectile.tres" id="3_lj035"]
+[ext_resource type="Script" path="res://game/components/rendering/c_visuals.gd" id="4_yrni3"]
+
+[sub_resource type="Resource" id="Resource_hrwyb"]
+script = ExtResource("1_fx50v")
+meta = {
+"description": "This action is called from the shotgun",
+"name": "Shoot Shotgun"
+}
+
+[sub_resource type="Resource" id="Resource_04g4x"]
+script = ExtResource("4_yrni3")
+packed_scene = ExtResource("3_3ug76")
+
+[sub_resource type="Resource" id="Resource_tmgbo"]
+script = ExtResource("4_yrni3")
+packed_scene = ExtResource("3_3ug76")
+
+[resource]
+script = ExtResource("1_5gyoy")
+weapon_visuals = SubResource("Resource_tmgbo")
+projectile = ExtResource("3_lj035")
+icon = ExtResource("1_3upns")
+name = "Shotgun"
+description = "Has a large scatter radius good for kiling lots of zombies"
+visuals = SubResource("Resource_04g4x")
+action = SubResource("Resource_hrwyb")
+hidden = false

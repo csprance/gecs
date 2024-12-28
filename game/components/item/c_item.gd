@@ -8,7 +8,7 @@ extends Component
 @export var name:= '|EMPTY|'
 ## The Description of the item
 @export var description:= '|EMPTY|'
-## The visuals for the item as it exists in the world
+## The visuals for the item as it exists in the world (not just on ground)
 @export var visuals: C_Visuals
 ## The inventory action that is called when the item is used
 @export var action: InventoryAction

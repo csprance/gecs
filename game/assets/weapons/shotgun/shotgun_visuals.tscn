@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3 uid="uid://cq6udbven0r3x"]
+
+[ext_resource type="PackedScene" uid="uid://3d2eefng0yqs" path="res://game/assets/weapons/shotgun/shotgun.glb" id="1_3ivhn"]
+
+[node name="Visuals" type="Node3D"]
+
+[node name="shotgun2" parent="." instance=ExtResource("1_3ivhn")]

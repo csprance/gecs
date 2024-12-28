@@ -12,46 +12,44 @@ const INTERESTED_SPEED = 1.0
 
 @export var c_projectile: C_Projectile
 
+func base_query(): return ECS.world.query.with_all([C_EvilDollBehavior, C_Transform, C_Enemy, C_Velocity,]).with_none([C_Death])
+
 ## This has sub systems so we can group all these things together
 func sub_systems():
 	return [
 		## Idle
 		[
-			ECS.world.query
-			.with_all([C_EvilDollBehavior, C_Transform, C_Enemy, C_Velocity, C_InterestRange])
-			.with_none([C_Interested, C_Death])
+			base_query()
+			.with_all([C_InterestRange])
+			.with_none([C_Interested])
 			.without_relationship([Relationships.chasing_anything()]),
 			idle_subsystem
 		],
 		## Chase
 		[
-			ECS.world.query
-			.with_all([C_EvilDollBehavior, C_Transform, C_Enemy, C_Velocity, C_InterestRange])
-			.with_none([C_Death])
+			base_query()
+			.with_all([C_InterestRange])
 			.with_relationship([Relationships.chasing_anything()]),
 			chase_subsystem
 		], 
 		## Interested
 		[
-			ECS.world.query
-			.with_all([C_EvilDollBehavior, C_Transform, C_Enemy, C_Velocity, C_InterestRange, C_Interested])
-			.with_none([C_Death]), 
+			base_query()
+			.with_all([C_InterestRange, C_Interested]),
 			interested_subsystem
 		],
 		## Attack
 		[
-			ECS.world.query
-			.with_all([C_EvilDollBehavior, C_Transform, C_Enemy, C_Velocity])
-			.with_none([C_Death, C_AttackCooldown])
+			base_query()
+			.with_none([C_AttackCooldown])
 			.with_relationship([Relationships.attacking_anything()]), 
 			attack_subsystem
 
 		],
 		## Ranged Attack
 		[
-			ECS.world.query
-			.with_all([C_EvilDollBehavior, C_Transform, C_Enemy, C_Velocity])
-			.with_none([C_Death, C_RangedAttackCooldown])
+			base_query()
+			.with_none([C_RangedAttackCooldown])
 			.with_relationship([Relationships.range_attacking_anything()]), 
 			ranged_attack_subsystem
 		],

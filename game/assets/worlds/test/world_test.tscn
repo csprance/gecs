@@ -1,4 +1,4 @@
-[gd_scene load_steps=58 format=3 uid="uid://c8ors4ai4l4if"]
+[gd_scene load_steps=59 format=3 uid="uid://c8ors4ai4l4if"]
 
 [ext_resource type="Script" path="res://addons/gecs/world.gd" id="1_dnklw"]
 [ext_resource type="PackedScene" uid="uid://bsys3gtandv0e" path="res://game/entities/gameplay/e_door.tscn" id="2_els58"]
@@ -11,6 +11,7 @@
 [ext_resource type="Resource" uid="uid://32qy231kdit2" path="res://game/data/items/i_speed_shoes.tres" id="7_nqkuy"]
 [ext_resource type="Resource" uid="uid://ryfenvkpu8gj" path="res://game/data/weapons/w_soda_can.tres" id="8_f7emr"]
 [ext_resource type="PackedScene" uid="uid://x548ueo7udx1" path="res://game/entities/gameplay/e_aim_point.tscn" id="8_ib406"]
+[ext_resource type="Resource" uid="uid://dbkfjl3onrmo7" path="res://game/data/weapons/w_shotgun.tres" id="8_nev33"]
 [ext_resource type="PackedScene" uid="uid://cudyrj1egdocg" path="res://game/entities/ui/hud/e_hud.tscn" id="9_u2l4c"]
 [ext_resource type="PackedScene" uid="uid://vdhm1ygxl2dx" path="res://game/entities/gameplay/e_camera.tscn" id="10_osjvc"]
 [ext_resource type="PackedScene" uid="uid://ex2wx8kwwjjx" path="res://game/systems/default_systems.tscn" id="11_dp1f4"]
@@ -160,6 +161,11 @@ item_resource = ExtResource("5_uedm4")
 [node name="KeyPickup3" parent="Entities" instance=ExtResource("3_b6amu")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.3588, -1.90735e-06, 4.14358)
 item_resource = ExtResource("7_41myo")
+quantity = 55
+
+[node name="KeyPickup4" parent="Entities" instance=ExtResource("3_b6amu")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -23.2946, -1.90735e-06, 4.14358)
+item_resource = ExtResource("8_nev33")
 quantity = 55
 
 [node name="SquirtGunPickup" parent="Entities" instance=ExtResource("3_b6amu")]

@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="C_Projectile" load_steps=7 format=3 uid="uid://huyhpv7ieg4q"]
+
+[ext_resource type="Script" path="res://game/components/weapon/c_projectile.gd" id="1_an0n5"]
+[ext_resource type="Script" path="res://game/components/weapon/c_damage.gd" id="1_bwx1a"]
+[ext_resource type="PackedScene" uid="uid://xu3vwl5in32u" path="res://game/assets/weapons/shotgun/projectile_shotgun_visuals.tscn" id="3_lfl54"]
+[ext_resource type="Script" path="res://game/components/rendering/c_visuals.gd" id="4_hpye3"]
+
+[sub_resource type="Resource" id="Resource_h440e"]
+script = ExtResource("1_bwx1a")
+amount = 3
+
+[sub_resource type="Resource" id="Resource_g5xp6"]
+script = ExtResource("4_hpye3")
+packed_scene = ExtResource("3_lfl54")
+
+[resource]
+script = ExtResource("1_an0n5")
+visuals = SubResource("Resource_g5xp6")
+damage_component = SubResource("Resource_h440e")
+collision_radius = 0.1
+speed = 10.0
+lifetime = 5.0
+affected_by_gravity = false
+explosive_radius = 0.0
+initial_velocity = Vector3(0, 0, 0)
