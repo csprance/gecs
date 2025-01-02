@@ -35,8 +35,11 @@ var world: World:
 		# bring about the end of times for this world
 		if world:
 			world.disconnect("tree_exited", _on_world_exited)
+		# Add the new world to the scene
 		world = value
 		if world:
+			# Add the world to the tree
+			get_tree().root.get_node('./Root').add_child(world)
 			world.connect("tree_exited", _on_world_exited)
 			_show_debug()
 
