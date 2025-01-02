@@ -38,8 +38,9 @@ var world: World:
 		# Add the new world to the scene
 		world = value
 		if world:
-			# Add the world to the tree
-			get_tree().root.get_node('./Root').add_child(world)
+			if not world.is_inside_tree():	
+				# Add the world to the tree if it is not already
+				get_tree().root.get_node('./Root').add_child(world)
 			world.connect("tree_exited", _on_world_exited)
 			_show_debug()
 
