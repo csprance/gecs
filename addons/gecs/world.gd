@@ -52,7 +52,7 @@ var _worldLogger =  GECSLogger.new().domain('World')
 
 ## Called when the World node is ready.[br]
 func _ready() -> void:
-	_initialize()
+	initialize()
 
 func _make_nodes_root(name: String) -> Node:
 	var node = Node.new()
@@ -61,19 +61,19 @@ func _make_nodes_root(name: String) -> Node:
 	return node
 	
 ## Adds [Entity]s and [System]s from the scene tree to the [World].[br]
-## Called when the World node is ready.
-func _initialize():
+## Called when the World node is ready or  when we should re-initialize the world from the tree
+func initialize():
 	# if no entities/systems root node is set create them and use them. This keeps things tidy for debugging
 	entity_nodes_root = _make_nodes_root('Entities').get_path() if not entity_nodes_root else entity_nodes_root
 	system_nodes_root = _make_nodes_root('Systems').get_path() if not system_nodes_root else system_nodes_root
 
 	# Add entities from the scene tree
-	var _entities = find_children('*', "Entity") as Array[Entity]
+	var _entities = get_node(entity_nodes_root).find_children('*', "Entity") as Array[Entity]
 	add_entities(_entities)
 	_worldLogger.debug('_initialize Added Entities from Scene Tree: ', _entities)
 
 	# Add systems from scene tree
-	var _systems  = find_children('*', "System") as Array[System]
+	var _systems  = get_node(system_nodes_root).find_children('*', "System") as Array[System]
 	add_systems(_systems)
 	_worldLogger.debug('_initialize Added Systems from Scene Tree: ', _systems)
 
@@ -156,7 +156,7 @@ func remove_entity(entity) -> void:
 	entity.on_destroy()
 	entity.queue_free()
 
-## Disable an [Entity] from the world. Disable entities don't run process or physics,[br] 
+## Disable an [Entity] from the world. Disabled entities don't run process or physics,[br] 
 ## are hidden and removed the entities list and the[br]
 ## [param entity] The [Entity] to disable.[br]
 ## [b]Example:[/b]
@@ -240,15 +240,18 @@ func remove_system(system) -> void:
 	_worldLogger.debug('remove_system Removing System: ', system)
 	systems.erase(system)
 	systems_by_group[system.group].erase(system)
+	if systems_by_group[system.group].size() == 0:
+		systems_by_group.erase(system.group)
 	system_removed.emit(system)
 	# Update index
 	system.queue_free()
 
-## Removes all [Entity]s and [System]s from the world.
-## Optionally frees the world node by default.
-func purge(should_free=true) -> void:
+## Removes all [Entity]s and [System]s from the world.[br]
+## [param should_free] Optionally frees the world node by default
+## [param keep] A list of entities that should be kept in the world
+func purge(should_free=true, keep := []) -> void:
 	_worldLogger.debug('Purging Entities', entities)
-	for entity in entities.duplicate():
+	for entity in entities.duplicate().filter(func(x): return not keep.has(x)):
 		remove_entity(entity)
 	_worldLogger.debug('Purging Systems', systems)
 	for system in systems.duplicate():
