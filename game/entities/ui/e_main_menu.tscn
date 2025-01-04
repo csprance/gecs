@@ -26,6 +26,8 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
 
 [node name="BG" type="ColorRect" parent="CanvasLayer/Wrapper"]
 layout_mode = 1
@@ -45,21 +47,25 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-metadata/_edit_use_anchors_ = true
 
-[node name="PasswordText" type="RichTextLabel" parent="CanvasLayer/Wrapper/PasswordScreen"]
+[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/Wrapper/PasswordScreen"]
+custom_minimum_size = Vector2(900, 0)
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -401.0
-offset_top = -249.0
-offset_right = 401.0
-offset_bottom = -41.0
+offset_left = -4.0
+offset_top = -188.0
+offset_right = 4.0
+offset_bottom = 188.0
 grow_horizontal = 2
 grow_vertical = 2
+alignment = 1
+
+[node name="PasswordText" type="RichTextLabel" parent="CanvasLayer/Wrapper/PasswordScreen/VBoxContainer"]
+layout_mode = 2
 theme = ExtResource("3_e40tu")
 theme_override_colors/default_color = Color(0, 0.517647, 0, 1)
 theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
@@ -70,37 +76,18 @@ theme_override_constants/shadow_outline_size = 12
 theme_override_fonts/normal_font = ExtResource("3_dxyum")
 theme_override_font_sizes/normal_font_size = 200
 text = "Password"
+fit_content = true
+horizontal_alignment = 1
 
-[node name="PasswordInput" type="TextEdit" parent="CanvasLayer/Wrapper/PasswordScreen"]
+[node name="PasswordInput" type="LineEdit" parent="CanvasLayer/Wrapper/PasswordScreen/VBoxContainer"]
 unique_name_in_owner = true
-layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -177.0
-offset_top = 10.0
-offset_right = 177.0
-offset_bottom = 84.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_font_sizes/font_size = 42
-placeholder_text = "Enter password"
+layout_mode = 2
+theme_override_font_sizes/font_size = 46
+placeholder_text = "Enter Password"
+alignment = 1
 
-[node name="StartWithPassword" type="RichTextLabel" parent="CanvasLayer/Wrapper/PasswordScreen"]
-layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -71.5
-offset_top = 129.0
-offset_right = 71.5
-offset_bottom = 197.0
-grow_horizontal = 2
-grow_vertical = 2
+[node name="StartWithPassword" type="RichTextLabel" parent="CanvasLayer/Wrapper/PasswordScreen/VBoxContainer"]
+layout_mode = 2
 theme = ExtResource("3_e40tu")
 theme_override_colors/default_color = Color(0, 0.517647, 0, 1)
 theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
@@ -109,33 +96,88 @@ theme_override_constants/outline_size = 10
 theme_override_constants/shadow_offset_x = 3
 theme_override_constants/shadow_outline_size = 12
 theme_override_fonts/normal_font = ExtResource("3_dxyum")
-theme_override_font_sizes/normal_font_size = 60
+theme_override_font_sizes/normal_font_size = 115
 bbcode_enabled = true
 text = "[url]start[/url]"
+fit_content = true
+horizontal_alignment = 1
 meta_underlined = false
 hint_underlined = false
 
 [node name="MenuScreen" type="Control" parent="CanvasLayer/Wrapper"]
 unique_name_in_owner = true
-anchors_preset = 0
-offset_left = 864.0
-offset_top = 505.373
-offset_right = 904.0
-offset_bottom = 545.373
-
-[node name="Start" type="RichTextLabel" parent="CanvasLayer/Wrapper/MenuScreen"]
 layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -20.0
-offset_top = -20.0
-offset_right = 123.0
-offset_bottom = 48.0
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/Wrapper/MenuScreen"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="RotateGroup" type="Control" parent="CanvasLayer/Wrapper/MenuScreen/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/Wrapper/MenuScreen/VBoxContainer/RotateGroup"]
+layout_mode = 1
+anchors_preset = 14
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_top = -146.0
+offset_bottom = 146.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Zombies" type="RichTextLabel" parent="CanvasLayer/Wrapper/MenuScreen/VBoxContainer/RotateGroup/VBoxContainer"]
+layout_mode = 2
+theme = ExtResource("3_e40tu")
+theme_override_colors/default_color = Color(0, 0.517647, 0, 1)
+theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 10
+theme_override_constants/shadow_offset_x = 3
+theme_override_constants/shadow_outline_size = 12
+theme_override_fonts/normal_font = ExtResource("3_dxyum")
+theme_override_font_sizes/normal_font_size = 200
+text = "Zombies Attack!"
+fit_content = true
+horizontal_alignment = 1
+
+[node name="My" type="RichTextLabel" parent="CanvasLayer/Wrapper/MenuScreen/VBoxContainer/RotateGroup/VBoxContainer"]
+layout_mode = 2
+theme = ExtResource("3_e40tu")
+theme_override_colors/default_color = Color(0, 0.517647, 0, 1)
+theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 10
+theme_override_constants/shadow_offset_x = 3
+theme_override_constants/shadow_outline_size = 12
+theme_override_fonts/normal_font = ExtResource("3_dxyum")
+theme_override_font_sizes/normal_font_size = 80
+text = "Mayhem Nextdoor"
+fit_content = true
+horizontal_alignment = 1
+
+[node name="MarginContainer" type="MarginContainer" parent="CanvasLayer/Wrapper/MenuScreen/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/margin_right = 55
+theme_override_constants/margin_bottom = 55
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/Wrapper/MenuScreen/VBoxContainer/MarginContainer"]
+layout_mode = 2
+
+[node name="Start" type="RichTextLabel" parent="CanvasLayer/Wrapper/MenuScreen/VBoxContainer/MarginContainer/VBoxContainer"]
+clip_contents = false
+layout_mode = 2
+size_flags_vertical = 3
 theme = ExtResource("3_e40tu")
 theme_override_colors/default_color = Color(0, 0.517647, 0, 1)
 theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
@@ -147,22 +189,15 @@ theme_override_fonts/normal_font = ExtResource("3_dxyum")
 theme_override_font_sizes/normal_font_size = 60
 bbcode_enabled = true
 text = "[url]start[/url]"
+fit_content = true
+horizontal_alignment = 2
 meta_underlined = false
 hint_underlined = false
 
-[node name="Password" type="RichTextLabel" parent="CanvasLayer/Wrapper/MenuScreen"]
-layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -21.0
-offset_top = 46.0
-offset_right = 228.0
-offset_bottom = 110.0
-grow_horizontal = 2
-grow_vertical = 2
+[node name="Password" type="RichTextLabel" parent="CanvasLayer/Wrapper/MenuScreen/VBoxContainer/MarginContainer/VBoxContainer"]
+clip_contents = false
+layout_mode = 2
+size_flags_vertical = 3
 theme = ExtResource("3_e40tu")
 theme_override_colors/default_color = Color(0, 0.517647, 0, 1)
 theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
@@ -174,120 +209,11 @@ theme_override_fonts/normal_font = ExtResource("3_dxyum")
 theme_override_font_sizes/normal_font_size = 60
 bbcode_enabled = true
 text = "[url]password[/url]"
+fit_content = true
+horizontal_alignment = 2
 meta_underlined = false
 hint_underlined = false
 
-[node name="RotateGroup" type="Control" parent="CanvasLayer/Wrapper/MenuScreen"]
-layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -559.0
-offset_top = -253.0
-offset_right = -454.0
-offset_bottom = -185.0
-grow_horizontal = 2
-grow_vertical = 2
-rotation = -0.14694
-
-[node name="Zombies" type="RichTextLabel" parent="CanvasLayer/Wrapper/MenuScreen/RotateGroup"]
-layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -276.5
-offset_top = -220.0
-offset_right = 413.5
-offset_bottom = -12.0
-grow_horizontal = 2
-grow_vertical = 2
-theme = ExtResource("3_e40tu")
-theme_override_colors/default_color = Color(0, 0.517647, 0, 1)
-theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
-theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
-theme_override_constants/outline_size = 10
-theme_override_constants/shadow_offset_x = 3
-theme_override_constants/shadow_outline_size = 12
-theme_override_fonts/normal_font = ExtResource("3_dxyum")
-theme_override_font_sizes/normal_font_size = 200
-text = "Zombies"
-
-[node name="Ate" type="RichTextLabel" parent="CanvasLayer/Wrapper/MenuScreen/RotateGroup"]
-layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -22.3484
-offset_top = -39.6463
-offset_right = 94.6516
-offset_bottom = 45.3537
-grow_horizontal = 2
-grow_vertical = 2
-theme = ExtResource("3_e40tu")
-theme_override_colors/default_color = Color(0, 0.517647, 0, 1)
-theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
-theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
-theme_override_constants/outline_size = 10
-theme_override_constants/shadow_offset_x = 3
-theme_override_constants/shadow_outline_size = 12
-theme_override_fonts/normal_font = ExtResource("3_dxyum")
-theme_override_font_sizes/normal_font_size = 80
-text = "Ate"
-
-[node name="My" type="RichTextLabel" parent="CanvasLayer/Wrapper/MenuScreen/RotateGroup"]
-layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -25.0476
-offset_top = 46.891
-offset_right = 91.9525
-offset_bottom = 133.891
-grow_horizontal = 2
-grow_vertical = 2
-theme = ExtResource("3_e40tu")
-theme_override_colors/default_color = Color(0, 0.517647, 0, 1)
-theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
-theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
-theme_override_constants/outline_size = 10
-theme_override_constants/shadow_offset_x = 3
-theme_override_constants/shadow_outline_size = 12
-theme_override_fonts/normal_font = ExtResource("3_dxyum")
-theme_override_font_sizes/normal_font_size = 80
-text = "my"
-
-[node name="Neighbors" type="RichTextLabel" parent="CanvasLayer/Wrapper/MenuScreen/RotateGroup"]
-layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -124.469
-offset_top = 131.244
-offset_right = 219.531
-offset_bottom = 229.244
-grow_horizontal = 2
-grow_vertical = 2
-theme = ExtResource("3_e40tu")
-theme_override_colors/default_color = Color(0, 0.517647, 0, 1)
-theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
-theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
-theme_override_constants/outline_size = 10
-theme_override_constants/shadow_offset_x = 3
-theme_override_constants/shadow_outline_size = 12
-theme_override_fonts/normal_font = ExtResource("3_dxyum")
-theme_override_font_sizes/normal_font_size = 80
-text = "neighbors"
-
-[connection signal="meta_clicked" from="CanvasLayer/Wrapper/PasswordScreen/StartWithPassword" to="." method="_on_start_clicked"]
-[connection signal="meta_clicked" from="CanvasLayer/Wrapper/MenuScreen/Start" to="." method="_on_start_clicked"]
-[connection signal="meta_clicked" from="CanvasLayer/Wrapper/MenuScreen/Password" to="." method="_on_password_clicked"]
+[connection signal="meta_clicked" from="CanvasLayer/Wrapper/PasswordScreen/VBoxContainer/StartWithPassword" to="." method="_on_start_clicked"]
+[connection signal="meta_clicked" from="CanvasLayer/Wrapper/MenuScreen/VBoxContainer/MarginContainer/VBoxContainer/Start" to="." method="_on_start_clicked"]
+[connection signal="meta_clicked" from="CanvasLayer/Wrapper/MenuScreen/VBoxContainer/MarginContainer/VBoxContainer/Password" to="." method="_on_password_clicked"]

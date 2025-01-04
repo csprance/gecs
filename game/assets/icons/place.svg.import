@@ -2,27 +2,26 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bgh3yech60m8c"
-path.s3tc="res://.godot/imported/walls_Base_color.png-6b8439e72c1eba109912466824239a43.s3tc.ctex"
+uid="uid://12i1kycu7ojr"
+path="res://.godot/imported/place.svg-fcf49c4ca03d4f86f05003560aca62a8.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
-"vram_texture": true
+"vram_texture": false
 }
 
 [deps]
 
-source_file="res://game/assets/worlds/level_one/walls_Base_color.png"
-dest_files=["res://.godot/imported/walls_Base_color.png-6b8439e72c1eba109912466824239a43.s3tc.ctex"]
+source_file="res://game/assets/icons/place.svg"
+dest_files=["res://.godot/imported/place.svg-fcf49c4ca03d4f86f05003560aca62a8.ctex"]
 
 [params]
 
-compress/mode=2
+compress/mode=0
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/hdr_compression=1
 compress/normal_map=0
 compress/channel_pack=0
-mipmaps/generate=true
+mipmaps/generate=false
 mipmaps/limit=-1
 roughness/mode=0
 roughness/src_normal=""
@@ -32,4 +31,7 @@ process/normal_map_invert_y=false
 process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
-detect_3d/compress_to=0
+detect_3d/compress_to=1
+svg/scale=1.0
+editor/scale_with_editor_scale=false
+editor/convert_colors_with_editor_theme=false

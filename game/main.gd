@@ -5,10 +5,6 @@ extends Node
 func _ready() -> void:
 	Bootstrap.bootstrap()
 	ECS.world = world
-	ECS.entity_preprocessors = [
-		## Most of our entities are going to have a transform component so lets sync them if they get added right away
-		# Utils.sync_transform
-	]
 
 func _process(delta):
 	ECS.world.process(delta, 'input')

@@ -1,6 +1,6 @@
 [gd_resource type="StandardMaterial3D" load_steps=2 format=3 uid="uid://c6itpbfm0agj3"]
 
-[ext_resource type="Texture2D" uid="uid://bv4vlxbttsxcl" path="res://game/assets/worlds/level_one/grass.png" id="1_v7j48"]
+[ext_resource type="Texture2D" uid="uid://bv4vlxbttsxcl" path="res://game/assets/levels/level_one/grass.png" id="1_v7j48"]
 
 [resource]
 resource_name = "grass"

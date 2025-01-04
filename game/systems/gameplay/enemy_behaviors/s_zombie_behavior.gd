@@ -93,8 +93,10 @@ func chase_subsystem(entity, _delta):
 	var chase_target = r_chasing.target
 	var chase_target_trs = (chase_target.get_component(C_Transform) as C_Transform).transform
 
-	# Set the velocity to go towards the target
+	# Set the velocity to go towards the target (but not up or down)
 	c_velocity.velocity = (chase_target_trs.origin - c_trs.transform.origin).normalized() * ZOMBIE_SPEED
+	c_velocity.velocity.y = 0
+
 
 	# Look at the chase target
 	var c_look_at = C_LookAt.new(chase_target_trs.origin)

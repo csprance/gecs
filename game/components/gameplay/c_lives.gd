@@ -12,16 +12,16 @@ extends Component
 @export var respawn_location: Transform3D = Transform3D.IDENTITY
 
 func _init(_lives: int = 3, _respawn_time: float = 4.0, location: Transform3D=Transform3D.IDENTITY) -> void:
-    lives = _lives
-    respawn_time = _respawn_time
-    respawn_location = location
+	lives = _lives
+	respawn_time = _respawn_time
+	respawn_location = location
 
 func _from_current_position():
-    var selected_nodes = EditorInterface.get_selection().get_selected_nodes()
-    if selected_nodes.size() == 0:
-        print('No Node Selected')
-        return
-    var selected_node: Node = selected_nodes[0]
-    if selected_node.get_property_list().map(func(x): return x['name']).has('global_transform'):
-        respawn_location = selected_node.global_transform
-        print('Transform Set To: ', respawn_location)
+	var selected_nodes = EditorInterface.get_selection().get_selected_nodes()
+	if selected_nodes.size() == 0:
+		print('No Node Selected')
+		return
+	var selected_node: Node = selected_nodes[0]
+	if selected_node.get_property_list().map(func(x): return x['name']).has('global_transform'):
+		respawn_location = selected_node.global_transform
+		print('Transform Set To: ', respawn_location)

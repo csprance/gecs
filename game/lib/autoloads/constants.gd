@@ -14,7 +14,7 @@ extends Node
 @export var exit_door_scene: PackedScene
 @export var main_menu_scene: PackedScene
 @export var level_intro_screen: PackedScene
-
+@export var void_world: PackedScene
 @export_category("Gameplay")
 
 
@@ -31,4 +31,3 @@ func level_by_password(password: String) -> LevelResource:
 			return level
 	
 	return levels[0] # Default to the first level
-	

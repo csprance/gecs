@@ -19,6 +19,7 @@ config/icon="res://game/assets/icons/zamn-logo.png"
 
 [audio]
 
+buses/default_bus_layout="res://game/assets/audio/default_bus_layout.tres"
 manager/sound/bus="Sound"
 manager/sound/pool_1D_size=16
 manager/sound/pool_2D_size=16

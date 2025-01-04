@@ -1,0 +1,13 @@
+[gd_scene load_steps=3 format=3 uid="uid://dxbghflvotpav"]
+
+[ext_resource type="PackedScene" uid="uid://cqj2bsylfhrfc" path="res://game/assets/levels/template_level.tscn" id="1_fft00"]
+
+[sub_resource type="Environment" id="Environment_0e1al"]
+background_mode = 1
+ambient_light_source = 3
+ambient_light_color = Color(0.489622, 0.489622, 0.489622, 1)
+
+[node name="Level" instance=ExtResource("1_fft00")]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="Props" index="0"]
+environment = SubResource("Environment_0e1al")

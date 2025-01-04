@@ -1,0 +1,300 @@
+[gd_scene load_steps=10 format=3 uid="uid://bqtylw74layec"]
+
+[ext_resource type="Script" path="res://game/entities/ui/e_level_outro.gd" id="1_7q6hl"]
+[ext_resource type="Texture2D" uid="uid://bsxa4oxuc76ii" path="res://game/assets/icons/zamn-logo.png" id="2_vy4m8"]
+[ext_resource type="Texture2D" uid="uid://b4ueuif8f8npe" path="res://game/assets/icons/icon.svg" id="5_dfg18"]
+[ext_resource type="Theme" uid="uid://ck7vy3altix2h" path="res://game/assets/themes/zamn-font.tres" id="5_r60f6"]
+[ext_resource type="FontFile" uid="uid://cs3q1u0vc4jhn" path="res://game/assets/fonts/FEASFBI_.TTF" id="6_iybyc"]
+[ext_resource type="AudioStream" uid="uid://bxahi1w2sb4rj" path="res://addons/kenney impact sounds/impact_wood_heavy_004.ogg" id="7_uc7qb"]
+
+[sub_resource type="Animation" id="Animation_xelxm"]
+resource_name = "fall"
+length = 7.0
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("CanvasLayer/Wrapper/HBoxContainerScoreLives/HBoxContainerScore/MarginContainerScore/Score:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.966667, 2, 3),
+"transitions": PackedFloat32Array(5.65685, 0.233258, 2.54912, 0.153893),
+"update": 0,
+"values": [Vector2(0, -200), Vector2(0, 280), Vector2(0, 280), Vector2(0, 1500)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("CanvasLayer/Wrapper/MarginContainerHeader/HBoxContainerText/LevelCompleteText:position")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(3, 3.96667, 5.96667, 7),
+"transitions": PackedFloat32Array(4.92457, 1, 4.75684, 1),
+"update": 0,
+"values": [Vector2(0, -400), Vector2(0, 400), Vector2(0, 150), Vector2(0, 1500)]
+}
+tracks/2/type = "audio"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("AudioStreamPlayer")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"clips": [{
+"end_offset": 0.0,
+"start_offset": 0.0,
+"stream": ExtResource("7_uc7qb")
+}, {
+"end_offset": 0.0,
+"start_offset": 0.0,
+"stream": ExtResource("7_uc7qb")
+}],
+"times": PackedFloat32Array(1, 3.96667)
+}
+tracks/2/use_blend = true
+
+[sub_resource type="Animation" id="Animation_xrgr0"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("CanvasLayer/Wrapper/HBoxContainerScoreLives/HBoxContainerScore/MarginContainerScore/Score:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector2(0, 280)]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_nx1h6"]
+_data = {
+&"RESET": SubResource("Animation_xrgr0"),
+&"fall": SubResource("Animation_xelxm")
+}
+
+[node name="LevelOutroUI" type="Node"]
+script = ExtResource("1_7q6hl")
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+follow_viewport_enabled = true
+
+[node name="BG" type="ColorRect" parent="CanvasLayer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.0941176, 0.0941176, 0.0941176, 1)
+
+[node name="Wrapper" type="VBoxContainer" parent="CanvasLayer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="MarginContainerHeader" type="MarginContainer" parent="CanvasLayer/Wrapper"]
+layout_mode = 2
+theme_override_constants/margin_top = 30
+theme_override_constants/margin_bottom = 60
+
+[node name="HBoxContainerText" type="HBoxContainer" parent="CanvasLayer/Wrapper/MarginContainerHeader"]
+layout_mode = 2
+size_flags_horizontal = 4
+
+[node name="LevelCompleteText" type="RichTextLabel" parent="CanvasLayer/Wrapper/MarginContainerHeader/HBoxContainerText"]
+custom_minimum_size = Vector2(1000, 0)
+layout_mode = 2
+size_flags_vertical = 4
+theme = ExtResource("5_r60f6")
+theme_override_colors/default_color = Color(0, 0.517647, 0, 1)
+theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 10
+theme_override_constants/shadow_offset_x = 3
+theme_override_constants/shadow_outline_size = 12
+theme_override_fonts/normal_font = ExtResource("6_iybyc")
+theme_override_font_sizes/normal_font_size = 150
+text = "Level Complete"
+fit_content = true
+horizontal_alignment = 1
+
+[node name="HBoxContainerScoreLives" type="HBoxContainer" parent="CanvasLayer/Wrapper"]
+layout_mode = 2
+
+[node name="HBoxContainerLives" type="HBoxContainer" parent="CanvasLayer/Wrapper/HBoxContainerScoreLives"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Life1" type="TextureRect" parent="CanvasLayer/Wrapper/HBoxContainerScoreLives/HBoxContainerLives"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(200, 200)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+texture = ExtResource("2_vy4m8")
+expand_mode = 1
+
+[node name="Life2" type="TextureRect" parent="CanvasLayer/Wrapper/HBoxContainerScoreLives/HBoxContainerLives"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(200, 200)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+texture = ExtResource("2_vy4m8")
+expand_mode = 1
+
+[node name="Life3" type="TextureRect" parent="CanvasLayer/Wrapper/HBoxContainerScoreLives/HBoxContainerLives"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(200, 200)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+texture = ExtResource("2_vy4m8")
+expand_mode = 1
+
+[node name="Life4" type="TextureRect" parent="CanvasLayer/Wrapper/HBoxContainerScoreLives/HBoxContainerLives"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(200, 200)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+texture = ExtResource("2_vy4m8")
+expand_mode = 1
+
+[node name="Life5" type="TextureRect" parent="CanvasLayer/Wrapper/HBoxContainerScoreLives/HBoxContainerLives"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(200, 200)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+texture = ExtResource("2_vy4m8")
+expand_mode = 1
+
+[node name="HBoxContainerScore" type="HBoxContainer" parent="CanvasLayer/Wrapper/HBoxContainerScoreLives"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+
+[node name="MarginContainerScore" type="MarginContainer" parent="CanvasLayer/Wrapper/HBoxContainerScoreLives/HBoxContainerScore"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/margin_right = 51
+
+[node name="Score" type="RichTextLabel" parent="CanvasLayer/Wrapper/HBoxContainerScoreLives/HBoxContainerScore/MarginContainerScore"]
+unique_name_in_owner = true
+clip_contents = false
+custom_minimum_size = Vector2(100, 100)
+layout_mode = 2
+size_flags_horizontal = 3
+theme = ExtResource("5_r60f6")
+theme_override_colors/default_color = Color(0, 0.517647, 0, 1)
+theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 10
+theme_override_constants/shadow_offset_x = 3
+theme_override_constants/shadow_outline_size = 12
+theme_override_fonts/normal_font = ExtResource("6_iybyc")
+theme_override_font_sizes/normal_font_size = 85
+text = "1000"
+scroll_active = false
+shortcut_keys_enabled = false
+horizontal_alignment = 2
+justification_flags = 128
+
+[node name="MarginContainerVictims" type="MarginContainer" parent="CanvasLayer/Wrapper"]
+layout_mode = 2
+theme_override_constants/margin_top = 60
+theme_override_constants/margin_bottom = 60
+
+[node name="HBoxContainerVictims" type="HBoxContainer" parent="CanvasLayer/Wrapper/MarginContainerVictims"]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+theme_override_constants/separation = 64
+
+[node name="Victim1" type="TextureRect" parent="CanvasLayer/Wrapper/MarginContainerVictims/HBoxContainerVictims"]
+custom_minimum_size = Vector2(256, 256)
+layout_mode = 2
+size_flags_horizontal = 6
+size_flags_vertical = 4
+texture = ExtResource("5_dfg18")
+expand_mode = 1
+
+[node name="Victim2" type="TextureRect" parent="CanvasLayer/Wrapper/MarginContainerVictims/HBoxContainerVictims"]
+custom_minimum_size = Vector2(256, 256)
+layout_mode = 2
+size_flags_horizontal = 6
+size_flags_vertical = 4
+texture = ExtResource("5_dfg18")
+expand_mode = 1
+
+[node name="Victim3" type="TextureRect" parent="CanvasLayer/Wrapper/MarginContainerVictims/HBoxContainerVictims"]
+custom_minimum_size = Vector2(256, 256)
+layout_mode = 2
+size_flags_horizontal = 6
+size_flags_vertical = 4
+texture = ExtResource("5_dfg18")
+expand_mode = 1
+
+[node name="Victim4" type="TextureRect" parent="CanvasLayer/Wrapper/MarginContainerVictims/HBoxContainerVictims"]
+custom_minimum_size = Vector2(256, 256)
+layout_mode = 2
+size_flags_horizontal = 6
+size_flags_vertical = 4
+texture = ExtResource("5_dfg18")
+expand_mode = 1
+
+[node name="Victim5" type="TextureRect" parent="CanvasLayer/Wrapper/MarginContainerVictims/HBoxContainerVictims"]
+custom_minimum_size = Vector2(256, 256)
+layout_mode = 2
+size_flags_horizontal = 6
+size_flags_vertical = 4
+texture = ExtResource("5_dfg18")
+expand_mode = 1
+
+[node name="MarginContainerBonus" type="MarginContainer" parent="CanvasLayer/Wrapper"]
+visible = false
+layout_mode = 2
+theme_override_constants/margin_top = 60
+theme_override_constants/margin_bottom = 60
+
+[node name="HBoxContainerBonus" type="HBoxContainer" parent="CanvasLayer/Wrapper/MarginContainerBonus"]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+theme_override_constants/separation = 64
+
+[node name="BonusText" type="RichTextLabel" parent="CanvasLayer/Wrapper/MarginContainerBonus/HBoxContainerBonus"]
+custom_minimum_size = Vector2(1000, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+theme = ExtResource("5_r60f6")
+theme_override_colors/default_color = Color(0, 0.517647, 0, 1)
+theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 10
+theme_override_constants/shadow_offset_x = 3
+theme_override_constants/shadow_outline_size = 12
+theme_override_fonts/normal_font = ExtResource("6_iybyc")
+theme_override_font_sizes/normal_font_size = 150
+text = "All Victims Saved Bonus"
+fit_content = true
+horizontal_alignment = 1
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+unique_name_in_owner = true
+libraries = {
+&"": SubResource("AnimationLibrary_nx1h6")
+}
+
+[node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="."]
+pitch_scale = 0.37

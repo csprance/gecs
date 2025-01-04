@@ -4,12 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://cganbyuy0jce"
-path="res://.godot/imported/level-one.gltf-97492b93fb051c42d63dad9d33e6be21.scn"
+path="res://.godot/imported/level-one.gltf-4ad543a89830bc6c8c16af2b3975f4d8.scn"
 
 [deps]
 
-source_file="res://game/assets/worlds/level_one/level-one.gltf"
-dest_files=["res://.godot/imported/level-one.gltf-97492b93fb051c42d63dad9d33e6be21.scn"]
+source_file="res://game/assets/levels/level_one/level-one.gltf"
+dest_files=["res://.godot/imported/level-one.gltf-4ad543a89830bc6c8c16af2b3975f4d8.scn"]
 
 [params]
 

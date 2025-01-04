@@ -1,6 +1,6 @@
 [gd_scene load_steps=10 format=3 uid="uid://btba2p445ljld"]
 
-[ext_resource type="Shader" uid="uid://bcedlxrjdrn5t" path="res://shd_explosion_cloud.tres" id="1_iacuh"]
+[ext_resource type="Shader" uid="uid://bcedlxrjdrn5t" path="res://game/assets/vfx/shd_explosion_cloud.tres" id="1_iacuh"]
 [ext_resource type="Script" path="res://game/assets/vfx/vfx_explosion.gd" id="1_k5jn6"]
 [ext_resource type="Script" path="res://addons/gecs/component.gd" id="2_7t8yg"]
 [ext_resource type="Script" path="res://game/components/gameplay/c_transform.gd" id="3_j24le"]

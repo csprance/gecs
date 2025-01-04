@@ -18,7 +18,7 @@ static func use_inventory_item(item: Entity, player: Entity):
 static func add_to_inventory(player: Entity, c_item: C_Item, quantity: int, inventory_signal: Signal, active_resource_property: String):
 	var new_entity = c_item.make_entity(quantity)
 	new_entity.add_relationship(Relationship.new(C_OwnedBy.new(), player))
-	ECS.world.add_entity(new_entity)
+	ECS.world.add_entity(new_entity, [C_Persistent.new()])
 	inventory_signal.emit(new_entity)
 	Loggie.debug('Added item to inventory: ', new_entity.name, ' Quantity: ', quantity)
 	if not GameState.get(active_resource_property):

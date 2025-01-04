@@ -1,0 +1,18 @@
+[gd_scene load_steps=2 format=3 uid="uid://cqj2bsylfhrfc"]
+
+[ext_resource type="Script" path="res://game/assets/levels/level.gd" id="1_0pklj"]
+
+[node name="Level" type="Node"]
+script = ExtResource("1_0pklj")
+
+[node name="Navigation" type="Node" parent="."]
+unique_name_in_owner = true
+
+[node name="Systems" type="Node" parent="."]
+unique_name_in_owner = true
+
+[node name="Entities" type="Node" parent="."]
+unique_name_in_owner = true
+
+[node name="Props" type="Node" parent="." groups=["navigation_mesh_source_group"]]
+unique_name_in_owner = true

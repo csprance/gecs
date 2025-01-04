@@ -29,7 +29,7 @@ func process(entity, delta):
 	if moved:
 		entity.add_component(C_CharacterBody3D.new())
 		entity.add_component(C_Gravity.new())
-		c_velocity.velocity *= 35.0
+		c_velocity.velocity *= 55.0
 		c_velocity.velocity.y *= .5
 		# c_velocity.velocity.y *= .1
 		# remove controls and relationship to trampoline

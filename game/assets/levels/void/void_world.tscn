@@ -1,0 +1,22 @@
+[gd_scene load_steps=3 format=3 uid="uid://7l86dkfjxlev"]
+
+[ext_resource type="Script" path="res://addons/gecs/world.gd" id="1_x4trs"]
+
+[sub_resource type="Environment" id="Environment_hm5vl"]
+background_mode = 1
+ambient_light_source = 3
+ambient_light_color = Color(0.489622, 0.489622, 0.489622, 1)
+
+[node name="VoidWorld" type="Node"]
+script = ExtResource("1_x4trs")
+entity_nodes_root = NodePath("Entities")
+system_nodes_root = NodePath("Systems")
+
+[node name="Entities" type="Node" parent="."]
+
+[node name="Systems" type="Node" parent="."]
+
+[node name="Props" type="Node" parent="."]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="Props"]
+environment = SubResource("Environment_hm5vl")

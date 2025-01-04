@@ -1,4 +1,4 @@
-[gd_scene load_steps=40 format=3 uid="uid://ex2wx8kwwjjx"]
+[gd_scene load_steps=41 format=3 uid="uid://ex2wx8kwwjjx"]
 
 [ext_resource type="Script" path="res://game/systems/gameplay/enemy_behaviors/s_zombie_behavior.gd" id="1_a57uo"]
 [ext_resource type="Script" path="res://game/systems/input/s_player_controls.gd" id="1_e5u7d"]
@@ -39,8 +39,9 @@
 [ext_resource type="Script" path="res://game/systems/gameplay/s_gear.gd" id="26_vo5t7"]
 [ext_resource type="Script" path="res://game/systems/gameplay/s_pathfind_to.gd" id="27_1w3kn"]
 [ext_resource type="Script" path="res://game/systems/physics/s_friction.gd" id="27_8mufn"]
+[ext_resource type="Script" path="res://game/systems/gameplay/s_spawner.gd" id="28_47ggk"]
 
-[node name="Systems" type="Node"]
+[node name="DefaultSystems" type="Node"]
 script = ExtResource("1_vjpkg")
 
 [node name="input" type="Node" parent="."]
@@ -140,6 +141,10 @@ group = "gameplay"
 
 [node name="PendingDeleteSystem" type="Node" parent="gameplay"]
 script = ExtResource("9_bykvn")
+group = "gameplay"
+
+[node name="SpawnerSystem" type="Node" parent="gameplay"]
+script = ExtResource("28_47ggk")
 group = "gameplay"
 
 [node name="physics" type="Node" parent="."]

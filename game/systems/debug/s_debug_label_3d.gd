@@ -16,7 +16,10 @@ func query():
 func process(entity, _delta):
     var c_debug_label = entity.get_component(C_DebugLabel) as C_DebugLabel
     if debug_labels.has(entity):
-        var label = debug_labels[entity]
+        var label = debug_labels.get(entity)
+        if not label:
+            debug_labels.erase(entity)
+            return
         label.text = c_debug_label.text
         label.global_transform.origin = entity.get_component(C_Transform).transform.origin + c_debug_label.offset
     else:

@@ -21,7 +21,7 @@
 [ext_resource type="Script" path="res://game/components/gameplay/c_health.gd" id="15_j7s5o"]
 [ext_resource type="Script" path="res://game/components/debug/c_debug_label.gd" id="16_pgbbi"]
 [ext_resource type="PackedScene" uid="uid://csxwta28e2lxv" path="res://game/assets/props/gravestone/gravestone.gltf" id="17_7ar8e"]
-[ext_resource type="Texture2D" uid="uid://bv4vlxbttsxcl" path="res://game/assets/worlds/level_one/grass.png" id="17_8l3ga"]
+[ext_resource type="Texture2D" uid="uid://bv4vlxbttsxcl" path="res://game/assets/levels/level_one/grass.png" id="17_8l3ga"]
 [ext_resource type="Script" path="res://game/components/gameplay/c_victim.gd" id="17_eirrq"]
 [ext_resource type="Script" path="res://game/components/gameplay/c_door.gd" id="19_18n5e"]
 [ext_resource type="PackedScene" uid="uid://bm6p3cjvxyqmy" path="res://game/entities/gameplay/e_victim.tscn" id="19_by7qk"]

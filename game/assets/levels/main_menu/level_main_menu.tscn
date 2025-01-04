@@ -1,0 +1,18 @@
+[gd_scene load_steps=5 format=3 uid="uid://dmh0v5ei83ujx"]
+
+[ext_resource type="PackedScene" uid="uid://cqj2bsylfhrfc" path="res://game/assets/levels/template_level.tscn" id="1_vjcns"]
+[ext_resource type="Script" path="res://game/systems/ui/s_ui_visiblity.gd" id="2_5qvfb"]
+[ext_resource type="Script" path="res://game/systems/ui/s_main_menu.gd" id="3_1csdj"]
+[ext_resource type="PackedScene" uid="uid://bqk4e5e2yfpdf" path="res://game/entities/ui/e_main_menu.tscn" id="4_d25l5"]
+
+[node name="Level" instance=ExtResource("1_vjcns")]
+
+[node name="UiVisibilitySystem" type="Node" parent="Systems" index="0"]
+script = ExtResource("2_5qvfb")
+group = "ui"
+
+[node name="MainMenuSystem" type="Node" parent="Systems" index="1"]
+script = ExtResource("3_1csdj")
+group = "ui"
+
+[node name="MainMenu" parent="Entities" index="0" instance=ExtResource("4_d25l5")]

@@ -16,3 +16,4 @@ game/bin/*
 
 *.painter_lock
 game/assets/characters/Ultimate Animated Character Pack - Nov 2019/*
+.p4ignore

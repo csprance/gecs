@@ -71,13 +71,16 @@ func _show_debug():
 ## or a target in a Relationship Pair
 var wildcard = null
 
-## Get all components of a specific type from a list of entities
-func get_components(entities, component_type):
+## Get all components of a specific type from a list of entities[br]
+## If the component does not exist on the entity it will return the default_component if provided or assert
+func get_components(entities, component_type, default_component = null) -> Array:
 	var components = []
 	for entity in entities:
 		var component = entity.components.get(component_type.resource_path, null)
-		if not component:
+		if not component and not default_component:
 			assert(component, "Entity does not have component: " + str(component_type))
+		if not component and default_component:
+			component = default_component
 		components.append(component)
 		
 	return components

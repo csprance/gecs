@@ -32,7 +32,10 @@ func victim_saved_subsys(entity, _delta: float):
 		score_vfx.global_position = entity.global_position + Vector3(0, 3, 0)   
 		add_child(score_vfx)
 	
-	entity.add_component(C_IsPendingDelete.new())
+	for child in entity.get_children():
+		child.queue_free()
+	
+	entity.remove_component(C_Saved)
 	
 	GameState.victims -= 1
 	if GameState.victims == 0:
