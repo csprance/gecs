@@ -32,9 +32,6 @@ var world: World:
 	get:
 		return world
 	set(value):
-		# bring about the end of times for this world
-		if world:
-			world.disconnect("tree_exited", _on_world_exited)
 		# Add the new world to the scene
 		world = value
 		if world:
