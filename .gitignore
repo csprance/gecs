@@ -11,8 +11,9 @@ addons/*
 !addons/qt_tools/
 !addons/qt_tools/**
 
-game/bin/*
-*.spp
+game/
+qt/
 
+# random files
+*.spp
 *.painter_lock
-game/assets/characters/Ultimate Animated Character Pack - Nov 2019/*
