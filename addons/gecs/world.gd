@@ -102,8 +102,8 @@ func process(delta: float, group: String='' ) -> void:
 ## # add an entity with some components
 ## world.add_entity(other_entity, [component_a, component_b])
 ## [/codeblock]
-func add_entity(entity: Entity, components = null) -> void:
-	if not entity.is_inside_tree():
+func add_entity(entity: Entity, components = null, add_to_tree=true) -> void:
+	if add_to_tree and not entity.is_inside_tree():
 		get_node(entity_nodes_root).add_child(entity)
 	# Update index
 	_worldLogger.debug('add_entity Adding Entity to World: ', entity)
@@ -245,6 +245,12 @@ func remove_system(system) -> void:
 	system_removed.emit(system)
 	# Update index
 	system.queue_free()
+
+## Remove a bunch of systems by there group name
+func remove_system_group(group: String) -> void:
+	if systems_by_group.has(group):
+		for system in systems_by_group[group]:
+			remove_system(system)
 
 ## Removes all [Entity]s and [System]s from the world.[br]
 ## [param should_free] Optionally frees the world node by default
@@ -417,3 +423,21 @@ func _on_entity_relationship_removed(entity: Entity, relationship: Relationship)
 			reverse_relationship_index[rev_key].erase(relationship.target)
 	# Emit Signal
 	relationship_removed.emit(entity, relationship)
+
+## Exports the worlds [World] [Entity] and [System] giving us the world state and save it to a .ecs file
+func export_world(path: String='user://world.ecs'):
+	var data = {
+		'entities': entities, # Entities with there components attached
+		'systems': systems, # Systems
+	}
+	var file = FileAccess.open(path, FileAccess.WRITE)
+	file.store_var(data, true)
+
+## Imports the [World] [Entity] and [System] state from an .ecs file, puring the world and adding the entities and systems in
+func import_world(path: String='user://world.ecs'):
+	purge()
+	var file = FileAccess.open(path, FileAccess.READ)
+	var data = file.get_var(true)
+	if data:
+		add_entities(data['entities'])
+		add_systems(data['systems'])

@@ -107,7 +107,7 @@ class_name Ball
 extends Entity
 
 func on_ready() -> void:
-	Utils.sync_transform(self)
+    Utils.sync_transform(self)
 ```
 
 3. **Initialize Components**: In the `_ready()` function, components listed in `component_resources` are automatically added to the entity but you can also override a method called `define_components()` and return an array of components. 
@@ -125,14 +125,14 @@ extends System
 
 func query():
   # All entities that all have transform, velocity and bounce components
-	return q.with_all([CTransform, CVelocity, CBounce])
+    return q.with_all([CTransform, CVelocity, CBounce])
 
 func process(entity: Entity, delta: float):
-	var c_bounce: CBounce = entity.get_component(CBounce)
-	if c_bounce.should_bounce:
-		var c_velocity: CVelocity = entity.get_component(CVelocity)
-		c_velocity.direction = c_bounce.normal
-		c_bounce.should_bounce = false
+    var c_bounce: CBounce = entity.get_component(CBounce)
+    if c_bounce.should_bounce:
+        var c_velocity: CVelocity = entity.get_component(CVelocity)
+        c_velocity.direction = c_bounce.normal
+        c_bounce.should_bounce = false
 ```
 
 2. **Override the `query()` Function**: In the `query()` function, specify the components that entities must have for the system to process them. Use the provided `q` (QueryBuilder) to build the query.
@@ -156,15 +156,15 @@ extends Node
 @onready var world: World = $World
 
 func _ready() -> void:
-	ECS.world = world
+    ECS.world = world
 
 func _process(delta):
-	# Process only systems in the "gameplay" group
-	ECS.process(delta, "gameplay")
+    # Process only systems in the "gameplay" group
+    ECS.process(delta, "gameplay")
 
 func _physics_process(delta):
-	# Process only systems in the "physics" group
-	ECS.process(delta, "physics")
+    # Process only systems in the "physics" group
+    ECS.process(delta, "physics")
 ```
 
 ## Example Project
@@ -216,7 +216,7 @@ class_name Ball
 extends Entity
 
 func on_ready() -> void:
-	Utils.sync_transform(self)
+    Utils.sync_transform(self)
 ```
 
 In the scene, the `Ball` entity includes `Bounce`, `Velocity`, and `Transform` components.
@@ -229,7 +229,7 @@ class_name Paddle
 extends Entity
 
 func on_ready() -> void:
-	Utils.sync_transform(self)
+    Utils.sync_transform(self)
 ```
 
 Includes `CPlayerMovement`, `CVelocity`, `CTransform`, and `CFriction` components.
@@ -244,14 +244,14 @@ class_name BounceSystem
 extends System
 
 func query():
-	return q.with_all([CTransform, CVelocity, CBounce])
+    return q.with_all([CTransform, CVelocity, CBounce])
 
 func process(entity: Entity, delta: float):
-	var c_bounce: CBounce = entity.get_component(CBounce)
-	if c_bounce.should_bounce:
-		var c_velocity: CVelocity = entity.get_component(CVelocity)
-		c_velocity.direction = c_bounce.normal
-		c_bounce.should_bounce = false
+    var c_bounce: CBounce = entity.get_component(CBounce)
+    if c_bounce.should_bounce:
+        var c_velocity: CVelocity = entity.get_component(CVelocity)
+        c_velocity.direction = c_bounce.normal
+        c_bounce.should_bounce = false
 ```
 
 - **VelocitySystem**: Updates entity positions based on their velocity.
@@ -262,13 +262,13 @@ class_name VelocitySystem
 extends System
 
 func query():
-	return q.with_all([CVelocity, CTransform])
+    return q.with_all([CVelocity, CTransform])
 
 func process(entity: Entity, delta: float):
-	var c_velocity: CVelocity = entity.get_component(CVelocity)
-	var c_transform: CTransform = entity.get_component(CTransform)
-	var velocity_vector: Vector2 = c_velocity.direction.normalized() * c_velocity.speed
-	c_transform.transform.origin += velocity_vector * delta
+    var c_velocity: CVelocity = entity.get_component(CVelocity)
+    var c_transform: CTransform = entity.get_component(CTransform)
+    var velocity_vector: Vector2 = c_velocity.direction.normalized() * c_velocity.speed
+    c_transform.transform.origin += velocity_vector * delta
 ```
 
 - **Transform2DSystem**: Synchronizes the `Transform` component with the entity's actual transform.
@@ -279,10 +279,10 @@ class_name Transform2DSystem
 extends System
 
 func query():
-	return q.with_all([CTransform])
+    return q.with_all([CTransform])
 
 func process(entity: Entity, delta):
-	Utils.sync_transform(entity)
+    Utils.sync_transform(entity)
 ```
 
 ## Advanced Usage
@@ -322,10 +322,10 @@ Systems have properties that allow for customizing their execution:
 Example:
 ```gdscript
 func _physics_process(delta):
-	ECS.process(delta, "physics")
+    ECS.process(delta, "physics")
 
 func _process(delta):
-	ECS.process(delta, "gameplay")
+    ECS.process(delta, "gameplay")
 ```
 This will only process systems that are in the "physics" group in the physics process function and gameplay system in the _process function
 

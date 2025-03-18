@@ -31,6 +31,10 @@ var _exclude_relationships: Array = []
 var _all_components_queries: Array = []
 # Components queries that an entity must match for any components
 var _any_components_queries: Array = []
+# Groups that an entity must be in
+var _groups: Array = []
+# Groups that an entity must not be in
+var _exclude_groups: Array = []
 
 ## Initializes the QueryBuilder with the specified [param world]
 func _init(world: World):
@@ -44,6 +48,8 @@ func clear():
 	_exclude_relationships = []
 	_all_components_queries = []
 	_any_components_queries = []
+	_groups = []
+	_exclude_groups = []
 	return self
 
 ## Helper to process components list that might contain queries
@@ -113,11 +119,46 @@ func with_reverse_relationship(relationships: Array = []) -> QueryBuilder:
 				return self.with_all(_world.reverse_relationship_index[rev_key])
 	return self
 
+## Finds entities with specific groups.
+func with_group(groups: Array[String] = []) -> QueryBuilder:
+	_groups.append_array(groups)
+	return self
+
+## Entities must not have any of the provided groups.
+func without_group(groups: Array[String] = []) -> QueryBuilder:
+	_exclude_groups.append_array(groups)
+	return self
+
 ## Executes the constructed query and retrieves matching entities.[br]
 ## [param returns] -  An [Array] of [Entity] that match the query criteria.
 func execute() -> Array:
-	var result = _world._query(_all_components, _any_components, _exclude_components) as Array[Entity]
+	# If we have groups or exclude groups, gather entities from those groups
+	if not _groups.is_empty() or not _exclude_groups.is_empty():
+		var entities_in_group = []
+		# Find entities in group from the world
+		if not _groups.is_empty():
+			entities_in_group = _world.entities.filter(func(e):
+				for g in _groups:
+					if e.is_in_group(g):
+						return true
+				return false
+			)
+		# Filter out entities in excluded groups
+		if not _exclude_groups.is_empty():
+			entities_in_group = entities_in_group.filter(func(e):
+				if not e:
+					return false
+				for g in _exclude_groups:
+					if e.is_in_group(g):
+						return false
+				return true
+			)
+		# match the entities in the group with the query
+		return matches(entities_in_group)
 	
+	# Otherwise, query the world
+	var result = _world._query(_all_components, _any_components, _exclude_components) as Array[Entity]
+
 	# Handle component property queries for required components
 	if not _all_components_queries.is_empty():
 		result = _filter_entities_by_queries(result, _all_components, _all_components_queries, true)
@@ -293,6 +334,8 @@ func combine(other: QueryBuilder) -> QueryBuilder:
 	# _exclude_components_queries += other._exclude_components_queries
 	_relationships += other._relationships
 	_exclude_relationships += other._exclude_relationships
+	_groups += other._groups
+	_exclude_groups += other._exclude_groups
 	return self
 
 func as_array() -> Array:

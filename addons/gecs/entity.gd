@@ -18,6 +18,7 @@
 ##         print("Component added:", component_key)
 ##[/codeblock]	
 @icon('res://addons/gecs/assets/entity.svg')
+@tool
 class_name Entity
 extends Node
 
@@ -48,6 +49,29 @@ var _state = {}
 
 func _ready() -> void:
 	initialize()
+
+
+func _get_property_list() -> Array:
+	var properties = []
+	# We want to store components as a dictionary when we serialize
+	properties.append({
+		"name": "components",
+		"type": TYPE_DICTIONARY,
+		"usage": PROPERTY_USAGE_STORAGE
+	})
+	# We want to store relationships as an array when we serialize
+	properties.append({
+		"name": "relationships",
+		"type": TYPE_ARRAY,
+		"usage": PROPERTY_USAGE_STORAGE
+	})
+	# We want to store state as a dictionary when we serialize
+	properties.append({
+		"name": "_state",
+		"type": TYPE_DICTIONARY,
+		"usage": PROPERTY_USAGE_STORAGE
+	})
+	return properties
 
 
 func initialize():
@@ -153,7 +177,7 @@ func remove_relationships(_relationships: Array):
 ## Retrieves a specific [Relationship] from the entity.
 ## [param relationship] The [Relationship] to retrieve.
 ## [param return] - The FIRST matching [Relationship] if it exists, otherwise `null`.
-func get_relationship(relationship: Relationship, single=true):
+func get_relationship(relationship: Relationship, single = true):
 	var results = []
 	var to_remove = []
 	for rel in relationships:
