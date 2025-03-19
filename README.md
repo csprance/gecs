@@ -4,6 +4,10 @@
 > Godot Entity Component System
 
 A lightweight, performant ECS framework for Godot 4.x that integrates seamlessly with Godot's node system.
+## Discord
+Join the server to chat and discuss the library and how to use it and how to contribute. 
+
+https://discord.gg/ZxKp4aWF
 
 ## Features
 
