@@ -27,6 +27,10 @@ extends Node
 @export var process_empty := false
 ## Is this system active. (Will be skipped if false)
 @export var active:= true
+
+## Is this system paused. (Will be skipped if true)
+var paused := false
+
 ## The [QueryBuilder] object exposed for conveinence to use in the system and to create the query.
 var q: QueryBuilder
 
@@ -78,6 +82,8 @@ func process_all(entities: Array, delta: float) -> bool:
 ## handles the processing of all [Entity]s that match the system's query [Component]s.[br]
 ## [param delta] The time elapsed since the last frame.
 func _handle(delta: float):
+	if not active or paused:
+		return
 	if _handle_subsystems(delta):
 		return
 	# Set our QueryBuilder RefCounted Object

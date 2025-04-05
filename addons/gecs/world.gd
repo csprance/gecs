@@ -92,6 +92,14 @@ func process(delta: float, group: String='' ) -> void:
 				if system.active:
 					system._handle(delta)
 
+## Updates the pause behavior for all systems based on the provided paused state.
+## If paused, only systems with PROCESS_MODE_ALWAYS remain active; all others become inactive.
+## If unpaused, systems with PROCESS_MODE_DISABLED stay inactive; all others become active.
+func update_pause_state(paused: bool) -> void:
+	for system in systems:
+		# Check to see if the system is can process based on the process mode and paused state
+		system.paused = not system.can_process()
+
 ## Adds a single [Entity] to the world.[br]
 ## [param entity] The [Entity] to add.[br]
 ## [param components] The optional list of [Component] to add to the entity.[br]
@@ -423,21 +431,3 @@ func _on_entity_relationship_removed(entity: Entity, relationship: Relationship)
 			reverse_relationship_index[rev_key].erase(relationship.target)
 	# Emit Signal
 	relationship_removed.emit(entity, relationship)
-
-## Exports the worlds [World] [Entity] and [System] giving us the world state and save it to a .ecs file
-func export_world(path: String='user://world.ecs'):
-	var data = {
-		'entities': entities, # Entities with there components attached
-		'systems': systems, # Systems
-	}
-	var file = FileAccess.open(path, FileAccess.WRITE)
-	file.store_var(data, true)
-
-## Imports the [World] [Entity] and [System] state from an .ecs file, puring the world and adding the entities and systems in
-func import_world(path: String='user://world.ecs'):
-	purge()
-	var file = FileAccess.open(path, FileAccess.READ)
-	var data = file.get_var(true)
-	if data:
-		add_entities(data['entities'])
-		add_systems(data['systems'])

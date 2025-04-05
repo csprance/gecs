@@ -40,10 +40,6 @@ var world: World:
 				get_tree().root.get_node('./Root').add_child(world)
 			world.connect("tree_exited", _on_world_exited)
 			_show_debug()
-
-func _on_world_exited() -> void:
-	world = null
-
 ## Are we in debug mode?
 var debug := false
 ## This is an array of functions that get called on the entities when they get added to the world (but before they are ready)
@@ -67,8 +63,12 @@ func _show_debug():
 		add_child(debug_window_scene)
 		debug_window_scene.create_debug_window()
 
+## Called when the world is exited
+func _on_world_exited() -> void:
+	world = null
+
 ## A Wildcard for use in relatonship queries. Indicates can be any value for a relation 
-## or a target in a Relationship Pair
+## or a target in a Relationship Pair ECS.wildcard
 var wildcard = null
 
 ## Get all components of a specific type from a list of entities[br]

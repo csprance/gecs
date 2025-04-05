@@ -281,6 +281,7 @@ func matches(entities: Array) -> Array:
 	var result = []
 	
 	for entity in entities:
+		assert(entity is Entity, "Must be an entity")
 		var matches = true
 		
 		# Check all required components
