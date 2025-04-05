@@ -34,6 +34,7 @@ https://discord.gg/ZxKp4aWF
    - [Systems](#systems)
 9. [Advanced Usage](#advanced-usage)
    - [Querying Entities](#querying-entities)
+   - [Pause Functionality](#pause-functionality)
 10. [Conclusion](#conclusion)
 
 ## Introduction
@@ -360,6 +361,19 @@ GECS now allows you to save and load the entire world state. Use these methods:
 - `ECS.import_world(file_path)` to import a saved world state into the world. Optionally purge the world
 
 These functions facilitate state persistence and dynamic world loading.
+
+### Pause Functionality
+
+GECS systems inherit the regular Godot process modes, letting you choose whether they should run during pause. 
+By default, systems use PROCESS_MODE_INHERIT, meaning they respect the pause state of their parent node. You can change this using set_process_mode() in Godot or set it from the editor GUI:
+
+• PROCESS_MODE_INHERIT (0): Inherits the parent's process mode.  
+• PROCESS_MODE_PAUSABLE (1): Stops processing when SceneTree.paused is true.  
+• PROCESS_MODE_WHEN_PAUSED (2): Only processes when paused.  
+• PROCESS_MODE_ALWAYS (3): Always processes, ignoring pause state.  
+• PROCESS_MODE_DISABLED (4): Never processes, ignoring pause state.  
+
+For example, gameplay and physics systems might stop when the game is paused, while input handling systems could still process any menu UI input. This integrates seamlessly with Godot’s built-in “pause” feature to give you fine-grained control over how each system behaves when the game is paused.
 
 ## Conclusion
 
