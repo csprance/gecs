@@ -9,8 +9,10 @@ extends Node
 
 ## Emitted when an entity is added
 signal entity_added(entity: Entity)
+signal entity_enabled(entity: Entity)
 ## Emitted when an entity is removed
 signal entity_removed(entity: Entity)
+signal entity_disabled(entity: Entity)
 ## Emitted when a system is added
 signal system_added(system: System)
 ## Emitted when a system is removed
@@ -50,7 +52,7 @@ var _worldLogger =  GECSLogger.new().domain('World')
 
 ## Called when the World node is ready.[br]
 func _ready() -> void:
-	_initialize()
+	initialize()
 
 func _make_nodes_root(name: String) -> Node:
 	var node = Node.new()
@@ -59,31 +61,30 @@ func _make_nodes_root(name: String) -> Node:
 	return node
 	
 ## Adds [Entity]s and [System]s from the scene tree to the [World].[br]
-## Called when the World node is ready.
-func _initialize():
+## Called when the World node is ready or  when we should re-initialize the world from the tree
+func initialize():
 	# if no entities/systems root node is set create them and use them. This keeps things tidy for debugging
 	entity_nodes_root = _make_nodes_root('Entities').get_path() if not entity_nodes_root else entity_nodes_root
 	system_nodes_root = _make_nodes_root('Systems').get_path() if not system_nodes_root else system_nodes_root
 
 	# Add entities from the scene tree
-	var _entities = find_children('*', "Entity") as Array[Entity]
+	var _entities = get_node(entity_nodes_root).find_children('*', "Entity") as Array[Entity]
 	add_entities(_entities)
 	_worldLogger.debug('_initialize Added Entities from Scene Tree: ', _entities)
 
 	# Add systems from scene tree
-	var _systems  = find_children('*', "System") as Array[System]
+	var _systems  = get_node(system_nodes_root).find_children('*', "System") as Array[System]
 	add_systems(_systems)
 	_worldLogger.debug('_initialize Added Systems from Scene Tree: ', _systems)
 
-	# Connect to entity relationship signals
-	for entity in entities:
-		entity.relationship_added.connect(_on_entity_relationship_added)
-		entity.relationship_removed.connect(_on_entity_relationship_removed)
+	EngineDebugger.send_message("gecs:world_init", [self])
+
 
 ## Called every frame by the [method _ECS.process] to process [System]s.[br]
 ## [param delta] The time elapsed since the last frame.
 ## [param group] The string for the group we should run. If empty runs all
 func process(delta: float, group: String='' ) -> void:
+	EngineDebugger.send_message("gecs:process_world", [delta, group])
 	# If no group specific in the group, run all systems and process was called run all system
 	if group == '':
 		for system in systems:
@@ -95,6 +96,14 @@ func process(delta: float, group: String='' ) -> void:
 				if system.active:
 					system._handle(delta)
 
+## Updates the pause behavior for all systems based on the provided paused state.
+## If paused, only systems with PROCESS_MODE_ALWAYS remain active; all others become inactive.
+## If unpaused, systems with PROCESS_MODE_DISABLED stay inactive; all others become active.
+func update_pause_state(paused: bool) -> void:
+	for system in systems:
+		# Check to see if the system is can process based on the process mode and paused state
+		system.paused = not system.can_process()
+
 ## Adds a single [Entity] to the world.[br]
 ## [param entity] The [Entity] to add.[br]
 ## [param components] The optional list of [Component] to add to the entity.[br]
@@ -105,8 +114,8 @@ func process(delta: float, group: String='' ) -> void:
 ## # add an entity with some components
 ## world.add_entity(other_entity, [component_a, component_b])
 ## [/codeblock]
-func add_entity(entity: Entity, components = null) -> void:
-	if not entity.is_inside_tree():
+func add_entity(entity: Entity, components = null, add_to_tree=true) -> void:
+	if add_to_tree and not entity.is_inside_tree():
 		get_node(entity_nodes_root).add_child(entity)
 	# Update index
 	_worldLogger.debug('add_entity Adding Entity to World: ', entity)
@@ -118,9 +127,16 @@ func add_entity(entity: Entity, components = null) -> void:
 	# Connect to entity signals for components so we can track global component state
 	entity.component_added.connect(_on_entity_component_added)
 	entity.component_removed.connect(_on_entity_component_removed)
+	entity.relationship_added.connect(_on_entity_relationship_added)
+	entity.relationship_removed.connect(_on_entity_relationship_removed)
 
 	if components:
 		entity.add_components(components)
+	
+	for processor in ECS.entity_preprocessors:
+		processor.call(entity)
+	
+	EngineDebugger.send_message("gecs:entity_added", [entity, entity.get_path()])
 
 ## Adds multiple entities to the world.[br]
 ## @param _entities An array of entities to add.[br]
@@ -130,6 +146,81 @@ func add_entity(entity: Entity, components = null) -> void:
 func add_entities(_entities: Array, components = null):
 	for _entity in _entities:
 		add_entity(_entity, components)
+
+
+## Removes an [Entity] from the world.[br]
+## [param entity] The [Entity] to remove.[br]
+## [b]Example:[/b]
+##      [codeblock]world.remove_entity(player_entity)[/codeblock]
+func remove_entity(entity) -> void:
+	entity = entity as Entity
+	for processor in ECS.entity_postprocessors:
+		processor.call(entity)
+	entity_removed.emit(entity)
+	_worldLogger.debug('remove_entity Removing Entity: ', entity)
+	entities.erase(entity) # FIXME: This doesn't always work for some reason?
+	EngineDebugger.send_message("gecs:entity_removed", [entity, entity.get_path()])
+	# Update index
+	for component_key in entity.components.keys():
+		_remove_entity_from_index(entity, component_key)
+	
+	entity.component_added.disconnect(_on_entity_component_added)
+	entity.component_removed.disconnect(_on_entity_component_removed)
+	entity.relationship_added.disconnect(_on_entity_relationship_added)
+	entity.relationship_removed.disconnect(_on_entity_relationship_removed)
+	entity.on_destroy()
+	entity.queue_free()
+
+## Disable an [Entity] from the world. Disabled entities don't run process or physics,[br] 
+## are hidden and removed the entities list and the[br]
+## [param entity] The [Entity] to disable.[br]
+## [b]Example:[/b]
+##      [codeblock]world.disable_entity(player_entity)[/codeblock]
+func disable_entity(entity) -> Entity:
+	entity = entity as Entity
+	entity.enabled = false
+	entity_disabled.emit(entity)
+	_worldLogger.debug('disable_entity Disabling Entity: ', entity)
+	entity.component_added.disconnect(_on_entity_component_added)
+	entity.component_removed.disconnect(_on_entity_component_removed)
+	entity.relationship_added.disconnect(_on_entity_relationship_added)
+	entity.relationship_removed.disconnect(_on_entity_relationship_removed)
+	entity.on_disable()
+	entity.set_process(false)
+	entity.set_physics_process(false)
+	EngineDebugger.send_message("gecs:entity_disabled", [entity, entity.get_path()])
+	return entity
+
+## Enables a single [Entity] to the world.[br]
+## [param entity] The [Entity] to enable.[br]
+## [param components] The optional list of [Component] to add to the entity.[br]
+## [b]Example:[/b]
+## [codeblock] 
+## # enable just an entity
+## world.enable_entity(player_entity)
+## # enable an entity with some components
+## world.enable_entity(other_entity, [component_a, component_b])
+## [/codeblock]
+func enable_entity(entity: Entity, components = null) -> void:
+	# Update index
+	_worldLogger.debug('enable_entity Enabling Entity to World: ', entity)
+	entity.enabled = true
+	entity_enabled.emit(entity)
+
+	# Connect to entity signals for components so we can track global component state
+	entity.component_added.connect(_on_entity_component_added)
+	entity.component_removed.connect(_on_entity_component_removed)
+	entity.relationship_added.connect(_on_entity_relationship_added)
+	entity.relationship_removed.connect(_on_entity_relationship_removed)
+
+	if components:
+		entity.add_components(components)
+	
+	entity.set_process(true)
+	entity.set_physics_process(true)
+	entity.on_enable()
+	EngineDebugger.send_message("gecs:entity_enabled", [entity, entity.get_path()])
+	
 
 ## Adds a single system to the world.
 ##
@@ -147,6 +238,7 @@ func add_system(system: System) -> void:
 	systems_by_group[system.group].push_back(system)
 	system_added.emit(system)
 	system.setup()
+	EngineDebugger.send_message("gecs:system_added", [system, system.get_path()])
 
 ## Adds multiple systems to the world.
 ##
@@ -158,24 +250,6 @@ func add_systems(_systems: Array):
 	for _system in _systems:
 		add_system(_system)
 
-## Removes an [Entity] from the world.[br]
-## [param entity] The [Entity] to remove.[br]
-## [b]Example:[/b]
-##      [codeblock]world.remove_entity(player_entity)[/codeblock]
-func remove_entity(entity) -> void:
-	entity = entity as Entity
-	entity_removed.emit(entity)
-	_worldLogger.debug('remove_entity Removing Entity: ', entity)
-	entities.erase(entity) # FIXME: This doesn't always work for some reason?
-	# Update index
-	for component_key in entity.components.keys():
-		_remove_entity_from_index(entity, component_key)
-	
-	entity.component_added.disconnect(_on_entity_component_added)
-	entity.component_removed.disconnect(_on_entity_component_removed)
-	entity.on_destroy()
-	entity.queue_free()
-
 ## Removes a [System] from the world.[br]
 ## [param system] The [System] to remove.[br]
 ## [b]Example:[/b]
@@ -184,15 +258,25 @@ func remove_system(system) -> void:
 	_worldLogger.debug('remove_system Removing System: ', system)
 	systems.erase(system)
 	systems_by_group[system.group].erase(system)
+	if systems_by_group[system.group].size() == 0:
+		systems_by_group.erase(system.group)
+	EngineDebugger.send_message("gecs:system_removed", [system, system.get_path()])
 	system_removed.emit(system)
 	# Update index
 	system.queue_free()
 
-## Removes all [Entity]s and [System]s from the world.
-## Optionally frees the world node by default.
-func purge(should_free=true) -> void:
+## Remove a bunch of systems by there group name
+func remove_system_group(group: String) -> void:
+	if systems_by_group.has(group):
+		for system in systems_by_group[group]:
+			remove_system(system)
+
+## Removes all [Entity]s and [System]s from the world.[br]
+## [param should_free] Optionally frees the world node by default
+## [param keep] A list of entities that should be kept in the world
+func purge(should_free=true, keep := []) -> void:
 	_worldLogger.debug('Purging Entities', entities)
-	for entity in entities.duplicate():
+	for entity in entities.duplicate().filter(func(x): return not keep.has(x)):
 		remove_entity(entity)
 	_worldLogger.debug('Purging Systems', systems)
 	for system in systems.duplicate():
@@ -320,6 +404,7 @@ func _on_entity_component_added(entity, component: Variant) -> void:
 	_add_entity_to_index(entity, component.get_script().resource_path)
 	# Emit Signal
 	component_added.emit(entity, component)
+	EngineDebugger.send_message("gecs:entity_component_added", [entity, component])
 
 ## [signal Entity.component_removed] Callback when a component is removed from an entity.[br]
 ## @param entity The entity that had a component removed.[br]
@@ -329,10 +414,11 @@ func _on_entity_component_removed(entity, component: Variant) -> void:
 	_remove_entity_from_index(entity, component.resource_path)
 	# Emit Signal
 	component_removed.emit(entity, component)
+	EngineDebugger.send_message("gecs:entity_component_removed", [entity, component])
 
 ## (Optional) Update index when a relationship is added.
 func _on_entity_relationship_added(entity: Entity, relationship: Relationship) -> void:
-	var key = relationship.relation.get_script().resource_path
+	var key = relationship.relation.resource_path
 	if not relationship_entity_index.has(key):
 		relationship_entity_index[key] = []
 	relationship_entity_index[key].append(entity)
@@ -345,10 +431,11 @@ func _on_entity_relationship_added(entity: Entity, relationship: Relationship) -
 		reverse_relationship_index[rev_key].append(relationship.target)
 	# Emit Signal
 	relationship_added.emit(entity, relationship)
+	EngineDebugger.send_message("gecs:entity_relationship_added", [entity, relationship])
 
 ## (Optional) Update index when a relationship is removed.
 func _on_entity_relationship_removed(entity: Entity, relationship: Relationship) -> void:
-	var key = relationship.relation.get_script().resource_path
+	var key = relationship.relation.resource_path
 	if relationship_entity_index.has(key):
 		relationship_entity_index[key].erase(entity)
 		
@@ -358,3 +445,4 @@ func _on_entity_relationship_removed(entity: Entity, relationship: Relationship)
 			reverse_relationship_index[rev_key].erase(relationship.target)
 	# Emit Signal
 	relationship_removed.emit(entity, relationship)
+	EngineDebugger.send_message("gecs:entity_relationship_removed", [entity, relationship])

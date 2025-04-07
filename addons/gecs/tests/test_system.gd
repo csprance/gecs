@@ -61,7 +61,7 @@ func test_system_processes_entities_with_required_components():
 	assert_int(entity_c.get_component(C_TestC).value).is_equal(1)
 	
 	# Doesn't get incremented because no systems picked it up
-	assert_int(entity_d.get_component(C_TestD).value).is_equal(0)
+	assert_int(entity_d.get_component(C_TestD).points).is_equal(0)
 
 	# override the component with a new one
 	entity_a.add_component(C_TestA.new())
@@ -74,7 +74,7 @@ func test_system_processes_entities_with_required_components():
 	assert_int(entity_c.get_component(C_TestC).value).is_equal(2)
 	
 	# Doesn't get incremented because no systems picked it up (still)
-	assert_int(entity_d.get_component(C_TestD).value).is_equal(0)
+	assert_int(entity_d.get_component(C_TestD).points).is_equal(0)
 
 # FIXME: This test is failing system groups are not being set correctly (or they're being overidden somewhere)
 func test_system_group_processes_entities_with_required_components():
@@ -98,9 +98,9 @@ func test_system_group_processes_entities_with_required_components():
 	var sys_a = TestSystemA.new()
 	sys_a.group = "group1"
 	var sys_b = TestSystemB.new()
-	sys_a.group = "group1"
+	sys_b.group = "group1"
 	var sys_c = TestSystemC.new()
-	sys_a.group = "group2"
+	sys_c.group = "group2"
 
 	world.add_systems([sys_a, sys_b, sys_c])
 
@@ -117,7 +117,7 @@ func test_system_group_processes_entities_with_required_components():
 	assert_int(entity_c.get_component(C_TestC).value).is_equal(1)
 	
 	# Doesn't get incremented because no systems picked it up
-	assert_int(entity_d.get_component(C_TestD).value).is_equal(0)
+	assert_int(entity_d.get_component(C_TestD).points).is_equal(0)
 
 	# override the component with a new one
 	entity_a.add_component(C_TestA.new())
@@ -130,5 +130,5 @@ func test_system_group_processes_entities_with_required_components():
 	assert_int(entity_c.get_component(C_TestC).value).is_equal(2)
 	
 	# Doesn't get incremented because no systems picked it up (still)
-	assert_int(entity_d.get_component(C_TestD).value).is_equal(0)
+	assert_int(entity_d.get_component(C_TestD).points).is_equal(0)
 	

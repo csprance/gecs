@@ -1,6 +1,7 @@
 class_name ArrayExtensions
 
 ## Intersects two arrays of entities.[br]
+## In common terms, use this to find items appearing in both arrays.
 ## [param array1] The first array to intersect.[br]
 ## [param array2] The second array to intersect.[br]
 ## [b]return Array[/b] The intersection of the two arrays.
@@ -12,6 +13,7 @@ static func intersect(array1: Array, array2: Array) -> Array:
 	return result
 
 ## Unions two arrays of entities.[br]
+## In common terms, use this to combine items without duplicates.[br]
 ## [param array1] The first array to union.[br]
 ## [param array2] The second array to union.[br]
 ## [b]return Array[/b] The union of the two arrays.
@@ -23,6 +25,7 @@ static func union(array1: Array, array2: Array) -> Array:
 	return result
 
 ## Differences two arrays of entities.[br]
+## In common terms, use this to find items only in the first array.[br]
 ## [param array1] The first array to difference.[br]
 ## [param array2] The second array to difference.[br]
 ## [b]return Array[/b] The difference of the two arrays (entities in array1 not in array2).

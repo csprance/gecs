@@ -28,13 +28,13 @@ func add_project_setting(setting_name: String, default_value : Variant, value_ty
 	if error: 
 		push_error("GECS - Encountered error %d while saving project settings." % error)
 
-## Adds new Loggie related ProjectSettings to Godot.
+## Adds new GECS related ProjectSettings to Godot.
 func add_gecs_project_settings():
 	ProjectSettings.settings_changed.connect(_on_settings_changed)
 	for setting in GecsSettings.project_settings.values():
 		add_project_setting(setting["path"], setting["default_value"], setting["type"], setting["hint"], setting["hint_string"], setting["doc"])
 
-## Removes Loggie related ProjectSettings from Godot.
+## Removes GECS related ProjectSettings from Godot.
 func remove_gecs_project_setings():
 	ProjectSettings.settings_changed.disconnect(_on_settings_changed)
 	for setting in GecsSettings.project_settings.values():

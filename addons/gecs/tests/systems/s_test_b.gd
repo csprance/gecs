@@ -1,4 +1,3 @@
-class_name TestBSystem
 extends System
 
 
