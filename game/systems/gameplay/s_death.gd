@@ -9,7 +9,7 @@ func query() -> QueryBuilder:
 
 func process(entity: Entity, _delta: float) -> void:
 	Loggie.debug('Death!', self)
-	SoundManager.play('fx', 'kill')
+	#SoundManager.play('fx', 'kill')
 	
 	# If we have a reward, give it to the player
 	var c_reward = entity.get_component(C_Reward) as C_Reward

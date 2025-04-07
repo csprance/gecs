@@ -38,7 +38,7 @@ func health_damage_subsys(entity: Entity, _delta: float):
 
 	if c_health.current > 0:
 		Loggie.debug('Damaged', c_damage, c_health)
-		SoundManager.play('fx', 'c_damage')
+		#SoundManager.play('fx', 'c_damage')
 
 	
 	if c_health.current <= 0:
