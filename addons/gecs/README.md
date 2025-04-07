@@ -67,7 +67,7 @@ Before diving into the usage of the GECS addon, it's important to understand the
 
 - **World Query**: A way to query for specific entities in the world based on the components they contain or the relationships they have. 
 
-_ **Component Query** In A world query we can define how the components property values should match specific criteria. Allowing us to further refine world queries beyond just presence of components. See more: [Component_Queries.md](./COMPONENT_QUERIES.md)
+- **Component Query** In A world query we can define  criteria. Allowing us to further refine world queries beyond just presence of components. See more: [Component_Queries.md](./addons/gecs/COMPONENT_QUERIES.md)
 
 - **Relationship**: A resource that represents a relationship between a target and a source based on a relation. See more: [Relations.md](./RELATIONSHIPS.md)
 
@@ -314,6 +314,16 @@ q
 var entities_with_velocity_and_not_captured = q.with_all([CVelocity]).with_none([CCaptured])
 ```
 
+**Group Searching with Query Builder**
+
+GECS supports filtering entities by Godot Group directly via the QueryBuilder. For example:
+```gdscript
+var entities = q.with_all([CVelocity]).with_group("enemy")
+```
+This returns only entities with the specified components and that belong to the "enemy" group.
+
+[Read more about goups here](https://docs.godotengine.org/en/stable/tutorials/scripting/groups.html)
+
 Systems have properties that allow for customizing their execution:
 
 * active: Determines whether the system runs during processing. If false, the system will be skipped.
@@ -337,7 +347,29 @@ Systems can be assigned to specific groups, enabling you to control when and how
 
 **Assigning Systems to Groups**:
 
-In your system script, set the `group` property to specify which group the system belongs to.
+In your system script, set the `group` property to specify which group the system belongs to. These are not the same as godot groups.
+
+**Import and Export World Functionality**
+
+GECS now allows you to save and load the entire world state. Use these methods:
+- `ECS.export_world(file_path)` to export the current world state.
+- `ECS.import_world(file_path)` to import a saved world state into the world. Optionally purge the world
+
+These functions facilitate state persistence and dynamic world loading.
+
+### Pause Functionality
+
+GECS systems inherit the regular Godot process modes, letting you choose whether they should run during pause. 
+By default, systems use PROCESS_MODE_INHERIT, meaning they respect the pause state of their parent node. You can change this using set_process_mode() in Godot or set it from the editor GUI:
+
+• PROCESS_MODE_INHERIT (0): Inherits the parent's process mode.  
+• PROCESS_MODE_PAUSABLE (1): Stops processing when SceneTree.paused is true.  
+• PROCESS_MODE_WHEN_PAUSED (2): Only processes when paused.  
+• PROCESS_MODE_ALWAYS (3): Always processes, ignoring pause state.  
+• PROCESS_MODE_DISABLED (4): Never processes, ignoring pause state.  
+
+For example, gameplay and physics systems might stop when the game is paused, while input handling systems could still process any menu UI input. This integrates seamlessly with Godot’s built-in “pause” feature to give you fine-grained control over how each system behaves when the game is paused.
+
 
 ## Conclusion
 

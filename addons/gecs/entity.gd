@@ -18,6 +18,7 @@
 ##         print("Component added:", component_key)
 ##[/codeblock]	
 @icon('res://addons/gecs/assets/entity.svg')
+@tool
 class_name Entity
 extends Node
 
@@ -35,7 +36,7 @@ signal relationship_removed(entity: Entity, relationship: Relationship)
 ## [Component]s to be attached to the entity set in the editor. These will be loaded for you and added to the [Entity]
 @export var component_resources: Array[Component] = []
 
-## [Component]s attached to the [Entity]
+## [Component]s attached to the [Entity] in the form of Dict[resource_path:String, Component]
 var components: Dictionary = {}
 ## Relationships attached to the entity
 var relationships: Array[Relationship] = []
@@ -45,24 +46,52 @@ var _entityLogger = GECSLogger.new().domain('Entity')
 ## We can store ephemeral state on the entity
 var _state = {}
 
-
+## Called when the entity is added to the scene tree.
 func _ready() -> void:
-	initialize()
+	_initialize()
 
 
-func initialize():
-	_entityLogger.trace('_ready Entity Initializing Components: ', self)
+
+func _initialize():
+	_entityLogger.trace('Entity Initializing Components: ', self.name)
+	
+	# Add components defined in code
 	component_resources.append_array(define_components())
+	
 	# remove any component_resources that are already defined in components
 	# This is useful for when you instantiate an entity from a scene and want to overide components
 	for component in component_resources:
 		if has_component(component.get_script()):
 			component_resources.erase(component)
+	
 	# Initialize components from the exported array
 	for res in component_resources:
 		add_component(res.duplicate(true))
 
+	# Call the lifecycle method on_ready
 	on_ready()
+
+### We need to override the default serialization method to store our components and relationships
+#func _get_property_list() -> Array:
+	## Because all of these things extend from Resource we can serialize them
+	#var properties = [{
+		#"name": "components",
+		#"type": TYPE_DICTIONARY,
+		#"usage": PROPERTY_USAGE_STORAGE
+	#},
+	#{
+		#"name": "relationships",
+		#"type": TYPE_ARRAY,
+		#"usage": PROPERTY_USAGE_STORAGE
+	#},
+	#{
+		#"name": "component_resources",
+		#"type": TYPE_ARRAY,
+		#"usage": PROPERTY_USAGE_STORAGE
+	#}]
+	#return properties
+
+
 
 ## ##################################
 ## Components
@@ -94,8 +123,8 @@ func add_components(_components: Array):
 func remove_component(component: Variant) -> void:
 	var component_key = component.resource_path
 	if components.erase(component.resource_path):
-		_entityLogger.trace('Removed Component: ', component.resource_path)
 		component_removed.emit(self, component)
+		_entityLogger.trace('Removed Component: ', component.resource_path)
 
 ## Removes multiple components from the entity.[br]
 ## [param _components] An array of components to remove.[br]
@@ -105,6 +134,13 @@ func remove_component(component: Variant) -> void:
 func remove_components(_components: Array):
 	for _component in _components:
 		remove_component(_component)
+
+##  Removes all components from the entity.[br]
+## [b]Example:[/b]
+##     [codeblock]entity.remove_all_components()[/codeblock]
+func remove_all_components() -> void:
+	for component in components.values():
+		remove_component(component)
 
 ## Retrieves a specific [Component] from the entity.[br]
 ## [param component] The [Component] class to retrieve.[br]
@@ -152,8 +188,8 @@ func remove_relationships(_relationships: Array):
 
 ## Retrieves a specific [Relationship] from the entity.
 ## [param relationship] The [Relationship] to retrieve.
-## [param return] - The FIRST matching [Relationship] if it exists, otherwise `null`.
-func get_relationship(relationship: Relationship, single=true):
+## [param return] - The FIRST matching [Relationship] if it exists, otherwise `null` or `[]` if single = false
+func get_relationship(relationship: Relationship, single = true):
 	var results = []
 	var to_remove = []
 	for rel in relationships:
@@ -169,8 +205,11 @@ func get_relationship(relationship: Relationship, single=true):
 	for rel in to_remove:
 		relationships.erase(rel)
 		relationship_removed.emit(self, rel)
+	var retval = null if results.is_empty() else results
+	if not single and retval == null:
+		return []
 	
-	return null if results.is_empty() else results
+	return retval
 
 ## Retrieves [Relationship]s from the entity.
 ## [param relationship] The [Relationship]s to retrieve.

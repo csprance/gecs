@@ -1,0 +1,37 @@
+[gd_scene load_steps=2 format=3 uid="uid://c3jat8ndtdoki"]
+
+[ext_resource type="Script" uid="uid://bn4pjik8c2mdq" path="res://addons/gecs/debug/entity_tree.gd" id="1_xsgon"]
+
+[node name="CanvasLayer" type="CanvasLayer"]
+
+[node name="EntityTreePopupPanel" type="PopupPanel" parent="."]
+title = "Entities"
+initial_position = 1
+size = Vector2i(322, 500)
+visible = true
+script = ExtResource("1_xsgon")
+
+[node name="VBox" type="VBoxContainer" parent="EntityTreePopupPanel"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 4.0
+offset_top = 4.0
+offset_right = 318.0
+offset_bottom = 496.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="QueryLineEdit" type="LineEdit" parent="EntityTreePopupPanel/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+placeholder_text = "Enter Query To Filter...."
+
+[node name="Tree" type="Tree" parent="EntityTreePopupPanel/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+hide_root = true
+select_mode = 2

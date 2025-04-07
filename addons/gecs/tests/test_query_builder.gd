@@ -570,3 +570,58 @@ func test_query_with_component_queries():
 		C_TestD, C_TestE, C_TestA
 	]).execute()
 	assert_array(result).has_size(0)  # Should match no entities
+
+func test_query_entities_groups():
+	var entity1 = Entity.new()
+	var entity2 = Entity.new()
+	var entity3 = Entity.new()
+
+	entity1.add_component(C_TestA.new())
+	entity2.add_component(C_TestB.new())
+	entity3.add_component(C_TestC.new())
+
+	# Add entities to groups
+	entity1.add_to_group("Player")
+	entity2.add_to_group("Enemy")
+	entity3.add_to_group("Enemy")
+	entity3.add_to_group("NPC")
+
+	world.add_entity(entity1)
+	world.add_entity(entity2)
+	world.add_entity(entity3)
+
+	# Test with_group for "Player"
+	var result = QueryBuilder.new(world).with_group(["Player"]).execute()
+	assert_array(result).has_size(1)
+	assert_bool(result.has(entity1)).is_true()
+
+	# Verify entity1 with C_TestA in "Player"
+	var check_player_a = QueryBuilder.new(world).with_all([C_TestA]).with_group(["Player"]).execute()
+	assert_array(check_player_a).has_size(1)
+	assert_bool(check_player_a.has(entity1)).is_true()
+
+	# Test with_group for "Enemy"
+	result = QueryBuilder.new(world).with_group(["Enemy"]).execute()
+	assert_array(result).has_size(2)
+	assert_bool(result.has(entity2)).is_true()
+	assert_bool(result.has(entity3)).is_true()
+
+	# Verify entity2 with C_TestB in "Enemy"
+	var check_enemy_b = QueryBuilder.new(world).with_all([C_TestB]).with_group(["Enemy"]).execute()
+	assert_array(check_enemy_b).has_size(1)
+	assert_bool(check_enemy_b.has(entity2)).is_true()
+
+	# Verify entity3 with C_TestC in "Enemy"
+	var check_enemy_c = QueryBuilder.new(world).with_all([C_TestC]).with_group(["Enemy"]).execute()
+	assert_array(check_enemy_c).has_size(1)
+	assert_bool(check_enemy_c.has(entity3)).is_true()
+
+	# Test without_group excluding "NPC"
+	result = QueryBuilder.new(world).with_group(["Enemy"]).without_group(["NPC"]).execute()
+	assert_array(result).has_size(1)
+	assert_bool(result.has(entity2)).is_true()
+	assert_bool(result.has(entity3)).is_false()
+
+	# Verify excluding "NPC" removes entity3
+	var check_enemy_c_no_npc = QueryBuilder.new(world).with_all([C_TestC]).with_group(["Enemy"]).without_group(["NPC"]).execute()
+	assert_array(check_enemy_c_no_npc).has_size(0)

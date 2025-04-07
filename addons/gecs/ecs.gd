@@ -26,6 +26,10 @@
 class_name _ECS
 extends Node
 
+signal world_changed(world: World)
+signal world_exited
+var debug_scene = preload('res://addons/gecs/debug/ecs_debug.tscn')
+
 ## The Current active [World] Instance[br]
 ## Holds a reference to the currently active [World], allowing access to the [member World.query] instance and any [Entity]s and [System]s within it.
 var world: World:
@@ -39,17 +43,23 @@ var world: World:
 				# Add the world to the tree if it is not already
 				get_tree().root.get_node('./Root').add_child(world)
 			world.connect("tree_exited", _on_world_exited)
-			_show_debug()
-
-func _on_world_exited() -> void:
-	world = null
+		world_changed.emit(world)
+		EngineDebugger.send_message("gecs:set_world", [value])
 
 ## Are we in debug mode?
 var debug := false
+
+func show_debug():
+	var _scene = debug_scene.instantiate()
+	add_child(_scene)
+
 ## This is an array of functions that get called on the entities when they get added to the world (but before they are ready)
 var entity_preprocessors: Array[Callable] = []
 ## This is an array of functions that get called on the entities right before they get removed from the world
 var entity_postprocessors : Array[Callable]= []
+## A Wildcard for use in relatonship queries. Indicates can be any value for a relation 
+## or a target in a Relationship Pair ECS.wildcard
+var wildcard = null
 
 ## This is called to process the current active [World] instance and the [System]s within it.
 ## You would call this in _process or _physics_process to update the [_ECS] system.[br]
@@ -58,18 +68,6 @@ var entity_postprocessors : Array[Callable]= []
 ## 	[codeblock]ECS.world.process(world, 'my-system-group')[/codeblock]
 func process(delta: float, group: String = '') -> void:
 	world.process(delta, group)
-
-## Called after the world is set to show the debug menu that has all entities and components if ECS.debug === True
-func _show_debug():
-	if ECS.debug:
-		var debug_window_scene = preload('res://addons/gecs/ecs_debug.tscn').instantiate()
-		debug_window_scene.name = "DebugWindow"
-		add_child(debug_window_scene)
-		debug_window_scene.create_debug_window()
-
-## A Wildcard for use in relatonship queries. Indicates can be any value for a relation 
-## or a target in a Relationship Pair
-var wildcard = null
 
 ## Get all components of a specific type from a list of entities[br]
 ## If the component does not exist on the entity it will return the default_component if provided or assert
@@ -84,3 +82,9 @@ func get_components(entities, component_type, default_component = null) -> Array
 		components.append(component)
 		
 	return components
+
+## Called when the world is exited
+func _on_world_exited() -> void:
+	world = null
+	world_exited.emit()
+	EngineDebugger.send_message("gecs:exit_world", [])

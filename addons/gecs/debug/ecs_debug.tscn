@@ -1,0 +1,39 @@
+[gd_scene load_steps=2 format=3 uid="uid://df7cvyauir2uh"]
+
+[ext_resource type="Script" uid="uid://ca7erogu58fca" path="res://addons/gecs/debug/ecs_debug.gd" id="1_8dl00"]
+
+[node name="ECSDebug" type="CanvasLayer"]
+layer = 2
+script = ExtResource("1_8dl00")
+
+[node name="Window" type="Window" parent="."]
+title = "ECS Debug"
+position = Vector2i(0, 36)
+size = Vector2i(300, 800)
+
+[node name="VBox" type="VBoxContainer" parent="Window"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 4.0
+offset_top = 4.0
+offset_right = -4.0
+offset_bottom = -4.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="QueryLineEdit" type="LineEdit" parent="Window/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+placeholder_text = "Enter Query To Filter...."
+
+[node name="Tree" type="Tree" parent="Window/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+hide_root = true
+select_mode = 2
+
+[connection signal="close_requested" from="Window" to="." method="_on_window_close_requested"]
