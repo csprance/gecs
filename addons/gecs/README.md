@@ -5,6 +5,8 @@
 
 A lightweight, performant ECS framework for Godot 4.x that integrates seamlessly with Godot's node system.
 
+https://discord.gg/eB43XU2tmn
+
 ## Features
 
 - 🎯 Full integration with Godot's node system
