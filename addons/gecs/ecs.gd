@@ -14,7 +14,7 @@
 ##
 ##   func _read(delta):
 ##       ECS.world = world
-##       
+##
 ##	 func _process(delta):
 ##	     ECS.process(delta)
 ##[/codeblock]
@@ -26,50 +26,47 @@
 class_name _ECS
 extends Node
 
+## Emitted when the world is changed with a ref to the new world
+signal world_changed(world: World)
+##  Emitted when the world is exited
+signal world_exited
+
 ## The Current active [World] Instance[br]
 ## Holds a reference to the currently active [World], allowing access to the [member World.query] instance and any [Entity]s and [System]s within it.
 var world: World:
 	get:
 		return world
 	set(value):
-		# Add the new world to the scene
+		# Add the new world to the scenes
 		world = value
 		if world:
-			if not world.is_inside_tree():	
+			if not world.is_inside_tree():
 				# Add the world to the tree if it is not already
-				get_tree().root.get_node('./Root').add_child(world)
+				get_tree().root.get_node("./Root").add_child(world)
 			world.connect("tree_exited", _on_world_exited)
-			_show_debug()
+		world_changed.emit(world)
+		if debug:
+			GECSEditorDebuggerMessages.set_world(world)
+
 ## Are we in debug mode?
-var debug := false
-## This is an array of functions that get called on the entities when they get added to the world (but before they are ready)
+var debug := true
+## This is an array of functions that get called on the entities when they get added to the world (after they are ready)
 var entity_preprocessors: Array[Callable] = []
 ## This is an array of functions that get called on the entities right before they get removed from the world
-var entity_postprocessors : Array[Callable]= []
+var entity_postprocessors: Array[Callable] = []
+## A Wildcard for use in relatonship queries. Indicates can be any value for a relation
+## or a target in a Relationship Pair ECS.wildcard
+var wildcard = null
+
 
 ## This is called to process the current active [World] instance and the [System]s within it.
 ## You would call this in _process or _physics_process to update the [_ECS] system.[br]
 ## If you provide a group name it will run just that group otherwise it runs all groups[br]
 ## Example:
 ## 	[codeblock]ECS.world.process(world, 'my-system-group')[/codeblock]
-func process(delta: float, group: String = '') -> void:
+func process(delta: float, group: String = "") -> void:
 	world.process(delta, group)
 
-## Called after the world is set to show the debug menu that has all entities and components if ECS.debug === True
-func _show_debug():
-	if ECS.debug:
-		var debug_window_scene = preload('res://addons/gecs/ecs_debug.tscn').instantiate()
-		debug_window_scene.name = "DebugWindow"
-		add_child(debug_window_scene)
-		debug_window_scene.create_debug_window()
-
-## Called when the world is exited
-func _on_world_exited() -> void:
-	world = null
-
-## A Wildcard for use in relatonship queries. Indicates can be any value for a relation 
-## or a target in a Relationship Pair ECS.wildcard
-var wildcard = null
 
 ## Get all components of a specific type from a list of entities[br]
 ## If the component does not exist on the entity it will return the default_component if provided or assert
@@ -82,5 +79,13 @@ func get_components(entities, component_type, default_component = null) -> Array
 		if not component and default_component:
 			component = default_component
 		components.append(component)
-		
+
 	return components
+
+
+## Called when the world is exited
+func _on_world_exited() -> void:
+	world = null
+	world_exited.emit()
+	if debug:
+		GECSEditorDebuggerMessages.exit_world()
