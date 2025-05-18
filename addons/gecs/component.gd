@@ -12,10 +12,14 @@
 ##  extends Node2D
 ##
 ##  @export var velocity: Vector2 = Vector2.ZERO
-##[/codeblock]    
-@icon('res://addons/gecs/assets/component.svg')
+##[/codeblock]
+@icon("res://addons/gecs/assets/component.svg")
 class_name Component
 extends Resource
+
+## Emitted when a property of this component changes. This is slightly different from the property_changed signal
+signal property_changed(component, property_name, old_value, new_value)
+
 
 ## Checks if this component equals another, including data
 func equals(other: Component) -> bool:
@@ -24,3 +28,14 @@ func equals(other: Component) -> bool:
 		if self.get(prop_name) != other.get(prop_name):
 			return false
 	return true
+
+
+## Used to serialize the component to a dictionar with only the export variables
+## This is used for the debugger to send the data to the editor
+func serialize() -> Dictionary:
+	var data: Dictionary = {}
+	for prop_info in get_script().get_script_property_list():
+		var prop_name: String = prop_info.name
+		var prop_val = get(prop_name)
+		data[prop_name] = prop_val
+	return data
