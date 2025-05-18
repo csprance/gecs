@@ -29,25 +29,34 @@ var target
 ## The source of the relationship.
 var source
 
+
 func _init(_relation = null, _target = null):
-	 # Assert for class reference vs instance for relation
-	assert(not (_relation != null and (_relation is GDScript or _relation is Script)),
-		"Relation must be an instance of Component (did you forget to call .new()?)")
-	
+	# Assert for class reference vs instance for relation
+	assert(
+		not (_relation != null and (_relation is GDScript or _relation is Script)),
+		"Relation must be an instance of Component (did you forget to call .new()?)"
+	)
+
 	# Assert for relation type
-	assert(_relation == null or _relation is Component, 
-		"Relation must be null or a Component instance")
-	
+	assert(
+		_relation == null or _relation is Component, "Relation must be null or a Component instance"
+	)
+
 	# Assert for class reference vs instance for target
-	assert(not (_target != null and _target is GDScript and _target is Component),
-		"Target must be an instance of Component (did you forget to call .new()?)")
-	
+	assert(
+		not (_target != null and _target is GDScript and _target is Component),
+		"Target must be an instance of Component (did you forget to call .new()?)"
+	)
+
 	# Assert for target type
-	assert(_target == null or _target is Entity or _target is Script,
-		"Target must be null, an Entity instance, or a Script archetype")
-	
+	assert(
+		_target == null or _target is Entity or _target is Script,
+		"Target must be null, an Entity instance, or a Script archetype"
+	)
+
 	relation = _relation
 	target = _target
+
 
 ## Checks if this relationship matches another relationship.
 ## [param other]: The [Relationship] to compare with.
@@ -89,6 +98,7 @@ func matches(other: Relationship) -> bool:
 
 	return rel_match and target_match
 
+
 func valid() -> bool:
 	# make sure the target is a valid Entity instance or it's ok if it's null
 	var relation_valid = false
@@ -96,8 +106,8 @@ func valid() -> bool:
 		relation_valid = true
 	else:
 		relation_valid = is_instance_valid(target)
-	
+
 	# Ensure the source is a valid Entity instance; it cannot be null
 	var source_valid = is_instance_valid(source)
-	
+
 	return relation_valid and source_valid
