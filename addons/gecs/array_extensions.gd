@@ -1,5 +1,6 @@
 class_name ArrayExtensions
 
+
 ## Intersects two arrays of entities.[br]
 ## In common terms, use this to find items appearing in both arrays.
 ## [param array1] The first array to intersect.[br]
@@ -11,6 +12,7 @@ static func intersect(array1: Array, array2: Array) -> Array:
 		if array2.has(entity):
 			result.append(entity)
 	return result
+
 
 ## Unions two arrays of entities.[br]
 ## In common terms, use this to combine items without duplicates.[br]
@@ -24,6 +26,7 @@ static func union(array1: Array, array2: Array) -> Array:
 			result.append(entity)
 	return result
 
+
 ## Differences two arrays of entities.[br]
 ## In common terms, use this to find items only in the first array.[br]
 ## [param array1] The first array to difference.[br]
@@ -35,3 +38,115 @@ static func difference(array1: Array, array2: Array) -> Array:
 		if not array2.has(entity):
 			result.append(entity)
 	return result
+
+
+## systems_by_group is a dictionary of system groups and their systems
+## { "Group1": [SystemA, SystemB], "Group2": [SystemC, SystemD] }
+static func topological_sort(systems_by_group: Dictionary) -> void:
+	# Iterate over each group key in 'systems_by_group'
+	for group in systems_by_group.keys():
+		var systems = systems_by_group[group]
+		# If the group has 1 or fewer systems, no sorting is needed
+		if systems.size() <= 1:
+			continue
+
+		# Create two data structures:
+		# 1) adjacency: stores, for a given system, which systems must come after it
+		# 2) indegree: tracks how many "prerequisite" systems each system has
+		var adjacency = {}
+		var indegree = {}
+		var wildcard_front = []
+		var wildcard_back = []
+		for s in systems:
+			adjacency[s] = []
+			indegree[s] = 0
+
+		# Build adjacency and indegree counts based on dependencies returned by s.deps()
+		for s in systems:
+			var deps_dict = s.deps()
+
+			# Check for Runs.Before array on s
+			# If present, each item in s.Runs.Before means "s must run before that item"
+			# So we add the item to adjacency[s], and increment the item's indegree
+			# If item is null or ECS.wildcard, we treat it as "run before everything" by pushing 's' onto wildcard_front
+			if deps_dict.has(s.Runs.Before):
+				for b in deps_dict[s.Runs.Before]:
+					if b == ECS.wildcard:
+						# ECS.wildcard AKA 'null' means s should run before all systems
+						wildcard_front.append(s)
+					elif systems.has(b):
+						# Normal dependency within the group
+						adjacency[s].append(b)
+						indegree[b] += 1
+
+			# Check for Runs.After array on s
+			# If present, each item in s.Runs.After means "s must run after that item"
+			# So we add 's' to adjacency[item], and increment s's indegree
+			# If item is null or ECS.wildcard, we treat it as "run after everything" by pushing 's' onto wildcard_back
+			if deps_dict.has(s.Runs.After):
+				for a in deps_dict[s.Runs.After]:
+					if a == ECS.wildcard:
+						# ECS.wildcard AKA 'null' means s should run after all systems
+						wildcard_back.append(s)
+					elif systems.has(a):
+						# Normal dependency within the group
+						adjacency[a].append(s)
+						indegree[s] += 1
+
+		# Kahn's Algorithm begins:
+		# 1) Insert all systems with zero indegree into a queue
+		# 2) Pop from the queue, add to sorted_result
+		# 3) Decrement indegree for each adjacent system
+		# 4) Any adjacent system that reaches zero indegree is appended to the queue
+		var queue = []
+
+		# Adjust for wildcard_front and wildcard_back:
+		# wildcard_front: s runs before everything -> point s -> other
+		for w in wildcard_front:
+			for other in systems:
+				if other != w and not adjacency[w].has(other):
+					adjacency[w].append(other)
+					indegree[other] += 1
+
+		# wildcard_back: s runs after everything -> point other -> s
+		for w in wildcard_back:
+			for other in systems:
+				if other != w and not adjacency[other].has(w):
+					adjacency[other].append(w)
+					indegree[w] += 1
+
+		# Collect all systems with zero indegree into the queue as our starting point
+		for s in systems:
+			if indegree[s] == 0:
+				queue.append(s)
+
+		var sorted_result = []
+
+		# While there are systems with no remaining prerequisites
+		while queue.size() > 0:
+			var current = queue.pop_front()
+			# Add that system to the sorted list
+			sorted_result.append(current)
+			# For each system that depends on 'current'
+			for nxt in adjacency[current]:
+				# Decrement its indegree because 'current' is now accounted for
+				indegree[nxt] -= 1
+				# If it has no more prerequisites, add it to the queue
+				if indegree[nxt] == 0:
+					queue.append(nxt)
+
+		# If we successfully placed all systems, overwrite the original array with sorted_result
+		if sorted_result.size() == systems.size():
+			systems_by_group[group] = sorted_result
+		else:
+			assert(
+				false,
+				(
+					"Topological sort failed for group '%s'. Possible cycle or mismatch in dependencies."
+					% group
+				)
+			)
+			# Otherwise, we found a cycle or mismatch. Fallback to the original unsorted array
+			systems_by_group[group] = systems
+
+	# The function modifies 'systems_by_group' in-place with a topologically sorted order
