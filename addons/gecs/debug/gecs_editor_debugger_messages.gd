@@ -95,6 +95,19 @@ static func system_removed(sys: System) -> void:
 		EngineDebugger.send_message(Msg.SYSTEM_REMOVED, [sys.get_instance_id(), sys.get_path()])
 
 
+static func _get_type_name_for_debugger(obj) -> String:
+	if obj == null:
+		return "null"
+	if obj is Resource or obj is Node:
+		var script = obj.get_script()
+		if script:
+			return script.get_class()
+		return obj.get_class()
+	elif obj is Object:
+		return obj.get_class()
+	return str(typeof(obj))
+
+
 static func entity_component_added(ent: Entity, comp: Resource) -> void:
 	if can_send_message():
 		EngineDebugger.send_message(
@@ -102,7 +115,7 @@ static func entity_component_added(ent: Entity, comp: Resource) -> void:
 			[
 				ent.get_instance_id(),
 				comp.get_instance_id(),
-				ClassUtils.get_type_name(comp),
+				_get_type_name_for_debugger(comp),
 				comp.serialize()
 			]
 		)
