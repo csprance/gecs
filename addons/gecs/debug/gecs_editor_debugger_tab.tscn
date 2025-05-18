@@ -1,0 +1,126 @@
+[gd_scene load_steps=3 format=3 uid="uid://df7cvyauir2uh"]
+
+[ext_resource type="Script" uid="uid://ca7erogu58fca" path="res://addons/gecs/debug/gecs_editor_debugger_tab.gd" id="1_8dl00"]
+
+[sub_resource type="CodeHighlighter" id="CodeHighlighter_wxuvi"]
+number_color = Color(0.79, 0.58144, 0.4108, 1)
+symbol_color = Color(0.619877, 0.315536, 1, 1)
+function_color = Color(0.161096, 0.422031, 0.723413, 1)
+member_variable_color = Color(0.518401, 0.581324, 0.71745, 1)
+
+[node name="GECSEditorDebuggerTab" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+script = ExtResource("1_8dl00")
+
+[node name="HSplit" type="HSplitContainer" parent="."]
+process_mode = 3
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="HSplitContainer" type="HSplitContainer" parent="HSplit"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="EntitiesVBox" type="VBoxContainer" parent="HSplit/HSplitContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="HBoxContainer" type="HBoxContainer" parent="HSplit/HSplitContainer/EntitiesVBox"]
+layout_mode = 2
+
+[node name="EntitiesQueryLineEdit" type="LineEdit" parent="HSplit/HSplitContainer/EntitiesVBox/HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "Entities filter....."
+
+[node name="QueryBuilderCheckBox" type="CheckBox" parent="HSplit/HSplitContainer/EntitiesVBox/HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "QueryBuilder"
+
+[node name="EntitiesTree" type="Tree" parent="HSplit/HSplitContainer/EntitiesVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+hide_root = true
+select_mode = 2
+
+[node name="SystemsVBox" type="VBoxContainer" parent="HSplit/HSplitContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="SystemsQueryLineEdit" type="LineEdit" parent="HSplit/HSplitContainer/SystemsVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+placeholder_text = "Systems filter...."
+
+[node name="SystemsTree" type="Tree" parent="HSplit/HSplitContainer/SystemsVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+hide_root = true
+select_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="HSplit"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="HBoxContainer" type="HBoxContainer" parent="HSplit/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 0
+
+[node name="UpdateDataCheckBox" type="CheckBox" parent="HSplit/VBoxContainer/HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 0
+button_pressed = true
+text = "Update With ECS State"
+
+[node name="RichTextLabel" type="RichTextLabel" parent="HSplit/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Update Interval  "
+horizontal_alignment = 2
+
+[node name="UpdateIntervalSpinBox" type="SpinBox" parent="HSplit/VBoxContainer/HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+min_value = 0.1
+step = 0.1
+value = 5.0
+allow_greater = true
+
+[node name="CodeEdit" type="CodeEdit" parent="HSplit/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+size_flags_stretch_ratio = 0.5
+text = "{
+	\"message\": \"Start The Game to debug debugging GECS\"
+}"
+syntax_highlighter = SubResource("CodeHighlighter_wxuvi")
+highlight_all_occurrences = true
+line_folding = true
+gutters_draw_fold_gutter = true
+indent_size = 2
+indent_automatic = true
+auto_brace_completion_enabled = true
+auto_brace_completion_highlight_matching = true
