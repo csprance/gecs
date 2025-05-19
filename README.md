@@ -89,7 +89,7 @@ Here's how to create a new component:
 
 ```gdscript
 # c_bounce.gd
-class_name CBounce
+class_name C_Bounce
 extends Component
 
 @export var normal := Vector2.ZERO
@@ -130,12 +130,12 @@ extends System
 
 func query():
   # All entities that all have transform, velocity and bounce components
-    return q.with_all([CTransform, CVelocity, CBounce])
+    return q.with_all([C_Transform, C_Velocity, C_Bounce])
 
 func process(entity: Entity, delta: float):
-    var c_bounce: CBounce = entity.get_component(CBounce)
+    var c_bounce = entity.get_component(C_Bounce) as C_Bounce
     if c_bounce.should_bounce:
-        var c_velocity: CVelocity = entity.get_component(CVelocity)
+        var c_velocity = entity.get_component(C_Velocity) as C_Velocity
         c_velocity.direction = c_bounce.normal
         c_bounce.should_bounce = false
 ```
@@ -165,11 +165,11 @@ func _ready() -> void:
 
 func _process(delta):
     # Process only systems in the "gameplay" group
-    ECS.process(delta, "gameplay")
+    world.process(delta, "gameplay")
 
 func _physics_process(delta):
     # Process only systems in the "physics" group
-    ECS.process(delta, "physics")
+    world.process(delta, "physics")
 ```
 
 ## Example Project
@@ -183,7 +183,7 @@ To illustrate the usage of GECS, let's look at an example project that simulates
 
 ```gdscript
 # c_bounce.gd
-class_name CBounce
+class_name C_Bounce
 extends Component
 
 @export var normal := Vector2.ZERO
@@ -194,7 +194,7 @@ extends Component
 
 ```gdscript
 # c_velocity.gd
-class_name CVelocity
+class_name C_Velocity
 extends Component
 
 @export var direction := Vector2.ZERO
@@ -205,7 +205,7 @@ extends Component
 
 ```gdscript
 # c_transform.gd
-class_name CTransform
+class_name C_Transform
 extends Component
 
 @export var transform: Transform2D
@@ -237,7 +237,7 @@ func on_ready() -> void:
     Utils.sync_transform(self)
 ```
 
-Includes `CPlayerMovement`, `CVelocity`, `CTransform`, and `CFriction` components.
+Includes `C_PlayerMovement`, `C_Velocity`, `C_Transform`, and `C_Friction` components.
 
 ### Systems
 
@@ -249,12 +249,12 @@ class_name BounceSystem
 extends System
 
 func query():
-    return q.with_all([CTransform, CVelocity, CBounce])
+    return q.with_all([C_Transform, C_Velocity, C_Bounce])
 
 func process(entity: Entity, delta: float):
-    var c_bounce: CBounce = entity.get_component(CBounce)
+    var c_bounce = entity.get_component(C_Bounce) as C_Bounce
     if c_bounce.should_bounce:
-        var c_velocity: CVelocity = entity.get_component(CVelocity)
+        var c_velocity = entity.get_component(C_Velocity) as C_Velocity
         c_velocity.direction = c_bounce.normal
         c_bounce.should_bounce = false
 ```
@@ -267,11 +267,11 @@ class_name VelocitySystem
 extends System
 
 func query():
-    return q.with_all([CVelocity, CTransform])
+    return q.with_all([C_Velocity, C_Transform])
 
 func process(entity: Entity, delta: float):
-    var c_velocity: CVelocity = entity.get_component(CVelocity)
-    var c_transform: CTransform = entity.get_component(CTransform)
+    var c_velocity = entity.get_component(C_Velocity) as C_Velocity
+    var c_transform = entity.get_component(C_Transform) as C_Transform
     var velocity_vector: Vector2 = c_velocity.direction.normalized() * c_velocity.speed
     c_transform.transform.origin += velocity_vector * delta
 ```
@@ -284,7 +284,7 @@ class_name Transform2DSystem
 extends System
 
 func query():
-    return q.with_all([CTransform])
+    return q.with_all([C_Transform])
 
 func process(entity: Entity, delta):
     Utils.sync_transform(entity)
@@ -316,14 +316,14 @@ q
 **Example**:
 
 ```gdscript
-var entities_with_velocity_and_not_captured = q.with_all([CVelocity]).with_none([CCaptured])
+var entities_with_velocity_and_not_captured = q.with_all([C_Velocity]).with_none([C_Captured])
 ```
 
 **Group Searching with Query Builder**
 
 GECS supports filtering entities by Godot Group directly via the QueryBuilder. For example:
 ```gdscript
-var entities = q.with_all([CVelocity]).with_group("enemy")
+var entities = q.with_all([C_Velocity]).with_group("enemy")
 ```
 This returns only entities with the specified components and that belong to the "enemy" group.
 
@@ -337,10 +337,10 @@ Systems have properties that allow for customizing their execution:
 Example:
 ```gdscript
 func _physics_process(delta):
-    ECS.process(delta, "physics")
+    world.process(delta, "physics")
 
 func _process(delta):
-    ECS.process(delta, "gameplay")
+    world.process(delta, "gameplay")
 ```
 This will only process systems that are in the "physics" group in the physics process function and gameplay system in the _process function
 
@@ -353,14 +353,6 @@ Systems can be assigned to specific groups, enabling you to control when and how
 **Assigning Systems to Groups**:
 
 In your system script, set the `group` property to specify which group the system belongs to. These are not the same as godot groups.
-
-**Import and Export World Functionality**
-
-GECS now allows you to save and load the entire world state. Use these methods:
-- `ECS.export_world(file_path)` to export the current world state.
-- `ECS.import_world(file_path)` to import a saved world state into the world. Optionally purge the world
-
-These functions facilitate state persistence and dynamic world loading.
 
 ### Pause Functionality
 
