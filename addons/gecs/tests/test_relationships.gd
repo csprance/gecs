@@ -185,6 +185,16 @@ func test_archetype_and_entity():
 	assert_bool(entities_that_like_pizza.has(e_bob)).is_true()  # bob only likes pizza
 	assert_bool(entities_that_like_pizza.has(e_heather)).is_true()  # heather likes food so of course she likes pizza
 
+func test_weak_relationship_matching():
+	var heather_eats_apples = e_heather.get_relationship(Relationship.new(C_Eats.new(), e_apple), true, true)
+	var heather_has_eats_apples = e_heather.has_relationship(Relationship.new(C_Eats.new(), e_apple), true)
+	var bob_doesnt_eat_apples = e_bob.get_relationship(Relationship.new(C_Eats.new(), e_apple), true, true)
+	var bob_has_eats_apples = e_bob.has_relationship(Relationship.new(C_Eats.new(), e_apple), true)
+	assert_bool(heather_eats_apples != null).is_true()  # heather eats apples
+	assert_bool(heather_has_eats_apples).is_true()  # heather eats apples
+	assert_bool(bob_doesnt_eat_apples == null).is_true()  # bob doesn't eat apples
+	assert_bool(bob_has_eats_apples).is_false()  # bob doesn't eat apples
+
 # # FIXME: This is not working
 # func test_reverse_relationships_a():
 
