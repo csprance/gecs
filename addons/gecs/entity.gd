@@ -57,6 +57,9 @@ var _state = {}
 
 ## Called when the entity is added to the scene tree.
 func _ready() -> void:
+	if Engine.is_editor_hint():
+		# This is the editor, so we don't want to initialize components
+		return
 	_initialize()
 
 
