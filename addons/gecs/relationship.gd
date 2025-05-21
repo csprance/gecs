@@ -61,7 +61,7 @@ func _init(_relation = null, _target = null):
 ## Checks if this relationship matches another relationship.
 ## [param other]: The [Relationship] to compare with.
 ## [return]: `true` if both the relation and target match, `false` otherwise.
-func matches(other: Relationship) -> bool:
+func matches(other: Relationship, weak = false) -> bool:
 	var rel_match = false
 	var target_match = false
 
@@ -70,8 +70,11 @@ func matches(other: Relationship) -> bool:
 		# If either relation is null, consider it a match (wildcard)
 		rel_match = true
 	else:
-		# Use the equals method from the Component class to compare relations
-		rel_match = relation.equals(other.relation)
+		if weak:
+			rel_match = relation.resource_path == other.relation.resource_path
+		else:
+			# Use the equals method from the Component class to compare relations
+			rel_match = relation.equals(other.relation)
 
 	# Compare targets
 	if other.target == null or target == null:
