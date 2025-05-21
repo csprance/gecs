@@ -378,3 +378,5 @@ Feel free to explore and expand upon the example project provided, and refer to 
 - GUI For Seeing all Systems executing
 - Gui for seeing all Entities and Components and Values in those components
 - GUI TO see all Components by type
+
+> GECS is provided as-is. If it breaks, you get to keep both pieces.
