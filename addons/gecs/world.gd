@@ -541,7 +541,7 @@ func _on_entity_relationship_added(entity: Entity, relationship: Relationship) -
 	relationship_entity_index[key].append(entity)
 
 	# Index the reverse relationship
-	if relationship.target is Entity:
+	if is_instance_valid(relationship.target) and relationship.target is Entity:
 		var rev_key = "reverse_" + key
 		if not reverse_relationship_index.has(rev_key):
 			reverse_relationship_index[rev_key] = []
@@ -558,7 +558,7 @@ func _on_entity_relationship_removed(entity: Entity, relationship: Relationship)
 	if relationship_entity_index.has(key):
 		relationship_entity_index[key].erase(entity)
 
-	if relationship.target is Entity:
+	if is_instance_valid(relationship.target) and relationship.target is Entity:
 		var rev_key = "reverse_" + key
 		if reverse_relationship_index.has(rev_key):
 			reverse_relationship_index[rev_key].erase(relationship.target)
