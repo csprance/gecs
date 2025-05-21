@@ -1,0 +1,27 @@
+name: Feature Request
+description: Suggest a new feature or improvement.
+labels: [enhancement]
+body:
+  - type: input
+    id: use-case
+    attributes:
+      label: Use Case
+      description: What are you trying to do that GECS doesn’t currently support?
+      placeholder: I want to be able to...
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: Describe your proposed change.
+      placeholder: It would be helpful if GECS could...
+    validations:
+      required: true
+  - type: checkboxes
+    id: consider-fork
+    attributes:
+      label: Did you consider forking instead?
+      options:
+        - label: I understand that not all feature requests will be implemented and that forking might be a better solution in some cases.
+          required: true
