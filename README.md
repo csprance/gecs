@@ -1,382 +1,74 @@
-<img src="./addons/gecs/assets/logo.png" height="256" align="center">
-
 # GECS
-> Godot Entity Component System
 
-A lightweight, performant ECS framework for Godot 4.x that integrates seamlessly with Godot's node system.
-## Discord
-Join the server to chat and discuss the library and how to use it and how to contribute. 
+> **Lightning-fast Entity Component System for Godot 4.x**
 
-https://discord.gg/eB43XU2tmn
-
-## Features
-
-- 🎯 Full integration with Godot's node system
-- 🚀 Query-based entity filtering with optimized component indexing
-- 🔧 System groups for organized processing
-- 📦 Component resources that work in the editor
-- 🎮 Easy setup with automatic node management
-- 🕹️ Full Example game Zombies Ate My Neighbors and a 2D Breakout Clone being made with system
-
-## Table of Contents
-
-1. [Introduction](#introduction)
-2. [Installation](#installation)
-3. [Getting Started](#getting-started)
-   - [Basic Concepts](#basic-concepts)
-4. [Creating Components](#creating-components)
-5. [Creating Entities](#creating-entities)
-6. [Creating Systems](#creating-systems)
-7. [The World and ECS Singleton](#the-world-and-ecs-singleton)
-8. [Example Project](#example-project)
-   - [Components](#components)
-   - [Entities](#entities)
-   - [Systems](#systems)
-9. [Advanced Usage](#advanced-usage)
-   - [Querying Entities](#querying-entities)
-   - [Pause Functionality](#pause-functionality)
-10. [Conclusion](#conclusion)
-
-## Introduction
-
-GECS is an Entity Component System (ECS) framework designed for the Godot Engine. It provides a simple yet powerful way to organize your game logic using the ECS pattern, allowing for better code organization, reusability, and scalability.
-
-This documentation will guide you through the setup and usage of the GECS addon, providing examples from a sample game project to illustrate key concepts.
-
-## Installation
-
-1. **Download the Addon**: Clone or download the GECS addon and place it in your project's `addons` folder.
-
-2. **Enable the Addon**: In the Godot editor, go to `Project > Project Settings > Plugins`, and enable the `GECS` plugin.
-
-3. **Autoload ECS**: The addon requires the `ECS` singleton to be autoloaded. This should be handled automatically when you enable the plugin. If not, go to `Project > Project Settings > Autoload`, and add `ECS` pointing to `res://addons/gecs/ecs.gd`.
-
-
-## Getting Started
-
-### Basic Concepts
-
-> Each class has a full set of in-editor Godot documentation. Check there as well!
-
-Before diving into the usage of the GECS addon, it's important to understand the basic concepts of an Entity Component System (ECS):
-
-- **Entity**: A container or placeholder that represents an object in your game. Entities can have multiple components added to them to define their behavior and properties.
-
-- **Component**: A data container that holds specific attributes or properties. Components do not contain game logic.
-
-- **Archetypes**: A specific named Entity that has a specific set of components (at ready) and usually is using script inheritance to take advantage of any godot nodes features. OR... just a named Entity. Very handy for relationship queries.
-
-- **System**: A system contains two parts. The query which defines which entities to operate on and the logic that operates on each entity with specific components.
-
-- **World**: The context in which entities and systems exist and interact.
-
-- **World Query**: A way to query for specific entities in the world based on the components they contain or the relationships they have. 
-
-- **Component Query** In A world query we can define  criteria. Allowing us to further refine world queries beyond just presence of components. See more: [Component_Queries.md](./addons/gecs/COMPONENT_QUERIES.md)
-
-- **Relationship**: A resource that represents a relationship between a target and a source based on a relation. See more: [Relations.md](./addons/gecs/RELATIONSHIPS.md)
-
-- **ECS Singleton**: Provides global access to the current `World` instance and offers utility functions for processing.
-
-
-## Creating Components
-
-Components in GECS are resources that extend the `Component` class. They are simple data containers without any logic. They may contain functions but only for getting/setting properties on the component. 
-
-Here's how to create a new component:
-
-1. **Create a New Script**: Create a new script extending `Component`.
+Build scalable, maintainable games with clean separation of data and logic. GECS integrates seamlessly with Godot's node system while providing powerful query-based entity filtering.
 
 ```gdscript
-# c_bounce.gd
-class_name C_Bounce
-extends Component
+# Create entities with components
+var player = Entity.new()
+player.add_component(C_Health.new(100))
+player.add_component(C_Velocity.new(Vector2(5, 0)))
 
-@export var normal := Vector2.ZERO
-@export var should_bounce := false
-```
+# Systems process entities with specific components
+class_name MovementSystem extends System
 
-2. **Define Properties**: Add any properties that represent the data for this component. Use the `@export` keyword to make them editable in the inspector. This allows you to use them in the godot editor to design entities with components and modify those properties. 
-
-## Creating Entities
-
-Entities in GECS are nodes that extend the `Entity` class. They can have components added to them to define their behavior.
-
-1. **Create a New Scene**: Create a new scene with a root node extending `Entity`.
-
-2. **Add Components**: Use the `component_resources` exported array to add instances of your components.
-
-```gdscript
-# e_ball.gd
-class_name Ball
-extends Entity
-
-func on_ready() -> void:
-    Utils.sync_transform(self)
-```
-
-3. **Initialize Components**: In the `_ready()` function, components listed in `component_resources` are automatically added to the entity but you can also override a method called `define_components()` and return an array of components. 
-
-## Creating Systems
-
-Systems in GECS are nodes that extend the `System` class. They contain the logic that operates on entities with specific components.
-
-1. **Create a New Script**: Create a new script extending `System`.
-
-```gdscript
-# s_bounce.gd
-class_name BounceSystem
-extends System
-
-func query():
-  # All entities that all have transform, velocity and bounce components
-    return q.with_all([C_Transform, C_Velocity, C_Bounce])
-
+func query(): return q.with_all([C_Velocity, C_Transform])
 func process(entity: Entity, delta: float):
-    var c_bounce = entity.get_component(C_Bounce) as C_Bounce
-    if c_bounce.should_bounce:
-        var c_velocity = entity.get_component(C_Velocity) as C_Velocity
-        c_velocity.direction = c_bounce.normal
-        c_bounce.should_bounce = false
+    var velocity = entity.get_component(C_Velocity)
+    var transform = entity.get_component(C_Transform)
+    transform.position += velocity.direction * delta
 ```
 
-2. **Override the `query()` Function**: In the `query()` function, specify the components that entities must have for the system to process them. Use the provided `q` (QueryBuilder) to build the query.
+## ⚡ Quick Start
 
-3. **Implement the `process()` Function**: The `process()` function contains the logic to be applied to each relevant entity. It is called for each entity that matches the query.
+1. **Install**: Download to `addons/gecs/` and enable in Project Settings
+2. **Follow Guide**: [Get your first ECS project running in 5 minutes →](addons/gecs/docs/GETTING_STARTED.md)
+3. **Learn More**: [Understand core ECS concepts →](addons/gecs/docs/CORE_CONCEPTS.md)
 
-## The World and ECS Singleton
+## ✨ Key Features
 
-The `World` class manages all entities and systems in your game. It processes systems and handles entity queries.
+- 🎯 **Godot Integration** - Works with nodes, scenes, and editor
+- 🚀 **High Performance** - Optimized queries with automatic caching
+- 🔧 **Flexible Queries** - Find entities by components, relationships, or properties
+- 📦 **Editor Support** - Visual component editing and scene integration
+- 🎮 **Battle Tested** - Used in production games
 
-- **ECS**: A singleton autoloaded to provide access to the current `World`.
+## 📚 Complete Documentation
 
-- **Setting Up the World**: In your main scene, add a node extending `World` and add your entities and systems as children.
+**All documentation is located in the addon folder:**
 
-_ **Executing the systems in the world**: Make sure to call ECS.process(delta, group) to run your systems. To process all active systems regardless of their group, omit the `group` parameter
+**→ [Complete Documentation Index](addons/gecs/README.md)**
 
-```gdscript
-# main.gd
-extends Node
+### Quick Navigation
 
-@onready var world: World = $World
+- **[Getting Started](addons/gecs/docs/GETTING_STARTED.md)** - Build your first ECS project (5 min)
+- **[Core Concepts](addons/gecs/docs/CORE_CONCEPTS.md)** - Understand Entities, Components, Systems, Relationships (20 min)
+- **[Best Practices](addons/gecs/docs/BEST_PRACTICES.md)** - Write maintainable ECS code (15 min)
+- **[Troubleshooting](addons/gecs/docs/TROUBLESHOOTING.md)** - Solve common issues quickly
 
-func _ready() -> void:
-    ECS.world = world
+### Advanced Features
 
-func _process(delta):
-    # Process only systems in the "gameplay" group
-    world.process(delta, "gameplay")
+- **[Component Queries](addons/gecs/docs/COMPONENT_QUERIES.md)** - Advanced property-based filtering
+- **[Relationships](addons/gecs/docs/RELATIONSHIPS.md)** - Entity linking and associations
+- **[Observers](addons/gecs/docs/OBSERVERS.md)** - Reactive systems for component changes
+- **[Performance Optimization](addons/gecs/docs/PERFORMANCE_OPTIMIZATION.md)** - Make your games run fast
 
-func _physics_process(delta):
-    # Process only systems in the "physics" group
-    world.process(delta, "physics")
-```
+## 🎮 Example Games
 
-## Example Project
-> ALSO Check out the example games being made on the branch [zombies-ate-my-neighbors](https://github.com/csprance/gecs/tree/zombies-ate-my-neighbors/game) and [breakout](https://github.com/csprance/gecs/tree/breakout/game)
+- **[Zombies Ate My Neighbors](https://github.com/csprance/gecs/tree/zombies-ate-my-neighbors/game)** - Action arcade game
+- **[Breakout Clone](https://github.com/csprance/gecs/tree/breakout/game)** - Classic brick breaker
 
-To illustrate the usage of GECS, let's look at an example project that simulates a simple Breakout game.
+## 🌟 Community
 
-### Components
+- **Discord**: [Join our community](https://discord.gg/eB43XU2tmn)
+- **Issues**: [Report bugs or request features](https://github.com/csprance/gecs/issues)
+- **Discussions**: [Ask questions and share projects](https://github.com/csprance/gecs/discussions)
 
-- **Bounce**: Indicates that an entity can bounce off surfaces.
+## 📄 License
 
-```gdscript
-# c_bounce.gd
-class_name C_Bounce
-extends Component
+MIT - See [LICENSE](LICENSE) for details.
 
-@export var normal := Vector2.ZERO
-@export var should_bounce := false
-```
+---
 
-- **Velocity**: Controls the movement speed and direction of an entity.
-
-```gdscript
-# c_velocity.gd
-class_name C_Velocity
-extends Component
-
-@export var direction := Vector2.ZERO
-@export var speed := 0.0
-```
-
-- **Transform**: Manages the position, rotation, and scale of an entity.
-
-```gdscript
-# c_transform.gd
-class_name C_Transform
-extends Component
-
-@export var transform: Transform2D
-```
-
-### Entities
-
-- **Ball**: Represents the ball in the game.
-
-```gdscript
-# e_ball.gd
-class_name Ball
-extends Entity
-
-func on_ready() -> void:
-    Utils.sync_transform(self)
-```
-
-In the scene, the `Ball` entity includes `Bounce`, `Velocity`, and `Transform` components.
-
-- **Paddle**: Represents the player's paddle.
-
-```gdscript
-# e_paddle.gd
-class_name Paddle
-extends Entity
-
-func on_ready() -> void:
-    Utils.sync_transform(self)
-```
-
-Includes `C_PlayerMovement`, `C_Velocity`, `C_Transform`, and `C_Friction` components.
-
-### Systems
-
-- **BounceSystem**: Handles the bouncing logic of entities.
-
-```gdscript
-# s_bounce.gd
-class_name BounceSystem
-extends System
-
-func query():
-    return q.with_all([C_Transform, C_Velocity, C_Bounce])
-
-func process(entity: Entity, delta: float):
-    var c_bounce = entity.get_component(C_Bounce) as C_Bounce
-    if c_bounce.should_bounce:
-        var c_velocity = entity.get_component(C_Velocity) as C_Velocity
-        c_velocity.direction = c_bounce.normal
-        c_bounce.should_bounce = false
-```
-
-- **VelocitySystem**: Updates entity positions based on their velocity.
-
-```gdscript
-# s_velocity.gd
-class_name VelocitySystem
-extends System
-
-func query():
-    return q.with_all([C_Velocity, C_Transform])
-
-func process(entity: Entity, delta: float):
-    var c_velocity = entity.get_component(C_Velocity) as C_Velocity
-    var c_transform = entity.get_component(C_Transform) as C_Transform
-    var velocity_vector: Vector2 = c_velocity.direction.normalized() * c_velocity.speed
-    c_transform.transform.origin += velocity_vector * delta
-```
-
-- **Transform2DSystem**: Synchronizes the `Transform` component with the entity's actual transform.
-
-```gdscript
-# s_transform_2d.gd
-class_name Transform2DSystem
-extends System
-
-func query():
-    return q.with_all([C_Transform])
-
-func process(entity: Entity, delta):
-    Utils.sync_transform(entity)
-```
-
-## Advanced Usage
-
-### Querying Entities
-
-The `QueryBuilder` class provides an advanced query function to retrieve entities based on their components.
-In classes extending System it is exposed in the `q` variable
-```gdscript
-q
-  .with_all([]) # Find entities that have all these components
-  .with_any([]) # Find entities that have any of these components
-  .with_none([]) # Exclude entities that have these components
-  .with_relationship([]) # Must have these relationships
-  .without_relationship([]) # must not  these relationships
-  .with_reverse_relationship([]) # must have these reverse relationships
-```
-
-- **with_all**: Entities must have all of these components.
-- **with_any**: Entities must have at least one of these components.
-- **with_none**: Entities must not have any of these components.
-- **with_relationship**: Entities must have these relationships
-- **without_relationship**: Entities must not have these relationships
-- **with_reverse_relationship**: This finds the entities of reverse relationships (aka the target of the relationship, not the source)
-
-**Example**:
-
-```gdscript
-var entities_with_velocity_and_not_captured = q.with_all([C_Velocity]).with_none([C_Captured])
-```
-
-**Group Searching with Query Builder**
-
-GECS supports filtering entities by Godot Group directly via the QueryBuilder. For example:
-```gdscript
-var entities = q.with_all([C_Velocity]).with_group("enemy")
-```
-This returns only entities with the specified components and that belong to the "enemy" group.
-
-[Read more about goups here](https://docs.godotengine.org/en/stable/tutorials/scripting/groups.html)
-
-Systems have properties that allow for customizing their execution:
-
-* active: Determines whether the system runs during processing. If false, the system will be skipped.
-* group: Assigns the system to a specific group. This allows you to control the execution of systems in groups. You can process systems of a specific group by providing the group name to the ECS.process(delta, group) function.
-
-Example:
-```gdscript
-func _physics_process(delta):
-    world.process(delta, "physics")
-
-func _process(delta):
-    world.process(delta, "gameplay")
-```
-This will only process systems that are in the "physics" group in the physics process function and gameplay system in the _process function
-
-To process all active systems regardless of their group, omit the `group` parameter:
-
-### Processing Systems by Group
-
-Systems can be assigned to specific groups, enabling you to control when and how they are processed. This is particularly useful for separating logic that should run at different times or frequencies.
-
-**Assigning Systems to Groups**:
-
-In your system script, set the `group` property to specify which group the system belongs to. These are not the same as godot groups.
-
-### Pause Functionality
-
-GECS systems inherit the regular Godot process modes, letting you choose whether they should run during pause. 
-By default, systems use PROCESS_MODE_INHERIT, meaning they respect the pause state of their parent node. You can change this using set_process_mode() in Godot or set it from the editor GUI:
-
-• PROCESS_MODE_INHERIT (0): Inherits the parent's process mode.  
-• PROCESS_MODE_PAUSABLE (1): Stops processing when SceneTree.paused is true.  
-• PROCESS_MODE_WHEN_PAUSED (2): Only processes when paused.  
-• PROCESS_MODE_ALWAYS (3): Always processes, ignoring pause state.  
-• PROCESS_MODE_DISABLED (4): Never processes, ignoring pause state.  
-
-For example, gameplay and physics systems might stop when the game is paused, while input handling systems could still process any menu UI input. This integrates seamlessly with Godot’s built-in “pause” feature to give you fine-grained control over how each system behaves when the game is paused.
-
-## Conclusion
-
-The GECS addon provides a flexible and efficient way to implement the ECS pattern in your Godot projects. By separating data (components) from logic (systems), you can create reusable and maintainable game code.
-
-Feel free to explore and expand upon the example project provided, and refer to this documentation and especially the in editor documentation as you integrate GECS into your own games.
-
-## TODO:
-- Build a better GUI for seeing Systems and their groups
-- GUI For Seeing all Systems executing
-- Gui for seeing all Entities and Components and Values in those components
-- GUI TO see all Components by type
-
-> GECS is provided as-is. If it breaks, you get to keep both pieces.
+_GECS is provided as-is. If it breaks, you get to keep both pieces._ 😄

@@ -798,6 +798,7 @@ func test_query_entities_groups():
 	)
 	assert_array(check_enemy_c_no_npc).has_size(0)
 
+
 func test_query_caching():
 	# Setup test entities
 	var entities = []
@@ -811,45 +812,45 @@ func test_query_caching():
 			entity.add_component(C_TestC.new())
 		entities.append(entity)
 	world.add_entities(entities)
-	
+
 	var query = QueryBuilder.new(world)
 	query.with_all([C_TestA, C_TestB])
-	
+
 	# First execution - uncached
 	var time_start = Time.get_ticks_usec()
 	var result1 = query.execute()
 	var uncached_time = Time.get_ticks_usec() - time_start
-	
+
 	# Second execution - should use cache
 	time_start = Time.get_ticks_usec()
 	var result2 = query.execute()
 	var cached_time = Time.get_ticks_usec() - time_start
-	
+
 	# Verify results are identical
 	assert_array(result1).is_equal(result2)
-	
+
 	# Verify cache is faster (should be significantly faster)
 	assert_bool(cached_time < uncached_time).is_true()
-	Loggie.info("Uncached query time: %d μs" % uncached_time)
-	Loggie.info("Cached query time: %d μs" % cached_time)
-	Loggie.info("Cache speedup: %.2fx" % (float(uncached_time) / max(cached_time, 1)))
-	
+	print("Uncached query time: %d ns" % uncached_time)
+	print("Cached query time: %d ns" % cached_time)
+	print("Cache speedup: %.2fx" % (float(uncached_time) / max(cached_time, 1)))
+
 	# Test cache invalidation
 	var new_entity = Entity.new()
 	new_entity.add_component(C_TestA.new())
 	new_entity.add_component(C_TestB.new())
 	world.add_entity(new_entity)
-	
+
 	query.invalidate_cache()
 	var result3 = query.execute()
 	# Verify new entity is included after cache invalidation
 	assert_bool(result3.has(new_entity)).is_true()
 	assert_int(result3.size()).is_equal(result2.size() + 1)
-	
+
 	# Test that modifying an entity's components invalidates relevant queries
 	var test_entity = result2[0]
 	test_entity.remove_component(C_TestA)
-	
+
 	query.invalidate_cache()
 	var result4 = query.execute()
 	assert_bool(result4.has(test_entity)).is_false()
@@ -864,35 +865,35 @@ func test_query_cache_with_component_queries():
 		entity.add_component(C_TestC.new(i))  # Each entity has unique TestC value
 		world.add_entity(entity)
 		entities.append(entity)
-	
+
 	var query = QueryBuilder.new(world)
 	query.with_all([{C_TestC: {"value": {"_gt": 50}}}])
-	
+
 	# First execution - uncached
 	var time_start = Time.get_ticks_usec()
 	var result1 = query.execute()
 	var uncached_time = Time.get_ticks_usec() - time_start
-	
+
 	# Second execution - should use cache
 	time_start = Time.get_ticks_usec()
 	var result2 = query.execute()
 	var cached_time = Time.get_ticks_usec() - time_start
-	
+
 	# Verify results
 	assert_array(result1).is_equal(result2)
 	assert_int(result1.size()).is_equal(49)  # Should have entities with values 51-99
-	
+
 	# Verify cache is faster
 	assert_bool(cached_time < uncached_time).is_true()
-	Loggie.info("Component query uncached time: %d μs" % uncached_time)
-	Loggie.info("Component query cached time: %d μs" % cached_time)
-	Loggie.info("Component query cache speedup: %.2fx" % (float(uncached_time) / max(cached_time, 1)))
-	
+	print("Component query uncached time: %d ns" % uncached_time)
+	print("Component query cached time: %d ns" % cached_time)
+	print("Component query cache speedup: %.2fx" % (float(uncached_time) / max(cached_time, 1)))
+
 	# Test cache invalidation with component value changes
 	var target_entity = result1[0]
 	var comp = target_entity.get_component(C_TestC)
 	comp.value = 25  # Change to value that shouldn't match query
-	
+
 	query.invalidate_cache()
 	var result3 = query.execute()
 	assert_bool(result3.has(target_entity)).is_false()

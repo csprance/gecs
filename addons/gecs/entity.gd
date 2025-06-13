@@ -48,6 +48,8 @@ signal relationship_removed(entity: Entity, relationship: Relationship)
 var components: Dictionary = {}
 ## Relationships attached to the entity
 var relationships: Array[Relationship] = []
+## Cache for component resource paths to avoid repeated .get_script().resource_path calls
+var _component_path_cache: Dictionary = {}
 
 ## Logger for entities to only log to a specific domain
 var _entityLogger = GECSLogger.new().domain("Entity")
@@ -93,11 +95,20 @@ func _initialize():
 ## [b]Example[/b]:
 ## [codeblock]entity.add_component(HealthComponent)[/codeblock]
 func add_component(component: Resource) -> void:
-	components[component.get_script().resource_path] = component
+	# Cache the resource path to avoid repeated calls
+	var resource_path = component.get_script().resource_path
+	
+	# If a component of this type already exists, remove it first
+	if components.has(resource_path):
+		var existing_component = components[resource_path]
+		remove_component(existing_component)
+	
+	_component_path_cache[component] = resource_path
+	components[resource_path] = component
 	component.property_changed.connect(_on_component_property_changed)
 	## Adding components happens through a signal
 	component_added.emit(self, component)
-	_entityLogger.trace("Added Component: ", component.get_script().resource_path)
+	_entityLogger.trace("Added Component: ", resource_path)
 
 
 func _on_component_property_changed(
@@ -121,11 +132,20 @@ func add_components(_components: Array):
 ## [b]Example:[/b]
 ##     [codeblock]entity.remove_component(HealthComponent)[/codeblock]
 func remove_component(component: Resource) -> void:
-	if components.erase(component.resource_path):
+	# Use cached path if available, otherwise get it from the component class
+	var resource_path: String
+	if _component_path_cache.has(component):
+		resource_path = _component_path_cache[component]
+		_component_path_cache.erase(component)
+	else:
+		# Component parameter should be a class/script, consistent with has_component
+		resource_path = component.resource_path
+
+	if components.erase(resource_path):
 		component_removed.emit(self, component)
 		# Removing components happens immediately
-		ECS.world._remove_entity_from_index(self, component.resource_path)
-		_entityLogger.trace("Removed Component: ", component.resource_path)
+		ECS.world._remove_entity_from_index(self, resource_path)
+		_entityLogger.trace("Removed Component: ", resource_path)
 
 
 func deferred_remove_component(component: Resource) -> void:

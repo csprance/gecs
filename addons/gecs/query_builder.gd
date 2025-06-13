@@ -235,7 +235,7 @@ func _internal_execute() -> Array:
 				filtered_entities.append(entity)
 		result = filtered_entities
 
-	# Remove the component property queries here
+	# Return the structural query result (caching handled in execute())
 	return result
 
 

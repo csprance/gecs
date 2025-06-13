@@ -127,8 +127,7 @@ func _handle(delta: float):
 	# Query for the entities that match the system's query
 	var entities = query().execute()
 	did_run = process_all(entities, delta)
-	if did_run:
-		entities.map(func(e): e.on_update(delta))
+	# Avoid calling on_update twice - process_all already calls it
 
 
 func _handle_subsystems(delta: float):
@@ -147,9 +146,13 @@ func _handle_subsystems(delta: float):
 		if should_process_all:
 			did_run = sub_sys_process.call(entities, delta)
 		else:
-			for entity in entities:
+			# Avoid unnecessary did_run check in tight loop
+			if not entities.is_empty():
 				did_run = true
-				sub_sys_process.call(entity, delta)
+				for entity in entities:
+					sub_sys_process.call(entity, delta)
 		if did_run:
-			entities.map(func(e): e.on_update(delta))
+			# Call on_update for all entities that were processed
+			for entity in entities:
+				entity.on_update(delta)
 	return sub_systems_ran

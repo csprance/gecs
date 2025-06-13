@@ -1,12 +1,19 @@
 # Component Queries in GECS
 
-Component Queries provide a powerful way to filter entities not just based on the presence of components but also on the data within those components. This allows for more fine-grained control when querying entities in your game or application.
+> **Advanced property-based entity filtering**
 
-## Introduction
+Component Queries provide a powerful way to filter entities not just based on the presence of components but also on the data within those components. This allows for precise, data-driven entity selection in your game systems.
 
-In the Entity-Component-System (ECS) architecture, entities are passive data holders defined by their components. While querying entities based on their components is straightforward, there are cases where you need to filter entities based on the properties of those components.
+## 📋 Prerequisites
 
-Component Queries enable you to specify conditions on component properties using comparison operators.
+- Understanding of [Core Concepts](CORE_CONCEPTS.md)
+- Familiarity with [Basic Queries](CORE_CONCEPTS.md#query-system)
+
+## 🎯 Introduction
+
+In standard ECS queries, you filter entities by which components they have or don't have. Component Queries take this further by letting you filter based on the **values** inside those components.
+
+Instead of just asking "which entities have a HealthComponent?", you can ask "which entities have a HealthComponent with current health less than 20?"
 
 ## Using Component Queries with `QueryBuilder`
 
@@ -88,6 +95,7 @@ var result = QueryBuilder.new(world).with_all([
 #### 6. Complex Queries
 
 Retrieve entities where:
+
 - `C_TestC.value` is greater than or equal to `25`, and
 - `C_TestD.points` is greater than `75` **or** less than `30`, and
 - Excludes entities with `C_TestE` component.

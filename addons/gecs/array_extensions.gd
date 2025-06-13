@@ -7,9 +7,18 @@ class_name ArrayExtensions
 ## [param array2] The second array to intersect.[br]
 ## [b]return Array[/b] The intersection of the two arrays.
 static func intersect(array1: Array, array2: Array) -> Array:
+	# Optimize by using the smaller array for lookup
+	if array1.size() > array2.size():
+		return intersect(array2, array1)
+
+	# Use dictionary for O(1) lookup instead of O(n) Array.has()
+	var lookup := {}
+	for entity in array2:
+		lookup[entity] = true
+
 	var result: Array = []
 	for entity in array1:
-		if array2.has(entity):
+		if lookup.has(entity):
 			result.append(entity)
 	return result
 
@@ -20,10 +29,22 @@ static func intersect(array1: Array, array2: Array) -> Array:
 ## [param array2] The second array to union.[br]
 ## [b]return Array[/b] The union of the two arrays.
 static func union(array1: Array, array2: Array) -> Array:
-	var result = array1.duplicate()
-	for entity in array2:
-		if not result.has(entity):
+	# Use dictionary to track uniqueness for O(1) lookups
+	var seen := {}
+	var result: Array = []
+
+	# Add all from array1
+	for entity in array1:
+		if not seen.has(entity):
+			seen[entity] = true
 			result.append(entity)
+
+	# Add unique items from array2
+	for entity in array2:
+		if not seen.has(entity):
+			seen[entity] = true
+			result.append(entity)
+
 	return result
 
 
@@ -33,9 +54,14 @@ static func union(array1: Array, array2: Array) -> Array:
 ## [param array2] The second array to difference.[br]
 ## [b]return Array[/b] The difference of the two arrays (entities in array1 not in array2).
 static func difference(array1: Array, array2: Array) -> Array:
+	# Use dictionary for O(1) lookup instead of O(n) Array.has()
+	var lookup := {}
+	for entity in array2:
+		lookup[entity] = true
+
 	var result: Array = []
 	for entity in array1:
-		if not array2.has(entity):
+		if not lookup.has(entity):
 			result.append(entity)
 	return result
 

@@ -52,13 +52,22 @@ var systems: Array[System]:
 		return all_systems
 ## [Component] to [Entity] Index - This stores entities by component for efficient querying.
 var component_entity_index: Dictionary = {}
+## Pool of QueryBuilder instances to reduce creation overhead
+var _query_builder_pool: Array[QueryBuilder] = []
+var _pool_size_limit: int = 10
+
 ## The [QueryBuilder] instance for this world used to build and execute queries[br]
 # # Anytime we request a query we want to connect the cache invalidated signal to the query [br]
 # # so that all queries are invalidated anytime we emite  cache_invalidated
 var query: QueryBuilder:
 	get:
-		var q := QueryBuilder.new(self)
-		cache_invalidated.connect(q.invalidate_cache)
+		var q: QueryBuilder
+		if _query_builder_pool.is_empty():
+			q = QueryBuilder.new(self)
+			cache_invalidated.connect(q.invalidate_cache)
+		else:
+			q = _query_builder_pool.pop_back()
+			q.clear()
 		return q
 ## Index for relationships to entities (Optional for optimization)
 var relationship_entity_index: Dictionary = {}
@@ -66,6 +75,32 @@ var relationship_entity_index: Dictionary = {}
 var reverse_relationship_index: Dictionary = {}
 ## Logger for the world to only log to a specific domain
 var _worldLogger = GECSLogger.new().domain("World")
+## Cache for commonly used query results to reduce redundant computations
+var _query_result_cache: Dictionary = {}
+## Track cache hits for performance monitoring
+var _cache_hits: int = 0
+var _cache_misses: int = 0
+
+
+## Return a QueryBuilder instance to the pool for reuse
+func _return_query_builder_to_pool(query_builder: QueryBuilder) -> void:
+	if _query_builder_pool.size() < _pool_size_limit:
+		query_builder.clear()
+		_query_builder_pool.append(query_builder)
+
+
+## Generate a cache key for query parameters
+func _generate_query_cache_key(all_components: Array, any_components: Array, exclude_components: Array) -> String:
+	var all_paths = all_components.map(func(x): return x.resource_path if x.has_method("resource_path") else str(x))
+	var any_paths = any_components.map(func(x): return x.resource_path if x.has_method("resource_path") else str(x))
+	var exclude_paths = exclude_components.map(func(x): return x.resource_path if x.has_method("resource_path") else str(x))
+	
+	# Sort arrays to ensure consistent cache keys regardless of order
+	all_paths.sort()
+	any_paths.sort()
+	exclude_paths.sort()
+	
+	return "ALL:%s|ANY:%s|EXCLUDE:%s" % [",".join(all_paths), ",".join(any_paths), ",".join(exclude_paths)]
 
 
 ## Called when the World node is ready.[br]
@@ -165,6 +200,8 @@ func add_entity(entity: Entity, components = null, add_to_tree = true) -> void:
 	for processor in ECS.entity_preprocessors:
 		processor.call(entity)
 
+	# Clear our query cache when component structure changes
+	_query_result_cache.clear()
 	cache_invalidated.emit()
 	if ECS.debug:
 		GECSEditorDebuggerMessages.entity_added(entity)
@@ -203,6 +240,8 @@ func remove_entity(entity) -> void:
 	entity.relationship_removed.disconnect(_on_entity_relationship_removed)
 	entity.on_destroy()
 	entity.queue_free()
+	# Clear our query cache when component structure changes
+	_query_result_cache.clear()
 	cache_invalidated.emit()
 
 
@@ -223,6 +262,8 @@ func disable_entity(entity) -> Entity:
 	entity.on_disable()
 	entity.set_process(false)
 	entity.set_physics_process(false)
+	# Clear our query cache when component structure changes
+	_query_result_cache.clear()
 	cache_invalidated.emit()
 	if ECS.debug:
 		GECSEditorDebuggerMessages.entity_disabled(entity)
@@ -257,6 +298,8 @@ func enable_entity(entity: Entity, components = null) -> void:
 	entity.set_process(true)
 	entity.set_physics_process(true)
 	entity.on_enable()
+	# Clear our query cache when component structure changes
+	_query_result_cache.clear()
 	cache_invalidated.emit()
 	if ECS.debug:
 		GECSEditorDebuggerMessages.entity_enabled(entity)
@@ -363,6 +406,14 @@ func _query(all_components = [], any_components = [], exclude_components = []) -
 	# Early return if no components specified
 	if all_components.is_empty() and any_components.is_empty() and exclude_components.is_empty():
 		return entities
+	
+	# Check world-level cache first
+	var cache_key = _generate_query_cache_key(all_components, any_components, exclude_components)
+	if _query_result_cache.has(cache_key):
+		_cache_hits += 1
+		return _query_result_cache[cache_key].duplicate()
+	
+	_cache_misses += 1
 	var map_resource_path = func(x): return x.resource_path
 	# Convert all component arrays to resource paths
 	var _all := all_components.map(map_resource_path)
@@ -383,6 +434,9 @@ func _query(all_components = [], any_components = [], exclude_components = []) -
 			for component in _all:
 				var component_entities = component_entity_index.get(component, [])
 				var size = component_entities.size()
+				# Early exit if any required component has no entities
+				if size == 0:
+					return []
 				if size < smallest_size:
 					smallest_size = size
 					smallest_component_key = component
@@ -400,20 +454,14 @@ func _query(all_components = [], any_components = [], exclude_components = []) -
 
 		# Handle any_components
 		if not _any.is_empty():
-			var any_result := []
-			for component in _any:
-				any_result.append_array(component_entity_index.get(component, []))
-
-			# Remove duplicates
-			any_result = Array(
-				any_result.duplicate().reduce(
-					func(accum, item):
-						if not accum.has(item):
-							accum.append(item)
-						return accum,
-					[]
-				)
-			)
+			var any_result: Array = []
+			# Start with first component's entities
+			if _any.size() > 0:
+				any_result = component_entity_index.get(_any[0], [])
+				# Union with remaining components
+				for i in range(1, _any.size()):
+					var entities_with_component = component_entity_index.get(_any[i], [])
+					any_result = ArrayExtensions.union(any_result, entities_with_component)
 
 			if result:
 				result = ArrayExtensions.intersect(result, any_result)
@@ -432,6 +480,8 @@ func _query(all_components = [], any_components = [], exclude_components = []) -
 			if not excluded.is_empty():
 				result = ArrayExtensions.difference(result, excluded)
 
+	# Cache the result for future queries
+	_query_result_cache[cache_key] = result.duplicate()
 	return result
 
 
@@ -445,8 +495,8 @@ func _add_entity_to_index(entity: Entity, component_key: String) -> void:
 	if not component_entity_index.has(component_key):
 		component_entity_index[component_key] = []
 	var entity_list = component_entity_index[component_key]
-	if not entity_list.has(entity):
-		entity_list.append(entity)
+	# Use direct append since we control when this is called - no duplicates expected
+	entity_list.append(entity)
 
 
 ## Removes an entity from the component index.[br]
@@ -481,6 +531,8 @@ func _on_entity_component_added(entity: Entity, component: Resource) -> void:
 	if ECS.debug:
 		GECSEditorDebuggerMessages.entity_component_added(entity, component)
 
+	# Clear our query cache when component structure changes
+	_query_result_cache.clear()
 	cache_invalidated.emit()
 
 
@@ -513,6 +565,8 @@ func _on_entity_component_property_change(
 			)
 		)
 
+	# Clear our query cache when component structure changes
+	_query_result_cache.clear()
 	cache_invalidated.emit()
 
 
@@ -530,6 +584,8 @@ func _on_entity_component_removed(entity, component: Resource) -> void:
 	if ECS.debug:
 		GECSEditorDebuggerMessages.entity_component_removed(entity, component)
 
+	# Clear our query cache when component structure changes
+	_query_result_cache.clear()
 	cache_invalidated.emit()
 
 
@@ -698,3 +754,21 @@ func _handle_observer_component_changed(
 				reactive_system.on_component_changed(
 					entity, component, property, new_value, old_value
 				)
+
+
+## Get performance statistics for cache usage
+func get_cache_stats() -> Dictionary:
+	var total_requests = _cache_hits + _cache_misses
+	var hit_rate = 0.0 if total_requests == 0 else float(_cache_hits) / float(total_requests)
+	return {
+		"cache_hits": _cache_hits,
+		"cache_misses": _cache_misses,
+		"hit_rate": hit_rate,
+		"cached_queries": _query_result_cache.size()
+	}
+
+
+## Reset cache statistics
+func reset_cache_stats() -> void:
+	_cache_hits = 0
+	_cache_misses = 0

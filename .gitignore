@@ -13,7 +13,4 @@ addons/*
 
 game/
 qt/
-
-# random files
-*.spp
-*.painter_lock
+reports/
