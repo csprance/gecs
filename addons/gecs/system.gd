@@ -131,10 +131,10 @@ func _handle(delta: float):
 
 
 func _handle_subsystems(delta: float):
-	var subsystems = sub_systems()
 	if not _using_subsystems:
 		return false
 	set_q()
+	var subsystems = sub_systems()
 	var sub_systems_ran = false
 	for sub_sys_tuple in subsystems:
 		var did_run = false
