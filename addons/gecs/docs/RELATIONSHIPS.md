@@ -220,7 +220,7 @@ entity1.add_relationship(r_attacking_players)
 entity2.add_relationship(r_attacking_players)
 ```
 
-**Static Relationship Factory:**
+**Static Relationship Factory (Recommended):**
 
 ```gdscript
 # ✅ Excellent - Organized relationship management
@@ -235,8 +235,15 @@ static func attacking_anything():
 static func chasing_players():
     return Relationship.new(C_IsChasing.new(), Player)
 
-static func allied_with(entity: Entity):
-    return Relationship.new(C_IsAlliedWith.new(), entity)
+static func interacting_with_anything():
+    return Relationship.new(C_Interacting.new(), ECS.wildcard)
+
+static func equipped_on_anything():
+    return Relationship.new(C_EquippedOn.new(), ECS.wildcard)
+
+# Usage in systems:
+var attackers = ECS.world.query.with_relationship([Relationships.attacking_players()]).execute()
+var chasers = ECS.world.query.with_relationship([Relationships.chasing_anything()]).execute()
 ```
 
 ### Naming Conventions

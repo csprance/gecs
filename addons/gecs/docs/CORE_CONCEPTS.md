@@ -60,8 +60,14 @@ Entities are the core data containers you work with in GECS. They're Godot nodes
 **Creating Entities in Code:**
 
 ```gdscript
-var e_my_entity = Entity.new()
-e_my_entity.add_components([C_Transform.new(), C_Velocity.new(Vector3.UP)])
+# Create entity class with components
+class_name MyEntity extends Entity
+
+func define_components() -> Array:
+    return [C_Transform.new(), C_Velocity.new(Vector3.UP)]
+
+# Use the entity
+var e_my_entity = MyEntity.new()
 ECS.world.add_entity(e_my_entity)
 ```
 
@@ -75,7 +81,9 @@ extends Entity
 
 func on_ready():
     # Sync transform from scene to component
-    Utils.sync_transform(self)
+    if has_component(C_Transform):
+        var transform_comp = get_component(C_Transform)
+        transform_comp.transform = global_transform
 ```
 
 ### Entity Lifecycle
@@ -130,27 +138,31 @@ func on_ready():
         sprite_comp.mesh_instance = mesh_instance
 
     # Sync editor-placed transform to component
-    Utils.sync_transform(self)
+    if has_component(C_Transform):
+        var transform_comp = get_component(C_Transform)
+        transform_comp.transform = global_transform
 ```
 
 ## 📦 Components
 
 ### Component Fundamentals
 
-Components are pure data containers - they store state but contain no game logic.
+Components are pure data containers - they store state but contain no game logic. They can emit signals for reactive systems.
 
 ```gdscript
 # c_health.gd - Example component
 class_name C_Health
 extends Component
 
-## How much total health this entity has
-@export var total := 100
-## The current health value
-@export var current := 100
+signal health_changed
 
-func _init(max_health: int = 100):
-    total = max_health
+## How much total health this entity has
+@export var maximum := 100.0
+## The current health value
+@export var current := 100.0
+
+func _init(max_health: float = 100.0):
+    maximum = max_health
     current = max_health
 ```
 
@@ -232,12 +244,27 @@ components/
 **Via Editor (Recommended):**
 Add to entity's `component_resources` array in Inspector - these auto-load when entity is added to world.
 
-**Via Code:**
+**Via define_components():**
 
 ```gdscript
-var health_component = C_Health.new()
-health_component.max_health = 150
-entity.add_component(health_component)
+# e_player.gd - Define components programmatically
+class_name Player
+extends Entity
+
+func define_components() -> Array:
+    return [
+        C_Health.new(100),
+        C_Transform.new(),
+        C_Input.new()
+    ]
+
+# Via Inspector: Add to component_resources array
+# Components automatically loaded when entity added to world
+
+# Dynamic addition (less common):
+var entity = Player.new()
+entity.add_component(C_StatusEffect.new("poison"))
+ECS.world.add_entity(entity)
 ```
 
 ## ⚙️ Systems
@@ -280,7 +307,7 @@ func query() -> QueryBuilder:
     return q.with_all([C_Transform])
 
 func process_all(entities: Array, _delta):
-    var transforms = ECS.get_components(entities, C_Transform) as Array[C_Transform]
+    var transforms = ECS.get_components(entities, C_Transform)
     for i in range(entities.size()):
         entities[i].global_transform = transforms[i].transform
 ```
@@ -295,26 +322,49 @@ extends System
 
 func sub_systems():
     return [
-        # Handles damage on entities with health
-        [ECS.world.query.with_all([C_Health]).with_any([C_Damage, C_HeavyDamage]).with_none([C_Death, C_Invulnerable]), health_damage_subsys],
-        # Handles damage on breakable entities
-        [ECS.world.query.with_all([C_Breakable, C_Health, C_HeavyDamage]).with_none([C_Death, C_Invulnerable]), breakable_damage_subsys],
+        # [query, callable, process_all_flag]
+        [ECS.world.query.with_all([C_Health, C_Damage]), damage_entities, false],
+        [ECS.world.query.with_all([C_Health]).with_none([C_Dead]), regenerate_health, true]
     ]
 
-func health_damage_subsys(entity: Entity, _delta: float):
-    var c_damage = entity.get_component(C_Damage) as C_Damage
-    var c_health = entity.get_component(C_Health) as C_Health
+func damage_entities(entity: Entity, delta: float):
+    var health = entity.get_component(C_Health)
+    var damage = entity.get_component(C_Damage)
+    health.current -= damage.amount
+    entity.remove_component(damage)
+    
+    if health.current <= 0:
+        entity.add_component(C_Dead.new())
 
-    if c_damage:
-        c_health.current -= c_damage.amount
-        entity.remove_component(C_Damage)
+func regenerate_health(entities: Array, delta: float):
+    # Batch process health regeneration
+    var healths = ECS.get_components(entities, C_Health)
+    for health in healths:
+        health.current = min(health.current + 1 * delta, health.maximum)
+```
 
-        if c_health.current <= 0:
-            entity.add_component(C_Death.new())
+### System Dependencies
 
-func breakable_damage_subsys(entity: Entity, delta: float):
-    # Handle breakable-specific damage logic
-    pass
+Control system execution order with dependencies:
+
+```gdscript
+class_name RenderSystem
+extends System
+
+func deps() -> Dictionary[int, Array]:
+    return {
+        Runs.After: [MovementSystem, TransformSystem],  # Run after these
+        Runs.Before: [UISystem]  # Run before this
+    }
+
+# Special case: run after ALL other systems
+class_name TransformSystem
+extends System
+
+func deps() -> Dictionary[int, Array]:
+    return {
+        Runs.After: [ECS.wildcard]  # Runs after everything else
+    }
 ```
 
 ### System Naming Conventions
@@ -496,42 +546,65 @@ static func chasing_anything():
 The World is the central manager for all entities and systems:
 
 ```gdscript
-# Setup world
-var world = World.new()
-add_child(world)
-ECS.world = world
+# main.gd - Simple scene-based setup
+extends Node
 
-# Add systems
-world.add_system(InputSystem.new(), "input")
-world.add_system(MovementSystem.new(), "physics")
-world.add_system(RenderSystem.new(), "render")
+@onready var world: World = $World
 
-# Process by groups
+func _ready():
+    Bootstrap.bootstrap()  # Initialize game-specific setup
+    ECS.world = world
+    # Systems are automatically registered via scene composition
+
+# Process systems by groups in order
 func _process(delta):
-    ECS.process(delta, "input")
-    ECS.process(delta, "physics")
-    ECS.process(delta, "render")
+    world.process(delta, "run-first")  # Initialization
+    world.process(delta, "input")      # Input handling
+    world.process(delta, "gameplay")   # Game logic
+    world.process(delta, "ui")         # UI updates
+    world.process(delta, "run-last")   # Cleanup
+
+func _physics_process(delta):
+    world.process(delta, "physics")    # Physics systems
+    world.process(delta, "debug")      # Debug systems
 ```
 
 ### System Groups and Processing Order
 
-Organize systems into logical groups for proper execution order:
+Organize systems using scene-based composition with execution groups:
 
-```gdscript
-# Input first
-world.add_system(PlayerInputSystem.new(), "input")
-world.add_system(AISystem.new(), "input")
-
-# Then physics/logic
-world.add_system(MovementSystem.new(), "physics")
-world.add_system(CollisionSystem.new(), "physics")
-world.add_system(HealthSystem.new(), "physics")
-
-# Finally rendering
-world.add_system(AnimationSystem.new(), "render")
-world.add_system(RenderSystem.new(), "render")
-world.add_system(UISystem.new(), "render")
 ```
+default_systems.tscn Structure:
+├── run-first (SystemGroup)
+│   ├── VictimInitSystem
+│   └── EcsStorageLoad
+├── input (SystemGroup)
+│   ├── ItemSystem
+│   ├── WeaponsSystem
+│   └── PlayerControlsSystem
+├── gameplay (SystemGroup)
+│   ├── GearSystem
+│   ├── DeathSystem
+│   └── EventSystem
+├── physics (SystemGroup)
+│   ├── FrictionSystem
+│   ├── CharacterBody3DSystem
+│   └── TransformSystem
+├── ui (SystemGroup)
+│   └── UiVisibilitySystem
+├── debug (SystemGroup)
+│   └── DebugLabel3DSystem
+└── run-last (SystemGroup)
+    ├── ActionsSystem
+    └── PendingDeleteSystem
+```
+
+**Scene Setup Benefits:**
+
+- **Visual Organization**: See system hierarchy in Godot editor
+- **Easy Reordering**: Drag systems between groups
+- **Inspector Configuration**: Set system properties in editor
+- **Reusable Scenes**: Share system configurations between projects
 
 ## 🔄 Data-Driven Architecture
 
@@ -540,11 +613,16 @@ world.add_system(UISystem.new(), "render")
 Build entities by combining simple components rather than complex inheritance:
 
 ```gdscript
-# ✅ Composition approach
-player.add_component(C_Health.new(100))
-player.add_component(C_Movement.new(200.0))
-player.add_component(C_Input.new())
-player.add_component(C_Inventory.new())
+# ✅ Composition approach in entity definition
+class_name Player extends Entity
+
+func define_components() -> Array:
+    return [
+        C_Health.new(100),
+        C_Movement.new(200.0),
+        C_Input.new(),
+        C_Inventory.new()
+    ]
 
 # Same components reused for different entity types
 enemy.add_component(C_Health.new(50))

@@ -29,7 +29,7 @@ func _process(delta):
 
 1. Are your entities added to the world? `ECS.world.add_entity(entity)`
 2. Do your entities have the right components? Check system queries
-3. Are your systems added to the world? `ECS.world.add_system(system)`
+3. Are your systems properly organized in scene hierarchy? Check default_systems.tscn
 
 **Still broken?** → [Entity Issues](#entity-issues)
 
@@ -351,9 +351,8 @@ func _ready():
     add_child(world)
     ECS.world = world
 
-    # Add your systems
-    world.add_system(MovementSystem.new())
-    world.add_system(RenderSystem.new())
+    # Systems are usually managed via scene composition
+    # See default_systems.tscn for organization
 
     # Create your entities
     setup_entities()

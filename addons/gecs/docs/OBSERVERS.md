@@ -22,167 +22,170 @@ Observers are specialized systems that watch for changes to specific components 
 
 ## 🔧 Observer Structure
 
-Observers extend the `Observer` class and implement three key methods:
+Observers extend the `Observer` class and implement key methods:
 
-1. **`watch()`** - Specifies which component to monitor for events
-2. **`match()`** - Defines a query to filter which entities trigger events
+1. **`watch()`** - Specifies which component to monitor for events (required)
+2. **`match()`** - Defines a query to filter which entities trigger events (optional)
 3. **Event Handlers** - Handle specific types of changes
 
 ```gdscript
-# o_health_ui_updater.gd
-class_name HealthUIUpdater
+# o_transform.gd
+class_name TransformObserver
 extends Observer
 
-func watch():
-    return C_Health  # Watch for health component changes
+func watch() -> Resource:
+    return C_Transform  # Watch for transform component changes
 
-func match():
-    return q.with_all([C_Health, C_Player])  # Only for player entities
+func on_component_added(entity: Entity, component: Resource):
+    # Sync component transform to entity when added
+    var transform_comp = component as C_Transform
+    entity.global_transform = transform_comp.transform
 
-func on_changed(entity: Entity, component: Component, property: String, old_value, new_value):
-    # Called when health values change
-    update_health_bar(entity, new_value)
-
-func on_added(entity: Entity, component: Component):
-    # Called when health component is added
-    create_health_bar(entity)
-
-func on_removed(entity: Entity, component: Component):
-    # Called when health component is removed
-    destroy_health_bar(entity)
+func on_component_changed(entity: Entity, component: Resource, property: String, new_value: Variant, old_value: Variant):
+    # Sync component transform to entity when changed
+    var transform_comp = component as C_Transform
+    entity.global_transform = transform_comp.transform
 ```
 
 ## 🎮 Observer Event Types
 
-### on_changed()
-
-Triggered when a watched component's property changes:
-
-```gdscript
-class_name DamageEffectObserver
-extends Observer
-
-func watch():
-    return C_Health
-
-func match():
-    return q.with_all([C_Health, C_Sprite])
-
-func on_changed(entity: Entity, component: Component, property: String, old_value, new_value):
-    if property == "current" and new_value < old_value:
-        # Health decreased - show damage effect
-        var damage_amount = old_value - new_value
-        show_damage_number(entity, damage_amount)
-        flash_red(entity)
-```
-
-### on_added()
+### on_component_added()
 
 Triggered when a watched component is added to an entity:
 
 ```gdscript
-class_name StatusEffectObserver
+class_name HealthUIObserver
 extends Observer
 
-func watch():
-    return C_StatusEffect
+func watch() -> Resource:
+    return C_Health
 
 func match():
-    return q.with_all([C_StatusEffect])
+    return q.with_all([C_Health]).with_group("player")
 
-func on_added(entity: Entity, component: Component):
-    var status = component as C_StatusEffect
-    match status.effect_type:
-        "poison":
-            add_poison_visual(entity)
-        "speed_boost":
-            add_speed_particles(entity)
-        "shield":
-            add_shield_overlay(entity)
+func on_component_added(entity: Entity, component: Resource):
+    # Create health bar when player gains health component
+    var health = component as C_Health
+    # Use call_deferred to avoid timing issues during component changes
+    call_deferred("create_health_bar", entity, health.maximum)
 ```
 
-### on_removed()
+### on_component_changed()
+
+Triggered when a watched component's property changes:
+
+```gdscript
+class_name HealthBarObserver
+extends Observer
+
+func watch() -> Resource:
+    return C_Health
+
+func match():
+    return q.with_all([C_Health]).with_group("player")
+
+func on_component_changed(entity: Entity, component: Resource, property: String, new_value: Variant, old_value: Variant):
+    if property == "current":
+        var health = component as C_Health
+        # Update health bar display
+        call_deferred("update_health_bar", entity, health.current, health.maximum)
+```
+
+### on_component_removed()
 
 Triggered when a watched component is removed from an entity:
 
 ```gdscript
-class_name StatusEffectObserver
+class_name HealthUIObserver
 extends Observer
 
-func watch():
-    return C_StatusEffect
+func watch() -> Resource:
+    return C_Health
 
-func match():
-    return q.with_all([C_Sprite])  # Entities that can show visual effects
-
-func on_removed(entity: Entity, component: Component):
-    var status = component as C_StatusEffect
-    match status.effect_type:
-        "poison":
-            remove_poison_visual(entity)
-        "speed_boost":
-            remove_speed_particles(entity)
-        "shield":
-            remove_shield_overlay(entity)
+func on_component_removed(entity: Entity, component: Resource):
+    # Clean up health bar when health component is removed
+    call_deferred("remove_health_bar", entity)
 ```
 
 ## 💡 Common Observer Patterns
 
-### UI Synchronization
+### Transform Synchronization
 
-Keep UI elements synchronized with game state:
+Keep entity scene transforms in sync with Transform components:
 
 ```gdscript
-# o_inventory_ui.gd
-class_name InventoryUIObserver
+# o_transform.gd
+class_name TransformObserver
 extends Observer
 
-func watch():
-    return C_Inventory
+func watch() -> Resource:
+    return C_Transform
 
-func match():
-    return q.with_all([C_Inventory, C_Player])
+func on_component_added(entity: Entity, component: Resource):
+    var transform_comp = component as C_Transform
+    entity.global_transform = transform_comp.transform
 
-func on_changed(entity: Entity, component: Component, property: String, old_value, new_value):
-    match property:
-        "items":
-            refresh_inventory_display()
-        "selected_item":
-            highlight_selected_item(new_value)
-        "gold":
-            update_gold_display(new_value)
-
-func on_added(entity: Entity, component: Component):
-    create_inventory_ui()
-
-func on_removed(entity: Entity, component: Component):
-    destroy_inventory_ui()
+func on_component_changed(entity: Entity, component: Resource, property: String, new_value: Variant, old_value: Variant):
+    var transform_comp = component as C_Transform
+    entity.global_transform = transform_comp.transform
 ```
 
-### Sound and Visual Effects
+### Status Effect Visuals
 
-Trigger audio/visual feedback on state changes:
+Show visual feedback for status effects:
+
+```gdscript
+# o_status_effects.gd
+class_name StatusEffectObserver
+extends Observer
+
+func watch() -> Resource:
+    return C_StatusEffect
+
+func on_component_added(entity: Entity, component: Resource):
+    var status = component as C_StatusEffect
+    call_deferred("add_status_visual", entity, status.effect_type)
+
+func on_component_removed(entity: Entity, component: Resource):
+    var status = component as C_StatusEffect
+    call_deferred("remove_status_visual", entity, status.effect_type)
+
+func add_status_visual(entity: Entity, effect_type: String):
+    match effect_type:
+        "poison":
+            # Add poison particle effect
+            pass
+        "shield":
+            # Add shield visual overlay
+            pass
+
+func remove_status_visual(entity: Entity, effect_type: String):
+    # Remove corresponding visual effect
+    pass
+```
+
+### Audio Feedback
+
+Trigger sound effects on component changes:
 
 ```gdscript
 # o_audio_feedback.gd
 class_name AudioFeedbackObserver
 extends Observer
 
-func watch():
+func watch() -> Resource:
     return C_Health
 
-func match():
-    return q.with_all([C_Health])
-
-func on_changed(entity: Entity, component: Component, property: String, old_value, new_value):
+func on_component_changed(entity: Entity, component: Resource, property: String, new_value: Variant, old_value: Variant):
     if property == "current":
-        if new_value <= 0:
-            AudioManager.play("death_sound")
-            ParticleManager.play_death_effect(entity.position)
-        elif new_value < old_value:
-            AudioManager.play("damage_sound")
-        elif new_value > old_value:
-            AudioManager.play("heal_sound")
+        var health_change = new_value - old_value
+        
+        if health_change < 0:
+            # Health decreased - play damage sound
+            call_deferred("play_damage_sound", entity.global_position)
+        elif health_change > 0:
+            # Health increased - play heal sound
+            call_deferred("play_heal_sound", entity.global_position)
 ```
 
 ## 🏗️ Observer Best Practices
@@ -191,55 +194,81 @@ func on_changed(entity: Entity, component: Component, property: String, old_valu
 
 **Observer files and classes:**
 
-- **Class names**: `DescriptiveNameObserver` (HealthUIObserver, DamageEffectObserver)
-- **File names**: `o_descriptive_name.gd` (o_health_ui.gd, o_damage_effect.gd)
+- **Class names**: `DescriptiveNameObserver` (TransformObserver, HealthUIObserver)
+- **File names**: `o_descriptive_name.gd` (o_transform.gd, o_health_ui.gd)
 
-### Performance Considerations
+### Use Deferred Calls
 
-**Keep Observer Logic Light:**
+Always use `call_deferred()` to defer work and avoid immediate execution during component updates:
 
 ```gdscript
-# ✅ Good - Light observer logic
-func on_changed(entity: Entity, component: Component, property: String, old_value, new_value):
-    # Queue the work for later processing
-    UIUpdateQueue.queue_health_update(entity, new_value)
+# ✅ Good - Defer work for later execution
+func on_component_changed(entity: Entity, component: Resource, property: String, new_value: Variant, old_value: Variant):
+    call_deferred("update_ui_element", entity, new_value)
 
-# ❌ Avoid - Heavy processing in observer
-func on_changed(entity: Entity, component: Component, property: String, old_value, new_value):
-    # This could cause frame drops
-    recalculate_entire_ui()
-    rebuild_complex_display()
+# ❌ Avoid - Immediate execution can cause issues
+func on_component_changed(entity: Entity, component: Resource, property: String, new_value: Variant, old_value: Variant):
+    update_ui_element(entity, new_value)  # May cause timing issues
+```
+
+### Keep Observer Logic Simple
+
+Focus observers on single responsibilities:
+
+```gdscript
+# ✅ Good - Single purpose observer
+class_name HealthUIObserver
+extends Observer
+
+func watch() -> Resource:
+    return C_Health
+
+func on_component_changed(entity: Entity, component: Resource, property: String, new_value: Variant, old_value: Variant):
+    if property == "current":
+        call_deferred("update_health_display", entity, new_value)
+
+# ❌ Avoid - Observer doing too much
+class_name HealthObserver
+extends Observer
+
+func on_component_changed(entity: Entity, component: Resource, property: String, new_value: Variant, old_value: Variant):
+    # Too many responsibilities in one observer
+    update_health_display(entity, new_value)
+    play_damage_sound(entity)
+    check_achievements(entity)
     save_game_state()
 ```
 
-**Use Specific Queries:**
+### Use Specific Queries
+
+Filter which entities trigger observers with `match()`:
 
 ```gdscript
 # ✅ Good - Specific query
 func match():
-    return q.with_all([C_Health, C_Player])  # Only player health changes
+    return q.with_all([C_Health]).with_group("player")  # Only player health
 
-# ❌ Avoid - Overly broad query
+# ❌ Avoid - Too broad
 func match():
-    return q.with_all([C_Health])  # Triggers for ALL entities with health
+    return q.with_all([C_Health])  # ALL entities with health
 ```
 
 ## 🎯 When to Use Observers
 
 **Use Observers for:**
 
-- UI updates based on game state
-- Audio/visual effects triggered by changes
-- Achievement/statistics tracking
-- State synchronization between components
-- Immediate response to critical state changes
+- UI updates based on game state changes
+- Audio/visual effects triggered by state changes
+- Immediate response to critical state changes (death, level up)
+- Synchronization between components and scene nodes
+- Event logging and analytics
 
 **Use Regular Systems for:**
 
 - Continuous processing (movement, physics)
 - Frame-by-frame updates
 - Complex logic that depends on multiple entities
-- Performance-critical processing
+- Performance-critical processing loops
 
 ## 📚 Related Documentation
 
