@@ -32,11 +32,10 @@ class_name Player
 extends Entity
 
 func on_ready():
-    # Sync the entity's scene transform to the Transform component
-    # This is a common pattern for 3D entities
+    # Sync the entity's scene position to the Transform component
     if has_component(C_Transform):
         var transform_comp = get_component(C_Transform)
-        transform_comp.transform = global_transform
+        transform_comp.position = global_position
 ```
 
 > 💡 **What's happening?** Entities are containers for components. We're creating a player entity that will sync its transform with the component system.
@@ -67,38 +66,58 @@ func _init(max_health: float = 100.0):
 class_name C_Transform
 extends Component
 
-@export var transform: Transform3D = Transform3D.IDENTITY
+@export var position: Vector3 = Vector3.ZERO
 
-func _init(trs: Transform3D = Transform3D.IDENTITY):
-    transform = trs
+func _init(pos: Vector3 = Vector3.ZERO):
+    position = pos
+```
+
+**File: `c_velocity.gd`**
+
+```gdscript
+# c_velocity.gd
+class_name C_Velocity
+extends Component
+
+@export var velocity: Vector3 = Vector3.ZERO
+
+func _init(vel: Vector3 = Vector3.ZERO):
+    velocity = vel
 ```
 
 > 💡 **Key Principle**: Components only hold data, never logic. Think of them as data containers.
 
 ## ⚙️ Step 4: Your First System (1 minute)
 
-Systems contain the logic that operates on entities with specific components. This system keeps entity transforms synchronized:
+Systems contain the logic that operates on entities with specific components. This system moves entities across the screen:
 
-**File: `s_transform.gd`**
+**File: `s_movement.gd`**
 
 ```gdscript
-# s_transform.gd
-class_name TransformSystem
+# s_movement.gd
+class_name MovementSystem
 extends System
 
 func query():
-    # Find all entities that have transform components
-    return q.with_all([C_Transform])
+    # Find all entities that have both transform and velocity
+    return q.with_all([C_Transform, C_Velocity])
 
-func process_all(entities: Array, _delta):
-    # Batch process all transforms for better performance
-    var transforms = ECS.get_components(entities, C_Transform)
-    for i in range(entities.size()):
-        # Sync component transform to actual entity transform
-        entities[i].global_transform = transforms[i].transform
+func process(entity: Entity, delta: float):
+    var transform_comp = entity.get_component(C_Transform)
+    var velocity_comp = entity.get_component(C_Velocity)
+    
+    # Move the entity based on its velocity
+    transform_comp.position += velocity_comp.velocity * delta
+    
+    # Update the actual entity position in the scene
+    entity.global_position = transform_comp.position
+    
+    # Bounce off screen edges (simple example)
+    if transform_comp.position.x > 10 or transform_comp.position.x < -10:
+        velocity_comp.velocity.x *= -1
 ```
 
-> 💡 **System Logic**: Query finds entities with required components, process_all() efficiently processes them in batches.
+> 💡 **System Logic**: Query finds entities with required components, process() runs the movement logic on each entity every frame.
 
 ## 🎬 Step 5: See It Work (1 minute)
 
@@ -115,15 +134,19 @@ extends Node
 func _ready():
     ECS.world = world
     
-    # Create a player entity with components
+    # Create a moving player entity
     var player = Player.new()
-    player.add_components([C_Health.new(100), C_Transform.new()])
+    player.add_components([
+        C_Health.new(100),
+        C_Transform.new(),
+        C_Velocity.new(Vector3(2, 0, 0))  # Move right at 2 units/second
+    ])
     add_child(player)  # Add to scene tree
     ECS.world.add_entity(player)  # Add to ECS world
     
-    # Create the transform system
-    var transform_system = TransformSystem.new()
-    ECS.world.add_system(transform_system)
+    # Create the movement system
+    var movement_system = MovementSystem.new()
+    ECS.world.add_system(movement_system)
 
 func _process(delta):
     # Process all systems
@@ -131,15 +154,15 @@ func _process(delta):
         ECS.process(delta)
 ```
 
-**Run your project!** 🎉 You now have a working ECS setup where the TransformSystem keeps entity transforms synchronized with their Transform components.
+**Run your project!** 🎉 You now have a working ECS setup where the player entity moves across the screen and bounces off the edges! The MovementSystem updates entity positions based on their velocity components.
 
 ## 🎯 What You Just Built
 
 Congratulations! You've created your first ECS project with:
 
 - **Entity**: Player - a container for components
-- **Components**: C_Health, C_Transform - pure data containers
-- **System**: TransformSystem - logic that synchronizes transforms
+- **Components**: C_Health, C_Transform, C_Velocity - pure data containers
+- **System**: MovementSystem - logic that moves entities based on velocity
 - **World**: Container that manages entities and systems
 
 ## 📈 Next Steps
@@ -164,14 +187,15 @@ extends Entity
 func define_components() -> Array:
     return [
         C_Health.new(100),
-        C_Transform.new()
+        C_Transform.new(),
+        C_Velocity.new(Vector3(1, 0, 0))  # Move right slowly
     ]
 
 func on_ready():
-    # Sync scene transform to component
+    # Sync scene position to component
     if has_component(C_Transform):
         var transform_comp = get_component(C_Transform)
-        transform_comp.transform = global_transform
+        transform_comp.position = global_position
 ```
 
 ### 2. Organize Your Main Scene
@@ -203,12 +227,12 @@ Main.tscn
 
 ### 🔧 Add More Features
 
-Try adding these to your player:
+Try adding these to your moving player:
 
-- **Movement system** - Add velocity and input components
-- **Multiple entities** - Create enemies with different health values
-- **Damage system** - Add a system that reduces health over time
-- **User input** - Add controls to move the player around
+- **Input system** - Add C_Input component and system to control movement with arrow keys
+- **Multiple entities** - Create more moving objects with different velocities
+- **Collision system** - Add C_Collision component and detect when entities hit each other
+- **Gravity system** - Add downward velocity to make entities fall
 
 ### 📚 Learn Best Practices
 
