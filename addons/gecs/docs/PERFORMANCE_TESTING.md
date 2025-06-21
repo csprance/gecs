@@ -11,6 +11,7 @@ This document explains how to run and interpret the GECS performance tests. This
 - GECS framework development environment
 - gdUnit4 testing framework
 - Godot 4.x
+- Test system dependencies: `s_performance_test.gd` and `s_complex_performance_test.gd` in tests/systems/
 
 ## 🎯 Overview
 
@@ -168,6 +169,18 @@ Based on test results, focus optimization efforts on:
 3. **Array Operations**: Core performance building blocks
 4. **System Processing**: Frame-rate critical
 5. **Memory Usage**: Large-scale scenarios
+
+## ⚠️ Common Issues
+
+### Missing Dependencies
+If tests fail with missing class errors, ensure these files exist:
+- `addons/gecs/tests/systems/s_performance_test.gd`
+- `addons/gecs/tests/systems/s_complex_performance_test.gd`
+
+### gdUnit4 Setup
+Beyond setting `GODOT_BIN`, ensure:
+- gdUnit4 plugin is enabled in project settings
+- All test component classes are properly defined
 
 ## 🔧 Custom Performance Tests
 
