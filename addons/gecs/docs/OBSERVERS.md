@@ -8,6 +8,7 @@ Observers provide a reactive programming model where systems automatically respo
 
 - Understanding of [Core Concepts](CORE_CONCEPTS.md)
 - Familiarity with [Systems](CORE_CONCEPTS.md#systems)
+- Observers must be added to the World to function
 
 ## 🎯 What are Observers?
 
@@ -24,8 +25,8 @@ Observers are specialized systems that watch for changes to specific components 
 
 Observers extend the `Observer` class and implement key methods:
 
-1. **`watch()`** - Specifies which component to monitor for events (required)
-2. **`match()`** - Defines a query to filter which entities trigger events (optional)
+1. **`watch()`** - Specifies which component to monitor for events (**required** - will crash if not overridden)
+2. **`match()`** - Defines a query to filter which entities trigger events (optional - defaults to all entities)
 3. **Event Handlers** - Handle specific types of changes
 
 ```gdscript
@@ -34,7 +35,7 @@ class_name TransformObserver
 extends Observer
 
 func watch() -> Resource:
-    return C_Transform  # Watch for transform component changes
+    return C_Transform  # Watch for transform component changes (REQUIRED)
 
 func on_component_added(entity: Entity, component: Resource):
     # Sync component transform to entity when added
@@ -269,6 +270,75 @@ func match():
 - Frame-by-frame updates
 - Complex logic that depends on multiple entities
 - Performance-critical processing loops
+
+## 🚀 Adding Observers to the World
+
+Observers must be registered with the World to function. There are several ways to do this:
+
+### Manual Registration
+
+```gdscript
+# In your scene or main script
+func _ready():
+    var health_observer = HealthUIObserver.new()
+    ECS.world.add_observer(health_observer)
+    
+    # Or add multiple observers at once
+    ECS.world.add_observers([health_observer, transform_observer, audio_observer])
+```
+
+### Automatic Scene Tree Registration
+
+Place Observer nodes in your scene under the systems root (default: "Systems" node), and they'll be automatically registered:
+
+```
+Main
+├── World
+├── Systems/          # Observers placed here are auto-registered
+│   ├── HealthUIObserver
+│   ├── TransformObserver
+│   └── AudioFeedbackObserver
+└── Entities/
+    └── Player
+```
+
+### Important Notes:
+- Observers are initialized with their own QueryBuilder (`observer.q`)
+- The `watch()` method is called during registration to validate the component
+- Observers must return a valid Component class from `watch()` or they'll crash
+
+## ⚠️ Common Issues & Troubleshooting
+
+### Observer Not Triggering
+**Problem**: Observer events never fire
+**Solutions**:
+- Ensure the observer is added to the World with `add_observer()`
+- Check that `watch()` returns the correct component class
+- Verify entities match the `match()` query (if defined)
+- Component changes must be on properties, not just internal state
+
+### Crash: "You must override the watch() method"
+**Problem**: Observer crashes on registration
+**Solution**: Override `watch()` method and return a Component class:
+```gdscript
+func watch() -> Resource:
+    return C_Health  # Must return actual component class
+```
+
+### Events Fire for Wrong Entities
+**Problem**: Observer triggers for entities you don't want
+**Solution**: Use `match()` to filter entities:
+```gdscript
+func match():
+    return q.with_all([C_Health]).with_group("player")  # Only players
+```
+
+### Property Changes Not Detected
+**Problem**: Observer doesn't detect component property changes
+**Causes**:
+- Direct assignment to properties should work automatically
+- Internal object modifications (like Array.append()) may not trigger signals
+- Manual signal emission required for complex property changes
 
 ## 📚 Related Documentation
 
