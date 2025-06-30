@@ -13,9 +13,9 @@ func process(entity: Entity, delta: float) -> void:
 	pass # code here....
 
 # If you want a sub system setup, uncomment this comment out process and query and fill it in
-# func sub_system():
+# func sub_systems() -> Array[Array]:
 # 	return [
-# 		[ECS.world.query.with_all([]), subsys_a],
+# 		[q.with_all([]), subsys_a],
 # 	] # return any sub systems here
 
 # func subsys_a(entity: Entity, delta: float) -> void:
