@@ -99,14 +99,16 @@ func _setup_session(session_id):
 	debugger_tab.name = "GECS"  # Will be used as the tab title.
 	session = get_session(session_id)
 	# Listens to the session started and stopped signals.
-	session.started.connect(
-		func():
-			print("GECS Debug Session started")
-			debugger_tab.active = true
-	)
-	session.stopped.connect(
-		func():
-			print("GECS Debug Session stopped")
-			debugger_tab.active = false
-	)
+	if not session.started.is_connected(_on_session_started):
+		session.started.connect(_on_session_started)
+	if not session.stopped.is_connected(_on_session_stopped):
+		session.stopped.connect(_on_session_stopped)
 	session.add_session_tab(debugger_tab)
+
+func _on_session_started():
+	print("GECS Debug Session started")
+	debugger_tab.active = true
+
+func _on_session_stopped():
+	print("GECS Debug Session stopped")
+	debugger_tab.active = false

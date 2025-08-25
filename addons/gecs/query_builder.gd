@@ -75,7 +75,7 @@ func _process_component_list(components: Array) -> Dictionary:
 		else:
 			# Handle regular component case
 			result.components.append(component)
-			result.queries.append({})  # Empty query for regular components
+			result.queries.append({}) # Empty query for regular components
 
 	return result
 
@@ -332,9 +332,6 @@ func matches(entities: Array) -> Array:
 	var result = []
 
 	for entity in entities:
-		# If it's null skip it
-		if entity == null:
-			continue
 		assert(entity is Entity, "Must be an entity")
 		var matches = true
 

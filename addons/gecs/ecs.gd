@@ -43,7 +43,8 @@ var world: World:
 			if not world.is_inside_tree():
 				# Add the world to the tree if it is not already
 				get_tree().root.get_node("./Root").add_child(world)
-			world.connect("tree_exited", _on_world_exited)
+			if not world.is_connected("tree_exited", _on_world_exited):
+				world.connect("tree_exited", _on_world_exited)
 		world_changed.emit(world)
 		if debug:
 			GECSEditorDebuggerMessages.set_world(world)

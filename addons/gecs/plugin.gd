@@ -47,7 +47,8 @@ func add_project_setting(
 
 ## Adds new GECS related ProjectSettings to Godot.
 func add_gecs_project_settings():
-	ProjectSettings.settings_changed.connect(_on_settings_changed)
+	if not ProjectSettings.settings_changed.is_connected(_on_settings_changed):
+		ProjectSettings.settings_changed.connect(_on_settings_changed)
 	for setting in GecsSettings.project_settings.values():
 		add_project_setting(
 			setting["path"],

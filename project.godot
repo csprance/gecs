@@ -26,7 +26,7 @@ resources_spreadsheet_view/freeze_first_column=true
 config/name="GECS"
 config/description="Godot Entity Component System"
 config/version="1.0.0"
-config/features=PackedStringArray("4.4", "Forward Plus")
+config/features=PackedStringArray("4.5", "Forward Plus")
 
 [audio]
 
@@ -44,8 +44,8 @@ ECS="*res://addons/gecs/ecs.gd"
 
 [debug]
 
-file_logging/enable_file_logging=true
 settings/stdout/verbose_stdout=true
+file_logging/enable_file_logging=true
 gdscript/warnings/unused_parameter=0
 gdscript/warnings/unused_signal=0
 

@@ -16,7 +16,8 @@ var active := false
 
 
 func _ready() -> void:
-	update_interval_spin_box.value_changed.connect(_on_time_update_interval_changed)
+	if not update_interval_spin_box.value_changed.is_connected(_on_time_update_interval_changed):
+		update_interval_spin_box.value_changed.connect(_on_time_update_interval_changed)
 	timer = update_interval_spin_box.value
 
 
