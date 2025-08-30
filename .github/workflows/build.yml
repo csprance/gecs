@@ -48,10 +48,12 @@ jobs:
 
           # Add and commit changes with descriptive message
           git add .
-          git commit -m "Release $TAG_VERSION: GECS for submodule use
+          git commit -F - <<'EOF' || echo "No changes to commit"
+Release '"$TAG_VERSION"': GECS for submodule use
 
-          Based on commit $SHORT_SHA by $COMMIT_AUTHOR:
-          $COMMIT_MESSAGE" || echo "No changes to commit"
+Based on commit '"$SHORT_SHA"' by '"$COMMIT_AUTHOR"':
+'"$COMMIT_MESSAGE"'
+EOF
 
           # Push to tag-based release branch
           git push origin release-$TAG_VERSION
@@ -101,10 +103,12 @@ jobs:
 
           # Add and commit changes with descriptive message
           git add .
-          git commit -m "Godot Asset Library $TAG_VERSION: GECS ready for Asset Library
+          git commit -F - <<'EOF' || echo "No changes to commit"
+Godot Asset Library '"$TAG_VERSION"': GECS ready for Asset Library
 
-          Based on commit $SHORT_SHA by $COMMIT_AUTHOR:
-          $COMMIT_MESSAGE" || echo "No changes to commit"
+Based on commit '"$SHORT_SHA"' by '"$COMMIT_AUTHOR"':
+'"$COMMIT_MESSAGE"'
+EOF
 
           # Push to tag-based Godot Asset Library branch
           git push origin godot-asset-library-$TAG_VERSION
