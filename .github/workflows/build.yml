@@ -46,14 +46,14 @@ jobs:
           # Remove test directories to avoid dependency issues
           rm -rf tests/
 
-          # Add and commit changes with descriptive message
+          # Configure Git identity and commit
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
           git add .
-          git commit -F - <<'EOF' || echo "No changes to commit"
-Release '"$TAG_VERSION"': GECS for submodule use
-
-Based on commit '"$SHORT_SHA"' by '"$COMMIT_AUTHOR"':
-'"$COMMIT_MESSAGE"'
-EOF
+          git commit -m "Release ${TAG_VERSION}: GECS for submodule use" \
+                      -m "Based on commit ${SHORT_SHA} by ${COMMIT_AUTHOR}:" \
+                      -m "${COMMIT_MESSAGE}" \
+            || echo "No changes to commit"
 
           # Push to tag-based release branch
           git push origin release-$TAG_VERSION
@@ -101,14 +101,14 @@ EOF
           # Remove test directories for Asset Library submission
           rm -rf addons/gecs/tests/
 
-          # Add and commit changes with descriptive message
+          # Configure Git identity and commit
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
           git add .
-          git commit -F - <<'EOF' || echo "No changes to commit"
-Godot Asset Library '"$TAG_VERSION"': GECS ready for Asset Library
-
-Based on commit '"$SHORT_SHA"' by '"$COMMIT_AUTHOR"':
-'"$COMMIT_MESSAGE"'
-EOF
+          git commit -m "Godot Asset Library ${TAG_VERSION}: GECS ready for Asset Library" \
+                      -m "Based on commit ${SHORT_SHA} by ${COMMIT_AUTHOR}:" \
+                      -m "${COMMIT_MESSAGE}" \
+            || echo "No changes to commit"
 
           # Push to tag-based Godot Asset Library branch
           git push origin godot-asset-library-$TAG_VERSION
