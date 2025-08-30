@@ -4,6 +4,9 @@ on:
     tags:
       - 'v*'  # Triggers on any version tag like v1.0.0, v1.2.3, v3.9.1-beta, etc.
 
+permissions:
+  contents: write  # Required for git push operations
+
 jobs:
   make-submodule:
     runs-on: ubuntu-latest
@@ -34,7 +37,7 @@ jobs:
           find . -maxdepth 1 ! -name '.git' ! -name '.' -exec rm -rf {} +
 
           # Copy addon contents to root for submodule use
-          git checkout main -- README.md LICENSE addons/gecs
+          git checkout "$COMMIT_SHA" -- README.md LICENSE addons/gecs
           cp README.md addons/gecs/
           cp LICENSE addons/gecs/
           cp -r addons/gecs/* .
@@ -84,8 +87,8 @@ jobs:
           # Create Godot Asset Library directory structure
           mkdir -p addons/gecs
 
-          # Copy addon contents and other necessary files
-          git checkout main -- README.md LICENSE addons/gecs
+          # Copy addon contents and other necessary files from the tag commit
+          git checkout "$COMMIT_SHA" -- README.md LICENSE addons/gecs
 
           # Copy README.md to addon folder
           cp README.md addons/gecs/
