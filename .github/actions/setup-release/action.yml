@@ -1,0 +1,43 @@
+name: 'Setup Release Environment'
+description: 'Common setup steps for release branches'
+outputs:
+  commit-sha:
+    description: 'Full commit SHA'
+    value: ${{ steps.commit-info.outputs.commit-sha }}
+  commit-message:
+    description: 'Commit message'
+    value: ${{ steps.commit-info.outputs.commit-message }}
+  commit-author:
+    description: 'Commit author'
+    value: ${{ steps.commit-info.outputs.commit-author }}
+  short-sha:
+    description: 'Short commit SHA'
+    value: ${{ steps.commit-info.outputs.short-sha }}
+  tag-version:
+    description: 'Git tag version'
+    value: ${{ steps.commit-info.outputs.tag-version }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Configure Git
+      shell: bash
+      run: |
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+    - name: Get commit info
+      id: commit-info
+      shell: bash
+      run: |
+        COMMIT_SHA="${{ github.sha }}"
+        COMMIT_MESSAGE=$(git log -1 --pretty=format:"%s" $COMMIT_SHA)
+        COMMIT_AUTHOR=$(git log -1 --pretty=format:"%an" $COMMIT_SHA)
+        SHORT_SHA=$(echo $COMMIT_SHA | cut -c1-7)
+        TAG_VERSION=${GITHUB_REF#refs/tags/}  # Extract tag name from refs/tags/v1.0.0
+        
+        echo "commit-sha=$COMMIT_SHA" >> $GITHUB_OUTPUT
+        echo "commit-message=$COMMIT_MESSAGE" >> $GITHUB_OUTPUT
+        echo "commit-author=$COMMIT_AUTHOR" >> $GITHUB_OUTPUT
+        echo "short-sha=$SHORT_SHA" >> $GITHUB_OUTPUT
+        echo "tag-version=$TAG_VERSION" >> $GITHUB_OUTPUT

@@ -105,7 +105,8 @@ func add_component(component: Resource) -> void:
 	
 	_component_path_cache[component] = resource_path
 	components[resource_path] = component
-	component.property_changed.connect(_on_component_property_changed)
+	if not component.property_changed.is_connected(_on_component_property_changed):
+		component.property_changed.connect(_on_component_property_changed)
 	## Adding components happens through a signal
 	component_added.emit(self, component)
 	_entityLogger.trace("Added Component: ", resource_path)

@@ -64,7 +64,8 @@ var query: QueryBuilder:
 		var q: QueryBuilder
 		if _query_builder_pool.is_empty():
 			q = QueryBuilder.new(self)
-			cache_invalidated.connect(q.invalidate_cache)
+			if not cache_invalidated.is_connected(q.invalidate_cache):
+				cache_invalidated.connect(q.invalidate_cache)
 		else:
 			q = _query_builder_pool.pop_back()
 			q.clear()
@@ -129,7 +130,7 @@ func initialize():
 
 	# Add systems from scene tree
 	var _systems = get_node(system_nodes_root).find_children("*", "System") as Array[System]
-	add_systems(_systems, true)  # and sort them after they're added
+	add_systems(_systems, true) # and sort them after they're added
 	_worldLogger.debug("_initialize Added Systems from Scene Tree and dep sorted: ", _systems)
 
 	# Add observers from scene tree
@@ -189,10 +190,14 @@ func add_entity(entity: Entity, components = null, add_to_tree = true) -> void:
 		_add_entity_to_index(entity, component_key)
 
 	# Connect to entity signals for components so we can track global component state
-	entity.component_added.connect(_on_entity_component_added)
-	entity.component_removed.connect(_on_entity_component_removed)
-	entity.relationship_added.connect(_on_entity_relationship_added)
-	entity.relationship_removed.connect(_on_entity_relationship_removed)
+	if not entity.component_added.is_connected(_on_entity_component_added):
+		entity.component_added.connect(_on_entity_component_added)
+	if not entity.component_removed.is_connected(_on_entity_component_removed):
+		entity.component_removed.connect(_on_entity_component_removed)
+	if not entity.relationship_added.is_connected(_on_entity_relationship_added):
+		entity.relationship_added.connect(_on_entity_relationship_added)
+	if not entity.relationship_removed.is_connected(_on_entity_relationship_removed):
+		entity.relationship_removed.connect(_on_entity_relationship_removed)
 
 	if components:
 		entity.add_components(components)
@@ -227,7 +232,7 @@ func remove_entity(entity) -> void:
 		processor.call(entity)
 	entity_removed.emit(entity)
 	_worldLogger.debug("remove_entity Removing Entity: ", entity)
-	entities.erase(entity)  # FIXME: This doesn't always work for some reason?
+	entities.erase(entity) # FIXME: This doesn't always work for some reason?
 	if ECS.debug:
 		GECSEditorDebuggerMessages.entity_removed(entity)
 	# Update index
@@ -287,10 +292,14 @@ func enable_entity(entity: Entity, components = null) -> void:
 	entity_enabled.emit(entity)
 
 	# Connect to entity signals for components so we can track global component state
-	entity.component_added.connect(_on_entity_component_added)
-	entity.component_removed.connect(_on_entity_component_removed)
-	entity.relationship_added.connect(_on_entity_relationship_added)
-	entity.relationship_removed.connect(_on_entity_relationship_removed)
+	if not entity.component_added.is_connected(_on_entity_component_added):
+		entity.component_added.connect(_on_entity_component_added)
+	if not entity.component_removed.is_connected(_on_entity_component_removed):
+		entity.component_removed.connect(_on_entity_component_removed)
+	if not entity.relationship_added.is_connected(_on_entity_relationship_added):
+		entity.relationship_added.connect(_on_entity_relationship_added)
+	if not entity.relationship_removed.is_connected(_on_entity_relationship_removed):
+		entity.relationship_removed.connect(_on_entity_relationship_removed)
 
 	if components:
 		entity.add_components(components)
@@ -518,7 +527,8 @@ func _remove_entity_from_index(entity, component_key: String) -> void:
 ## @param component_key The resource path of the added component.
 func _on_entity_component_added(entity: Entity, component: Resource) -> void:
 	# We have to get the script here then resource because we're using an instantiated resource
-	_add_entity_to_index(entity, component.get_script().resource_path)
+	if component and component.get_script():
+		_add_entity_to_index(entity, component.get_script().resource_path)
 	# Emit Signal
 	component_added.emit(entity, component)
 
@@ -526,7 +536,8 @@ func _on_entity_component_added(entity: Entity, component: Resource) -> void:
 	_handle_observer_component_added(entity, component)
 
 	# Watch for propety changes to the component
-	entity.component_property_changed.connect(_on_entity_component_property_change)
+	if not entity.component_property_changed.is_connected(_on_entity_component_property_change):
+		entity.component_property_changed.connect(_on_entity_component_property_change)
 
 	if ECS.debug:
 		GECSEditorDebuggerMessages.entity_component_added(entity, component)
@@ -556,7 +567,7 @@ func _on_entity_component_property_change(
 	if ECS.debug:
 		(
 			GECSEditorDebuggerMessages
-			. entity_component_property_changed(
+			.entity_component_property_changed(
 				entity,
 				component,
 				property_name,
@@ -632,7 +643,7 @@ func _on_entity_relationship_removed(entity: Entity, relationship: Relationship)
 ##      [codeblock]world.add_observer(health_change_system)[/codeblock]
 func add_observer(_observer: Observer) -> void:
 	# Verify the system has a valid watch component
-	_observer.watch()  # Just call to validate it returns a component
+	_observer.watch() # Just call to validate it returns a component
 	if not _observer.is_inside_tree():
 		get_node(system_nodes_root).add_child(_observer)
 	_worldLogger.trace("add_observer Adding Reactive System: ", _observer)
@@ -642,7 +653,7 @@ func add_observer(_observer: Observer) -> void:
 	_observer.q = QueryBuilder.new(self)
 
 	# Verify the system has a valid watch component
-	_observer.watch()  # Just call to validate it returns a component
+	_observer.watch() # Just call to validate it returns a component
 
 
 ## Adds multiple reactive systems to the world.
@@ -694,6 +705,7 @@ func _handle_observer_component_added(entity: Entity, component: Resource) -> vo
 		var watch_component = reactive_system.watch()
 		if (
 			watch_component
+			and component and component.get_script()
 			and watch_component.resource_path == component.get_script().resource_path
 		):
 			# Check if the entity matches the system's query
@@ -734,6 +746,7 @@ func _handle_observer_component_changed(
 		var watch_component = reactive_system.watch()
 		if (
 			watch_component
+			and component and component.get_script()
 			and watch_component.resource_path == component.get_script().resource_path
 		):
 			# Check if the entity matches the system's query

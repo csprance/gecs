@@ -69,7 +69,7 @@ func query() -> QueryBuilder:
 
 ## Override this method to define any sub-systems that should be processed by this system.[br]
 func sub_systems() -> Array[Array]:
-	_using_subsystems = false  # If this method is not overridden then we are not using sub systems
+	_using_subsystems = false # If this method is not overridden then we are not using sub systems
 	return []
 
 

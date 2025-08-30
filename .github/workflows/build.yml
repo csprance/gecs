@@ -1,0 +1,114 @@
+name: 🛠️ Build GECS Release
+on:
+  push:
+    tags:
+      - 'v*'  # Triggers on any version tag like v1.0.0, v1.2.3, v3.9.1-beta, etc.
+
+permissions:
+  contents: write  # Required for git push operations
+
+jobs:
+  make-submodule:
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup release environment
+        id: setup
+        uses: ./.github/actions/setup-release
+
+      - name: Create tag-based release branch
+        run: |
+          # Use outputs from setup step
+          COMMIT_SHA="${{ steps.setup.outputs.commit-sha }}"
+          COMMIT_MESSAGE="${{ steps.setup.outputs.commit-message }}"
+          COMMIT_AUTHOR="${{ steps.setup.outputs.commit-author }}"
+          SHORT_SHA="${{ steps.setup.outputs.short-sha }}"
+          TAG_VERSION="${{ steps.setup.outputs.tag-version }}"
+
+          # Create new release branch for this tag version
+          git checkout -B release-$TAG_VERSION
+
+          # Clear everything except .git
+          find . -maxdepth 1 ! -name '.git' ! -name '.' -exec rm -rf {} +
+
+          # Copy addon contents to root for submodule use
+          git checkout "$COMMIT_SHA" -- README.md LICENSE addons/gecs
+          cp README.md addons/gecs/
+          cp LICENSE addons/gecs/
+          cp -r addons/gecs/* .
+          rm -rf addons
+          
+          # Remove test directories to avoid dependency issues
+          rm -rf tests/
+
+          # Configure Git identity and commit
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "Release ${TAG_VERSION}: GECS for submodule use" \
+                      -m "Based on commit ${SHORT_SHA} by ${COMMIT_AUTHOR}:" \
+                      -m "${COMMIT_MESSAGE}" \
+            || echo "No changes to commit"
+
+          # Push to tag-based release branch
+          git push --force origin release-$TAG_VERSION
+
+  make-godot-asset-library:
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup release environment
+        id: setup
+        uses: ./.github/actions/setup-release
+
+      - name: Create tag-based Godot Asset Library branch
+        run: |
+          # Use outputs from setup step
+          COMMIT_SHA="${{ steps.setup.outputs.commit-sha }}"
+          COMMIT_MESSAGE="${{ steps.setup.outputs.commit-message }}"
+          COMMIT_AUTHOR="${{ steps.setup.outputs.commit-author }}"
+          SHORT_SHA="${{ steps.setup.outputs.short-sha }}"
+          TAG_VERSION="${{ steps.setup.outputs.tag-version }}"
+
+          # Create new Godot Asset Library branch for this tag version
+          git checkout -B godot-asset-library-$TAG_VERSION
+
+          # Clear everything except .git
+          find . -maxdepth 1 ! -name '.git' ! -name '.' -exec rm -rf {} +
+
+          # Create Godot Asset Library directory structure
+          mkdir -p addons/gecs
+
+          # Copy addon contents and other necessary files from the tag commit
+          git checkout "$COMMIT_SHA" -- README.md LICENSE addons/gecs
+
+          # Copy README.md to addon folder
+          cp README.md addons/gecs/
+
+          # Copy LICENSE to addon folder
+          cp LICENSE addons/gecs/
+          
+          # Remove test directories for Asset Library submission
+          rm -rf addons/gecs/tests/
+
+          # Configure Git identity and commit
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "Godot Asset Library ${TAG_VERSION}: GECS ready for Asset Library" \
+                      -m "Based on commit ${SHORT_SHA} by ${COMMIT_AUTHOR}:" \
+                      -m "${COMMIT_MESSAGE}" \
+            || echo "No changes to commit"
+
+          # Push to tag-based Godot Asset Library branch
+          git push --force origin godot-asset-library-$TAG_VERSION

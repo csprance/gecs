@@ -81,6 +81,37 @@ addons/gdUnit4/runtest.sh -a res://addons/gecs/tests/performance/performance_tes
 
 Performance tests cover all critical ECS operations and provide regression detection. See `addons/gecs/docs/PERFORMANCE_TESTING.md` for detailed documentation.
 
+### Creating Releases
+
+GECS uses an automated release workflow that creates clean distribution branches for different use cases.
+
+**To create a new release:**
+
+1. **Tag the release** (use semantic versioning):
+   ```bash
+   git tag v1.0.0
+   git push origin v1.0.0
+   ```
+
+2. **The GitHub workflow automatically creates two branches:**
+   - `release-v1.0.0` - For submodule users (addon contents at root level)
+   - `godot-asset-library-v1.0.0` - For Godot Asset Library submissions (proper `addons/gecs/` structure)
+
+**Both branches contain:**
+- Clean addon code (no test directories)
+- README.md and LICENSE files
+- Production-ready GECS framework
+
+**For users:**
+```bash
+# Submodule installation
+git submodule add -b release-v1.0.0 https://github.com/your-repo/gecs.git gecs
+
+# Asset Library - submit the godot-asset-library-v1.0.0 branch
+```
+
+**Version numbering:** Use semantic versioning (v1.0.0, v1.1.0, v2.0.0, etc.)
+
 ### Development Structure
 
 **Component Creation:**
