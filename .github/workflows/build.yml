@@ -2,7 +2,7 @@ name: 🛠️ Build GECS Release
 on:
   push:
     tags:
-      - 'v*.*.*'  # Triggers on version tags like v1.0.0, v1.2.3, etc.
+      - 'v*'  # Triggers on any version tag like v1.0.0, v1.2.3, v3.9.1-beta, etc.
 
 jobs:
   make-submodule:
