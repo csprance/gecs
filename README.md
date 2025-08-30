@@ -1,6 +1,6 @@
 # GECS
 
-> **Lightning-fast Entity Component System for Godot 4.x**
+> **Entity Component System for Godot 4.x**
 
 Build scalable, maintainable games with clean separation of data and logic. GECS integrates seamlessly with Godot's node system while providing powerful query-based entity filtering.
 
@@ -32,7 +32,7 @@ func process(entity: Entity, delta: float):
 - 🚀 **High Performance** - Optimized queries with automatic caching
 - 🔧 **Flexible Queries** - Find entities by components, relationships, or properties
 - 📦 **Editor Support** - Visual component editing and scene integration
-- 🎮 **Battle Tested** - Used in production games
+- 🎮 **Battle Tested** - Used in games being actively developed
 
 ## 📚 Complete Documentation
 
