@@ -87,9 +87,6 @@ jobs:
           # Copy addon contents and other necessary files
           git checkout main -- README.md LICENSE addons/gecs
 
-          # Copy addon contents to addons/gecs (already in correct structure)
-          cp -r addons/gecs/* addons/gecs/
-
           # Copy README.md to addon folder
           cp README.md addons/gecs/
 
