@@ -1,2 +1,0 @@
-class_name _GECSFOODTEST
-extends Entity
