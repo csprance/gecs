@@ -1,7 +1,8 @@
 class_name RandomSpawnerSystem
 extends System
 
-@export var spawn_interval: float = 0.0001 # Time in seconds between spawns
+@export var target_entity_count: int = 10000 # Target number of entities to maintain
+@export var batch_interval: float = 0.01 # Time between batches
 @export var random_mover_scene: PackedScene
 
 var timer = 5.0
@@ -9,15 +10,14 @@ var timer = 5.0
 func process_all(_es: Array, delta: float):
 	timer -= delta
 	if timer <= 0.0:
-		timer = spawn_interval
-		_spawn_entity()
+		timer = batch_interval
+		_manage_entity_population()
 
 
-func _spawn_entity() -> void:
-	# just grab a random entity with a velocity component to clone
-	var e_random_entity = ECS.world.query.with_all([C_Velocity]).execute_one()
-	if e_random_entity == null:
-		return
+func _manage_entity_population() -> void:
+	# Get current entity count (entities with velocity components)
+	var current_entities = ECS.world.query.execute()
+	var current_count = current_entities.size()
 	
-	ECS.world.add_entity(random_mover_scene.instantiate() as Entity)
-	ECS.world.add_entity(random_mover_scene.instantiate() as Entity)
+	if current_count < target_entity_count:
+		ECS.world.add_entity(random_mover_scene.instantiate() as Entity)

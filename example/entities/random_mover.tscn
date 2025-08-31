@@ -18,7 +18,7 @@ metadata/_custom_type_script = "uid://b7r4xkfiy8qi0"
 
 [sub_resource type="Resource" id="Resource_b8ng6"]
 script = ExtResource("5_k3wa3")
-lifetime = 15.0
+lifetime = 25.0
 metadata/_custom_type_script = "uid://d0fit03sansqe"
 
 [sub_resource type="TorusMesh" id="TorusMesh_o4fpx"]
