@@ -26,6 +26,7 @@ resources_spreadsheet_view/freeze_first_column=true
 config/name="GECS"
 config/description="Godot Entity Component System"
 config/version="1.0.0"
+run/main_scene="uid://x5ubiio43y7w"
 config/features=PackedStringArray("4.5", "Forward Plus")
 
 [audio]

@@ -1,4 +1,4 @@
-[gd_scene load_steps=3 format=3 uid="uid://df7cvyauir2uh"]
+[gd_scene load_steps=3 format=3 uid="uid://cbykprebt3jaa"]
 
 [ext_resource type="Script" uid="uid://ca7erogu58fca" path="res://addons/gecs/debug/gecs_editor_debugger_tab.gd" id="1_8dl00"]
 
@@ -89,7 +89,6 @@ size_flags_vertical = 0
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 0
-button_pressed = true
 text = "Update With ECS State"
 
 [node name="RichTextLabel" type="RichTextLabel" parent="HSplit/VBoxContainer/HBoxContainer"]

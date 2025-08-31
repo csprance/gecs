@@ -1,17 +1,21 @@
 ## QueryBuilder[br]
 ## A utility class for constructing and executing queries to retrieve entities based on their components.
 ##
-## The QueryBuilder supports filtering entities that have all, any, or exclude specific components.
+## The QueryBuilder supports filtering entities that have all, any, or exclude specific components,
+## as well as filtering by enabled/disabled status using high-performance group indexing.
 ## [codeblock]
-##     var entities = ECS.world.query
+##     var enabled_entities = ECS.world.query
 ##                    	.with_all([Transform, Velocity])
 ##                    	.with_any([Health])
 ##                    	.with_none([Inactive])
+##                    	.enabled(true)
 ##                    	.execute()
+##     
+##     var disabled_entities = ECS.world.query.enabled(false).execute()
+##     var all_entities = ECS.world.query.enabled(null).execute()
 ##[/codeblock]
-## This will retrieve all entities that have both `Transform` and `Velocity` components,
-## have at least one of the `Health` component,
-## and do not have the `Inactive` component.
+## This will efficiently query entities using indexed group lookups rather than
+## filtering the entire entity list.
 class_name QueryBuilder
 extends RefCounted
 
@@ -35,6 +39,8 @@ var _any_components_queries: Array = []
 var _groups: Array = []
 # Groups that an entity must not be in
 var _exclude_groups: Array = []
+# Enabled/disabled filter: true = enabled only, false = disabled only, null = all
+var _enabled_filter = null
 
 # Add fields for query result caching
 var _cache_valid: bool = false
@@ -58,6 +64,7 @@ func clear():
 	_any_components_queries = []
 	_groups = []
 	_exclude_groups = []
+	_enabled_filter = null
 	_cache_valid = false
 	return self
 
@@ -153,6 +160,21 @@ func without_group(groups: Array[String] = []) -> QueryBuilder:
 	return self
 
 
+## Filter to only enabled entities using internal arrays for optimal performance.[br]
+## [param returns] [QueryBuilder] instance for chaining.
+func enabled() -> QueryBuilder:
+	_enabled_filter = true
+	_cache_valid = false
+	return self
+
+## Filter to only disabled entities using internal arrays for optimal performance.[br]
+## [param returns] [QueryBuilder] instance for chaining.
+func disabled() -> QueryBuilder:
+	_enabled_filter = false
+	_cache_valid = false
+	return self
+
+
 func execute_one() -> Entity:
 	# Execute the query and return the first matching entity
 	var result = execute()
@@ -235,6 +257,12 @@ func _internal_execute() -> Array:
 				filtered_entities.append(entity)
 		result = filtered_entities
 
+	# Apply enabled/disabled filtering if specified
+	if _enabled_filter == true:
+		result = result.filter(func(entity): return entity.enabled)
+	elif _enabled_filter == false:
+		result = result.filter(func(entity): return not entity.enabled)
+	
 	# Return the structural query result (caching handled in execute())
 	return result
 
@@ -245,6 +273,8 @@ func _filter_entities_by_queries(
 ) -> Array:
 	var filtered = []
 	for entity in entities:
+		if entity == null:
+			continue
 		if require_all:
 			# Must match all queries
 			var matches = true
@@ -332,6 +362,9 @@ func matches(entities: Array) -> Array:
 	var result = []
 
 	for entity in entities:
+		# If it's null skip it
+		if entity == null:
+			continue
 		assert(entity is Entity, "Must be an entity")
 		var matches = true
 
@@ -410,6 +443,78 @@ func is_empty() -> bool:
 		and _relationships.is_empty()
 		and _exclude_relationships.is_empty()
 	)
+
+
+func to_string() -> String:
+	var parts = []
+	
+	if not _all_components.is_empty():
+		parts.append("with_all(" + _format_components(_all_components) + ")")
+	
+	if not _any_components.is_empty():
+		parts.append("with_any(" + _format_components(_any_components) + ")")
+	
+	if not _exclude_components.is_empty():
+		parts.append("with_none(" + _format_components(_exclude_components) + ")")
+	
+	if not _relationships.is_empty():
+		parts.append("with_relationship(" + _format_relationships(_relationships) + ")")
+	
+	if not _exclude_relationships.is_empty():
+		parts.append("without_relationship(" + _format_relationships(_exclude_relationships) + ")")
+	
+	if not _groups.is_empty():
+		parts.append("with_group(" + str(_groups) + ")")
+	
+	if not _exclude_groups.is_empty():
+		parts.append("without_group(" + str(_exclude_groups) + ")")
+	
+	if _enabled_filter != null:
+		if _enabled_filter:
+			parts.append("enabled()")
+		else:
+			parts.append("disabled()")
+	
+	if not _all_components_queries.is_empty():
+		parts.append("component_queries(" + _format_component_queries(_all_components_queries) + ")")
+	
+	if not _any_components_queries.is_empty():
+		parts.append("any_component_queries(" + _format_component_queries(_any_components_queries) + ")")
+	
+	if parts.is_empty():
+		return "ECS.world.query"
+	
+	return "ECS.world.query." + ".".join(parts)
+
+
+func _format_components(components: Array) -> String:
+	var names = []
+	for component in components:
+		if component is Script:
+			names.append(component.get_global_name())
+		else:
+			names.append(str(component))
+	return "[" + ", ".join(names) + "]"
+
+
+func _format_relationships(relationships: Array) -> String:
+	var names = []
+	for relationship in relationships:
+		if relationship.has_method("to_string"):
+			names.append(relationship.to_string())
+		else:
+			names.append(str(relationship))
+	return "[" + ", ".join(names) + "]"
+
+
+func _format_component_queries(queries: Array) -> String:
+	var formatted = []
+	for query in queries:
+		if query.has_method("to_string"):
+			formatted.append(query.to_string())
+		else:
+			formatted.append(str(query))
+	return "[" + ", ".join(formatted) + "]"
 
 
 func compile(query: String) -> QueryBuilder:

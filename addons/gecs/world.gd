@@ -55,6 +55,8 @@ var component_entity_index: Dictionary = {}
 ## Pool of QueryBuilder instances to reduce creation overhead
 var _query_builder_pool: Array[QueryBuilder] = []
 var _pool_size_limit: int = 10
+## Entity pool manager for transparent entity pooling
+var entity_pool_manager: EntityPoolManager
 
 ## The [QueryBuilder] instance for this world used to build and execute queries[br]
 # # Anytime we request a query we want to connect the cache invalidated signal to the query [br]
@@ -107,6 +109,8 @@ func _generate_query_cache_key(all_components: Array, any_components: Array, exc
 ## Called when the World node is ready.[br]
 func _ready() -> void:
 	#_worldLogger.disabled = true
+	entity_pool_manager = EntityPoolManager.new()
+	entity_pool_manager.configure_default_pools()
 	initialize()
 
 
@@ -205,6 +209,7 @@ func add_entity(entity: Entity, components = null, add_to_tree = true) -> void:
 	for processor in ECS.entity_preprocessors:
 		processor.call(entity)
 
+
 	# Clear our query cache when component structure changes
 	_query_result_cache.clear()
 	cache_invalidated.emit()
@@ -243,8 +248,13 @@ func remove_entity(entity) -> void:
 	entity.component_removed.disconnect(_on_entity_component_removed)
 	entity.relationship_added.disconnect(_on_entity_relationship_added)
 	entity.relationship_removed.disconnect(_on_entity_relationship_removed)
-	entity.on_destroy()
-	entity.queue_free()
+	
+	# Check if entity should be returned to pool or destroyed
+	if not entity_pool_manager.handle_entity_removal(entity):
+		# No pool hint, destroy normally
+		entity.on_destroy()
+		entity.queue_free()
+	
 	# Clear our query cache when component structure changes
 	_query_result_cache.clear()
 	cache_invalidated.emit()
@@ -257,7 +267,7 @@ func remove_entity(entity) -> void:
 ##      [codeblock]world.disable_entity(player_entity)[/codeblock]
 func disable_entity(entity) -> Entity:
 	entity = entity as Entity
-	entity.enabled = false
+	entity.enabled = false # This will trigger _on_entity_enabled_changed via setter
 	entity_disabled.emit(entity)
 	_worldLogger.debug("disable_entity Disabling Entity: ", entity)
 	entity.component_added.disconnect(_on_entity_component_added)
@@ -288,7 +298,7 @@ func disable_entity(entity) -> Entity:
 func enable_entity(entity: Entity, components = null) -> void:
 	# Update index
 	_worldLogger.debug("enable_entity Enabling Entity to World: ", entity)
-	entity.enabled = true
+	entity.enabled = true # This will trigger _on_entity_enabled_changed via setter
 	entity_enabled.emit(entity)
 
 	# Connect to entity signals for components so we can track global component state
@@ -312,6 +322,44 @@ func enable_entity(entity: Entity, components = null) -> void:
 	cache_invalidated.emit()
 	if ECS.debug:
 		GECSEditorDebuggerMessages.entity_enabled(entity)
+
+
+## ##################################
+## Entity Pooling
+## ##################################
+
+
+## Creates an entity from a pool or creates a new one if pool is empty.[br]
+## This method provides transparent entity pooling while maintaining the exact same API.[br]
+## [param pool_name] Optional pool name to get entity from. Defaults to "default".[br]
+##   Available pools: "default", "high_frequency", "medium_frequency", "low_frequency"[br]
+## [param entity_class] Optional entity class to instantiate if pool is empty.[br]
+## [param components] Optional list of components to add to the entity.[br]
+## [param add_to_tree] Whether to add the entity to the scene tree (default: true).[br]
+## [b]Example:[/b]
+## [codeblock]
+## # Create a default entity
+## var entity = world.create_entity()
+## # Create from high-frequency pool (for bullets, particles, etc.)
+## var bullet = world.create_entity("high_frequency", BulletEntity)
+## # Create from medium-frequency pool with components
+## var pickup = world.create_entity("medium_frequency", PickupEntity, [value_component])
+## [/codeblock]
+func create_entity(pool_name: String = "default", entity_class: Script = null, components = null, add_to_tree: bool = true) -> Entity:
+	var entity = entity_pool_manager.get_entity(pool_name, entity_class)
+	
+	# Set pool hint for later return to pool
+	entity.set_meta("_pool_hint", pool_name)
+	
+	# Add entity to world using existing add_entity method
+	add_entity(entity, components, add_to_tree)
+	
+	return entity
+
+
+## ##################################
+## Systems
+## ##################################
 
 
 ## Adds a single system to the world.
@@ -527,8 +575,7 @@ func _remove_entity_from_index(entity, component_key: String) -> void:
 ## @param component_key The resource path of the added component.
 func _on_entity_component_added(entity: Entity, component: Resource) -> void:
 	# We have to get the script here then resource because we're using an instantiated resource
-	if component and component.get_script():
-		_add_entity_to_index(entity, component.get_script().resource_path)
+	_add_entity_to_index(entity, component.get_script().resource_path)
 	# Emit Signal
 	component_added.emit(entity, component)
 
@@ -537,6 +584,9 @@ func _on_entity_component_added(entity: Entity, component: Resource) -> void:
 
 	# Watch for propety changes to the component
 	if not entity.component_property_changed.is_connected(_on_entity_component_property_change):
+		# Connect to the component's property changed signal
+		# This allows us to track changes to properties on the component
+		# and notify observers
 		entity.component_property_changed.connect(_on_entity_component_property_change)
 
 	if ECS.debug:
@@ -785,3 +835,10 @@ func get_cache_stats() -> Dictionary:
 func reset_cache_stats() -> void:
 	_cache_hits = 0
 	_cache_misses = 0
+
+
+## Called when the World is being freed to clean up entity pools
+func _exit_tree() -> void:
+	if entity_pool_manager:
+		entity_pool_manager.clear_all_pools()
+		entity_pool_manager = null

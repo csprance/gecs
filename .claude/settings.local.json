@@ -1,0 +1,30 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find:*)",
+      "Bash(where godot)",
+      "Bash(rg:*)",
+      "Bash(addons/gdUnit4/runtest.sh:*)",
+      "Bash(mv:*)",
+      "Bash(cp:*)",
+      "Bash(if [ -d \"D:/code/gecs/docs\" ])",
+      "Bash(then echo \"docs directory exists\")",
+      "Bash(ls:*)",
+      "Bash(else echo \"docs directory does not exist\")",
+      "Bash(fi)",
+      "Bash(git stash push:*)",
+      "Bash(git stash:*)",
+      "Bash(grep:*)",
+      "mcp__godot__get_project_info",
+      "mcp__godot__get_godot_version",
+      "Bash(\"addons/gdUnit4/runtest.sh\" -a \"addons/gecs/tests\")",
+      "Bash(\"addons/gdUnit4/runtest.sh\" -a \"res://addons/gecs/tests/performance/performance_test_entities.gd\")",
+      "Bash(\"addons/gdUnit4/runtest.sh\" -a \"addons/gecs/tests\" -c)",
+      "Bash(\"addons/gdUnit4/runtest.sh\" -a \"addons/gecs/tests/core\")",
+      "Bash(rm:*)",
+      "Bash(git add:*)",
+      "Bash(\"addons/gdUnit4/runtest.sh\" -a \"res://addons/gecs/tests/core/test_world_serialization.gd\")"
+    ],
+    "deny": []
+  }
+}

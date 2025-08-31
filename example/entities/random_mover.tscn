@@ -1,0 +1,32 @@
+[gd_scene load_steps=10 format=3 uid="uid://bwg3a55vnyovm"]
+
+[ext_resource type="Script" uid="uid://dv6gko4duu5ic" path="res://example/entities/random_mover.gd" id="1_c1i3g"]
+[ext_resource type="Script" uid="uid://b6k13gc2m4e5s" path="res://addons/gecs/component.gd" id="2_o4fpx"]
+[ext_resource type="Script" uid="uid://b7r4xkfiy8qi0" path="res://example/components/c_velocity.gd" id="3_5rwi4"]
+[ext_resource type="Script" uid="uid://bx3pmlknhmilu" path="res://example/components/c_timer.gd" id="4_5rwi4"]
+[ext_resource type="Script" uid="uid://d0fit03sansqe" path="res://example/components/c_lifetime.gd" id="5_k3wa3"]
+
+[sub_resource type="Resource" id="Resource_p5wvt"]
+script = ExtResource("4_5rwi4")
+time = 1.0
+metadata/_custom_type_script = "uid://bx3pmlknhmilu"
+
+[sub_resource type="Resource" id="Resource_k3wa3"]
+script = ExtResource("3_5rwi4")
+velocity = Vector3(1, 0, 0)
+metadata/_custom_type_script = "uid://b7r4xkfiy8qi0"
+
+[sub_resource type="Resource" id="Resource_b8ng6"]
+script = ExtResource("5_k3wa3")
+lifetime = 15.0
+metadata/_custom_type_script = "uid://d0fit03sansqe"
+
+[sub_resource type="TorusMesh" id="TorusMesh_o4fpx"]
+
+[node name="RandomMover" type="Node3D"]
+script = ExtResource("1_c1i3g")
+component_resources = Array[ExtResource("2_o4fpx")]([SubResource("Resource_p5wvt"), SubResource("Resource_k3wa3"), SubResource("Resource_b8ng6")])
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.335, 0)
+mesh = SubResource("TorusMesh_o4fpx")

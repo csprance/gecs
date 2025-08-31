@@ -35,6 +35,10 @@ enum Runs {
 @export var process_empty := false
 ## Is this system active. (Will be skipped if false)
 @export var active := true
+## Enable parallel processing for this system's entities
+@export var parallel_processing := false
+## Minimum entities required to use parallel processing (performance threshold)
+@export var parallel_threshold := 50
 
 ## The order in which this system should run (Determined by kahns algorithm and the deps method Runs.Before and Runs.After deps)
 var order := 0
@@ -100,13 +104,58 @@ func process_all(entities: Array, delta: float) -> bool:
 	if entities.size() == 0 and process_empty:
 		process(null, delta)
 		return true
+	
 	var did_run = false
-	# otherwise process all the entities (wont happen if empty array)
-	for entity in entities:
-		did_run = true
-		process(entity, delta)
-		entity.on_update(delta)
+	
+	# Use parallel processing if enabled and we have enough entities
+	if parallel_processing and entities.size() >= parallel_threshold:
+		did_run = _process_parallel(entities, delta)
+	else:
+		# otherwise process all the entities sequentially (wont happen if empty array)
+		for entity in entities:
+			did_run = true
+			process(entity, delta)
+			entity.on_update(delta)
+	
 	return did_run
+
+
+## Process entities in parallel using WorkerThreadPool
+func _process_parallel(entities: Array, delta: float) -> bool:
+	if entities.is_empty():
+		return false
+	
+	# Use OS thread count as fallback since WorkerThreadPool.get_thread_count() doesn't exist
+	var worker_count = OS.get_processor_count()
+	var batch_size = max(1, entities.size() / worker_count)
+	var batches = []
+	var tasks = []
+	
+	# Split entities into batches
+	for i in range(0, entities.size(), batch_size):
+		var batch = entities.slice(i, min(i + batch_size, entities.size()))
+		batches.append(batch)
+	
+	# Submit tasks for each batch
+	for batch in batches:
+		var task_id = WorkerThreadPool.add_task(_process_batch_callable.bind(batch, delta))
+		tasks.append(task_id)
+	
+	# Wait for all tasks to complete
+	for task_id in tasks:
+		WorkerThreadPool.wait_for_task_completion(task_id)
+	
+	# Call on_update for all entities on main thread (required for Godot node operations)
+	for entity in entities:
+		entity.on_update(delta)
+	
+	return true
+
+
+## Process a batch of entities - called by worker threads
+func _process_batch_callable(batch: Array, delta: float) -> void:
+	for entity in batch:
+		process(entity, delta)
 
 
 ## Set the query builder to the systems q object.[br]
