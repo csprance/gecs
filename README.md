@@ -13,7 +13,9 @@ player.add_component(C_Velocity.new(Vector2(5, 0)))
 # Systems process entities with specific components
 class_name MovementSystem extends System
 
-func query(): return q.with_all([C_Velocity, C_Transform])
+func query(): 
+    return q.with_all([C_Velocity, C_Transform])
+
 func process(entity: Entity, delta: float):
     var velocity = entity.get_component(C_Velocity)
     var transform = entity.get_component(C_Transform)
