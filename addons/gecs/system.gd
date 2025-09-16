@@ -52,6 +52,8 @@ var q: QueryBuilder
 var systemLogger = GECSLogger.new().domain("System")
 
 var _using_subsystems = true
+var _cached_query: QueryBuilder
+var _cached_subsystems: Array
 
 
 ## Override this method to define the [System]s that this system depends on.[br]
@@ -173,19 +175,23 @@ func _handle(delta: float):
 		return
 	set_q()
 	var did_run := false
-	# Query for the entities that match the system's query
-	var entities = query().execute()
+	# Cache query on first call to avoid recreating it every frame
+	if not _cached_query:
+		_cached_query = query()
+	var entities = _cached_query.execute()
 	did_run = process_all(entities, delta)
 	# Avoid calling on_update twice - process_all already calls it
 
 
 func _handle_subsystems(delta: float):
-	var subsystems = sub_systems()
+	# Cache subsystems on first call to avoid recreating them every frame
+	if not _cached_subsystems:
+		_cached_subsystems = sub_systems()
 	if not _using_subsystems:
 		return false
 	set_q()
 	var sub_systems_ran = false
-	for sub_sys_tuple in subsystems:
+	for sub_sys_tuple in _cached_subsystems:
 		var did_run = false
 		sub_systems_ran = true
 		var query = sub_sys_tuple[0]
