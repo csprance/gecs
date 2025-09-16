@@ -13,7 +13,9 @@ player.add_component(C_Velocity.new(Vector2(5, 0)))
 # Systems process entities with specific components
 class_name MovementSystem extends System
 
-func query(): return q.with_all([C_Velocity, C_Transform])
+func query(): 
+    return q.with_all([C_Velocity, C_Transform])
+
 func process(entity: Entity, delta: float):
     var velocity = entity.get_component(C_Velocity)
     var transform = entity.get_component(C_Transform)
@@ -56,6 +58,7 @@ func process(entity: Entity, delta: float):
 
 ## 🎮 Example Games
 
+- **[GECS-101](https://github.com/csprance/gecs-101)** - A simple example
 - **[Zombies Ate My Neighbors](https://github.com/csprance/gecs/tree/zombies-ate-my-neighbors/game)** - Action arcade game
 - **[Breakout Clone](https://github.com/csprance/gecs/tree/breakout/game)** - Classic brick breaker
 
