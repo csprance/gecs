@@ -67,6 +67,9 @@ func _ready() -> void:
 
 func _initialize():
 	_entityLogger.trace("Entity Initializing Components: ", self.name)
+	
+	for preadd_component in components.values():
+		component_added.emit(self, preadd_component)
 
 	# Add components defined in code
 	component_resources.append_array(define_components())

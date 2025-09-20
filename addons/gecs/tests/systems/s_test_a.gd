@@ -23,6 +23,7 @@ func query():
 
 
 func process(entity: Entity, delta: float):
-	var a = entity.get_component(C_TestA)
+	var a = entity.get_component(C_TestA) as C_TestA
 	a.value += 1
-	print("TestASystem: ", a.value)
+	a.property_changed.emit(a, 'value', null, null)
+	print("TestASystem: ", entity.name, a.value)
