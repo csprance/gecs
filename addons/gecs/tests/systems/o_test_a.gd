@@ -6,6 +6,8 @@ extends Observer
 const C_TestA = preload("res://addons/gecs/tests/components/c_test_a.gd")
 const C_TestB = preload("res://addons/gecs/tests/components/c_test_b.gd")
 
+var event_count := 0
+
 
 ## The component to watch for changes
 func watch() -> Resource:
@@ -23,4 +25,5 @@ func on_component_changed(
 	entity: Entity, component: Resource, property: String, old_value: Variant, new_value: Variant
 ) -> void:
 	# Set the transfrom from the component to the entity
-	print("We changed!")
+	print("We changed!", entity.name , component.value)
+	event_count += 1
