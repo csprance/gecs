@@ -180,14 +180,10 @@ func update_pause_state(paused: bool) -> void:
 ## world.add_entity(other_entity, [component_a, component_b])
 ## [/codeblock]
 func add_entity(entity: Entity, components = null, add_to_tree = true) -> void:
-	if add_to_tree and not entity.is_inside_tree():
-		get_node(entity_nodes_root).add_child(entity)
 	# Update index
 	_worldLogger.debug("add_entity Adding Entity to World: ", entity)
 	entities.append(entity)
 	entity_added.emit(entity)
-	for component_key in entity.components.keys():
-		_add_entity_to_index(entity, component_key)
 
 	# Connect to entity signals for components so we can track global component state
 	if not entity.component_added.is_connected(_on_entity_component_added):
@@ -198,6 +194,10 @@ func add_entity(entity: Entity, components = null, add_to_tree = true) -> void:
 		entity.relationship_added.connect(_on_entity_relationship_added)
 	if not entity.relationship_removed.is_connected(_on_entity_relationship_removed):
 		entity.relationship_removed.connect(_on_entity_relationship_removed)
+	
+	# add to the tree after setup signal connecting	
+	if add_to_tree and not entity.is_inside_tree():
+		get_node(entity_nodes_root).add_child(entity)
 
 	if components:
 		entity.add_components(components)
