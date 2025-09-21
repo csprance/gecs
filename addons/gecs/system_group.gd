@@ -10,7 +10,7 @@
 class_name SystemGroup
 extends Node
 
-## Put the systems in the group based on the name of the System group node
+## Put the [System]s in the group based on the [member Node.name] of the [SystemGroup]
 @export var auto_group := true
 
 ## called when the node enters the scene tree for the first time.
