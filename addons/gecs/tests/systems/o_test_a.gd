@@ -7,6 +7,7 @@ const C_TestA = preload("res://addons/gecs/tests/components/c_test_a.gd")
 const C_TestB = preload("res://addons/gecs/tests/components/c_test_b.gd")
 
 var event_count := 0
+var added_count := 0
 
 
 ## The component to watch for changes
@@ -27,3 +28,6 @@ func on_component_changed(
 	# Set the transfrom from the component to the entity
 	print("We changed!", entity.name , component.value)
 	event_count += 1
+	
+func on_component_added(entity: Entity, component: Resource) -> void:
+	added_count += 1
