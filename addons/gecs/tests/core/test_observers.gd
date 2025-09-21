@@ -37,15 +37,19 @@ func test_observer_receive_component_changed():
 	entity_b.name = "b"
 	entity_b.add_component(C_TestA.new())
 	entity_b.add_component(C_TestB.new())
-
+	
+	# issue #43
+	var entity_a2 = TestA.new()
+	entity_a2.name = "a"
+	entity_a2.add_component(C_TestA.new())
+	world.get_tree().current_scene.add_child(entity_a2) 
+	world.add_entity(entity_a2, null , false)
 	
 
 	# Add  some entities before systems
 	world.add_entities([entity_a, entity_b])
 
 	world.add_system(TestSystemA.new())
-	#world.add_system(TestSystemB.new())
-	#world.add_system(TestSystemC.new())
 	var test_a_observer = TestAObserver.new()
 	world.add_observer(test_a_observer)
 
@@ -54,12 +58,12 @@ func test_observer_receive_component_changed():
 	world.process(0.1)
 
 	# Check the event_count
-	assert_int(test_a_observer.event_count).is_equal(1)
+	assert_int(test_a_observer.event_count).is_equal(2)
 	
 	# Run the systems again
 	print('process 2nd')
 	world.process(0.1)
 
 	# Check the event_count
-	assert_int(test_a_observer.event_count).is_equal(2)
+	assert_int(test_a_observer.event_count).is_equal(4)
 	
