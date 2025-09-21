@@ -48,8 +48,13 @@ var _cached_result: Array = []
 
 
 ## Initializes the QueryBuilder with the specified [param world]
-func _init(world: World):
+func _init(world: World = null):
 	_world = world as World
+
+
+## Allow setting the world after creation for editor time creation
+func set_world(world: World):
+	_world = world
 
 
 ## Clears the query criteria, resetting all filters. Mostly used in testing
