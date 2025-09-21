@@ -180,14 +180,8 @@ func update_pause_state(paused: bool) -> void:
 ## world.add_entity(other_entity, [component_a, component_b])
 ## [/codeblock]
 func add_entity(entity: Entity, components = null, add_to_tree = true) -> void:
-	if add_to_tree and not entity.is_inside_tree():
-		get_node(entity_nodes_root).add_child(entity)
 	# Update index
 	_worldLogger.debug("add_entity Adding Entity to World: ", entity)
-	entities.append(entity)
-	entity_added.emit(entity)
-	for component_key in entity.components.keys():
-		_add_entity_to_index(entity, component_key)
 
 	# Connect to entity signals for components so we can track global component state
 	if not entity.component_added.is_connected(_on_entity_component_added):
@@ -205,10 +199,21 @@ func add_entity(entity: Entity, components = null, add_to_tree = true) -> void:
 	for processor in ECS.entity_preprocessors:
 		processor.call(entity)
 
-
 	# Clear our query cache when component structure changes
 	_query_result_cache.clear()
 	cache_invalidated.emit()
+	
+	#  Add the entity to the tree if it's not already there after hooking up the signals
+	# This ensures that any _ready methods on the entity or its components are called after setup
+	if add_to_tree and not entity.is_inside_tree():
+		get_node(entity_nodes_root).add_child(entity)
+		entities.append(entity)
+	
+	entity_added.emit(entity)
+	
+	for component_key in entity.components.keys():
+		_add_entity_to_index(entity, component_key)
+	
 	if ECS.debug:
 		GECSEditorDebuggerMessages.entity_added(entity)
 
@@ -316,8 +321,6 @@ func enable_entity(entity: Entity, components = null) -> void:
 	cache_invalidated.emit()
 	if ECS.debug:
 		GECSEditorDebuggerMessages.entity_enabled(entity)
-
-
 
 
 ## ##################################
