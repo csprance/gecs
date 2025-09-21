@@ -1,8 +1,9 @@
 ## System[br]
+##
 ## The base class for all systems within the ECS framework.[br]
 ##
 ## Systems contain the core logic and behavior, processing [Entity]s that have specific [Component]s.[br]
-## Each system overrides the [method System.query] and returns a query using the [QueryBuilder] [br]
+## Each system overrides the [method System.query] and returns a query using the [QueryBuilder][br]
 ## exposed as [member System.q] required for it to process an [Entity] and implements the [method System.process] method.[br][br]
 ## [b]Example:[/b]
 ##[codeblock]
@@ -21,6 +22,7 @@
 class_name System
 extends Node
 
+#region Enums
 ## These control when the system should run in relation to other systems.
 enum Runs {
 	## This system should run before all the systems defined in the array ex: [TransformSystem] means it will run before the [TransformSystem] system runs
@@ -29,6 +31,9 @@ enum Runs {
 	After,
 }
 
+#endregion Enums
+
+#region Exported Variables
 ## What group this system belongs to. Systems can be organized and run by group
 @export var group: String = ""
 ## Determines whether the system should run even when there are no [Entity]s to process.
@@ -40,24 +45,33 @@ enum Runs {
 ## Minimum entities required to use parallel processing (performance threshold)
 @export var parallel_threshold := 50
 
+#endregion Exported Variables
+
+#region Public Variables
 ## The order in which this system should run (Determined by kahns algorithm and the deps method Runs.Before and Runs.After deps)
 var order := 0
 
 ## Is this system paused. (Will be skipped if true)
 var paused := false
 
-## The [QueryBuilder] object exposed for conveinence to use in the system and to create the query.
+## The [QueryBuilder] object exposed for convenience to use in the system and to create the query.
 var q: QueryBuilder
 
+## Logger for system debugging and tracing
 var systemLogger = GECSLogger.new().domain("System")
 
+## Internal flag to track if this system uses subsystems
 var _using_subsystems = true
+## Cached query to avoid recreating it every frame
 var _cached_query: QueryBuilder
+## Cached subsystems to avoid recreating them every frame
 var _cached_subsystems: Array
 
+#endregion Public Variables
 
+#region Public Methods
 ## Override this method to define the [System]s that this system depends on.[br]
-## If not overriden the system will run based on the order of the systems in the [World] [br]
+## If not overridden the system will run based on the order of the systems in the [World][br]
 ## and the order of the systems in the [World] will be based on the order they were added to the [World].[br]
 func deps() -> Dictionary[int, Array]:
 	return {
@@ -166,7 +180,10 @@ func set_q():
 		q = ECS.world.query
 
 
-## handles the processing of all [Entity]s that match the system's query [Component]s.[br]
+#endregion Public Methods
+
+#region Private Methods
+## Handles the processing of all [Entity]s that match the system's query [Component]s.[br]
 ## [param delta] The time elapsed since the last frame.
 func _handle(delta: float):
 	if not active or paused:
@@ -211,3 +228,5 @@ func _handle_subsystems(delta: float):
 			for entity in entities:
 				entity.on_update(delta)
 	return sub_systems_ran
+
+#endregion Private Methods

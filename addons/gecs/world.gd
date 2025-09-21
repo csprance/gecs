@@ -1,12 +1,14 @@
-## World[br]
-## Represents the game world in the [_ECS] framework, managing all [Entity]s and [System]s.[br]
+## World
 ##
-## The World class handles the addition and removal of [Entity]s and [System]s, and orchestrates the processing of [Entity]s through [System]s each frame.[br]
-## The World class also maintains an index mapping of components to entities for efficient querying.[br]
+## Represents the game world in the [_ECS] framework, managing all [Entity]s and [System]s.
+##
+## The World class handles the addition and removal of [Entity]s and [System]s, and orchestrates the processing of [Entity]s through [System]s each frame.
+## The World class also maintains an index mapping of components to entities for efficient querying.
 @icon("res://addons/gecs/assets/world.svg")
 class_name World
 extends Node
 
+#region Signals
 ## Emitted when an entity is added
 signal entity_added(entity: Entity)
 signal entity_enabled(entity: Entity)
@@ -32,14 +34,20 @@ signal relationship_removed(entity: Entity, relationship: Relationship)
 ## Emitted when the queries are invalidated because of a component change
 signal cache_invalidated
 
+#endregion Signals
+
+#region Exported Variables
 ## Where are all the [Entity] nodes placed in the scene tree?
 @export var entity_nodes_root: NodePath
 ## Where are all the [System] nodes placed in the scene tree?
 @export var system_nodes_root: NodePath
 
+#endregion Exported Variables
+
+#region Public Variables
 ## All the [Entity]s in the world.
 var entities: Array[Entity] = []
-## All the [ReactiveSystem]s in the world.
+## All the [Observer]s in the world.
 var observers: Array[Observer] = []
 ## All the [System]s by group Dictionary[String, Array[System]]
 var systems_by_group: Dictionary[String, Array] = {}
@@ -56,9 +64,9 @@ var component_entity_index: Dictionary = {}
 var _query_builder_pool: Array[QueryBuilder] = []
 var _pool_size_limit: int = 10
 
-## The [QueryBuilder] instance for this world used to build and execute queries[br]
-# # Anytime we request a query we want to connect the cache invalidated signal to the query [br]
-# # so that all queries are invalidated anytime we emite  cache_invalidated
+## The [QueryBuilder] instance for this world used to build and execute queries.
+## Anytime we request a query we want to connect the cache invalidated signal to the query
+## so that all queries are invalidated anytime we emit cache_invalidated.
 var query: QueryBuilder:
 	get:
 		var q: QueryBuilder
@@ -82,7 +90,9 @@ var _query_result_cache: Dictionary = {}
 var _cache_hits: int = 0
 var _cache_misses: int = 0
 
+#endregion Public Variables
 
+#region Private Methods
 ## Return a QueryBuilder instance to the pool for reuse
 func _return_query_builder_to_pool(query_builder: QueryBuilder) -> void:
 	if _query_builder_pool.size() < _pool_size_limit:
@@ -104,7 +114,10 @@ func _generate_query_cache_key(all_components: Array, any_components: Array, exc
 	return "ALL:%s|ANY:%s|EXCLUDE:%s" % [",".join(all_paths), ",".join(any_paths), ",".join(exclude_paths)]
 
 
-## Called when the World node is ready.[br]
+#endregion Private Methods
+
+#region Built-in Virtual Methods
+## Called when the World node is ready.
 func _ready() -> void:
 	#_worldLogger.disabled = true
 	initialize()
@@ -117,8 +130,8 @@ func _make_nodes_root(name: String) -> Node:
 	return node
 
 
-## Adds [Entity]s and [System]s from the scene tree to the [World].[br]
-## Called when the World node is ready or  when we should re-initialize the world from the tree
+## Adds [Entity]s and [System]s from the scene tree to the [World].
+## Called when the World node is ready or when we should re-initialize the world from the tree.
 func initialize():
 	# if no entities/systems root node is set create them and use them. This keeps things tidy for debugging
 	entity_nodes_root = (
@@ -147,9 +160,12 @@ func initialize():
 		GECSEditorDebuggerMessages.world_init(self)
 
 
-## Called every frame by the [method _ECS.process] to process [System]s.[br]
+#endregion Built-in Virtual Methods
+
+#region Public Methods
+## Called every frame by the [method _ECS.process] to process [System]s.
 ## [param delta] The time elapsed since the last frame.
-## [param group] The string for the group we should run. If empty runs all systems in default "" group
+## [param group] The string for the group we should run. If empty runs all systems in default "" group.
 func process(delta: float, group: String = "") -> void:
 	if ECS.debug:
 		GECSEditorDebuggerMessages.process_world(delta, group)
@@ -219,7 +235,7 @@ func add_entity(entity: Entity, components = null, add_to_tree = true) -> void:
 
 
 ## Adds multiple entities to the world.[br]
-## @param _entities An array of entities to add.[br]
+## [param entities] An array of entities to add.
 ## [param components] The optional list of [Component] to add to the entity.[br]
 ## [b]Example:[/b]
 ##      [codeblock]world.add_entities([player_entity, enemy_entity], [component_a])[/codeblock]
@@ -323,14 +339,12 @@ func enable_entity(entity: Entity, components = null) -> void:
 		GECSEditorDebuggerMessages.entity_enabled(entity)
 
 
-## ##################################
-## Systems
-## ##################################
+#region Systems
 
 
 ## Adds a single system to the world.
 ##
-## @param system The system to add.
+## [param system] The system to add.
 ##
 ## [b]Example:[/b]
 ##      [codeblock]world.add_system(movement_system)[/codeblock]
@@ -351,7 +365,7 @@ func add_system(system: System, topo_sort: bool = false) -> void:
 
 ## Adds multiple systems to the world.
 ##
-## @param _systems An array of systems to add.
+## [param systems] An array of systems to add.
 ##
 ## [b]Example:[/b]
 ##      [codeblock]world.add_systems([movement_system, render_system])[/codeblock]
@@ -405,10 +419,10 @@ func purge(should_free = true, keep := []) -> void:
 		for system in systems_by_group[group_key].duplicate():
 			remove_system(system)
 
-	# Purge all reactive systems
-	_worldLogger.debug("Purging Reactive Systems", observers)
-	for reactive_system in observers.duplicate():
-		remove_observer(reactive_system)
+	# Purge all observers
+	_worldLogger.debug("Purging Observers", observers)
+	for observer in observers.duplicate():
+		remove_observer(observer)
 
 	# remove itself
 	if should_free:
@@ -416,15 +430,18 @@ func purge(should_free = true, keep := []) -> void:
 
 
 ## Executes a query to retrieve entities based on component criteria.[br]
-## [param all_components] - [Component]s that [Entity]s must have all of.[br]
-## [param any_components] - [Component]s that [Entity]s must have at least one of.[br]
-## [param exclude_components] - [Component]s that [Entity]s must not have.[br]
+## [param all_components] [Component]s that [Entity]s must have all of.[br]
+## [param any_components] [Component]s that [Entity]s must have at least one of.[br]
+## [param exclude_components] [Component]s that [Entity]s must not have.[br]
 ## [param returns] An [Array] of [Entity]s that match the query.[br]
 ## [br]
 ## Performance Optimization:[br]
 ## When checking for all_components, the system first identifies the component with the smallest[br]
 ## set of entities and starts with that set. This significantly reduces the number of comparisons needed,[br]
 ## as we only need to check the smallest possible set of entities against other components.
+
+#endregion Systems
+
 func _query(all_components = [], any_components = [], exclude_components = []) -> Array:
 	# Early return if no components specified
 	if all_components.is_empty() and any_components.is_empty() and exclude_components.is_empty():
@@ -508,12 +525,12 @@ func _query(all_components = [], any_components = [], exclude_components = []) -
 	return result
 
 
-# Index Management Functions
+#region Index Management Functions
 
 
 ## Adds an entity to the component index.[br]
-## @param entity The entity to index.[br]
-## @param component_key The component's resource path.
+## [param entity] The entity to index.[br]
+## [param component_key] The component's resource path.
 func _add_entity_to_index(entity: Entity, component_key: String) -> void:
 	if not component_entity_index.has(component_key):
 		component_entity_index[component_key] = []
@@ -523,8 +540,8 @@ func _add_entity_to_index(entity: Entity, component_key: String) -> void:
 
 
 ## Removes an entity from the component index.[br]
-## @param entity The entity to remove.[br]
-## @param component_key The component's resource path.
+## [param entity] The entity to remove.[br]
+## [param component_key] The component's resource path.
 func _remove_entity_from_index(entity, component_key: String) -> void:
 	if component_entity_index.has(component_key):
 		var entity_list: Array = component_entity_index[component_key]
@@ -533,12 +550,14 @@ func _remove_entity_from_index(entity, component_key: String) -> void:
 			component_entity_index.erase(component_key)
 
 
-# Signal Callbacks
+#endregion Index Management Functions
+
+#region Signal Callbacks
 
 
 ## [signal Entity.component_added] Callback when a component is added to an entity.[br]
-## @param entity The entity that had a component added.[br]
-## @param component_key The resource path of the added component.
+## [param entity] The entity that had a component added.[br]
+## [param component] The resource path of the added component.
 func _on_entity_component_added(entity: Entity, component: Resource) -> void:
 	# We have to get the script here then resource because we're using an instantiated resource
 	_add_entity_to_index(entity, component.get_script().resource_path)
@@ -565,6 +584,7 @@ func _on_entity_component_added(entity: Entity, component: Resource) -> void:
 
 ## Called when a component property changes through signals called on the components and connected to.[br]
 ## in the _ready method.[br]
+## [param entity] The [Entity] with the component change.[br]
 ## [param component] The [Component] that changed.[br]
 ## [param property_name] The name of the property that changed.[br]
 ## [param old_value] The old value of the property.[br]
@@ -598,14 +618,14 @@ func _on_entity_component_property_change(
 
 
 ## [signal Entity.component_removed] Callback when a component is removed from an entity.[br]
-## @param entity The entity that had a component removed.[br]
-## @param component_key The resource path of the removed component.
+## [param entity] The entity that had a component removed.[br]
+## [param component] The resource path of the removed component.
 func _on_entity_component_removed(entity, component: Resource) -> void:
 	# We remove components immediately so this was called on the entity all we do is pass signal along
 	# Emit Signal
 	component_removed.emit(entity, component)
 
-	# Handle reactive systems for component removed
+	# Handle observers for component removed
 	_handle_observer_component_removed(entity, component)
 
 	if ECS.debug:
@@ -651,10 +671,8 @@ func _on_entity_relationship_removed(entity: Entity, relationship: Relationship)
 		GECSEditorDebuggerMessages.entity_relationship_removed(entity, relationship)
 
 
-## Adds a single reactive system to the world.
-##
-## @param reactive_system The reactive system to add.
-##
+## Adds a single [Observer] to the [World].
+## [param observer] The [Observer] to add.
 ## [b]Example:[/b]
 ##      [codeblock]world.add_observer(health_change_system)[/codeblock]
 func add_observer(_observer: Observer) -> void:
@@ -662,20 +680,18 @@ func add_observer(_observer: Observer) -> void:
 	_observer.watch() # Just call to validate it returns a component
 	if not _observer.is_inside_tree():
 		get_node(system_nodes_root).add_child(_observer)
-	_worldLogger.trace("add_observer Adding Reactive System: ", _observer)
+	_worldLogger.trace("add_observer Adding Observer: ", _observer)
 	observers.append(_observer)
 
-	# Initialize the query builder for the reactive system
+	# Initialize the query builder for the observer
 	_observer.q = QueryBuilder.new(self)
 
 	# Verify the system has a valid watch component
 	_observer.watch() # Just call to validate it returns a component
 
 
-## Adds multiple reactive systems to the world.
-##
-## @param _reactive_systems An array of reactive systems to add.
-##
+## Adds multiple [Observer]s to the [World].
+## [param observers] An array of [Observer]s to add.
 ## [b]Example:[/b]
 ##      [codeblock]world.add_observers([health_system, damage_system])[/codeblock]
 func add_observers(_observers: Array):
@@ -683,10 +699,8 @@ func add_observers(_observers: Array):
 		add_observer(_observer)
 
 
-## Removes a [ReactiveSystem] from the world.
-##
-## @param reactive_system The [ReactiveSystem] to remove.
-##
+## Removes an [Observer] from the [World].
+## [param observer] The [Observer] to remove.
 ## [b]Example:[/b]
 ##      [codeblock]world.remove_observer(health_system)[/codeblock]
 func remove_observer(observer: Observer) -> void:
@@ -698,23 +712,23 @@ func remove_observer(observer: Observer) -> void:
 	observer.queue_free()
 
 
-## Handle component property changes and notify reactive systems
-## @param entity The entity with the component change
-## @param component The component that changed
-## @param property The property name that changed
-## @param new_value The new value of the property
-## @param old_value The previous value of the property
+## Handle component property changes and notify observers
+## [param entity] The entity with the component change
+## [param component] The component that changed
+## [param property] The property name that changed
+## [param new_value] The new value of the property
+## [param old_value] The previous value of the property
 func handle_component_changed(
 	entity: Entity, component: Resource, property: String, new_value: Variant, old_value: Variant
 ) -> void:
 	# Emit the general signal
 	component_changed.emit(entity, component, property, new_value, old_value)
 
-	# Find reactive systems watching for this component and notify them
+	# Find observers watching for this component and notify them
 	_handle_observer_component_changed(entity, component, property, new_value, old_value)
 
 
-## Notify reactive systems when a component is added
+## Notify observers when a component is added
 func _handle_observer_component_added(entity: Entity, component: Resource) -> void:
 	for reactive_system in observers:
 		# Get the component that this system is watching
@@ -742,7 +756,7 @@ func _handle_observer_component_added(entity: Entity, component: Resource) -> vo
 				reactive_system.on_component_added(entity, component)
 
 
-## Notify reactive systems when a component is removed
+## Notify observers when a component is removed
 func _handle_observer_component_removed(entity: Entity, component: Resource) -> void:
 	for reactive_system in observers:
 		# Get the component that this system is watching
@@ -753,7 +767,7 @@ func _handle_observer_component_removed(entity: Entity, component: Resource) -> 
 			reactive_system.on_component_removed(entity, component)
 
 
-## Notify reactive systems when a component property changes
+## Notify observers when a component property changes
 func _handle_observer_component_changed(
 	entity: Entity, component: Resource, property: String, new_value: Variant, old_value: Variant
 ) -> void:
@@ -784,7 +798,11 @@ func _handle_observer_component_changed(
 					entity, component, property, new_value, old_value
 				)
 
+#endregion Signal Callbacks
 
+#endregion Public Methods
+
+#region Utility Methods
 ## Get performance statistics for cache usage
 func get_cache_stats() -> Dictionary:
 	var total_requests = _cache_hits + _cache_misses
@@ -801,3 +819,5 @@ func get_cache_stats() -> Dictionary:
 func reset_cache_stats() -> void:
 	_cache_hits = 0
 	_cache_misses = 0
+
+#endregion Utility Methods

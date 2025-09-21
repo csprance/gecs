@@ -1,11 +1,12 @@
 ## Entity[br]
-## Represents an entity within the [_ECS] framework. [br]
+##
+## Represents an entity within the [_ECS] framework.[br]
 ## An entity is a container that can hold multiple [Component]s.
 ##
-## Entities serves as the fundamental building block for game objects, allowing for flexible and modular design.[br]
+## Entities serve as the fundamental building block for game objects, allowing for flexible and modular design.[br]
 ##[br]
 ## Entities can have [Component]s added or removed dynamically, enabling the behavior and properties of game objects to change at runtime.[br]
-## Entities can have [Relationship]s added or removed dynamically, allowing for a deep heirachical query system.[br]
+## Entities can have [Relationship]s added or removed dynamically, allowing for a deep hierarchical query system.[br]
 ##[br]
 ## Example:
 ##[codeblock]
@@ -22,6 +23,7 @@
 class_name Entity
 extends Node
 
+#region Signals
 ## Emitted when a [Component] is added to the entity.
 signal component_added(entity: Entity, component: Resource)
 ## Emitted when a [Component] is removed from the entity.
@@ -39,11 +41,17 @@ signal relationship_added(entity: Entity, relationship: Relationship)
 ## Emit when a [Relationship] is removed from the [Entity]
 signal relationship_removed(entity: Entity, relationship: Relationship)
 
+#endregion Signals
+
+#region Exported Variables
 ## Is this entity active? (Will show up in queries)
 @export var enabled: bool = true
 ## [Component]s to be attached to the entity set in the editor. These will be loaded for you and added to the [Entity]
 @export var component_resources: Array[Component] = []
 
+#endregion Exported Variables
+
+#region Public Variables
 ## [Component]s attached to the [Entity] in the form of Dict[resource_path:String, Component]
 var components: Dictionary = {}
 ## Relationships attached to the entity
@@ -56,7 +64,9 @@ var _entityLogger = GECSLogger.new().domain("Entity")
 ## We can store ephemeral state on the entity
 var _state = {}
 
+#endregion Public Variables
 
+#region Built-in Virtual Methods
 ## Called when the entity is added to the scene tree.
 func _ready() -> void:
 	if Engine.is_editor_hint():
@@ -84,14 +94,13 @@ func _initialize():
 	# Call the lifecycle method on_ready
 	on_ready()
 
+#endregion Built-in Virtual Methods
 
-## ##################################
-## Components
-## ##################################
+#region Components
 
 
 ## Adds a single component to the entity.[br]
-## [param component] - The subclass of [Component] to add[br]
+## [param component] The subclass of [Component] to add.[br]
 ## [b]Example[/b]:
 ## [codeblock]entity.add_component(HealthComponent)[/codeblock]
 func add_component(component: Resource) -> void:
@@ -173,7 +182,7 @@ func remove_all_components() -> void:
 
 ## Retrieves a specific [Component] from the entity.[br]
 ## [param component] The [Component] class to retrieve.[br]
-## [param return] - The requested [Component] if it exists, otherwise `null`.[br]
+## Returns the requested [Component] if it exists, otherwise `null`.[br]
 ## [b]Example:[/b]
 ##     [codeblock]var transform = entity.get_component(Transform)[/codeblock]
 func get_component(component: Resource) -> Component:
@@ -187,9 +196,9 @@ func has_component(component: Resource) -> bool:
 	return components.has(component.resource_path)
 
 
-## ##################################
-## Relationships
-## ##################################
+#endregion Components
+
+#region Relationships
 
 
 ## Adds a relationship to this entity.[br]
@@ -261,9 +270,9 @@ func has_relationship(relationship: Relationship, weak = false) -> bool:
 	return get_relationship(relationship, true, weak) != null
 
 
-## ##################################
-# Lifecycle methods
-## ##################################
+#endregion Relationships
+
+#region Lifecycle Methods
 
 
 ## Called after the entity is fully initialized and ready.[br]
@@ -299,3 +308,5 @@ func on_enable() -> void:
 ## This should return a list of components to add by default when the entity is created
 func define_components() -> Array:
 	return []
+
+#endregion Lifecycle Methods
