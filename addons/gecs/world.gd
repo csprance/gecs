@@ -207,12 +207,21 @@ func add_entity(entity: Entity, components = null, add_to_tree = true) -> void:
 	# This ensures that any _ready methods on the entity or its components are called after setup
 	if add_to_tree and not entity.is_inside_tree():
 		get_node(entity_nodes_root).add_child(entity)
-		entities.append(entity)
+	
+	# whatever the entity add to the tree before/after add_entity, it always add to the world list.
+	entities.append(entity)
+	if not  Engine.is_editor_hint():
+		#gecs should depart from tree, not depend on godot _ready
+		#emit the pre-add components first. but i recommand relocate these code into entity._initialize()
+		for preadd_component in entity.components.values():
+			entity.component_added.emit(entity, preadd_component)
+		entity._initialize()
 	
 	entity_added.emit(entity)
 	
-	for component_key in entity.components.keys():
-		_add_entity_to_index(entity, component_key)
+	# remove it as component_added.emit would run following 2 lines
+	#for component_key in entity.components.keys():
+	#	_add_entity_to_index(entity, component_key)
 	
 	if ECS.debug:
 		GECSEditorDebuggerMessages.entity_added(entity)
