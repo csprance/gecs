@@ -16,11 +16,11 @@ extends Node
 ## called when the node enters the scene tree for the first time.
 func _enter_tree() -> void:
 	# Connect signals
-    if not child_entered_tree.is_connected(_on_child_entered_tree):
+	if not child_entered_tree.is_connected(_on_child_entered_tree):
 		child_entered_tree.connect(_on_child_entered_tree)
 	
-    # Set the group for all child systems
-    if auto_group:
+	# Set the group for all child systems
+	if auto_group:
 		for child in get_children():
 			if child is System:
 				child.group = name
