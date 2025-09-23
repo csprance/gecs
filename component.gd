@@ -39,3 +39,12 @@ func serialize() -> Dictionary:
 		var prop_val = get(prop_name)
 		data[prop_name] = prop_val
 	return data
+
+
+## Used to change a property's value 
+## and emit the "property_changed" signal explicitly  
+## for observers to detect the changes.
+func change(property_name, new_value):
+	var old_value = get(property_name)
+	set(property_name, new_value)
+	property_changed.emit(self, property_name, old_value, new_value)
