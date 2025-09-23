@@ -46,7 +46,7 @@ func test_observer_receive_component_changed():
 	var entity_a2 = TestA.new()
 	entity_a2.name = "a"
 	entity_a2.add_component(C_TestA.new())
-	world.get_tree().current_scene.add_child(entity_a2)
+	world.get_node(world.entity_nodes_root).add_child(entity_a2)
 	world.add_entity(entity_a2, null, false)
 	assert_int(test_a_observer.added_count).is_equal(1)
 	
