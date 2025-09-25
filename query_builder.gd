@@ -10,7 +10,7 @@
 ##                    	.with_none([Inactive])
 ##                    	.enabled(true)
 ##                    	.execute()
-##     
+##
 ##     var disabled_entities = ECS.world.query.enabled(false).execute()
 ##     var all_entities = ECS.world.query.enabled(null).execute()
 ##[/codeblock]
@@ -267,7 +267,7 @@ func _internal_execute() -> Array:
 		result = result.filter(func(entity): return entity.enabled)
 	elif _enabled_filter == false:
 		result = result.filter(func(entity): return not entity.enabled)
-	
+
 	# Return the structural query result (caching handled in execute())
 	return result
 
@@ -450,45 +450,45 @@ func is_empty() -> bool:
 	)
 
 
-func to_string() -> String:
+func _to_string() -> String:
 	var parts = []
-	
+
 	if not _all_components.is_empty():
 		parts.append("with_all(" + _format_components(_all_components) + ")")
-	
+
 	if not _any_components.is_empty():
 		parts.append("with_any(" + _format_components(_any_components) + ")")
-	
+
 	if not _exclude_components.is_empty():
 		parts.append("with_none(" + _format_components(_exclude_components) + ")")
-	
+
 	if not _relationships.is_empty():
 		parts.append("with_relationship(" + _format_relationships(_relationships) + ")")
-	
+
 	if not _exclude_relationships.is_empty():
 		parts.append("without_relationship(" + _format_relationships(_exclude_relationships) + ")")
-	
+
 	if not _groups.is_empty():
 		parts.append("with_group(" + str(_groups) + ")")
-	
+
 	if not _exclude_groups.is_empty():
 		parts.append("without_group(" + str(_exclude_groups) + ")")
-	
+
 	if _enabled_filter != null:
 		if _enabled_filter:
 			parts.append("enabled()")
 		else:
 			parts.append("disabled()")
-	
+
 	if not _all_components_queries.is_empty():
 		parts.append("component_queries(" + _format_component_queries(_all_components_queries) + ")")
-	
+
 	if not _any_components_queries.is_empty():
 		parts.append("any_component_queries(" + _format_component_queries(_any_components_queries) + ")")
-	
+
 	if parts.is_empty():
 		return "ECS.world.query"
-	
+
 	return "ECS.world.query." + ".".join(parts)
 
 
@@ -505,7 +505,7 @@ func _format_components(components: Array) -> String:
 func _format_relationships(relationships: Array) -> String:
 	var names = []
 	for relationship in relationships:
-		if relationship.has_method("to_string"):
+		if relationship.has_method("_to_string"):
 			names.append(relationship.to_string())
 		else:
 			names.append(str(relationship))
@@ -515,7 +515,7 @@ func _format_relationships(relationships: Array) -> String:
 func _format_component_queries(queries: Array) -> String:
 	var formatted = []
 	for query in queries:
-		if query.has_method("to_string"):
+		if query.has_method("_to_string"):
 			formatted.append(query.to_string())
 		else:
 			formatted.append(str(query))
