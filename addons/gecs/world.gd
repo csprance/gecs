@@ -209,13 +209,7 @@ func add_entity(entity: Entity, components = null, add_to_tree = true) -> void:
 	if not entity.relationship_removed.is_connected(_on_entity_relationship_removed):
 		entity.relationship_removed.connect(_on_entity_relationship_removed)
 
-	if components:
-		entity.add_components(components)
-
-	for processor in ECS.entity_preprocessors:
-		processor.call(entity)
-
-	# Clear our query cache when component structure changes
+	# Clear our query cache when new entities are added
 	_query_result_cache.clear()
 	cache_invalidated.emit()
 	
@@ -223,12 +217,19 @@ func add_entity(entity: Entity, components = null, add_to_tree = true) -> void:
 	# This ensures that any _ready methods on the entity or its components are called after setup
 	if add_to_tree and not entity.is_inside_tree():
 		get_node(entity_nodes_root).add_child(entity)
-		entities.append(entity)
+	
+	# add entity to our list
+	entities.append(entity)
+
+	# initialize the entity and its components in game only
+	if not Engine.is_editor_hint():
+		entity._initialize(components if components else [])
 	
 	entity_added.emit(entity)
 	
-	for component_key in entity.components.keys():
-		_add_entity_to_index(entity, component_key)
+	# All the entities are ready so we should run the pre-processors now
+	for processor in ECS.entity_preprocessors:
+		processor.call(entity)
 	
 	if ECS.debug:
 		GECSEditorDebuggerMessages.entity_added(entity)
@@ -561,6 +562,11 @@ func _remove_entity_from_index(entity, component_key: String) -> void:
 func _on_entity_component_added(entity: Entity, component: Resource) -> void:
 	# We have to get the script here then resource because we're using an instantiated resource
 	_add_entity_to_index(entity, component.get_script().resource_path)
+	
+	# Clear query cache when components are added
+	_query_result_cache.clear()
+	cache_invalidated.emit()
+	
 	# Emit Signal
 	component_added.emit(entity, component)
 
@@ -576,10 +582,6 @@ func _on_entity_component_added(entity: Entity, component: Resource) -> void:
 
 	if ECS.debug:
 		GECSEditorDebuggerMessages.entity_component_added(entity, component)
-
-	# Clear our query cache when component structure changes
-	_query_result_cache.clear()
-	cache_invalidated.emit()
 
 
 ## Called when a component property changes through signals called on the components and connected to.[br]
@@ -630,11 +632,11 @@ func _on_entity_component_removed(entity, component: Resource) -> void:
 
 	if ECS.debug:
 		GECSEditorDebuggerMessages.entity_component_removed(entity, component)
-
-	# Clear our query cache when component structure changes
+	
+	# Clear query cache when components are removed
 	_query_result_cache.clear()
 	cache_invalidated.emit()
-
+	
 
 ## (Optional) Update index when a relationship is added.
 func _on_entity_relationship_added(entity: Entity, relationship: Relationship) -> void:
@@ -649,6 +651,11 @@ func _on_entity_relationship_added(entity: Entity, relationship: Relationship) -
 		if not reverse_relationship_index.has(rev_key):
 			reverse_relationship_index[rev_key] = []
 		reverse_relationship_index[rev_key].append(relationship.target)
+	
+	# Clear query cache when relationships are added
+	_query_result_cache.clear()
+	cache_invalidated.emit()
+	
 	# Emit Signal
 	relationship_added.emit(entity, relationship)
 	if ECS.debug:
@@ -665,6 +672,11 @@ func _on_entity_relationship_removed(entity: Entity, relationship: Relationship)
 		var rev_key = "reverse_" + key
 		if reverse_relationship_index.has(rev_key):
 			reverse_relationship_index[rev_key].erase(relationship.target)
+	
+	# Clear query cache when relationships are removed
+	_query_result_cache.clear()
+	cache_invalidated.emit()
+	
 	# Emit Signal
 	relationship_removed.emit(entity, relationship)
 	if ECS.debug:

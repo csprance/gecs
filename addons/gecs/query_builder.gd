@@ -450,7 +450,7 @@ func is_empty() -> bool:
 	)
 
 
-func to_string() -> String:
+func _to_string() -> String:
 	var parts = []
 	
 	if not _all_components.is_empty():

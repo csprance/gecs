@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bebopiehk02k1"
-path="res://.godot/imported/system_folder.svg-2f0259040a9493c8e89231632a21217f.ctex"
+path="res://.godot/imported/system_folder.svg-9f95776b45329abe5c6e0deb4fa1cf7c.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://game/assets/icons/system_folder.svg"
-dest_files=["res://.godot/imported/system_folder.svg-2f0259040a9493c8e89231632a21217f.ctex"]
+source_file="res://addons/gecs/assets/system_folder.svg"
+dest_files=["res://.godot/imported/system_folder.svg-9f95776b45329abe5c6e0deb4fa1cf7c.ctex"]
 
 [params]
 

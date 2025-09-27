@@ -67,18 +67,20 @@ var _state = {}
 #endregion Public Variables
 
 #region Built-in Virtual Methods
-## Called when the entity is added to the scene tree.
-func _ready() -> void:
-	if Engine.is_editor_hint():
-		# This is the editor, so we don't want to initialize components
-		return
-	_initialize()
 
-
-func _initialize():
+## Called to initialize the entity and its components.
+## This is called automatically by [method World.add_entity][br]
+func _initialize(_components: Array = []) -> void:
 	_entityLogger.trace("Entity Initializing Components: ", self.name)
 
-	# Add components defined in code
+	# because components can be added before the entity is added to the world
+	# replay adding components here so signals pick them up and the index is updated
+	var temp_comps = components.values().duplicate_deep()
+	components.clear()
+	for comp in temp_comps:
+		add_component(comp)
+
+	# Add components defined in code to comp resources
 	component_resources.append_array(define_components())
 
 	# remove any component_resources that are already defined in components
@@ -87,7 +89,10 @@ func _initialize():
 		if has_component(component.get_script()):
 			component_resources.erase(component)
 
-	# Initialize components from the exported array
+	# Add components passed in directly to the _initialize method to override everything else
+	component_resources.append_array(_components)
+
+	# Initialize components
 	for res in component_resources:
 		add_component(res.duplicate(true))
 
