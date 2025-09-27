@@ -196,6 +196,10 @@ func _handle(delta: float):
 	if not _cached_query:
 		_cached_query = query()
 	var entities = _cached_query.execute()
+	
+	if entities.size() == 0 and not process_empty:
+		return
+		
 	did_run = process_all(entities, delta)
 	# Avoid calling on_update twice - process_all already calls it
 
