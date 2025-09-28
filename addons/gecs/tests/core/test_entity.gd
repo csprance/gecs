@@ -83,3 +83,14 @@ func test_add_get_has_relationship():
 	assert_str(type_string(typeof(class_retrieved_relationship))).is_equal(
 		type_string(typeof(Relationship.new(C_TestA.new(), entitya)))
 	)
+
+func test_add_and_remove_component():
+	var entity = auto_free(TestB.new())
+	for i in range(99):
+		var comp = C_TestB.new()
+		entity.add_component(comp)
+		entity.remove_component(C_TestB)
+		print('_component_path_cache size=', entity._component_path_cache.size())
+
+	# Test memory leak
+	assert_int(entity._component_path_cache.size()).is_equal(0)
