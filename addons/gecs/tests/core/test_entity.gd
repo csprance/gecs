@@ -6,9 +6,11 @@ var world: World
 const C_TestA = preload("res://addons/gecs/tests/components/c_test_a.gd")
 const C_TestB = preload("res://addons/gecs/tests/components/c_test_b.gd")
 const C_TestC = preload("res://addons/gecs/tests/components/c_test_c.gd")
+const C_TestH = preload("res://addons/gecs/tests/components/c_test_h.gd")
 const TestA = preload("res://addons/gecs/tests/entities/e_test_a.gd")
 const TestB = preload("res://addons/gecs/tests/entities/e_test_b.gd")
 const TestC = preload("res://addons/gecs/tests/entities/e_test_c.gd")
+
 
 
 func before():
@@ -35,6 +37,12 @@ func test_add_and_get_component():
 	var retrieved_component = entity.get_component(C_TestA)
 	assert_str(type_string(typeof(retrieved_component))).is_equal(type_string(typeof(comp)))
 
+# Components need default values on init or they will error
+# FIXME: How can we catch this in the code?
+func test_add_entity_with_component_with_no_defaults_in_init():
+	var entity = auto_free(Entity.new())
+	# this line will lead to crash (the _init parameters has no default value)
+	assert_error(func(): entity.add_component(C_TestH.new(57)))
 
 func test_add_multiple_components_and_has():
 	var entity = auto_free(TestB.new())

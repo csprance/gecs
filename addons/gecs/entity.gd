@@ -156,8 +156,14 @@ func remove_component(component: Resource) -> void:
 		# Component parameter should be a class/script, consistent with has_component
 		resource_path = component.resource_path
 
-	if components.erase(resource_path):
-		component_removed.emit(self, component)
+	if components.has(resource_path):
+		var component_instance = components[resource_path]
+		components.erase(resource_path)
+		
+		# Clean up cache entry for the component instance
+		_component_path_cache.erase(component_instance)
+		
+		component_removed.emit(self, component_instance)
 		# Removing components happens immediately
 		ECS.world._remove_entity_from_index(self, resource_path)
 		_entityLogger.trace("Removed Component: ", resource_path)
