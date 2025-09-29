@@ -24,6 +24,10 @@ func after_test():
 		test_world = null
 
 
+func after():
+	# Save results
+	save_performance_results("res://reports/component_performance_results.json")
+
 ## Test component addition performance
 func test_component_addition_small_scale():
 	# Pre-create entities
@@ -256,7 +260,7 @@ func test_component_property_access():
 			var comp = entity.get_component(C_TestA)
 			if comp:
 				# Access component properties (assuming C_TestA has some properties)
-				var _dummy = comp.serialize()  # This accesses all properties
+				var _dummy = comp.serialize() # This accesses all properties
 
 	benchmark("Component_Property_Access", access_properties)
 	print_performance_results()
@@ -290,47 +294,3 @@ func test_component_path_cache_performance():
 	assert_performance_threshold(
 		"Component_Path_Cache_Performance", 100.0, "Component path caching not effective"
 	)
-
-
-## Run all component performance tests
-func test_run_all_component_benchmarks():
-	test_component_addition_small_scale()
-	after_test()
-	before_test()
-
-	test_component_addition_medium_scale()
-	after_test()
-	before_test()
-
-	test_multiple_component_addition()
-	after_test()
-	before_test()
-
-	test_component_removal_small_scale()
-	after_test()
-	before_test()
-
-	test_component_lookup_performance()
-	after_test()
-	before_test()
-
-	test_component_has_check_performance()
-	after_test()
-	before_test()
-
-	test_component_indexing_performance()
-	after_test()
-	before_test()
-
-	test_bulk_component_operations()
-	after_test()
-	before_test()
-
-	test_component_property_access()
-	after_test()
-	before_test()
-
-	test_component_path_cache_performance()
-
-	# Save results
-	save_performance_results("res://reports/component_performance_results.json")

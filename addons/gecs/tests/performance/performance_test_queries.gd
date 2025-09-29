@@ -99,7 +99,7 @@ func test_complex_multi_component_query():
 
 	var complex_query = func():
 		var results = test_world.query.with_all([C_TestA, C_TestB]).execute()
-		assert_that(results.size()).is_greater_equal(0)  # May be 0 if no entities match
+		assert_that(results.size()).is_greater_equal(0) # May be 0 if no entities match
 
 	benchmark("Complex_Multi_Component_Query", complex_query)
 	print_performance_results()
@@ -147,11 +147,11 @@ func test_complex_combined_query():
 	var combined_query = func():
 		var results = (
 			test_world
-			. query
-			. with_all([C_TestA])
-			. with_any([C_TestB, C_TestC])
-			. with_none([C_TestD])
-			. execute()
+			.query
+			.with_all([C_TestA])
+			.with_any([C_TestB, C_TestC])
+			.with_none([C_TestD])
+			.execute()
 		)
 		assert_that(results.size()).is_greater_equal(0)
 
@@ -257,7 +257,7 @@ func test_repeated_query_execution():
 	setup_diverse_entities(SMALL_SCALE)
 
 	var repeated_queries = func():
-		for i in 100:  # Execute same query 100 times
+		for i in 100: # Execute same query 100 times
 			var results = test_world.query.with_all([C_TestA]).execute()
 			assert_that(results.size()).is_greater(0)
 
@@ -275,7 +275,7 @@ func test_query_builder_creation():
 	setup_diverse_entities(SMALL_SCALE)
 
 	var create_query_builders = func():
-		for i in 1000:  # Create 1000 query builders
+		for i in 1000: # Create 1000 query builders
 			var query = test_world.query.with_all([C_TestA]).with_any([C_TestB])
 			# Don't execute, just test creation
 	# Don't execute, just test creation
@@ -295,7 +295,7 @@ func test_empty_query_performance():
 	setup_diverse_entities(MEDIUM_SCALE)
 
 	var empty_query = func():
-		var results = test_world.query.execute()  # No filters, should return all entities
+		var results = test_world.query.execute() # No filters, should return all entities
 		assert_that(results.size()).is_equal(MEDIUM_SCALE)
 
 	benchmark("Empty_Query_Performance", empty_query)
@@ -322,60 +322,6 @@ func test_no_results_query_performance():
 
 
 ## Run all query performance tests
-func test_run_all_query_benchmarks():
-	test_simple_with_all_query_small_scale()
-	after_test()
-	before_test()
-
-	test_simple_with_all_query_medium_scale()
-	after_test()
-	before_test()
-
-	test_simple_with_all_query_large_scale()
-	after_test()
-	before_test()
-
-	test_complex_multi_component_query()
-	after_test()
-	before_test()
-
-	test_with_any_query_performance()
-	after_test()
-	before_test()
-
-	test_with_none_query_performance()
-	after_test()
-	before_test()
-
-	test_complex_combined_query()
-	after_test()
-	before_test()
-
-	test_query_caching_performance()
-	after_test()
-	before_test()
-
-	test_query_invalidation_impact()
-	after_test()
-	before_test()
-
-	test_query_selectivity_performance()
-	after_test()
-	before_test()
-
-	test_repeated_query_execution()
-	after_test()
-	before_test()
-
-	test_query_builder_creation()
-	after_test()
-	before_test()
-
-	test_empty_query_performance()
-	after_test()
-	before_test()
-
-	test_no_results_query_performance()
-
+func after():
 	# Save results
 	save_performance_results("res://reports/query_performance_results.json")

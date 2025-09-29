@@ -50,15 +50,14 @@ func after_test():
 ## Create a realistic game scenario with diverse entity types
 func setup_game_scenario(entity_count: int):
 	# Create different types of entities found in typical games
-
 	# Player entities (1% of total)
 	var player_count = max(1, entity_count / 100)
 	for i in player_count:
 		var entity = Entity.new()
 		entity.name = "Player_%d" % i
-		entity.add_component(C_TestA.new())  # Transform
-		entity.add_component(C_TestB.new())  # Input/Controller
-		entity.add_component(C_TestC.new())  # Health
+		entity.add_component(C_TestA.new()) # Transform
+		entity.add_component(C_TestB.new()) # Input/Controller
+		entity.add_component(C_TestC.new()) # Health
 		test_entities.append(entity)
 		test_world.add_entity(entity, null, false)
 
@@ -67,10 +66,10 @@ func setup_game_scenario(entity_count: int):
 	for i in enemy_count:
 		var entity = Entity.new()
 		entity.name = "Enemy_%d" % i
-		entity.add_component(C_TestA.new())  # Transform
-		entity.add_component(C_TestC.new())  # Health
+		entity.add_component(C_TestA.new()) # Transform
+		entity.add_component(C_TestC.new()) # Health
 		if i % 2 == 0:
-			entity.add_component(C_TestB.new())  # AI
+			entity.add_component(C_TestB.new()) # AI
 		test_entities.append(entity)
 		test_world.add_entity(entity, null, false)
 
@@ -79,9 +78,9 @@ func setup_game_scenario(entity_count: int):
 	for i in projectile_count:
 		var entity = Entity.new()
 		entity.name = "Projectile_%d" % i
-		entity.add_component(C_TestA.new())  # Transform
+		entity.add_component(C_TestA.new()) # Transform
 		if i % 3 == 0:
-			entity.add_component(C_TestB.new())  # Physics
+			entity.add_component(C_TestB.new()) # Physics
 		test_entities.append(entity)
 		test_world.add_entity(entity, null, false)
 
@@ -90,9 +89,9 @@ func setup_game_scenario(entity_count: int):
 	for i in static_count:
 		var entity = Entity.new()
 		entity.name = "Static_%d" % i
-		entity.add_component(C_TestA.new())  # Transform
+		entity.add_component(C_TestA.new()) # Transform
 		if i % 4 == 0:
-			entity.add_component(C_TestD.new())  # Renderer
+			entity.add_component(C_TestD.new()) # Renderer
 		test_entities.append(entity)
 		test_world.add_entity(entity, null, false)
 
@@ -108,9 +107,9 @@ func test_realistic_game_loop_medium_scale():
 
 	var simulate_game_frame = func():
 		# Simulate a typical game frame with multiple system groups
-		test_world.process(0.016, "physics")  # Physics systems
-		test_world.process(0.016, "rendering")  # Rendering systems
-		test_world.process(0.016)  # All remaining systems
+		test_world.process(0.016, "physics") # Physics systems
+		test_world.process(0.016, "rendering") # Rendering systems
+		test_world.process(0.016) # All remaining systems
 
 	benchmark("Realistic_Game_Loop_Medium_Scale", simulate_game_frame)
 	print_performance_results()
@@ -187,7 +186,7 @@ func test_dynamic_component_changes():
 		# Simulate adding/removing components during gameplay
 		var change_count = 0
 		for entity in test_entities:
-			if change_count >= 50:  # Limit changes for consistent testing
+			if change_count >= 50: # Limit changes for consistent testing
 				break
 
 			if entity.has_component(C_TestC):
@@ -216,7 +215,6 @@ func test_complex_query_scenarios():
 
 	var complex_queries = func():
 		# Simulate various queries that might happen during gameplay
-
 		# Find all players
 		var players = test_world.query.with_all([C_TestA, C_TestB, C_TestC]).execute()
 
@@ -241,7 +239,7 @@ func test_complex_query_scenarios():
 					+ static_rendered.size()
 				)
 			)
-			. is_greater(0)
+			.is_greater(0)
 		)
 
 	benchmark("Complex_Query_Scenarios", complex_queries)
@@ -339,7 +337,7 @@ func test_worst_case_query_performance():
 		entity.add_component(C_TestA.new())
 		entity.add_component(C_TestB.new())
 		entity.add_component(C_TestC.new())
-		if i % 100 != 0:  # Only 1% don't have TestD
+		if i % 100 != 0: # Only 1% don't have TestD
 			entity.add_component(C_TestD.new())
 
 		test_entities.append(entity)
@@ -352,11 +350,11 @@ func test_worst_case_query_performance():
 		# Complex query with many conditions
 		var complex_query = (
 			test_world
-			. query
-			. with_all([C_TestA, C_TestB])
-			. with_any([C_TestC, C_TestD])
-			. with_none([C_TestE])
-			. execute()
+			.query
+			.with_all([C_TestA, C_TestB])
+			.with_any([C_TestC, C_TestD])
+			.with_none([C_TestE])
+			.execute()
 		)
 
 		# Verify we got expected results
@@ -372,36 +370,6 @@ func test_worst_case_query_performance():
 
 
 ## Run all integration performance tests
-func test_run_all_integration_benchmarks():
-	test_realistic_game_loop_medium_scale()
-	after_test()
-	before_test()
-
-	test_realistic_game_loop_large_scale()
-	after_test()
-	before_test()
-
-	test_dynamic_entity_management()
-	after_test()
-	before_test()
-
-	test_dynamic_component_changes()
-	after_test()
-	before_test()
-
-	test_complex_query_scenarios()
-	after_test()
-	before_test()
-
-	test_memory_pressure_scenario()
-	after_test()
-	before_test()
-
-	test_sustained_performance()
-	after_test()
-	before_test()
-
-	test_worst_case_query_performance()
-
+func after():
 	# Save results
 	save_performance_results("res://reports/integration_performance_results.json")

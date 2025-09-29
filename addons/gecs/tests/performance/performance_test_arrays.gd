@@ -15,6 +15,10 @@ func after_test():
 	test_arrays.clear()
 
 
+func after():
+	# Save results
+	save_performance_results("res://reports/array_performance_results.json")
+	
 ## Create test arrays with various sizes and overlap characteristics
 func create_test_arrays(size1: int, size2: int, overlap_percent: float = 0.5):
 	var array1: Array = []
@@ -141,7 +145,7 @@ func test_array_operations_size_ratios():
 
 	for i in MEDIUM_SCALE:
 		large_array.append("LargeEntity_%d" % i)
-		if i < 25:  # Some overlap
+		if i < 25: # Some overlap
 			large_array.append("SmallEntity_%d" % i)
 
 	var size_ratio_test = func():
@@ -258,7 +262,7 @@ func test_optimization_effectiveness():
 	var naive_intersect = func():
 		var result: Array = []
 		for entity in array1:
-			if array2.has(entity):  # O(n) lookup
+			if array2.has(entity): # O(n) lookup
 				result.append(entity)
 		assert_that(result.size()).is_greater(0)
 
@@ -309,51 +313,3 @@ func test_array_operations_memory_efficiency():
 	assert_performance_threshold(
 		"Array_Operations_Memory_Test", 150.0, "Array operations memory usage too high"
 	)
-
-
-## Run all array performance tests
-func test_run_all_array_benchmarks():
-	test_array_intersect_small_scale()
-	after_test()
-	before_test()
-
-	test_array_intersect_medium_scale()
-	after_test()
-	before_test()
-
-	test_array_intersect_large_scale()
-	after_test()
-	before_test()
-
-	test_array_union_performance()
-	after_test()
-	before_test()
-
-	test_array_difference_performance()
-	after_test()
-	before_test()
-
-	test_array_operations_size_ratios()
-	after_test()
-	before_test()
-
-	test_array_operations_no_overlap()
-	after_test()
-	before_test()
-
-	test_array_operations_complete_overlap()
-	after_test()
-	before_test()
-
-	test_repeated_array_operations()
-	after_test()
-	before_test()
-
-	test_optimization_effectiveness()
-	after_test()
-	before_test()
-
-	test_array_operations_memory_efficiency()
-
-	# Save results
-	save_performance_results("res://reports/array_performance_results.json")

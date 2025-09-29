@@ -23,7 +23,12 @@ func after_test():
 		test_world.purge()
 		test_world = null
 
+## Run all entity performance tests
+func after():
+	# Save results
+	save_performance_results("res://reports/entity_performance_results.json")
 
+	
 ## Test entity creation performance
 func test_entity_creation_small_scale():
 	var create_entities = func():
@@ -64,7 +69,7 @@ func test_entity_world_addition_small_scale():
 
 	var add_entities = func():
 		for entity in test_entities:
-			test_world.add_entity(entity, null, false)  # Don't add to tree for perf test
+			test_world.add_entity(entity, null, false) # Don't add to tree for perf test
 
 	var result = benchmark("Entity_World_Addition_Small_Scale", add_entities)
 	print_performance_results()
@@ -84,7 +89,7 @@ func test_entity_world_addition_medium_scale():
 
 	var add_entities = func():
 		for entity in test_entities:
-			test_world.add_entity(entity, null, false)  # Don't add to tree for perf test
+			test_world.add_entity(entity, null, false) # Don't add to tree for perf test
 
 	var result = benchmark("Entity_World_Addition_Medium_Scale", add_entities)
 	print_performance_results()
@@ -219,41 +224,3 @@ func test_entity_memory_stress():
 	for entity in stress_entities:
 		if is_instance_valid(entity):
 			test_world.remove_entity(entity)
-
-
-## Run all entity performance tests
-func test_run_all_entity_benchmarks():
-	test_entity_creation_small_scale()
-	after_test()
-	before_test()
-
-	test_entity_creation_medium_scale()
-	after_test()
-	before_test()
-
-	test_entity_world_addition_small_scale()
-	after_test()
-	before_test()
-
-	test_entity_world_addition_medium_scale()
-	after_test()
-	before_test()
-
-	test_entity_removal_small_scale()
-	after_test()
-	before_test()
-
-	test_entity_with_components_creation()
-	after_test()
-	before_test()
-
-	test_bulk_entity_operations()
-	after_test()
-	before_test()
-
-	test_entity_lookup_performance()
-	after_test()
-	before_test()
-
-	# Save results
-	save_performance_results("res://reports/entity_performance_results.json")

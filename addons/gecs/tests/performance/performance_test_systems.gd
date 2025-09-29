@@ -61,7 +61,7 @@ func test_simple_system_processing_small_scale():
 	test_world.add_system(test_system)
 	test_system.reset_count()
 
-	var process_systems = func(): test_world.process(0.016)  # Simulate 60 FPS delta
+	var process_systems = func(): test_world.process(0.016) # Simulate 60 FPS delta
 
 	benchmark("Simple_System_Processing_Small_Scale", process_systems)
 	print_performance_results()
@@ -80,7 +80,7 @@ func test_simple_system_processing_medium_scale():
 	test_world.add_system(test_system)
 	test_system.reset_count()
 
-	var process_systems = func(): test_world.process(0.016)  # Simulate 60 FPS delta
+	var process_systems = func(): test_world.process(0.016) # Simulate 60 FPS delta
 
 	benchmark("Simple_System_Processing_Medium_Scale", process_systems)
 	print_performance_results()
@@ -101,7 +101,7 @@ func test_simple_system_processing_large_scale():
 	test_world.add_system(test_system)
 	test_system.reset_count()
 
-	var process_systems = func(): test_world.process(0.016)  # Simulate 60 FPS delta
+	var process_systems = func(): test_world.process(0.016) # Simulate 60 FPS delta
 
 	benchmark("Simple_System_Processing_Large_Scale", process_systems)
 	print_performance_results()
@@ -123,7 +123,7 @@ func test_complex_system_processing():
 	test_world.add_system(complex_system)
 	complex_system.reset_count()
 
-	var process_complex_systems = func(): test_world.process(0.016)  # Simulate 60 FPS delta
+	var process_complex_systems = func(): test_world.process(0.016) # Simulate 60 FPS delta
 
 	benchmark("Complex_System_Processing", process_complex_systems)
 	print_performance_results()
@@ -147,7 +147,7 @@ func test_multiple_systems_processing():
 	test_system.reset_count()
 	complex_system.reset_count()
 
-	var process_multiple_systems = func(): test_world.process(0.016)  # Process all systems
+	var process_multiple_systems = func(): test_world.process(0.016) # Process all systems
 
 	benchmark("Multiple_Systems_Processing", process_multiple_systems)
 	print_performance_results()
@@ -204,7 +204,7 @@ func test_system_processing_no_matches():
 	for i in MEDIUM_SCALE:
 		var entity = Entity.new()
 		entity.name = "NoMatchEntity_%d" % i
-		entity.add_component(C_TestD.new())  # System queries for C_TestA
+		entity.add_component(C_TestD.new()) # System queries for C_TestA
 		test_entities.append(entity)
 		test_world.add_entity(entity, null, false)
 
@@ -242,7 +242,7 @@ func test_system_group_processing():
 
 	var process_gameplay_group = func(): test_world.process(0.016, "gameplay")
 
-	var process_all_groups = func(): test_world.process(0.016)  # No group specified
+	var process_all_groups = func(): test_world.process(0.016) # No group specified
 
 	benchmark("Physics_Group_Processing", process_physics_group)
 	benchmark("Gameplay_Group_Processing", process_gameplay_group)
@@ -284,7 +284,7 @@ func test_system_processing_frequency():
 	var multiple_time = performance_results["Multiple_Process_Calls"].avg_time_ms
 
 	# 10 calls should take roughly 10x time (allowing some overhead)
-	var max_expected_time = single_time * 15  # 50% overhead allowance
+	var max_expected_time = single_time * 15 # 50% overhead allowance
 	assert_that(multiple_time).is_less(max_expected_time).override_failure_message(
 		(
 			"Multiple system process calls don't scale linearly: single=%f ms, 10x=%f ms"
@@ -300,7 +300,7 @@ func test_inactive_system_performance():
 	# Add systems and make one inactive
 	test_world.add_system(test_system)
 	test_world.add_system(complex_system)
-	complex_system.active = false  # Disable complex system
+	complex_system.active = false # Disable complex system
 
 	test_system.reset_count()
 	complex_system.reset_count()
@@ -321,44 +321,6 @@ func test_inactive_system_performance():
 
 
 ## Run all system performance tests
-func test_run_all_system_benchmarks():
-	test_simple_system_processing_small_scale()
-	after_test()
-	before_test()
-
-	test_simple_system_processing_medium_scale()
-	after_test()
-	before_test()
-
-	test_simple_system_processing_large_scale()
-	after_test()
-	before_test()
-
-	test_complex_system_processing()
-	after_test()
-	before_test()
-
-	test_multiple_systems_processing()
-	after_test()
-	before_test()
-
-	test_system_processing_scalability()
-	after_test()
-	before_test()
-
-	test_system_processing_no_matches()
-	after_test()
-	before_test()
-
-	test_system_group_processing()
-	after_test()
-	before_test()
-
-	test_system_processing_frequency()
-	after_test()
-	before_test()
-
-	test_inactive_system_performance()
-
+func after():
 	# Save results
 	save_performance_results("res://reports/system_performance_results.json")

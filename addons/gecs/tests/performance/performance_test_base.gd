@@ -37,7 +37,7 @@ func measure_time(callable: Callable, iterations: int = 1) -> float:
 		callable.call()
 
 	var end_time = Time.get_ticks_usec()
-	return (end_time - start_time) / 1000.0  # Return milliseconds
+	return (end_time - start_time) / 1000.0 # Return milliseconds
 
 
 ## Run a performance benchmark with warmup and multiple measurements
@@ -84,15 +84,15 @@ func benchmark(test_name: String, callable: Callable, iterations: int = 1) -> Di
 
 ## Print performance results in a readable format
 func print_performance_results():
-	print("\n=== GECS Performance Test Results ===")
+	prints("\n=== GECS Performance Test Results ===")
 	for test_name in performance_results:
 		var result = performance_results[test_name]
-		print("\n%s:" % test_name)
-		print("  Iterations: %d" % result.iterations)
-		print("  Avg Time: %.3f ms (%.3f ms)" % [result.avg_time_ms, result.std_dev_ms])
-		print("  Min/Max: %.3f ms / %.3f ms" % [result.min_time_ms, result.max_time_ms])
-		print("  Ops/sec: %.0f" % result.ops_per_sec)
-		print("  Time/op: %.2f s" % result.time_per_op_us)
+		prints("\n%s:" % test_name)
+		prints("  Iterations: %d" % result.iterations)
+		prints("  Avg Time: %.3f ms (%.3f ms)" % [result.avg_time_ms, result.std_dev_ms])
+		prints("  Min/Max: %.3f ms / %.3f ms" % [result.min_time_ms, result.max_time_ms])
+		prints("  Ops/sec: %.0f" % result.ops_per_sec)
+		prints("  Time/op: %.2f s" % result.time_per_op_us)
 
 
 ## Create a basic world for testing
@@ -177,6 +177,6 @@ func save_performance_results(filename: String = ""):
 		}
 		file.store_string(JSON.stringify(data, "\t"))
 		file.close()
-		print("Performance results saved to: %s" % filename)
+		prints("Performance results saved to: %s" % filename)
 	else:
-		print("Failed to save performance results to: %s" % filename)
+		prints("Failed to save performance results to: %s" % filename)

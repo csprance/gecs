@@ -50,7 +50,7 @@ func setup_entities_for_systems(count: int):
 
 
 ## Setup systems
-func setup_systems(a_count: int, b_count:int, process_empty:bool):
+func setup_systems(a_count: int, b_count: int, process_empty: bool):
 	# Simulates a game with multiple systems
 	for i in range(a_count):
 		var system = ProcessTestSystem_A.new(process_empty)
@@ -68,18 +68,18 @@ func setup_systems(a_count: int, b_count:int, process_empty:bool):
 
 
 ## Test simple system processing performance
-func system_processing_large_scale(process_empty:bool):
+func system_processing_large_scale(process_empty: bool):
 	setup_entities_for_systems(LARGE_SCALE)
-	setup_systems(50,50,process_empty)
+	setup_systems(50, 50, process_empty)
 
-	var process_systems = func(): 
+	var process_systems = func():
 		for i in range(60):
-			test_world.process(0.016)  # Simulate 60 FPS delta
+			test_world.process(0.016) # Simulate 60 FPS delta
 
 	benchmark("Simple_System_Processing_Large_Scale", process_systems)
 	print_performance_results()
 
-	var total:int = 0
+	var total: int = 0
 	for system in test_systems:
 		total += system.process_count
 	# Verify system actually processed entities
@@ -92,12 +92,3 @@ func system_processing_large_scale(process_empty:bool):
 		150.0,
 		"Simple system processing too slow at large scale"
 	)
-
-func test_system_processing_large_scale_empty():
-	before_test()
-	system_processing_large_scale(true)
-	after_test()
-
-	before_test()
-	system_processing_large_scale(false)
-	after_test()
