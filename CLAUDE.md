@@ -63,6 +63,31 @@ addons/gdUnit4/runtest.sh -a res://addons/gecs/tests/test_world.gd
 addons/gdUnit4/runtest.sh -a res://addons/gecs/tests/ -c
 ```
 
+**Running Specific Tests:**
+
+```bash
+# Run specific test file
+addons/gdUnit4/runtest.sh -a "addons/gecs/tests/performance/performance_test_components.gd"
+
+# Run specific test method using ignore flag (opposite selection)
+addons/gdUnit4/runtest.sh -a "addons/gecs/tests/performance" -i "PerformanceTestComponents:test_method_to_skip"
+
+# Run multiple test directories
+addons/gdUnit4/runtest.sh -a "addons/gecs/tests/core" -a "addons/gecs/tests/performance"
+
+# Continue on failures (don't fail fast)
+addons/gdUnit4/runtest.sh -a "addons/gecs/tests" -c
+
+# Use specific test configuration
+addons/gdUnit4/runtest.sh -conf GdUnitRunner.cfg
+```
+
+**Key Options:**
+- `-a, --add`: Add test suite/directory to execution
+- `-i, --ignore`: Ignore specific test suite or test case  
+- `-c, --continue`: Continue on test failures (don't fail fast)
+- `-conf, --config`: Run tests from specific config file
+
 ### Performance Testing
 
 Comprehensive performance test suite available for tracking optimization effectiveness:
