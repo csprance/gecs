@@ -49,8 +49,8 @@ var world: World:
 		if debug:
 			GECSEditorDebuggerMessages.set_world(world)
 
-## Are we in debug mode?
-var debug := true
+## Are we in debug mode? Controlled by project setting gecs/debug_mode
+var debug := ProjectSettings.get_setting("gecs/debug_mode", false)
 ## This is an array of functions that get called on the entities when they get added to the world (after they are ready)
 var entity_preprocessors: Array[Callable] = []
 ## This is an array of functions that get called on the entities right before they get removed from the world
