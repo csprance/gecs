@@ -23,6 +23,10 @@ var performance_results: Dictionary = {}
 ## Setup performance testing environment
 func before_test():
 	performance_results.clear()
+	
+	# Disable debug mode for accurate performance measurements
+	ECS.debug = false
+	
 	# Ensure consistent starting state
 	if ECS.world:
 		ECS.world.purge(false)
