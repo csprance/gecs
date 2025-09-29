@@ -126,14 +126,18 @@ func with_none(components: Array = []) -> QueryBuilder:
 	return self
 
 
-## Finds entities with specific relationships.
+## Finds entities with specific relationships using strong matching (exact component data).
+## [br][b]Strong Matching:[/b] Components must have identical data using [code]equals()[/code] method.
+## [br]For weak matching (component type only), use [method Entity.has_relationship] with [code]weak=true[/code].
 func with_relationship(relationships: Array = []) -> QueryBuilder:
 	_relationships = relationships
 	_cache_valid = false
 	return self
 
 
-## Entities must not have any of the provided relationships.
+## Entities must not have any of the provided relationships using strong matching (exact component data).
+## [br][b]Strong Matching:[/b] Components must have identical data using [code]equals()[/code] method.
+## [br]For weak matching (component type only), use [method Entity.has_relationship] with [code]weak=true[/code].
 func without_relationship(relationships: Array = []) -> QueryBuilder:
 	_exclude_relationships = relationships
 	_cache_valid = false

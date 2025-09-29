@@ -414,6 +414,11 @@ func purge(should_free = true, keep := []) -> void:
 	for entity in entities.duplicate().filter(func(x): return not keep.has(x)):
 		remove_entity(entity)
 
+	# Clear relationship indexes after purging entities
+	relationship_entity_index.clear()
+	reverse_relationship_index.clear()
+	_worldLogger.debug("Cleared relationship indexes after purge")
+
 	# Purge all systems
 	_worldLogger.debug("Purging All Systems")
 	for group_key in systems_by_group.keys():
