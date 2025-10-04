@@ -27,7 +27,7 @@ static func save(gecs_data: GecsData, filepath: String, binary: bool = false) ->
 	if binary:
 		# Convert .tres to .res for binary format
 		final_path = filepath.replace(".tres", ".res")
-		flags = ResourceSaver.FLAG_BUNDLE_RESOURCES
+		flags = ResourceSaver.FLAG_COMPRESS # Binary format uses no flags, .res extension determines format
 	# else: text format (default flags = 0)
 	
 	var result = ResourceSaver.save(gecs_data, final_path, flags)
@@ -41,15 +41,9 @@ static func deserialize(gecs_filepath: String) -> Array[Entity]:
 	# Try binary first (.res), then text (.tres)
 	var binary_path = gecs_filepath.replace(".tres", ".res")
 	
-	print("GECS deserialize: Checking binary path: ", binary_path)
-	print("GECS deserialize: Binary exists: ", ResourceLoader.exists(binary_path))
-	print("GECS deserialize: Text exists: ", ResourceLoader.exists(gecs_filepath))
-	
 	if ResourceLoader.exists(binary_path):
-		print("GECS deserialize: Loading from binary path: ", binary_path)
 		return _load_from_path(binary_path)
 	elif ResourceLoader.exists(gecs_filepath):
-		print("GECS deserialize: Loading from text path: ", gecs_filepath)
 		return _load_from_path(gecs_filepath)
 	else:
 		push_error("GECS deserialize: File not found: " + gecs_filepath)

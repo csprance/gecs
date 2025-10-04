@@ -56,7 +56,7 @@ func test_save_and_load_simple():
 	assert_that(des_entity.name).is_equal("SaveLoadTest")
 	
 	# Use auto_free for cleanup
-	for entity in deserialized_entities:
-		auto_free(entity)
+	for _entity in deserialized_entities:
+		auto_free(_entity)
 	
 	# Keep file for inspection in reports directory
