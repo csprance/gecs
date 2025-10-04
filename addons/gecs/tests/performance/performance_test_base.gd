@@ -3,11 +3,6 @@
 class_name PerformanceTestBase
 extends GdUnitTestSuite
 
-const C_TestA = preload("res://addons/gecs/tests/components/c_test_a.gd")
-const C_TestB = preload("res://addons/gecs/tests/components/c_test_b.gd")
-const C_TestC = preload("res://addons/gecs/tests/components/c_test_c.gd")
-const C_TestD = preload("res://addons/gecs/tests/components/c_test_d.gd")
-const C_TestE = preload("res://addons/gecs/tests/components/c_test_e.gd")
 
 ## Performance test configuration
 const WARMUP_ITERATIONS = 5

@@ -1,3 +1,4 @@
+class_name C_TestD
 extends Component
 
 @export var points: int = 0

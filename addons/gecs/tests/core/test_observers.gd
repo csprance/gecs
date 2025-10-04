@@ -1,18 +1,5 @@
 extends GdUnitTestSuite
 
-const TestA = preload("res://addons/gecs/tests/entities/e_test_a.gd")
-const TestB = preload("res://addons/gecs/tests/entities/e_test_b.gd")
-const TestC = preload("res://addons/gecs/tests/entities/e_test_c.gd")
-
-const C_TestA = preload("res://addons/gecs/tests/components/c_test_a.gd")
-const C_TestB = preload("res://addons/gecs/tests/components/c_test_b.gd")
-const C_TestC = preload("res://addons/gecs/tests/components/c_test_c.gd")
-const C_TestD = preload("res://addons/gecs/tests/components/c_test_d.gd")
-const C_TestE = preload("res://addons/gecs/tests/components/c_test_e.gd")
-
-const TestSystemA = preload("res://addons/gecs/tests/systems/s_test_a.gd")
-const TestSystemB = preload("res://addons/gecs/tests/systems/s_test_b.gd")
-const TestSystemC = preload("res://addons/gecs/tests/systems/s_test_c.gd")
 
 var runner: GdUnitSceneRunner
 var world: World
@@ -28,7 +15,7 @@ func after_test():
 	world.purge(false)
 	
 func test_observer_receive_component_changed():
-	world.add_system(TestSystemA.new())
+	world.add_system(TestASystem.new())
 	var test_a_observer = TestAObserver.new()
 	world.add_observer(test_a_observer)
 	

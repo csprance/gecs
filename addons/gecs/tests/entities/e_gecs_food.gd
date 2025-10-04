@@ -1,2 +1,2 @@
-class_name _GECSFOODTEST
+class_name GecsFood
 extends Entity

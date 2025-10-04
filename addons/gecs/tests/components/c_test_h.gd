@@ -1,3 +1,4 @@
+class_name C_TestH
 extends Component
 
 @export var value: int = 0

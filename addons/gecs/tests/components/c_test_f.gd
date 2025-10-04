@@ -1,3 +1,4 @@
+class_name C_TestF
 extends Component
 
 var value: int = 0 # properties with no export annotation

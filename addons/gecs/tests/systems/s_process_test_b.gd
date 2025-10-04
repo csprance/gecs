@@ -2,7 +2,6 @@
 class_name ProcessTestSystem_B
 extends System
 
-const C_TestB = preload("res://addons/gecs/tests/components/c_test_b.gd")
 
 var process_count: int = 0
 

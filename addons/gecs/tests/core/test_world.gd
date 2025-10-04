@@ -3,22 +3,7 @@ extends GdUnitTestSuite  # Assuming GutTest is the correct base class in your se
 var runner: GdUnitSceneRunner
 var world: World
 
-const TestA = preload("res://addons/gecs/tests/entities/e_test_a.gd")
-const TestB = preload("res://addons/gecs/tests/entities/e_test_b.gd")
-const TestC = preload("res://addons/gecs/tests/entities/e_test_c.gd")
 
-const C_TestA = preload("res://addons/gecs/tests/components/c_test_a.gd")
-const C_TestB = preload("res://addons/gecs/tests/components/c_test_b.gd")
-const C_TestC = preload("res://addons/gecs/tests/components/c_test_c.gd")
-const C_TestD = preload("res://addons/gecs/tests/components/c_test_d.gd")
-const C_TestE = preload("res://addons/gecs/tests/components/c_test_e.gd")
-const C_TestF = preload("res://addons/gecs/tests/components/c_test_f.gd")
-const C_TestG = preload("res://addons/gecs/tests/components/c_test_g.gd")
-const C_TestH = preload("res://addons/gecs/tests/components/c_test_h.gd")
-
-const TestSystemA = preload("res://addons/gecs/tests/systems/s_test_a.gd")
-const TestSystemB = preload("res://addons/gecs/tests/systems/s_test_b.gd")
-const TestSystemC = preload("res://addons/gecs/tests/systems/s_test_c.gd")
 
 
 func before():

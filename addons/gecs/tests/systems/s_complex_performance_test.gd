@@ -2,9 +2,6 @@
 class_name ComplexPerformanceTestSystem
 extends System
 
-const C_TestA = preload("res://addons/gecs/tests/components/c_test_a.gd")
-const C_TestB = preload("res://addons/gecs/tests/components/c_test_b.gd")
-const C_TestC = preload("res://addons/gecs/tests/components/c_test_c.gd")
 
 var process_count: int = 0
 

@@ -15,8 +15,8 @@ var world: World
 var e_bob: Person
 var e_alice: Person
 var e_heather: Person
-var e_apple: _GECSFOODTEST
-var e_pizza: _GECSFOODTEST
+var e_apple: GecsFood
+var e_pizza: GecsFood
 
 
 func before():
@@ -36,9 +36,9 @@ func before_test():
 	e_alice.name = "e_alice"
 	e_heather = Person.new()
 	e_heather.name = "e_heather"
-	e_apple = _GECSFOODTEST.new()
+	e_apple = GecsFood.new()
 	e_apple.name = "e_apple"
-	e_pizza = _GECSFOODTEST.new()
+	e_pizza = GecsFood.new()
 	e_pizza.name = "e_pizza"
 
 	world.add_entity(e_bob)
@@ -53,11 +53,11 @@ func before_test():
 	# alice loves heather
 	e_alice.add_relationship(Relationship.new(C_Loves.new(), e_heather))
 	# heather likes ALL food both apples and pizza
-	e_heather.add_relationship(Relationship.new(C_Likes.new(), _GECSFOODTEST))
+	e_heather.add_relationship(Relationship.new(C_Likes.new(), GecsFood))
 	# heather eats 5 apples
 	e_heather.add_relationship(Relationship.new(C_Eats.new(5), e_apple))
 	# Alice attacks all food
-	e_alice.add_relationship(Relationship.new(C_IsAttacking.new(), _GECSFOODTEST))
+	e_alice.add_relationship(Relationship.new(C_IsAttacking.new(), GecsFood))
 	# bob cries in front of everyone
 	e_bob.add_relationship(Relationship.new(C_IsCryingInFrontOf.new(), Person))
 	# Bob likes ONLY pizza even though there are other foods so he doesn't care for apples
@@ -153,7 +153,7 @@ func test_with_relationships_wildcard_target():
 func test_with_relationships_wildcard_relation():
 	# Any entity with any relation to the Food archetype
 	var any_relation_to_food = (
-		ECS.world.query.with_relationship([Relationship.new(ECS.wildcard, _GECSFOODTEST)]).execute()
+		ECS.world.query.with_relationship([Relationship.new(ECS.wildcard, GecsFood)]).execute()
 	)
 	assert_bool(Array(any_relation_to_food).has(e_heather)).is_true() # heather likes food. but i mean cmon we all do
 
@@ -165,7 +165,7 @@ func test_archetype_and_entity():
 		ECS
 		.world
 		.query
-		.with_relationship([Relationship.new(C_Likes.new(), _GECSFOODTEST)])
+		.with_relationship([Relationship.new(C_Likes.new(), GecsFood)])
 		.execute()
 	)
 	assert_bool(entities_that_like_food.has(e_heather)).is_true() # heather likes food
@@ -701,7 +701,6 @@ func test_multiple_component_targets_same_relationship():
 func test_broad_query_with_drill_down_filtering():
 	# Test the pattern: broad query -> drill down with entity.has_relationship()
 	# This is the recommended pattern for complex relationship filtering
-	
 	# Purge and recreate entities for a clean slate
 	world.purge(false)
 	
@@ -717,9 +716,9 @@ func test_broad_query_with_drill_down_filtering():
 	world.add_entity(e_heather)
 	
 	# Create clear component aliases for this test
-	var C_Damaged = C_IsCryingInFrontOf  # Damage marker component
-	var C_FireDamage = C_Eats             # Fire damage type
-	var C_PoisonDamage = C_Loves          # Poison damage type
+	var C_Damaged = C_IsCryingInFrontOf # Damage marker component
+	var C_FireDamage = C_Eats # Fire damage type
+	var C_PoisonDamage = C_Loves # Poison damage type
 	
 	# Create a damage system with various damage types and amounts
 	# Each entity gets unique component instances as per typical workflow
@@ -752,8 +751,8 @@ func test_broad_query_with_drill_down_filtering():
 		if entity.has_relationship(Relationship.new(C_Damaged.new(), C_FireDamage.new(999)), true):
 			fire_damaged_entities.append(entity)
 	
-	assert_bool(fire_damaged_entities.has(e_bob)).is_true()    # bob has fire damage (25)
-	assert_bool(fire_damaged_entities.has(e_alice)).is_true()  # alice has fire damage (85)
+	assert_bool(fire_damaged_entities.has(e_bob)).is_true() # bob has fire damage (25)
+	assert_bool(fire_damaged_entities.has(e_alice)).is_true() # alice has fire damage (85)
 	assert_bool(fire_damaged_entities.has(e_heather)).is_false() # heather has no fire damage
 	assert_int(fire_damaged_entities.size()).is_equal(2)
 	
@@ -765,8 +764,8 @@ func test_broad_query_with_drill_down_filtering():
 		if fire_rel and fire_rel.target.value > 50:
 			high_fire_damage_entities.append(entity)
 	
-	assert_bool(high_fire_damage_entities.has(e_alice)).is_true()  # alice has 85 fire damage
-	assert_bool(high_fire_damage_entities.has(e_bob)).is_false()   # bob has only 25 fire damage
+	assert_bool(high_fire_damage_entities.has(e_alice)).is_true() # alice has 85 fire damage
+	assert_bool(high_fire_damage_entities.has(e_bob)).is_false() # bob has only 25 fire damage
 	assert_int(high_fire_damage_entities.size()).is_equal(1)
 	
 	# Step 4: Drill down - find entities with MULTIPLE damage types
@@ -776,8 +775,8 @@ func test_broad_query_with_drill_down_filtering():
 		if damage_rels.size() > 1:
 			multi_damage_entities.append(entity)
 	
-	assert_bool(multi_damage_entities.has(e_alice)).is_true()   # alice has fire + poison
-	assert_bool(multi_damage_entities.has(e_bob)).is_false()    # bob has only fire
+	assert_bool(multi_damage_entities.has(e_alice)).is_true() # alice has fire + poison
+	assert_bool(multi_damage_entities.has(e_bob)).is_false() # bob has only fire
 	assert_bool(multi_damage_entities.has(e_heather)).is_false() # heather has only poison
 	assert_int(multi_damage_entities.size()).is_equal(1)
 	
@@ -789,8 +788,8 @@ func test_broad_query_with_drill_down_filtering():
 		if has_fire and has_poison:
 			fire_and_poison_entities.append(entity)
 	
-	assert_bool(fire_and_poison_entities.has(e_alice)).is_true()   # alice has both
-	assert_bool(fire_and_poison_entities.has(e_bob)).is_false()    # bob has only fire
+	assert_bool(fire_and_poison_entities.has(e_alice)).is_true() # alice has both
+	assert_bool(fire_and_poison_entities.has(e_bob)).is_false() # bob has only fire
 	assert_bool(fire_and_poison_entities.has(e_heather)).is_false() # heather has only poison
 	assert_int(fire_and_poison_entities.size()).is_equal(1)
 

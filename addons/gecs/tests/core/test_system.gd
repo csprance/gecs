@@ -1,18 +1,5 @@
 extends GdUnitTestSuite
 
-const TestA = preload("res://addons/gecs/tests/entities/e_test_a.gd")
-const TestB = preload("res://addons/gecs/tests/entities/e_test_b.gd")
-const TestC = preload("res://addons/gecs/tests/entities/e_test_c.gd")
-
-const C_TestA = preload("res://addons/gecs/tests/components/c_test_a.gd")
-const C_TestB = preload("res://addons/gecs/tests/components/c_test_b.gd")
-const C_TestC = preload("res://addons/gecs/tests/components/c_test_c.gd")
-const C_TestD = preload("res://addons/gecs/tests/components/c_test_d.gd")
-const C_TestE = preload("res://addons/gecs/tests/components/c_test_e.gd")
-
-const TestSystemA = preload("res://addons/gecs/tests/systems/s_test_a.gd")
-const TestSystemB = preload("res://addons/gecs/tests/systems/s_test_b.gd")
-const TestSystemC = preload("res://addons/gecs/tests/systems/s_test_c.gd")
 
 var runner: GdUnitSceneRunner
 var world: World
@@ -45,9 +32,9 @@ func test_system_processes_entities_with_required_components():
 	# Add  some entities before systems
 	world.add_entities([entity_a, entity_b])
 
-	world.add_system(TestSystemA.new())
-	world.add_system(TestSystemB.new())
-	world.add_system(TestSystemC.new())
+	world.add_system(TestASystem.new())
+	world.add_system(TestBSystem.new())
+	world.add_system(TestCSystem.new())
 
 	# add some entities after systems
 	world.add_entities([entity_c, entity_d])
@@ -69,7 +56,7 @@ func test_system_processes_entities_with_required_components():
 	world.process(0.1)
 
 	# Check the values of the components
-	assert_int(entity_a.get_component(C_TestA).value).is_equal(1)  # This is one because we added a new component which replaced the old one
+	assert_int(entity_a.get_component(C_TestA).value).is_equal(1) # This is one because we added a new component which replaced the old one
 	assert_int(entity_b.get_component(C_TestB).value).is_equal(2)
 	assert_int(entity_c.get_component(C_TestC).value).is_equal(2)
 
@@ -95,11 +82,11 @@ func test_system_group_processes_entities_with_required_components():
 	# Add  some entities before systems
 	world.add_entities([entity_a, entity_b])
 
-	var sys_a = TestSystemA.new()
+	var sys_a = TestASystem.new()
 	sys_a.group = "group1"
-	var sys_b = TestSystemB.new()
+	var sys_b = TestBSystem.new()
 	sys_b.group = "group1"
-	var sys_c = TestSystemC.new()
+	var sys_c = TestCSystem.new()
 	sys_c.group = "group2"
 
 	world.add_systems([sys_a, sys_b, sys_c])
@@ -125,7 +112,7 @@ func test_system_group_processes_entities_with_required_components():
 	world.process(0.1)
 
 	# Check the values of the components
-	assert_int(entity_a.get_component(C_TestA).value).is_equal(0)  # This is one because we added a new component which replaced the old one
+	assert_int(entity_a.get_component(C_TestA).value).is_equal(0) # This is one because we added a new component which replaced the old one
 	assert_int(entity_b.get_component(C_TestB).value).is_equal(1)
 	assert_int(entity_c.get_component(C_TestC).value).is_equal(1)
 

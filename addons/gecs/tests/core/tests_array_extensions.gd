@@ -1,14 +1,10 @@
 extends GdUnitTestSuite
 
-const TestSystemA = preload("res://addons/gecs/tests/systems/s_test_a.gd")
-const TestSystemB = preload("res://addons/gecs/tests/systems/s_test_b.gd")
-const TestSystemC = preload("res://addons/gecs/tests/systems/s_test_c.gd")
-const TestSystemD = preload("res://addons/gecs/tests/systems/s_test_d.gd")
 
-var testSystemA = TestSystemA.new()
-var testSystemB = TestSystemB.new()
-var testSystemC = TestSystemC.new()
-var testSystemD = TestSystemD.new()
+var testSystemA = TestASystem.new()
+var testSystemB = TestBSystem.new()
+var testSystemC = TestCSystem.new()
+var testSystemD = TestDSystem.new()
 
 
 func test_topological_sort():

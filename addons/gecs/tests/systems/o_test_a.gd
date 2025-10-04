@@ -3,8 +3,6 @@
 class_name TestAObserver
 extends Observer
 
-const C_TestA = preload("res://addons/gecs/tests/components/c_test_a.gd")
-const C_TestB = preload("res://addons/gecs/tests/components/c_test_b.gd")
 
 var event_count := 0
 var added_count := 0

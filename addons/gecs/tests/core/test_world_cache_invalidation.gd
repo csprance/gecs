@@ -3,10 +3,6 @@ extends GdUnitTestSuite
 var runner: GdUnitSceneRunner
 var world: World
 
-const C_TestA = preload("res://addons/gecs/tests/components/c_test_a.gd")
-const C_TestB = preload("res://addons/gecs/tests/components/c_test_b.gd")
-const C_TestC = preload("res://addons/gecs/tests/components/c_test_c.gd")
-const C_TestD = preload("res://addons/gecs/tests/components/c_test_d.gd")
 
 func before():
 	runner = scene_runner("res://addons/gecs/tests/test_scene.tscn")
