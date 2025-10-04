@@ -466,7 +466,7 @@ func _query(all_components = [], any_components = [], exclude_components = []) -
 	var _any := any_components.map(map_resource_path)
 	var _exclude := exclude_components.map(map_resource_path)
 
-	var result: Array
+	var result: Set
 
 	# If we have all or any components, process those
 	if not _all.is_empty() or not _any.is_empty():
@@ -478,7 +478,7 @@ func _query(all_components = [], any_components = [], exclude_components = []) -
 			var smallest_component_key := ""
 
 			for component in _all:
-				var component_entities = component_entity_index.get(component, [])
+				var component_entities = component_entity_index.get(component, Set.new())
 				var size = component_entities.size()
 				# Early exit if any required component has no entities
 				if size == 0:
@@ -488,47 +488,46 @@ func _query(all_components = [], any_components = [], exclude_components = []) -
 					smallest_component_key = component
 
 			# Start with the smallest set and intersect others
-			result = component_entity_index.get(smallest_component_key, []).duplicate()
+			result = component_entity_index.get(smallest_component_key, Set.new())
 			for component in _all:
-				if component != smallest_component_key:
-					result = ArrayExtensions.intersect(
-						result, component_entity_index.get(component, [])
-					)
-					# Early exit if result is empty
-					if result.is_empty():
-						return []
+				# Early exit if result is empty
+				if result.is_empty():
+					return []
+				if component == smallest_component_key:
+					continue
+				result = result.intersect(component_entity_index.get(component, Set.new()))
 
 		# Handle any_components
 		if not _any.is_empty():
-			var any_result: Array = []
+			var any_result: Set = Set.new()
 			# Start with first component's entities
 			if _any.size() > 0:
-				any_result = component_entity_index.get(_any[0], [])
+				any_result = component_entity_index.get(_any[0], Set.new())
 				# Union with remaining components
 				for i in range(1, _any.size()):
-					var entities_with_component = component_entity_index.get(_any[i], [])
-					any_result = ArrayExtensions.union(any_result, entities_with_component)
+					var entities_with_component = component_entity_index.get(_any[i], Set.new())
+					any_result = any_result.union(entities_with_component)
 
 			if result:
-				result = ArrayExtensions.intersect(result, any_result)
+				result = result.intersect(any_result)
 			else:
 				result = any_result
 	else:
 		# Only if we have no inclusive filters but have exclusions,
 		# start with all entities
 		if not _exclude.is_empty():
-			result = entities.duplicate()
+			result = Set.new(entities)
 
 	# Handle exclude_components
 	if not _exclude.is_empty():
 		for component in _exclude:
-			var excluded = component_entity_index.get(component, [])
+			var excluded = component_entity_index.get(component, Set.new())
 			if not excluded.is_empty():
-				result = ArrayExtensions.difference(result, excluded)
+				result = result.difference(excluded)
 
 	# Cache the result for future queries
-	_query_result_cache[cache_key] = result.duplicate()
-	return result
+	_query_result_cache[cache_key] = result.to_array()
+	return _query_result_cache[cache_key].duplicate()
 
 
 #region Index Management Functions
@@ -539,10 +538,10 @@ func _query(all_components = [], any_components = [], exclude_components = []) -
 ## [param component_key] The component's resource path.
 func _add_entity_to_index(entity: Entity, component_key: String) -> void:
 	if not component_entity_index.has(component_key):
-		component_entity_index[component_key] = []
+		component_entity_index[component_key] = Set.new()
 	var entity_list = component_entity_index[component_key]
 	# Use direct append since we control when this is called - no duplicates expected
-	entity_list.append(entity)
+	entity_list.add(entity)
 
 
 ## Removes an entity from the component index.[br]
@@ -550,7 +549,7 @@ func _add_entity_to_index(entity: Entity, component_key: String) -> void:
 ## [param component_key] The component's resource path.
 func _remove_entity_from_index(entity, component_key: String) -> void:
 	if component_entity_index.has(component_key):
-		var entity_list: Array = component_entity_index[component_key]
+		var entity_list: Set = component_entity_index[component_key]
 		entity_list.erase(entity)
 		if entity_list.size() == 0:
 			component_entity_index.erase(component_key)
