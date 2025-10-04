@@ -90,3 +90,15 @@ func _on_world_exited() -> void:
 	world_exited.emit()
 	if debug:
 		GECSEditorDebuggerMessages.exit_world()
+
+
+func serialize(query: QueryBuilder) -> GecsData:
+	return GECSIO.serialize(query)
+
+
+func save(gecs_data: GecsData, filepath: String, binary: bool = false) -> bool:
+	return GECSIO.save(gecs_data, filepath, binary)
+
+
+func deserialize(gecs_filepath: String) -> Array[Entity]:
+	return GECSIO.deserialize(gecs_filepath)
