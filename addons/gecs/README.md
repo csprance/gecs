@@ -24,6 +24,7 @@
 - **[Best Practices](docs/BEST_PRACTICES.md)** - Write maintainable, performant ECS code
 - **[Relationships](docs/RELATIONSHIPS.md)** - Link entities together for complex interactions
 - **[Observers](docs/OBSERVERS.md)** - Reactive systems that respond to component changes
+- **[Serialization](docs/SERIALIZATION.md)** - Save and load game state and entities
 
 ### ⚡ Optimization & Advanced (As needed)
 
@@ -51,6 +52,7 @@
 | **Entity Linking**     | [Relationships](docs/RELATIONSHIPS.md)         | Connect entities with relationships |
 | **Property Filtering** | [Component Queries](docs/COMPONENT_QUERIES.md) | Query entities by component data    |
 | **Event Systems**      | [Observers](docs/OBSERVERS.md)                 | React to component changes          |
+| **Data Persistence**   | [Serialization](docs/SERIALIZATION.md)         | Save/load entities and game state   |
 
 ### Optimization & Debugging
 
@@ -89,6 +91,11 @@ var likers = ECS.world.query.with_relationship([Relationship.new(C_Likes.new(), 
 
 # Component queries
 var low_health = ECS.world.query.with_all([{C_Health: {"current": {"_lt": 20}}}]).execute()
+
+# Serialization
+var data = ECS.serialize(ECS.world.query.with_all([C_Persistent]))
+ECS.save(data, "user://savegame.tres", true)  # Binary format
+var entities = ECS.deserialize("user://savegame.tres")
 ```
 
 ## 🎮 Example Projects
