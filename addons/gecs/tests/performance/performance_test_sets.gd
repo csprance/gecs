@@ -198,3 +198,32 @@ func test_set_difference_performance():
 	benchmark("Array_Difference_Performance", difference_test)
 	benchmark("Set_Difference_Performance", set_difference_test)
 	print_performance_results()
+
+func test_set_remove_performance():
+	var arrays = create_test_arrays(LARGE_SCALE*2, LARGE_SCALE*2, 0.6)
+	var array1 = arrays[0]
+	var array2 = arrays[1]
+	var set1 = Set.new(array1)
+	var set2 = Set.new(array2)
+
+	var remove_test = func():
+		var arr = array1.duplicate()
+		var count = 0
+		for item in array2:
+			if item in arr:
+				arr.erase(item)
+				count += 1
+		print("Array_Remove_Count: ", count)
+	
+	var set_remove_test = func():
+		var _set = set1.duplicate()
+		var count = 0
+		for item in set2.values():
+			if _set.has(item):
+				_set.erase(item)
+				count += 1
+		print("Set_Remove_Count: ", count)
+
+	benchmark("Array_Remove_Performance", remove_test)
+	benchmark("Set_Remove_Performance", set_remove_test)
+	print_performance_results()
