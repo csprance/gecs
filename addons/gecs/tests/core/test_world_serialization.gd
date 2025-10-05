@@ -340,3 +340,94 @@ func test_binary_format_and_auto_detection():
 		print("  Text (.tres): ", text_size, " bytes")
 		print("  Binary (.res): ", binary_size, " bytes")
 		print("  Compression: ", "%.1f" % ((1.0 - float(binary_size) / float(text_size)) * 100), "% smaller")
+
+func test_prefab_entity_serialization():
+	# Load a prefab entity from scene
+	var packed_scene = load("res://addons/gecs/tests/entities/e_prefab_test.tscn") as PackedScene
+	var prefab_entity = packed_scene.instantiate() as Entity
+	prefab_entity.name = "LoadedPrefab"
+	
+	world.add_entity(prefab_entity)
+	# Add C_Test_C back in 
+	prefab_entity.add_component(C_TestC.new(99))
+	
+	# Get component values before serialization for comparison
+	var original_test_a = prefab_entity.get_component(C_TestA)
+	var original_test_b = prefab_entity.get_component(C_TestB)
+	var original_test_c = prefab_entity.get_component(C_TestC)
+	
+	
+	assert_that(original_test_a).is_not_null()
+	assert_that(original_test_b).is_not_null()
+	assert_that(original_test_c).is_not_null()
+	
+	
+	var original_a_value = original_test_a.value
+	var original_b_value = original_test_b.value
+	var original_c_value = original_test_c.value
+	
+	
+	# Serialize entities with test components
+	var query = world.query.with_all([C_TestA])
+	var serialized_data = ECS.serialize(query)
+	
+	# Validate the prefab was serialized with scene path
+	assert_that(serialized_data.entities).has_size(1)
+	var entity_data = serialized_data.entities[0]
+	assert_that(entity_data.entity_name).is_equal("LoadedPrefab")
+	assert_that(entity_data.scene_path).is_equal("res://addons/gecs/tests/entities/e_prefab_test.tscn")
+	assert_that(entity_data.components).has_size(3)  # Should have C_TestA, C_TestB, C_TestC
+	
+	# Save and reload
+	var file_path = "res://reports/test_prefab_serialization.tres"
+	ECS.save(serialized_data, file_path)
+	
+	# Remove original entity from world
+	world.remove_entity(prefab_entity)
+	
+	# Deserialize and validate prefab is properly reconstructed
+	var deserialized_entities = ECS.deserialize(file_path)
+	assert_that(deserialized_entities).has_size(1)
+	
+	var des_entity = deserialized_entities[0]
+	assert_that(des_entity.name).is_equal("LoadedPrefab")
+	assert_that(des_entity.has_component(C_TestA)).is_true()
+	assert_that(des_entity.has_component(C_TestB)).is_true()
+	assert_that(des_entity.has_component(C_TestC)).is_true()
+	
+	# Validate component values are preserved
+	var test_a = des_entity.get_component(C_TestA)
+	var test_b = des_entity.get_component(C_TestB)
+	var test_c = des_entity.get_component(C_TestC)
+	
+	assert_that(test_a.value).is_equal(original_a_value)
+	assert_that(test_b.value).is_equal(original_b_value)
+	
+	# NOW THE CRITICAL TEST: Add deserialized entity back to world
+	world.add_entity(des_entity)
+	
+	# Verify components still work after being added to world
+	assert_that(des_entity.has_component(C_TestA)).is_true()
+	assert_that(des_entity.has_component(C_TestB)).is_true()
+	assert_that(des_entity.has_component(C_TestC)).is_true()
+	
+	# Verify we can still get components after world operations
+	var world_test_a = des_entity.get_component(C_TestA)
+	var world_test_b = des_entity.get_component(C_TestB)
+	var world_test_c = des_entity.get_component(C_TestC)
+	
+	assert_that(world_test_a).is_not_null()
+	assert_that(world_test_b).is_not_null()
+	assert_that(world_test_c).is_not_null()
+	
+	# Verify values are still correct after world operations
+	assert_that(world_test_a.value).is_equal(original_a_value)
+	assert_that(world_test_b.value).is_equal(original_b_value)
+	
+	# Test that queries still work with the deserialized entity
+	var world_query = world.query.with_all([C_TestA])
+	var found_entities = world_query.execute()
+	assert_that(found_entities).has_size(1)
+	assert_that(found_entities[0]).is_equal(des_entity)
+	
+	print("Prefab entity serialization with world round-trip test completed successfully!")
