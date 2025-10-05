@@ -85,9 +85,7 @@ func _initialize(_components: Array = []) -> void:
 
 	# remove any component_resources that are already defined in components
 	# This is useful for when you instantiate an entity from a scene and want to overide components
-	for component in component_resources:
-		if has_component(component.get_script()):
-			component_resources.erase(component)
+	component_resources = component_resources.filter(func(comp): return not has_component(comp.get_script()))
 
 	# Add components passed in directly to the _initialize method to override everything else
 	component_resources.append_array(_components)
