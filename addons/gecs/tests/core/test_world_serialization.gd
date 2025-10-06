@@ -34,7 +34,7 @@ func test_basic_entity_serialization():
 	
 	# Validate serialized structure
 	assert_that(serialized_data).is_not_null()
-	assert_that(serialized_data.version).is_equal("0.1")
+	assert_that(serialized_data.version).is_equal("0.2")
 	assert_that(serialized_data.entities).has_size(1)
 	
 	var entity_data = serialized_data.entities[0]
@@ -431,3 +431,213 @@ func test_prefab_entity_serialization():
 	assert_that(found_entities[0]).is_equal(des_entity)
 	
 	print("Prefab entity serialization with world round-trip test completed successfully!")
+
+
+func test_serialize_config_include_all_components():
+	# Create entity with multiple components
+	var entity = Entity.new()
+	entity.name = "ConfigTestEntity"
+	entity.add_component(C_SerializationTest.new(100, 5.5, "test", true))
+	entity.add_component(C_Persistent.new("Player", 10, 75.0, Vector2(10, 20), ["item1"]))
+	
+	world.add_entity(entity)
+	
+	# Test default config (include all)
+	var config = GECSSerializeConfig.new()
+	assert_that(config.include_all_components).is_true()
+	
+	var query = world.query.with_all([C_SerializationTest])
+	var serialized_data = ECS.serialize(query, config)
+	
+	# Should include both components
+	assert_that(serialized_data.entities).has_size(1)
+	var entity_data = serialized_data.entities[0]
+	assert_that(entity_data.components).has_size(2)
+
+
+func test_serialize_config_specific_components_only():
+	# Create entity with multiple components
+	var entity = Entity.new()
+	entity.name = "SpecificConfigTestEntity"
+	entity.add_component(C_SerializationTest.new(200, 10.5, "specific", false))
+	entity.add_component(C_Persistent.new("SpecificPlayer", 20, 90.0, Vector2(30, 40), ["item2"]))
+	
+	world.add_entity(entity)
+	
+	# Configure to include only C_SerializationTest
+	var config = GECSSerializeConfig.new()
+	config.include_all_components = false
+	config.components = [C_SerializationTest.new()]
+	
+	var query = world.query.with_all([C_SerializationTest])
+	var serialized_data = ECS.serialize(query, config)
+	
+	# Should only include C_SerializationTest component
+	assert_that(serialized_data.entities).has_size(1)
+	var entity_data = serialized_data.entities[0]
+	assert_that(entity_data.components).has_size(1)
+	
+	# Verify it's the correct component type
+	var component = entity_data.components[0]
+	assert_that(component).is_instance_of(C_SerializationTest)
+	assert_that(component.int_value).is_equal(200)
+
+
+func test_serialize_config_exclude_relationships():
+	# Create entities with relationships
+	var parent = Entity.new()
+	parent.name = "ParentEntity"
+	parent.add_component(C_SerializationTest.new(300, 15.5, "parent", true))
+	
+	var child = Entity.new()
+	child.name = "ChildEntity"
+	child.add_component(C_SerializationTest.new(400, 20.5, "child", false))
+	
+	world.add_entities([parent, child])
+	
+	# Add relationship
+	var relationship = Relationship.new(R_ChildOf, parent)
+	child.add_relationship(relationship)
+	
+	# Configure to exclude relationships
+	var config = GECSSerializeConfig.new()
+	config.include_relationships = false
+	
+	var query = world.query.with_all([C_SerializationTest])
+	var serialized_data = ECS.serialize(query, config)
+	
+	# Should have entities but no relationships
+	assert_that(serialized_data.entities).has_size(2)
+	for entity_data in serialized_data.entities:
+		assert_that(entity_data.relationships).has_size(0)
+
+
+func test_serialize_config_exclude_related_entities():
+	# Create entities with relationships
+	var parent = Entity.new()
+	parent.name = "ParentForExclusion"
+	parent.add_component(C_SerializationTest.new(500, 25.5, "parent_exclude", true))
+	
+	var child = Entity.new()
+	child.name = "ChildForExclusion"
+	child.add_component(C_Persistent.new("ChildPlayer", 30, 80.0, Vector2(50, 60), ["child_item"]))
+	
+	world.add_entities([parent, child])
+	
+	# Add relationship from parent to child
+	var relationship = Relationship.new(R_ChildOf, child)
+	parent.add_relationship(relationship)
+	
+	# Configure to exclude related entities
+	var config = GECSSerializeConfig.new()
+	config.include_related_entities = false
+	
+	# Query only for parent (which has C_SerializationTest)
+	var query = world.query.with_all([C_SerializationTest])
+	var serialized_data = ECS.serialize(query, config)
+	
+	# Should only include the parent, not the related child
+	assert_that(serialized_data.entities).has_size(1)
+	var entity_data = serialized_data.entities[0]
+	assert_that(entity_data.entity_name).is_equal("ParentForExclusion")
+
+
+func test_world_default_serialize_config():
+	# Test that world has a default config
+	assert_that(world.default_serialize_config).is_not_null()
+	assert_that(world.default_serialize_config.include_all_components).is_true()
+	assert_that(world.default_serialize_config.include_relationships).is_true()
+	assert_that(world.default_serialize_config.include_related_entities).is_true()
+	
+	# Modify world default
+	world.default_serialize_config.include_relationships = false
+	
+	# Create entity with relationship
+	var parent = Entity.new()
+	parent.name = "WorldConfigParent"
+	parent.add_component(C_SerializationTest.new(600, 30.5, "world_config", true))
+	
+	var child = Entity.new()
+	child.name = "WorldConfigChild"
+	child.add_component(C_Persistent.new("WorldChild", 40, 70.0, Vector2(70, 80), ["world_item"]))
+	
+	world.add_entities([parent, child])
+	
+	var relationship = Relationship.new(R_ChildOf, child)
+	parent.add_relationship(relationship)
+	
+	# Serialize without explicit config (should use world default)
+	var query = world.query.with_all([C_SerializationTest])
+	var serialized_data = ECS.serialize(query)
+	
+	# Should exclude relationships due to world config
+	assert_that(serialized_data.entities).has_size(1)  # No related entities included due to no relationships
+	var entity_data = serialized_data.entities[0]
+	assert_that(entity_data.relationships).has_size(0)  # No relationships included
+
+
+func test_entity_level_serialize_config_override():
+	# Create entity with custom serialize config
+	var entity = Entity.new()
+	entity.name = "EntityConfigOverride"
+	entity.add_component(C_SerializationTest.new(700, 35.5, "entity_override", false))
+	entity.add_component(C_Persistent.new("EntityPlayer", 50, 60.0, Vector2(90, 100), ["entity_item"]))
+	
+	# Set entity-specific config to include only C_Persistent
+	entity.serialize_config = GECSSerializeConfig.new()
+	entity.serialize_config.include_all_components = false
+	entity.serialize_config.components = [C_Persistent.new()]
+	
+	world.add_entity(entity)
+	
+	# Serialize without explicit config (should use entity override)
+	var query = world.query.with_all([C_SerializationTest])
+	var serialized_data = ECS.serialize(query)
+	
+	# Should only include C_Persistent component due to entity config
+	assert_that(serialized_data.entities).has_size(1)
+	var entity_data = serialized_data.entities[0]
+	assert_that(entity_data.components).has_size(1)
+	
+	var component = entity_data.components[0]
+	assert_that(component).is_instance_of(C_Persistent)
+
+
+func test_config_hierarchy_priority():
+	# Set world default to exclude relationships
+	world.default_serialize_config.include_relationships = false
+	
+	# Create entity with entity-level config that includes relationships
+	var entity = Entity.new()
+	entity.name = "HierarchyTestEntity"
+	entity.add_component(C_SerializationTest.new(800, 40.5, "hierarchy", true))
+	entity.serialize_config = GECSSerializeConfig.new()
+	entity.serialize_config.include_relationships = true
+	
+	world.add_entity(entity)
+	
+	# Add relationship
+	var other_entity = Entity.new()
+	other_entity.name = "OtherEntity"
+	other_entity.add_component(C_Persistent.new("Other", 60, 50.0, Vector2(110, 120), ["other_item"]))
+	world.add_entity(other_entity)
+	
+	var relationship = Relationship.new(R_ChildOf, other_entity)
+	entity.add_relationship(relationship)
+	
+	# Test 1: No explicit config should use entity config (include relationships)
+	var query = world.query.with_all([C_SerializationTest])
+	var serialized_data = ECS.serialize(query)
+	
+	var entity_data = serialized_data.entities[0]
+	assert_that(entity_data.relationships).has_size(1)  # Entity config overrides world default
+	
+	# Test 2: Explicit config should override everything
+	var explicit_config = GECSSerializeConfig.new()
+	explicit_config.include_relationships = false
+	explicit_config.include_related_entities = false
+	
+	var serialized_data_explicit = ECS.serialize(query, explicit_config)
+	assert_that(serialized_data_explicit.entities).has_size(1)  # No related entities
+	var entity_data_explicit = serialized_data_explicit.entities[0]
+	assert_that(entity_data_explicit.relationships).has_size(0)  # Explicit config overrides entity config

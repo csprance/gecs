@@ -92,8 +92,8 @@ func _on_world_exited() -> void:
 		GECSEditorDebuggerMessages.exit_world()
 
 
-func serialize(query: QueryBuilder) -> GecsData:
-	return GECSIO.serialize(query)
+func serialize(query: QueryBuilder, config: GECSSerializeConfig = null) -> GecsData:
+	return GECSIO.serialize(query, config)
 
 
 func save(gecs_data: GecsData, filepath: String, binary: bool = false) -> bool:

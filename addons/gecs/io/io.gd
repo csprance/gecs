@@ -1,7 +1,7 @@
 class_name GECSIO
 
 
-static func serialize(query: QueryBuilder) -> GecsData:
+static func serialize(query: QueryBuilder, config: GECSSerializeConfig = null) -> GecsData:
 	var entity_data_array: Array[GecsEntityData] = []
 	var processed_entities: Dictionary = {} # uuid -> bool
 	var entity_uuid_mapping: Dictionary = {} # uuid -> Entity
@@ -9,52 +9,67 @@ static func serialize(query: QueryBuilder) -> GecsData:
 	# Pass 1: Serialize entities from original query
 	var query_entities = query.execute() as Array[Entity]
 	for entity in query_entities:
-		var entity_data = _serialize_entity(entity, false)
+		var effective_config = _resolve_config(entity, config)
+		var entity_data = _serialize_entity(entity, false, effective_config)
 		entity_data_array.append(entity_data)
 		processed_entities[entity.uuid] = true
 		entity_uuid_mapping[entity.uuid] = entity
 	
-	# Pass 2: Scan relationships and auto-include referenced entities
+	# Pass 2: Scan relationships and auto-include referenced entities (if enabled)
 	var entities_to_check = query_entities.duplicate()
 	var check_index = 0
 	
 	while check_index < entities_to_check.size():
 		var entity = entities_to_check[check_index]
+		var effective_config = _resolve_config(entity, config)
 		
-		# Check all relationships of this entity
-		for relationship in entity.relationships:
-			if relationship.target is Entity:
-				var target_entity = relationship.target as Entity
-				var target_id = target_entity.uuid
-				
-				# If this entity hasn't been processed yet, auto-include it
-				if not processed_entities.has(target_id):
-					var auto_entity_data = _serialize_entity(target_entity, true)
-					entity_data_array.append(auto_entity_data)
-					processed_entities[target_id] = true
-					entity_uuid_mapping[target_id] = target_entity
+		# Only proceed if config allows including related entities
+		if effective_config.include_related_entities:
+			# Check all relationships of this entity
+			for relationship in entity.relationships:
+				if relationship.target is Entity:
+					var target_entity = relationship.target as Entity
+					var target_id = target_entity.uuid
 					
-					# Add to list for further relationship checking
-					entities_to_check.append(target_entity)
+					# If this entity hasn't been processed yet, auto-include it
+					if not processed_entities.has(target_id):
+						var target_config = _resolve_config(target_entity, config)
+						var auto_entity_data = _serialize_entity(target_entity, true, target_config)
+						entity_data_array.append(auto_entity_data)
+						processed_entities[target_id] = true
+						entity_uuid_mapping[target_id] = target_entity
+						
+						# Add to list for further relationship checking
+						entities_to_check.append(target_entity)
 		
 		check_index += 1
 	
 	return GecsData.new(entity_data_array)
 
 
+## Helper function to resolve the effective configuration for an entity
+## Priority: provided_config > entity.serialize_config > world.default_serialize_config > fallback
+static func _resolve_config(entity: Entity, provided_config: GECSSerializeConfig) -> GECSSerializeConfig:
+	if provided_config != null:
+		return provided_config
+	return entity.get_effective_serialize_config()
+
+
 ## Helper function to serialize a single entity with its components and relationships
-static func _serialize_entity(entity: Entity, auto_included: bool) -> GecsEntityData:
-	# Serialize components
+static func _serialize_entity(entity: Entity, auto_included: bool, config: GECSSerializeConfig) -> GecsEntityData:
+	# Serialize components (filtered by config)
 	var components: Array[Component] = []
 	for component in entity.components.values():
-		# Duplicate the component to avoid modifying the original
-		components.append(component.duplicate(true))
+		if config.should_include_component(component):
+			# Duplicate the component to avoid modifying the original
+			components.append(component.duplicate(true))
 	
-	# Serialize relationships
+	# Serialize relationships (if enabled by config)
 	var relationships: Array[GecsRelationshipData] = []
-	for relationship in entity.relationships:
-		var rel_data = GecsRelationshipData.from_relationship(relationship)
-		relationships.append(rel_data)
+	if config.include_relationships:
+		for relationship in entity.relationships:
+			var rel_data = GecsRelationshipData.from_relationship(relationship)
+			relationships.append(rel_data)
 	
 	return GecsEntityData.new(
 		entity.name,
@@ -114,7 +129,7 @@ static func _load_from_path(file_path: String) -> Array[Entity]:
 		uuid_to_entity[entity.uuid] = entity
 	
 	# Pass 2: Restore relationships using UUID mapping
-	for i in range(entities.size()):
+	for i in entities.size():
 		var entity = entities[i]
 		var entity_data = gecs_data.entities[i]
 		

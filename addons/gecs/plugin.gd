@@ -5,7 +5,7 @@ var gecs_editor_debugger = preload("res://addons/gecs/debug/gecs_editor_debugger
 
 
 func _enter_tree():
-	add_autoload_singleton("ECS", "res://addons/gecs/ecs.gd")
+	add_autoload_singleton("ECS", "res://addons/gecs/ecs/ecs.gd")
 	add_debugger_plugin(gecs_editor_debugger)
 	add_gecs_project_settings()
 

@@ -41,6 +41,8 @@ signal cache_invalidated
 @export var entity_nodes_root: NodePath
 ## Where are all the [System] nodes placed in the scene tree?
 @export var system_nodes_root: NodePath
+## Default serialization config for all entities in this world
+@export var default_serialize_config: GECSSerializeConfig
 
 #endregion Exported Variables
 
@@ -135,6 +137,10 @@ func _make_nodes_root(name: String) -> Node:
 ## Adds [Entity]s and [System]s from the scene tree to the [World].
 ## Called when the World node is ready or when we should re-initialize the world from the tree.
 func initialize():
+	# Initialize default serialize config if not set
+	if default_serialize_config == null:
+		default_serialize_config = GECSSerializeConfig.new()
+	
 	# if no entities/systems root node is set create them and use them. This keeps things tidy for debugging
 	entity_nodes_root = (
 		_make_nodes_root("Entities").get_path() if not entity_nodes_root else entity_nodes_root

@@ -27,7 +27,7 @@ func test_serialize_basic_entity():
 	
 	# Basic validation
 	assert_that(serialized_data).is_not_null()
-	assert_that(serialized_data.version).is_equal("0.1")
+	assert_that(serialized_data.version).is_equal("0.2")
 	assert_that(serialized_data.entities).has_size(1)
 	
 	print("Serialized data: ", JSON.stringify(serialized_data, "\t"))

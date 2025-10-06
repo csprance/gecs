@@ -54,6 +54,8 @@ signal relationship_removed(entity: Entity, relationship: Relationship)
 		if uuid == "":
 			uuid = GECSIO.uuid()
 		return uuid
+## Serialization config override for this specific entity (optional)
+@export var serialize_config: GECSSerializeConfig
 
 #endregion Exported Variables
 
@@ -112,6 +114,17 @@ func _enter_tree() -> void:
 
 
 #endregion Built-in Virtual Methods
+
+## Get the effective serialization config for this entity
+## Returns entity-specific config if set, otherwise falls back to world default
+func get_effective_serialize_config() -> GECSSerializeConfig:
+	if serialize_config != null:
+		return serialize_config
+	if ECS.world != null and ECS.world.default_serialize_config != null:
+		return ECS.world.default_serialize_config
+	# Fallback if no world or no default config
+	var fallback = GECSSerializeConfig.new()
+	return fallback
 
 #region Components
 
