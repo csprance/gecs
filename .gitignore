@@ -3,14 +3,4 @@
 /android/
 repomix-output.txt
 
-# Ignore everything in addons except for gecs
-addons/*
-!addons/gecs/
-!addons/gecs/**
-# include debug menu because we modify it for gecs
-!addons/debug_menu/
-!addons/debug_menu/**
-
-game/
-qt/
 reports/
