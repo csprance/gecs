@@ -48,6 +48,12 @@ signal relationship_removed(entity: Entity, relationship: Relationship)
 @export var enabled: bool = true
 ## [Component]s to be attached to the entity set in the editor. These will be loaded for you and added to the [Entity]
 @export var component_resources: Array[Component] = []
+## Persistent unique identifier for this entity that survives save/load cycles
+@export var uuid: String = "":
+	get:
+		if uuid == "":
+			uuid = GECSIO.uuid()
+		return uuid
 
 #endregion Exported Variables
 
@@ -96,6 +102,14 @@ func _initialize(_components: Array = []) -> void:
 
 	# Call the lifecycle method on_ready
 	on_ready()
+
+
+func _enter_tree() -> void:
+	if Engine.is_editor_hint():
+		return
+	uuid = GECSIO.uuid() if uuid == "" else uuid
+	notify_property_list_changed()
+
 
 #endregion Built-in Virtual Methods
 

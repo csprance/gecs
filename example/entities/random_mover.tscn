@@ -26,6 +26,7 @@ metadata/_custom_type_script = "uid://d0fit03sansqe"
 [node name="RandomMover" type="Node3D"]
 script = ExtResource("1_c1i3g")
 component_resources = Array[ExtResource("2_o4fpx")]([SubResource("Resource_p5wvt"), SubResource("Resource_k3wa3"), SubResource("Resource_b8ng6")])
+uuid = "f27b33f3-6327-4afa-90e9-e515dd0897be"
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.335, 0)

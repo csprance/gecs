@@ -20,14 +20,19 @@ metadata/_custom_type_script = "uid://cdu5tlyk72uu4"
 [node name="Entities" type="Node" parent="World"]
 
 [node name="RandomMover" parent="World/Entities" instance=ExtResource("3_h2yge")]
+uuid = "92cf18e3-df04-47e7-8ce6-c016ccae8291"
 
 [node name="RandomMover2" parent="World/Entities" instance=ExtResource("3_h2yge")]
+uuid = "44145f3b-4f7f-414e-ad7b-deee3dbe9faa"
 
 [node name="RandomMover3" parent="World/Entities" instance=ExtResource("3_h2yge")]
+uuid = "ea451e4f-b5c0-4ee1-a22d-368da825408d"
 
 [node name="RandomMover4" parent="World/Entities" instance=ExtResource("3_h2yge")]
+uuid = "5a6f510b-1817-44c5-a04b-1a41c5cd1aed"
 
 [node name="RandomMover5" parent="World/Entities" instance=ExtResource("3_h2yge")]
+uuid = "255d2e04-a196-4ba4-be0e-82b9c0eb5870"
 
 [node name="Systems" type="Node" parent="World"]
 

@@ -60,6 +60,8 @@ var systems: Array[System]:
 		return all_systems
 ## [Component] to [Entity] Index - This stores entities by component for efficient querying.
 var component_entity_index: Dictionary = {}
+## UUID to [Entity] registry - Prevents duplicate UUIDs and enables fast UUID lookups
+var entity_uuid_registry: Dictionary = {} # String (uuid) -> Entity
 ## Pool of QueryBuilder instances to reduce creation overhead
 var _query_builder_pool: Array[QueryBuilder] = []
 var _pool_size_limit: int = 10
@@ -196,6 +198,16 @@ func update_pause_state(paused: bool) -> void:
 ## world.add_entity(other_entity, [component_a, component_b])
 ## [/codeblock]
 func add_entity(entity: Entity, components = null, add_to_tree = true) -> void:
+	# Check for UUID collision - if entity with same UUID exists, replace it
+	var entity_uuid = entity.uuid
+	if entity_uuid in entity_uuid_registry:
+		var existing_entity = entity_uuid_registry[entity_uuid]
+		_worldLogger.debug("UUID collision detected, replacing entity: ", existing_entity.name, " with: ", entity.name)
+		remove_entity(existing_entity)
+	
+	# Register this entity's UUID
+	entity_uuid_registry[entity_uuid] = entity
+	
 	# Update index
 	_worldLogger.debug("add_entity Adding Entity to World: ", entity)
 
@@ -267,6 +279,11 @@ func remove_entity(entity) -> void:
 	entity.relationship_added.disconnect(_on_entity_relationship_added)
 	entity.relationship_removed.disconnect(_on_entity_relationship_removed)
 	
+	# Remove from UUID registry
+	var entity_uuid = entity.uuid
+	if entity_uuid in entity_uuid_registry and entity_uuid_registry[entity_uuid] == entity:
+		entity_uuid_registry.erase(entity_uuid)
+	
 	# Destroy entity normally
 	entity.on_destroy()
 	entity.queue_free()
@@ -274,6 +291,15 @@ func remove_entity(entity) -> void:
 	# Clear our query cache when component structure changes
 	_query_result_cache.clear()
 	cache_invalidated.emit()
+
+
+## Removes an Array of [Entity] from the world.[br]
+## [param entity] The Array of [Entity] to remove.[br]
+## [b]Example:[/b]
+##      [codeblock]world.remove_entities([player_entity, other_entity])[/codeblock]
+func remove_entities(_entities: Array) -> void:
+	for _entity in _entities:
+		remove_entity(_entity)
 
 
 ## Disable an [Entity] from the world. Disabled entities don't run process or physics,[br]
@@ -300,6 +326,15 @@ func disable_entity(entity) -> Entity:
 		GECSEditorDebuggerMessages.entity_disabled(entity)
 	return entity
 
+
+## Disable an Array of [Entity] from the world. Disabled entities don't run process or physics,[br]
+## are hidden and removed the entities list[br]
+## [param entity] The [Entity] to disable.[br]
+## [b]Example:[/b]
+##      [codeblock]world.disable_entities([player_entity, other_entity])[/codeblock]
+func disable_entities(_entities: Array) -> void:
+	for _entity in _entities:
+		disable_entity(_entity)
 
 ## Enables a single [Entity] to the world.[br]
 ## [param entity] The [Entity] to enable.[br]
@@ -339,6 +374,19 @@ func enable_entity(entity: Entity, components = null) -> void:
 	if ECS.debug:
 		GECSEditorDebuggerMessages.entity_enabled(entity)
 
+
+## Find an entity by its persistent UUID
+## [param uuid] The uuid to search for
+## [return] The Entity with matching UUID, or null if not found
+func get_entity_by_uuid(uuid: String) -> Entity:
+	return entity_uuid_registry.get(uuid, null)
+
+
+## Check if an entity with the given UUID exists in the world
+## [param uuid] The uuid to check
+## [return] true if an entity with this UUID exists, false otherwise  
+func has_entity_with_uuid(uuid: String) -> bool:
+	return uuid in entity_uuid_registry
 
 #region Systems
 
@@ -396,7 +444,21 @@ func remove_system(system, topo_sort: bool = false) -> void:
 		ArrayExtensions.topological_sort(systems_by_group)
 
 
-## Remove a bunch of systems by there group name
+## Removes an Array of [System] from the world.[br]
+## [param system] The Array of [System] to remove.[br]
+## [b]Example:[/b]
+##      [codeblock]world.remove_systems([movement_system, other_system])[/codeblock]
+func remove_systems(_systems: Array, topo_sort: bool = false) -> void:
+	for _system in _systems:
+		remove_system(_system)
+	if topo_sort:
+		ArrayExtensions.topological_sort(systems_by_group)
+
+
+## Removes all systems in a group from the world.[br]
+## [param group] The group name of the systems to remove.[br]
+## [b]Example:[/b]
+##      [codeblock]world.remove_system_group("Gameplay")[/codeblock]
 func remove_system_group(group: String, topo_sort: bool = false) -> void:
 	if systems_by_group.has(group):
 		for system in systems_by_group[group]:
