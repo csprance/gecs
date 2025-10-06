@@ -41,7 +41,7 @@ manager/music/bus="Music"
 
 [autoload]
 
-ECS="*res://addons/gecs/ecs.gd"
+ECS="*res://addons/gecs/ecs/ecs.gd"
 DebugMenu="*res://addons/debug_menu/debug_menu.tscn"
 
 [debug]
@@ -61,7 +61,7 @@ movie_writer/movie_file="D:/code/zamn/qt/recordings/godot-movie-recording.avi"
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/debug_menu/plugin.cfg", "res://addons/gecs/plugin.cfg", "res://addons/gdUnit4/plugin.cfg")
+enabled=PackedStringArray("res://addons/debug_menu/plugin.cfg", "res://addons/gdUnit4/plugin.cfg", "res://addons/gecs/plugin.cfg")
 
 [file_customization]
 
@@ -79,10 +79,6 @@ folder_colors={
 [gdunit4]
 
 ui/inspector/tree_view_mode=1
-
-[gecs]
-
-log_level=4
 
 [global_group]
 

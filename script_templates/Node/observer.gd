@@ -1,3 +1,4 @@
+# meta-description: An Observer watches for changes to a specific type of Component on all Entities in the world.
 class_name _CLASS_
 extends Observer
 

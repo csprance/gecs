@@ -1,3 +1,4 @@
+# meta-description: A System processes all Entities that match a query.
 class_name _CLASS_
 extends System
 

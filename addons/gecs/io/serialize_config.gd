@@ -6,8 +6,8 @@ extends Resource
 
 ## Include all components (true) or only specific components (false)
 @export var include_all_components: bool = true
-## Which components to include in serialization (only used when include_all_components = false)
-@export var components: Array[Component] = []
+## Which component types to include in serialization (only used when include_all_components = false)
+@export var components: Array = []
 ## Whether to include relationships in serialization
 @export var include_relationships: bool = true
 ## Whether to include related entities in serialization (Related entities are entities referenced by relationships from the serialized entities)
@@ -16,7 +16,8 @@ extends Resource
 
 ## Helper method to determine if a component should be included in serialization
 func should_include_component(component: Component) -> bool:
-	return include_all_components || component in components
+	var comp_type = component.get_script()
+	return include_all_components or components.any(func(type): return comp_type == type)
 
 
 ## Merge this config with another config, with the other config taking priority

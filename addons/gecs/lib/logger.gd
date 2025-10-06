@@ -2,11 +2,11 @@
 class_name GECSLogger
 extends RefCounted
 
-enum LogLevel { TRACE, DEBUG, INFO, WARNING, ERROR }
+enum LogLevel {TRACE, DEBUG, INFO, WARNING, ERROR}
 
-var current_level: LogLevel = ProjectSettings.get_setting("gecs/log_level", LogLevel.DEBUG)
+var current_level: LogLevel = ProjectSettings.get_setting(GecsSettings.SETTINGS_LOG_LEVEL, LogLevel.DEBUG)
 var current_domain: String = ""
-var disabled : = false
+var disabled := false
 
 
 func set_level(level: LogLevel):

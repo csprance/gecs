@@ -1,3 +1,4 @@
+# meta-description: Components are  data containers and contain no functionality.
 class_name _CLASS_
 extends Component
 

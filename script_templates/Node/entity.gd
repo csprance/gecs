@@ -1,3 +1,5 @@
+# meta-description: An Entity represents a "Thing" in your game world. It is a container for components.
+@tool
 class_name _CLASS_
 extends Entity
 
