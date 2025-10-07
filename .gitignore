@@ -1,6 +1,0 @@
-# Godot 4+ specific ignores
-.godot/
-/android/
-repomix-output.txt
-
-reports/
