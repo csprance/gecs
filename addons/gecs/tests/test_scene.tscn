@@ -1,6 +1,6 @@
 [gd_scene load_steps=3 format=3 uid="uid://ngouye3it3qy"]
 
-[ext_resource type="Script" uid="uid://cdu5tlyk72uu4" path="res://addons/gecs/world.gd" id="1_o1k8h"]
+[ext_resource type="Script" uid="uid://cdu5tlyk72uu4" path="res://addons/gecs/ecs/world.gd" id="1_o1k8h"]
 [ext_resource type="Script" uid="uid://bcfll27sdfcpw" path="res://addons/gecs/tests/test_scene.gd" id="1_vo5ju"]
 
 [node name="Node3D" type="Node3D"]

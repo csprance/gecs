@@ -13,20 +13,54 @@ func before_test():
 
 
 func after_test():
-	# Clean up test entities
+	# Remove entities from world first to avoid orphans
+	if test_world and is_instance_valid(test_world):
+		# Remove all test entities from world first
+		for entity in test_entities:
+			if is_instance_valid(entity) and entity in test_world.entities:
+				test_world.remove_entity(entity)
+	
+	# Free all entities properly
 	for entity in test_entities:
 		if is_instance_valid(entity):
 			entity.queue_free()
 	test_entities.clear()
-
-	if test_world:
-		test_world.purge()
+	
+	# Clean up the world thoroughly
+	if test_world and is_instance_valid(test_world):
+		# Free all children entities
+		for child in test_world.get_children():
+			if is_instance_valid(child):
+				child.queue_free()
+		
+		# Clear world data structures
+		test_world.entities.clear()
+		test_world.systems.clear()
+		test_world.component_entity_index.clear()
+		test_world.relationship_entity_index.clear()
+		test_world.reverse_relationship_index.clear()
+		test_world._query_result_cache.clear()
+		
+		# Remove and free the world
+		remove_child(test_world)
+		test_world.queue_free()
 		test_world = null
+	
+	# Force comprehensive cleanup
+	await force_comprehensive_cleanup()
+	
+	# Call parent cleanup
+	super.after_test()
 
 
 func after():
-	# Save results
-	save_performance_results("res://reports/component_performance_results.json")
+	# Save results using new timestamped format
+	save_performance_results("component-performance")
+	
+	# Optionally compare with historical data and print report
+	var comparison = compare_with_historical("component-performance")
+	if not comparison.is_empty():
+		print_performance_comparison(comparison)
 
 ## Test component addition performance
 func test_component_addition_small_scale():
@@ -43,6 +77,9 @@ func test_component_addition_small_scale():
 
 	benchmark("Component_Addition_Small_Scale", add_components)
 	print_performance_results()
+
+	# Immediate cleanup after benchmark to prevent orphan nodes
+	cleanup_test_entities_immediate(test_entities, test_world)
 
 	# Assert reasonable performance (should add components to 100 entities in under 10ms)
 	assert_performance_threshold(
@@ -64,6 +101,9 @@ func test_component_addition_medium_scale():
 
 	benchmark("Component_Addition_Medium_Scale", add_components)
 	print_performance_results()
+
+	# Immediate cleanup after benchmark to prevent orphan nodes
+	cleanup_test_entities_immediate(test_entities, test_world)
 
 	# Assert reasonable performance (should add components to 1000 entities in under 75ms)
 	assert_performance_threshold(
@@ -88,6 +128,9 @@ func test_multiple_component_addition():
 
 	benchmark("Multiple_Component_Addition", add_multiple_components)
 	print_performance_results()
+
+	# Immediate cleanup after benchmark to prevent orphan nodes
+	cleanup_test_entities_immediate(test_entities, test_world)
 
 	# Assert reasonable performance (should add 3 components to 100 entities in under 20ms)
 	assert_performance_threshold(
@@ -114,6 +157,9 @@ func test_component_removal_small_scale():
 
 	benchmark("Component_Removal_Small_Scale", remove_components)
 	print_performance_results()
+
+	# Immediate cleanup after benchmark to prevent orphan nodes
+	cleanup_test_entities_immediate(test_entities, test_world)
 
 	# Assert reasonable performance (should remove components from 100 entities in under 10ms)
 	assert_performance_threshold(
@@ -149,6 +195,9 @@ func test_component_lookup_performance():
 	benchmark("Component_Lookup_Performance", lookup_components)
 	print_performance_results()
 
+	# Immediate cleanup after benchmark to prevent orphan nodes
+	cleanup_test_entities_immediate(test_entities, test_world)
+
 	# Assert reasonable performance (should lookup components in 1000 entities in under 30ms)
 	assert_performance_threshold("Component_Lookup_Performance", 30.0, "Component lookup too slow")
 
@@ -178,6 +227,9 @@ func test_component_has_check_performance():
 	benchmark("Component_Has_Check_Performance", check_components)
 	print_performance_results()
 
+	# Immediate cleanup after benchmark to prevent orphan nodes
+	cleanup_test_entities_immediate(test_entities, test_world)
+
 	# Assert reasonable performance (should check components in 1000 entities in under 25ms)
 	assert_performance_threshold(
 		"Component_Has_Check_Performance", 25.0, "Component has_component check too slow"
@@ -186,8 +238,6 @@ func test_component_has_check_performance():
 
 ## Test component indexing performance (world-level)
 func test_component_indexing_performance():
-	var entities_to_add: Array[Entity] = []
-
 	# Pre-create entities with components
 	for i in MEDIUM_SCALE:
 		var entity = Entity.new()
@@ -195,15 +245,18 @@ func test_component_indexing_performance():
 		entity.add_component(C_TestA.new())
 		if i % 2 == 0:
 			entity.add_component(C_TestB.new())
-		entities_to_add.append(entity)
+		test_entities.append(entity)  # Track for cleanup
 
 	# Test adding entities (which triggers indexing)
 	var index_entities = func():
-		for entity in entities_to_add:
+		for entity in test_entities:
 			test_world.add_entity(entity, null, false)
 
 	benchmark("Component_Indexing_Performance", index_entities)
 	print_performance_results()
+
+	# Immediate cleanup after benchmark to prevent orphan nodes
+	cleanup_test_entities_immediate(test_entities, test_world)
 
 	# Verify indexing worked
 	assert_that(test_world.component_entity_index.size()).is_greater(0)
@@ -238,6 +291,9 @@ func test_bulk_component_operations():
 	benchmark("Bulk_Component_Addition", bulk_add_components)
 	print_performance_results()
 
+	# Immediate cleanup after benchmark to prevent orphan nodes
+	cleanup_test_entities_immediate(test_entities, test_world)
+
 	# Assert reasonable performance (should bulk add components to 100 entities in under 15ms)
 	assert_performance_threshold(
 		"Bulk_Component_Addition", 15.0, "Bulk component addition too slow"
@@ -265,6 +321,9 @@ func test_component_property_access():
 	benchmark("Component_Property_Access", access_properties)
 	print_performance_results()
 
+	# Immediate cleanup after benchmark to prevent orphan nodes
+	cleanup_test_entities_immediate(test_entities, test_world)
+
 	# Assert reasonable performance (should access properties in 100 entities in under 10ms)
 	assert_performance_threshold(
 		"Component_Property_Access", 10.0, "Component property access too slow"
@@ -289,6 +348,9 @@ func test_component_path_cache_performance():
 
 	benchmark("Component_Path_Cache_Performance", cache_test)
 	print_performance_results()
+
+	# Immediate cleanup after benchmark to prevent orphan nodes
+	cleanup_test_entities_immediate(test_entities, test_world)
 
 	# Assert reasonable performance (should handle 1000 add/remove cycles in under 100ms)
 	assert_performance_threshold(

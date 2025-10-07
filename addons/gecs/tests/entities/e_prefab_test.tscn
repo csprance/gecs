@@ -1,7 +1,7 @@
 [gd_scene load_steps=11 format=3 uid="uid://tpqdridb86dk"]
 
 [ext_resource type="Script" uid="uid://dmjuo67pvwh3d" path="res://addons/gecs/tests/entities/e_prefab_test.gd" id="1_7nbii"]
-[ext_resource type="Script" uid="uid://b6k13gc2m4e5s" path="res://addons/gecs/component.gd" id="2_ju2ix"]
+[ext_resource type="Script" uid="uid://b6k13gc2m4e5s" path="res://addons/gecs/ecs/component.gd" id="2_ju2ix"]
 [ext_resource type="Script" uid="uid://5antadqj7v84" path="res://addons/gecs/tests/components/c_test_a.gd" id="3_8o2uq"]
 [ext_resource type="Script" uid="uid://c6lvbdptfldrg" path="res://addons/gecs/tests/components/c_test_b.gd" id="4_t4812"]
 

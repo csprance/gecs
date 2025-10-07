@@ -10,4 +10,6 @@ func process_all(_es: Array, delta: float):
 	timer -= delta
 	if timer <= 0.0:
 		timer = batch_interval
-		ECS.world.add_entity(random_mover_scene.instantiate() as Entity)
+		var entity = random_mover_scene.instantiate() as Entity
+		entity.uuid = '' 
+		ECS.world.add_entity(entity)

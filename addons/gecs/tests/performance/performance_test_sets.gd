@@ -18,8 +18,13 @@ func after_test():
 
 
 func after():
-	# Save results
-	save_performance_results("res://reports/set_performance_results.json")
+	# Save results using new timestamped format
+	save_performance_results("set-performance")
+	
+	# Optionally compare with historical data and print report
+	var comparison = compare_with_historical("set-performance")
+	if not comparison.is_empty():
+		print_performance_comparison(comparison)
 	
 ## Create test arrays with various sizes and overlap characteristics
 func create_test_arrays(size1: int, size2: int, overlap_percent: float = 0.5):

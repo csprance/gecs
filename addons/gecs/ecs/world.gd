@@ -280,10 +280,15 @@ func remove_entity(entity) -> void:
 	for component_key in entity.components.keys():
 		_remove_entity_from_index(entity, component_key)
 
-	entity.component_added.disconnect(_on_entity_component_added)
-	entity.component_removed.disconnect(_on_entity_component_removed)
-	entity.relationship_added.disconnect(_on_entity_relationship_added)
-	entity.relationship_removed.disconnect(_on_entity_relationship_removed)
+	# Only disconnect signals if they're actually connected
+	if entity.component_added.is_connected(_on_entity_component_added):
+		entity.component_added.disconnect(_on_entity_component_added)
+	if entity.component_removed.is_connected(_on_entity_component_removed):
+		entity.component_removed.disconnect(_on_entity_component_removed)
+	if entity.relationship_added.is_connected(_on_entity_relationship_added):
+		entity.relationship_added.disconnect(_on_entity_relationship_added)
+	if entity.relationship_removed.is_connected(_on_entity_relationship_removed):
+		entity.relationship_removed.disconnect(_on_entity_relationship_removed)
 	
 	# Remove from UUID registry
 	var entity_uuid = entity.uuid

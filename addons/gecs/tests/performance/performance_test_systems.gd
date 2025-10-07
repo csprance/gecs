@@ -21,21 +21,40 @@ func before_test():
 
 
 func after_test():
-	# Clean up test entities
+	# Free all entities properly first
 	for entity in test_entities:
 		if is_instance_valid(entity):
 			entity.queue_free()
 	test_entities.clear()
-
-	# Clean up systems
+	
+	# Clean up systems first
 	if test_system and is_instance_valid(test_system):
 		test_system.queue_free()
 	if complex_system and is_instance_valid(complex_system):
 		complex_system.queue_free()
-
-	if test_world:
-		test_world.purge()
+	
+	# Clean up the world thoroughly
+	if test_world and is_instance_valid(test_world):
+		# Free all children entities
+		for child in test_world.get_children():
+			if is_instance_valid(child):
+				child.queue_free()
+		
+		# Clear world data structures
+		test_world.entities.clear()
+		test_world.systems.clear()
+		test_world.component_entity_index.clear()
+		test_world.relationship_entity_index.clear()
+		test_world.reverse_relationship_index.clear()
+		test_world._query_result_cache.clear()
+		
+		# Remove and free the world
+		remove_child(test_world)
+		test_world.queue_free()
 		test_world = null
+	
+	# Call parent cleanup
+	super.after_test()
 
 
 ## Setup entities for system processing tests
@@ -165,10 +184,19 @@ func test_multiple_systems_processing():
 ## Test system processing with different entity counts
 func test_system_processing_scalability():
 	var scales = [100, 500, 1000, 2000]
+	var scale_results = {}
 
 	for scale in scales:
-		after_test()
-		before_test()
+		# Clean up previous test
+		test_entities.clear()
+		if test_world and is_instance_valid(test_world):
+			remove_child(test_world)
+			test_world.queue_free()
+		
+		# Setup fresh test world
+		test_world = create_test_world()
+		test_system = PerformanceTestSystem.new()
+		test_system.name = "PerformanceTestSystem"
 
 		setup_entities_for_systems(scale)
 		test_world.add_system(test_system)
@@ -177,7 +205,8 @@ func test_system_processing_scalability():
 		var test_name = "System_Processing_Scale_%d" % scale
 		var process_at_scale = func(): test_world.process(0.016)
 
-		benchmark(test_name, process_at_scale)
+		var result = benchmark(test_name, process_at_scale)
+		scale_results[scale] = result.avg_time_ms
 
 		# Verify processing happened
 		assert_that(test_system.process_count).is_greater(0)
@@ -185,17 +214,18 @@ func test_system_processing_scalability():
 	print_performance_results()
 
 	# Check that performance scales reasonably (not exponentially)
-	var scale_100_time = performance_results["System_Processing_Scale_100"].avg_time_ms
-	var scale_2000_time = performance_results["System_Processing_Scale_2000"].avg_time_ms
+	if scale_results.has(100) and scale_results.has(2000):
+		var scale_100_time = scale_results[100]
+		var scale_2000_time = scale_results[2000]
 
-	# 20x entities should not take more than 40x time (allowing for some overhead)
-	var max_expected_time = scale_100_time * 40
-	assert_that(scale_2000_time).is_less(max_expected_time).override_failure_message(
-		(
-			"System processing does not scale well: 100 entities=%f ms, 2000 entities=%f ms"
-			% [scale_100_time, scale_2000_time]
+		# 20x entities should not take more than 40x time (allowing for some overhead)
+		var max_expected_time = scale_100_time * 40
+		assert_that(scale_2000_time).is_less(max_expected_time).override_failure_message(
+			(
+				"System processing does not scale well: 100 entities=%f ms, 2000 entities=%f ms"
+				% [scale_100_time, scale_2000_time]
+			)
 		)
-	)
 
 
 ## Test system processing with no matching entities
@@ -322,5 +352,10 @@ func test_inactive_system_performance():
 
 ## Run all system performance tests
 func after():
-	# Save results
-	save_performance_results("res://reports/system_performance_results.json")
+	# Save results using new timestamped format
+	save_performance_results("system-performance")
+	
+	# Optionally compare with historical data and print report
+	var comparison = compare_with_historical("system-performance")
+	if not comparison.is_empty():
+		print_performance_comparison(comparison)

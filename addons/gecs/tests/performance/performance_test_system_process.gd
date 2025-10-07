@@ -15,21 +15,40 @@ func before_test():
 
 
 func after_test():
-	# Clean up test entities
+	# Free all entities properly first
 	for entity in test_entities:
 		if is_instance_valid(entity):
 			entity.queue_free()
 	test_entities.clear()
-
-	# Clean up systems
+	
+	# Clean up systems first
 	for system in test_systems:
 		if system and is_instance_valid(system):
 			system.queue_free()
 	test_systems.clear()
-
-	if test_world:
-		test_world.purge()
+	
+	# Clean up the world thoroughly
+	if test_world and is_instance_valid(test_world):
+		# Free all children entities
+		for child in test_world.get_children():
+			if is_instance_valid(child):
+				child.queue_free()
+		
+		# Clear world data structures
+		test_world.entities.clear()
+		test_world.systems.clear()
+		test_world.component_entity_index.clear()
+		test_world.relationship_entity_index.clear()
+		test_world.reverse_relationship_index.clear()
+		test_world._query_result_cache.clear()
+		
+		# Remove and free the world
+		remove_child(test_world)
+		test_world.queue_free()
 		test_world = null
+	
+	# Call parent cleanup
+	super.after_test()
 
 
 ## Setup entities for system processing tests
