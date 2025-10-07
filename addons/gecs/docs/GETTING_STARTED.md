@@ -86,6 +86,7 @@ func _init(vel: Vector3 = Vector3.ZERO):
 ```
 
 > 💡 **Key Principle**: Components only hold data, never logic. Think of them as data containers.
+> ⚠️ **Important Note**: Components `_init` function requires that all arguments have a default value or Godot will crash.
 
 ## ⚙️ Step 4: Your First System (1 minute)
 
