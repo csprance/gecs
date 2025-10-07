@@ -34,8 +34,8 @@ extends Entity
 func on_ready():
     # Sync the entity's scene position to the Transform component
     if has_component(C_Transform):
-        var transform_comp = get_component(C_Transform)
-        transform_comp.position = global_position
+        var c_trs = get_component(C_Transform) as C_Transform
+        c_trs.position = self.global_position
 ```
 
 > 💡 **What's happening?** Entities are containers for components. We're creating a player entity that will sync its transform with the component system.
@@ -103,18 +103,18 @@ func query():
     return q.with_all([C_Transform, C_Velocity])
 
 func process(entity: Entity, delta: float):
-    var transform_comp = entity.get_component(C_Transform)
-    var velocity_comp = entity.get_component(C_Velocity)
+    var c_trs = entity.get_component(C_Transform) as C_Transform
+    var c_velocity = entity.get_component(C_Velocity) as C_Velocity
     
     # Move the entity based on its velocity
-    transform_comp.position += velocity_comp.velocity * delta
+    c_trs.position += c_velocity.velocity * delta
     
     # Update the actual entity position in the scene
-    entity.global_position = transform_comp.position
+    entity.global_position = c_trs.position
     
     # Bounce off screen edges (simple example)
-    if transform_comp.position.x > 10 or transform_comp.position.x < -10:
-        velocity_comp.velocity.x *= -1
+    if c_trs.position.x > 10 or c_trs.position.x < -10:
+        c_velocity.velocity.x *= -1
 ```
 
 > 💡 **System Logic**: Query finds entities with required components, process() runs the movement logic on each entity every frame.
@@ -135,14 +135,14 @@ func _ready():
     ECS.world = world
     
     # Create a moving player entity
-    var player = Player.new()
-    player.add_components([
+    var e_player = Player.new()
+    e_player.add_components([
         C_Health.new(100),
         C_Transform.new(),
         C_Velocity.new(Vector3(2, 0, 0))  # Move right at 2 units/second
     ])
-    add_child(player)  # Add to scene tree
-    ECS.world.add_entity(player)  # Add to ECS world
+    add_child(e_player)  # Add to scene tree
+    ECS.world.add_entity(e_player)  # Add to ECS world
     
     # Create the movement system
     var movement_system = MovementSystem.new()
@@ -194,8 +194,8 @@ func define_components() -> Array:
 func on_ready():
     # Sync scene position to component
     if has_component(C_Transform):
-        var transform_comp = get_component(C_Transform)
-        transform_comp.position = global_position
+        var c_trs = get_component(C_Transform) as C_Transform
+        c_trs.position = self.global_position
 ```
 
 ### 2. Organize Your Main Scene
