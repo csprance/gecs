@@ -81,9 +81,10 @@ extends Entity
 
 func on_ready():
     # Sync transform from scene to component
-    if has_component(C_Transform):
-        var transform_comp = get_component(C_Transform)
-        transform_comp.transform = global_transform
+    var c_trs = get_component(C_Transform) as C_Transform
+    if not c_trs:
+        return
+    transform_comp.transform = self.global_transform # This works because the TSCN base type is Node3D and we extend Node3D with Entity (Which itself extends from Node)
 ```
 
 ### Entity Lifecycle
@@ -133,14 +134,14 @@ extends Entity
 
 func on_ready():
     # Connect scene nodes to components
-    var sprite_comp = get_component(C_Sprite)
-    if sprite_comp:
+    var c_sprite = get_component(C_Sprite)
+    if c_sprite:
         sprite_comp.mesh_instance = mesh_instance
 
     # Sync editor-placed transform to component
-    if has_component(C_Transform):
-        var transform_comp = get_component(C_Transform)
-        transform_comp.transform = global_transform
+    var c_trs = get_component(C_Transform)
+    if c_trs:
+        transform_comp.transform = self.global_transform
 ```
 
 ## 📦 Components
@@ -300,16 +301,22 @@ func process(entity: Entity, delta: float):
 **Batch Processing (More Efficient):**
 
 ```gdscript
-class_name TransformSystem
+class_name VelocitySystem
 extends System
 
 func query() -> QueryBuilder:
-    return q.with_all([C_Transform])
+	return q.with_all([C_Velocity])
+	
 
-func process_all(entities: Array, _delta):
-    var transforms = ECS.get_components(entities, C_Transform)
-    for i in range(entities.size()):
-        entities[i].global_transform = transforms[i].transform
+func process_all(entities: Array, delta: float) -> bool:
+	for entity in entities:
+		var velocity_component: C_Velocity = entity.get_component(C_Velocity)
+		# Update the entity's position based on its velocity
+		var position: Vector3 = entity.transform.origin
+		position += velocity_component.velocity * delta
+		entity.transform.origin = position
+	return true # Return true to indicate processing was successful
+
 ```
 
 ### Sub-Systems
@@ -328,19 +335,19 @@ func sub_systems():
     ]
 
 func damage_entities(entity: Entity, delta: float):
-    var health = entity.get_component(C_Health)
-    var damage = entity.get_component(C_Damage)
-    health.current -= damage.amount
-    entity.remove_component(damage)
+    var c_health = entity.get_component(C_Health)
+    var c_damage = entity.get_component(C_Damage)
+    c_health.current -= c_damage.amount
+    entity.remove_component(c_damage)
     
     if health.current <= 0:
         entity.add_component(C_Dead.new())
 
 func regenerate_health(entities: Array, delta: float):
     # Batch process health regeneration
-    var healths = ECS.get_components(entities, C_Health)
-    for health in healths:
-        health.current = min(health.current + 1 * delta, health.maximum)
+    for ent in entities:
+        var c_health = entity.get_component(C_Health)
+        c_health.current = min(c_health.current + 1 * delta, c_health.maximum)
 ```
 
 ### System Dependencies
