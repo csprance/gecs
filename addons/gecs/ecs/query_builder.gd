@@ -74,29 +74,11 @@ func clear():
 	return self
 
 
-## Helper to process components list that might contain queries
-func _process_component_list(components: Array) -> Dictionary:
-	var result := {"components": [], "queries": []}
-
-	for component in components:
-		if component is Dictionary:
-			# Handle component query case
-			for component_type in component:
-				result.components.append(component_type)
-				result.queries.append(component[component_type])
-		else:
-			# Handle regular component case
-			result.components.append(component)
-			result.queries.append({}) # Empty query for regular components
-
-	return result
-
-
 ## Finds entities with all of the provided components.[br]
 ## [param components] An [Array] of [Component] classes.[br]
 ## [param returns]: [QueryBuilder] instance for chaining.
 func with_all(components: Array = []) -> QueryBuilder:
-	var processed = _process_component_list(components)
+	var processed = ComponentQueryMatcher.process_component_list(components)
 	_all_components = processed.components
 	_all_components_queries = processed.queries
 	_cache_valid = false
@@ -107,7 +89,7 @@ func with_all(components: Array = []) -> QueryBuilder:
 ## [param components] An [Array] of [Component] classes.[br]
 ## [param reutrns] [QueryBuilder] instance for chaining.
 func with_any(components: Array = []) -> QueryBuilder:
-	var processed = _process_component_list(components)
+	var processed = ComponentQueryMatcher.process_component_list(components)
 	_any_components = processed.components
 	_any_components_queries = processed.queries
 	_cache_valid = false
@@ -126,18 +108,18 @@ func with_none(components: Array = []) -> QueryBuilder:
 	return self
 
 
-## Finds entities with specific relationships using strong matching (exact component data).
-## [br][b]Strong Matching:[/b] Components must have identical data using [code]equals()[/code] method.
-## [br]For weak matching (component type only), use [method Entity.has_relationship] with [code]weak=true[/code].
+## Finds entities with specific relationships using weak matching by default (component type and queries).
+## [br][b]Weak Matching (default):[/b] Components match by type and component queries are evaluated.
+## [br]For strong matching (exact component data), use [method Entity.has_relationship] with [code]weak=false[/code].
 func with_relationship(relationships: Array = []) -> QueryBuilder:
 	_relationships = relationships
 	_cache_valid = false
 	return self
 
 
-## Entities must not have any of the provided relationships using strong matching (exact component data).
-## [br][b]Strong Matching:[/b] Components must have identical data using [code]equals()[/code] method.
-## [br]For weak matching (component type only), use [method Entity.has_relationship] with [code]weak=true[/code].
+## Entities must not have any of the provided relationships using weak matching by default (component type and queries).
+## [br][b]Weak Matching (default):[/b] Components match by type and component queries are evaluated.
+## [br]For strong matching (exact component data), use [method Entity.has_relationship] with [code]weak=false[/code].
 func without_relationship(relationships: Array = []) -> QueryBuilder:
 	_exclude_relationships = relationships
 	_cache_valid = false
@@ -290,7 +272,7 @@ func _filter_entities_by_queries(
 			for i in range(components.size()):
 				var component = entity.get_component(components[i])
 				var query = queries[i]
-				if not _matches_component_query(component, query):
+				if not ComponentQueryMatcher.matches_query(component, query):
 					matches = false
 					break
 			if matches:
@@ -300,7 +282,7 @@ func _filter_entities_by_queries(
 			for i in range(components.size()):
 				var component = entity.get_component(components[i])
 				var query = queries[i]
-				if component and _matches_component_query(component, query):
+				if component and ComponentQueryMatcher.matches_query(component, query):
 					filtered.append(entity)
 					break
 	return filtered
@@ -310,54 +292,9 @@ func _filter_entities_by_queries(
 func _entity_matches_any_query(entity: Entity, components: Array, queries: Array) -> bool:
 	for i in range(components.size()):
 		var component = entity.get_component(components[i])
-		if component and _matches_component_query(component, queries[i]):
+		if component and ComponentQueryMatcher.matches_query(component, queries[i]):
 			return true
 	return false
-
-
-## Helper method to check if a component's properties match a query
-func _matches_component_query(component: Component, query: Dictionary) -> bool:
-	if query.is_empty():
-		return true
-
-	for property in query:
-		if not component.get(property):
-			return false
-
-		var property_value = component.get(property)
-		var property_query = query[property]
-
-		for operator in property_query:
-			match operator:
-				"func":
-					if not property_query[operator].call(property_value):
-						return false
-				"_eq":
-					if property_value != property_query[operator]:
-						return false
-				"_gt":
-					if property_value <= property_query[operator]:
-						return false
-				"_lt":
-					if property_value >= property_query[operator]:
-						return false
-				"_gte":
-					if property_value < property_query[operator]:
-						return false
-				"_lte":
-					if property_value > property_query[operator]:
-						return false
-				"_ne":
-					if property_value == property_query[operator]:
-						return false
-				"_nin":
-					if property_value in property_query[operator]:
-						return false
-				"_in":
-					if not (property_value in property_query[operator]):
-						return false
-
-	return true
 
 
 ## Filters a provided list of entities using the current query criteria.[br]

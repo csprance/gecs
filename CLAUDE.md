@@ -197,6 +197,11 @@ entity.add_relationship(Relationship.new(R_ChildOf, parent_entity))
 
 # Query relationships
 q.with_relationship([R_ChildOf])
+
+# Remove relationships with limits (NEW in v5.1+)
+entity.remove_relationship(Relationship.new(C_Damage.new(), null), 1)  # Remove 1 damage
+entity.remove_relationship(Relationship.new(C_Buff.new(), null), 3)    # Remove up to 3 buffs
+entity.remove_relationship(Relationship.new(C_Effect.new(), null))     # Remove all effects (default)
 ```
 
 ## Common Patterns

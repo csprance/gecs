@@ -94,6 +94,11 @@ e_heather.add_relationship(Relationship.new(C_Eats.new(5), e_apple))    # heathe
 
 # Remove relationships
 e_alice.remove_relationship(Relationship.new(C_Loves.new(), e_heather)) # alice no longer loves heather
+
+# Remove with limits (NEW)
+e_player.remove_relationship(Relationship.new(C_Poison.new(), null), 1)  # Remove only 1 poison stack
+e_enemy.remove_relationship(Relationship.new(C_Buff.new(), null), 3)     # Remove up to 3 buffs
+e_hero.remove_relationship(Relationship.new(C_Damage.new(), null), -1)   # Remove all damage (default)
 ```
 
 ## 🔍 Relationship Queries
@@ -248,6 +253,235 @@ ECS.world.query.with_reverse_relationship([Relationship.new(C_IsAttacking.new())
 ECS.world.query.with_reverse_relationship([Relationship.new(C_Eats.new(), ECS.wildcard)])
 ```
 
+## 🎛️ Limited Relationship Removal
+
+> **Control exactly how many relationships to remove for fine-grained management**
+
+The `remove_relationship()` method now supports a **limit parameter** that allows you to control exactly how many matching relationships to remove. This is essential for stack-based systems, partial healing, inventory management, and fine-grained effect control.
+
+### Basic Syntax
+
+```gdscript
+entity.remove_relationship(relationship, limit)
+```
+
+**Limit Values:**
+- `limit = -1` (default): Remove **all** matching relationships
+- `limit = 0`: Remove **no** relationships (useful for testing/validation)
+- `limit = 1`: Remove **one** matching relationship
+- `limit > 1`: Remove **up to that many** matching relationships
+
+### Core Use Cases
+
+#### 1. **Stack-Based Systems**
+
+Perfect for buff/debuff stacks, damage over time effects, or any system where effects can stack:
+
+```gdscript
+# Poison stack system
+class_name C_PoisonStack extends Component
+@export var damage_per_tick: float = 5.0
+
+# Apply poison stacks
+entity.add_relationship(Relationship.new(C_PoisonStack.new(3.0), null))
+entity.add_relationship(Relationship.new(C_PoisonStack.new(3.0), null))
+entity.add_relationship(Relationship.new(C_PoisonStack.new(3.0), null))
+entity.add_relationship(Relationship.new(C_PoisonStack.new(3.0), null))  # 4 poison stacks
+
+# Antidote removes 2 poison stacks
+entity.remove_relationship(Relationship.new(C_PoisonStack.new(), null), 2)
+# Entity now has 2 poison stacks remaining
+
+# Strong antidote removes all poison
+entity.remove_relationship(Relationship.new(C_PoisonStack.new(), null))  # Default: remove all
+```
+
+#### 2. **Partial Healing Systems**
+
+Control damage removal for gradual healing or partial repair:
+
+```gdscript
+# Multiple damage sources on entity
+entity.add_relationship(Relationship.new(C_Damage.new(), C_FireDamage.new(25)))
+entity.add_relationship(Relationship.new(C_Damage.new(), C_FireDamage.new(15)))
+entity.add_relationship(Relationship.new(C_Damage.new(), C_SlashDamage.new(30)))
+entity.add_relationship(Relationship.new(C_Damage.new(), C_PoisonDamage.new(10)))
+
+# Healing potion removes one damage source
+entity.remove_relationship(Relationship.new(C_Damage.new(), null), 1)
+
+# Fire resistance removes only fire damage (up to 2 sources)
+entity.remove_relationship(Relationship.new(C_Damage.new(), C_FireDamage), 2)
+
+# Full heal removes all damage
+entity.remove_relationship(Relationship.new(C_Damage.new(), null))  # All damage gone
+```
+
+#### 3. **Inventory and Resource Management**
+
+Handle item stacks, resource consumption, and crafting materials:
+
+```gdscript
+# Item stack system
+class_name C_HasItem extends Component
+class_name C_HealthPotion extends Component
+@export var healing_amount: int = 50
+
+# Player has multiple health potions
+entity.add_relationship(Relationship.new(C_HasItem.new(), C_HealthPotion.new(50)))
+entity.add_relationship(Relationship.new(C_HasItem.new(), C_HealthPotion.new(50)))
+entity.add_relationship(Relationship.new(C_HasItem.new(), C_HealthPotion.new(50)))
+entity.add_relationship(Relationship.new(C_HasItem.new(), C_HealthPotion.new(50)))
+
+# Use one health potion
+entity.remove_relationship(Relationship.new(C_HasItem.new(), C_HealthPotion), 1)
+
+# Vendor buys 2 health potions
+entity.remove_relationship(Relationship.new(C_HasItem.new(), C_HealthPotion), 2)
+
+# Drop all potions
+entity.remove_relationship(Relationship.new(C_HasItem.new(), C_HealthPotion))
+```
+
+#### 4. **Buff/Debuff Management**
+
+Fine-grained control over temporary effects:
+
+```gdscript
+# Multiple speed buffs from different sources
+entity.add_relationship(Relationship.new(C_Buff.new(), C_SpeedBuff.new(1.2, 10.0)))  # Boots
+entity.add_relationship(Relationship.new(C_Buff.new(), C_SpeedBuff.new(1.5, 5.0)))   # Spell
+entity.add_relationship(Relationship.new(C_Buff.new(), C_SpeedBuff.new(1.1, 30.0)))  # Passive
+
+# Dispel magic removes one buff
+entity.remove_relationship(Relationship.new(C_Buff.new(), null), 1)
+
+# Mass dispel removes up to 3 buffs
+entity.remove_relationship(Relationship.new(C_Buff.new(), null), 3)
+
+# Purge removes all buffs
+entity.remove_relationship(Relationship.new(C_Buff.new(), null))
+```
+
+### Advanced Examples
+
+#### Component Query + Limit Combination
+
+Combine component queries with limits for precise control:
+
+```gdscript
+# Remove only high-damage effects (damage > 20), up to 2 of them
+entity.remove_relationship(
+    Relationship.new({C_Damage: {"damage_amount": {"_gt": 20}}}, null), 
+    2
+)
+
+# Remove poison effects with duration < 5 seconds, limit to 1
+entity.remove_relationship(
+    Relationship.new({C_PoisonEffect: {"duration": {"_lt": 5.0}}}, null),
+    1
+)
+
+# Remove all fire damage regardless of amount (no limit)
+entity.remove_relationship(
+    Relationship.new(C_Damage.new(), C_FireDamage),
+    -1
+)
+```
+
+#### System Integration
+
+Integrate limited removal into your game systems:
+
+```gdscript
+class_name HealingSystem extends System
+
+func heal_entity(entity: Entity, healing_power: int):
+    """Remove damage based on healing power"""
+    if healing_power <= 0:
+        return
+    
+    # Partial healing - remove damage effects based on healing power
+    var damage_to_remove = min(healing_power, get_damage_count(entity))
+    entity.remove_relationship(Relationship.new(C_Damage.new(), null), damage_to_remove)
+    
+    print("Healed ", damage_to_remove, " damage effects")
+
+func get_damage_count(entity: Entity) -> int:
+    return entity.get_relationships(Relationship.new(C_Damage.new(), null)).size()
+
+class_name CleanseSystem extends System
+
+func cleanse_entity(entity: Entity, cleanse_strength: int):
+    """Remove debuffs based on cleanse strength"""
+    match cleanse_strength:
+        1:  # Weak cleanse
+            entity.remove_relationship(Relationship.new(C_Debuff.new(), null), 1)
+        2:  # Medium cleanse  
+            entity.remove_relationship(Relationship.new(C_Debuff.new(), null), 3)
+        3:  # Strong cleanse
+            entity.remove_relationship(Relationship.new(C_Debuff.new(), null))  # All debuffs
+
+class_name CraftingSystem extends System
+
+func consume_materials(entity: Entity, recipe: Dictionary):
+    """Consume specific amounts of crafting materials"""
+    for material_type in recipe:
+        var amount_needed = recipe[material_type]
+        entity.remove_relationship(
+            Relationship.new(C_HasMaterial.new(), material_type), 
+            amount_needed
+        )
+```
+
+### Error Handling and Validation
+
+The limit parameter provides built-in safeguards:
+
+```gdscript
+# Safe operations - won't crash if fewer relationships exist than requested
+entity.remove_relationship(Relationship.new(C_Buff.new(), null), 100)  # Removes all available, won't error
+
+# Validation operations
+entity.remove_relationship(Relationship.new(C_Damage.new(), null), 0)  # Removes nothing - useful for testing
+
+# Check before removal
+var damage_count = entity.get_relationships(Relationship.new(C_Damage.new(), null)).size()
+if damage_count > 0:
+    entity.remove_relationship(Relationship.new(C_Damage.new(), null), min(3, damage_count))
+```
+
+### Performance Considerations
+
+Limited removal is optimized for efficiency:
+
+```gdscript
+# ✅ Efficient - stops searching after finding enough matches
+entity.remove_relationship(Relationship.new(C_Effect.new(), null), 5)
+
+# ✅ Still efficient - reuses the same removal logic
+entity.remove_relationship(Relationship.new(C_Effect.new(), null), -1)  # Remove all
+
+# ✅ Most efficient for single removals
+entity.remove_relationship(Relationship.new(C_SpecificEffect.new(exact_data), target), 1)
+```
+
+### Integration with Multiple Relationships
+
+Works seamlessly with `remove_relationships()` for batch operations:
+
+```gdscript
+# Apply limit to multiple relationship types
+var relationships_to_remove = [
+    Relationship.new(C_Buff.new(), null),
+    Relationship.new(C_Debuff.new(), null),
+    Relationship.new(C_TemporaryEffect.new(), null)
+]
+
+# Remove up to 2 of each type
+entity.remove_relationships(relationships_to_remove, 2)
+```
+
 ## 🎮 Game Examples
 
 ### Status Effect System with Component Relationships
@@ -349,9 +583,30 @@ func process_speed_buffs():
 
 func remove_all_effects_from_entity(entity: Entity):
     # Remove all status effects using wildcard
-    var all_effects = entity.get_relationships(Relationship.new(C_HasEffect.new(), null))
-    for effect_rel in all_effects:
-        entity.remove_relationship(effect_rel)
+    entity.remove_relationship(Relationship.new(C_HasEffect.new(), null))
+
+func remove_some_effects_from_entity(entity: Entity, count: int):
+    # Remove a specific number of status effects using limit parameter
+    entity.remove_relationship(Relationship.new(C_HasEffect.new(), null), count)
+
+func cleanse_one_debuff(entity: Entity):
+    # Remove just one debuff (useful for cleanse spells)
+    entity.remove_relationship(Relationship.new(C_Debuff.new(), null), 1)
+
+func dispel_magic(entity: Entity, power: int):
+    # Dispel magic spell removes buffs based on power level
+    match power:
+        1: entity.remove_relationship(Relationship.new(C_HasEffect.new(), C_SpeedBuff), 1)    # Weak dispel - 1 speed buff
+        2: entity.remove_relationship(Relationship.new(C_HasEffect.new(), null), 2)          # Medium dispel - 2 any effects  
+        3: entity.remove_relationship(Relationship.new(C_HasEffect.new(), null))             # Strong dispel - all effects
+
+func antidote_healing(entity: Entity, antidote_strength: int):
+    # Antidote removes poison effects based on strength
+    entity.remove_relationship(Relationship.new(C_HasEffect.new(), C_PoisonDamage), antidote_strength)
+
+func partial_fire_immunity(entity: Entity):
+    # Fire immunity spell removes up to 3 fire damage effects
+    entity.remove_relationship(Relationship.new(C_HasEffect.new(), C_FireDamage), 3)
 
 func get_entities_with_damage_effects():
     # Get entities with any damage type effect (fire or poison)
@@ -484,9 +739,52 @@ static func interacting_with_anything():
 static func equipped_on_anything():
     return Relationship.new(C_EquippedOn.new(), ECS.wildcard)
 
+static func any_status_effect():
+    return Relationship.new(C_HasEffect.new(), null)
+
+static func any_damage_effect():
+    return Relationship.new(C_Damage.new(), null)
+
+static func any_buff():
+    return Relationship.new(C_Buff.new(), null)
+
 # Usage in systems:
 var attackers = ECS.world.query.with_relationship([Relationships.attacking_players()]).execute()
 var chasers = ECS.world.query.with_relationship([Relationships.chasing_anything()]).execute()
+
+# Usage with limits:
+entity.remove_relationship(Relationships.any_status_effect(), 1)  # Remove one effect
+entity.remove_relationship(Relationships.any_damage_effect(), 3)  # Remove up to 3 damage effects
+entity.remove_relationship(Relationships.any_buff())              # Remove all buffs
+```
+
+**Limited Removal Best Practices:**
+
+```gdscript
+# ✅ Good - Clear intent with descriptive variables
+var WEAK_CLEANSE = 1
+var MEDIUM_CLEANSE = 3
+var STRONG_CLEANSE = -1  # All
+
+entity.remove_relationship(Relationships.any_debuff(), WEAK_CLEANSE)
+
+# ✅ Good - Helper functions for common operations
+func remove_one_poison(entity: Entity):
+    entity.remove_relationship(Relationship.new(C_Poison.new(), null), 1)
+
+func remove_all_fire_damage(entity: Entity):
+    entity.remove_relationship(Relationship.new(C_Damage.new(), C_FireDamage))
+
+func partial_heal(entity: Entity, healing_power: int):
+    entity.remove_relationship(Relationship.new(C_Damage.new(), null), healing_power)
+
+# ✅ Excellent - Validation before removal
+func safe_remove_effects(entity: Entity, count: int):
+    var current_effects = entity.get_relationships(Relationship.new(C_Effect.new(), null)).size()
+    var to_remove = min(count, current_effects)
+    if to_remove > 0:
+        entity.remove_relationship(Relationship.new(C_Effect.new(), null), to_remove)
+        print("Removed ", to_remove, " effects")
 ```
 
 ### Naming Conventions
@@ -504,13 +802,22 @@ var chasers = ECS.world.query.with_relationship([Relationships.chasing_anything(
 
 ## 🎯 Next Steps
 
-Now that you understand relationships:
+Now that you understand relationships and limited removal:
 
 1. **Design relationship schemas** for your game's entities
 2. **Experiment with wildcard queries** for dynamic systems
-3. **Combine relationships with component queries** for powerful filtering
-4. **Optimize with static relationship factories** for better performance
-5. **Learn advanced patterns** in [Best Practices Guide](BEST_PRACTICES.md)
+3. **Implement limited removal** for stack-based and graduated systems
+4. **Combine relationships with component queries** for powerful filtering
+5. **Optimize with static relationship factories** for better performance
+6. **Use limit parameters** for fine-grained control in healing, crafting, and effect systems
+7. **Learn advanced patterns** in [Best Practices Guide](BEST_PRACTICES.md)
+
+**Quick Start Checklist for Limited Removal:**
+- ✅ Try basic limit syntax: `entity.remove_relationship(rel, 1)`
+- ✅ Build a simple stack system (buffs, debuffs, or damage)
+- ✅ Create helper functions for common removal patterns
+- ✅ Integrate limits into your game systems (healing, cleansing, etc.)
+- ✅ Test edge cases (limit > available relationships)
 
 ## 📚 Related Documentation
 

@@ -794,6 +794,184 @@ func test_broad_query_with_drill_down_filtering():
 	assert_int(fire_and_poison_entities.size()).is_equal(1)
 
 
+func test_component_query_based_removal():
+	# Test the new smart removal logic that auto-detects strong vs weak matching
+	# based on whether the relationship uses component queries or instances
+	# Add multiple eating relationships with different amounts
+	e_bob.add_relationship(Relationship.new(C_Eats.new(5), e_apple))
+	e_bob.add_relationship(Relationship.new(C_Eats.new(10), e_apple))
+	e_bob.add_relationship(Relationship.new(C_Eats.new(15), e_apple))
+	e_bob.add_relationship(Relationship.new(C_Likes.new(100), e_apple)) # Different component type
+	
+	# Verify all relationships exist
+	assert_bool(e_bob.has_relationship(Relationship.new(C_Eats.new(5), e_apple), false)).is_true()
+	assert_bool(e_bob.has_relationship(Relationship.new(C_Eats.new(10), e_apple), false)).is_true()
+	assert_bool(e_bob.has_relationship(Relationship.new(C_Eats.new(15), e_apple), false)).is_true()
+	assert_bool(e_bob.has_relationship(Relationship.new(C_Likes.new(100), e_apple), false)).is_true()
+	
+	# Test 1: Strong removal with component instance (should remove only exact match)
+	e_bob.remove_relationship(Relationship.new(C_Eats.new(10), e_apple))
+	
+	assert_bool(e_bob.has_relationship(Relationship.new(C_Eats.new(5), e_apple), false)).is_true() # still exists
+	assert_bool(e_bob.has_relationship(Relationship.new(C_Eats.new(10), e_apple), false)).is_false() # removed
+	assert_bool(e_bob.has_relationship(Relationship.new(C_Eats.new(15), e_apple), false)).is_true() # still exists
+	assert_bool(e_bob.has_relationship(Relationship.new(C_Likes.new(100), e_apple), false)).is_true() # different type, still exists
+	
+	# Test 2: Weak removal with empty component query (should remove all of that type)
+	e_bob.remove_relationship(Relationship.new({C_Eats: {}}, e_apple))
+	
+	assert_bool(e_bob.has_relationship(Relationship.new(C_Eats.new(5), e_apple), false)).is_false() # removed by weak matching
+	assert_bool(e_bob.has_relationship(Relationship.new(C_Eats.new(15), e_apple), false)).is_false() # removed by weak matching
+	assert_bool(e_bob.has_relationship(Relationship.new(C_Likes.new(100), e_apple), false)).is_true() # different type, still exists
+	
+	# Test 3: Query-based removal with specific criteria
+	# Add more relationships to test query operators
+	e_bob.add_relationship(Relationship.new(C_Eats.new(25), e_apple))
+	e_bob.add_relationship(Relationship.new(C_Eats.new(35), e_apple))
+	e_bob.add_relationship(Relationship.new(C_Eats.new(45), e_apple))
+	
+	# Remove all eating relationships where value > 30
+	e_bob.remove_relationship(Relationship.new({C_Eats: {"value": {"_gt": 30}}}, e_apple))
+	
+	assert_bool(e_bob.has_relationship(Relationship.new(C_Eats.new(25), e_apple), false)).is_true() # 25 <= 30, still exists
+	assert_bool(e_bob.has_relationship(Relationship.new(C_Eats.new(35), e_apple), false)).is_false() # 35 > 30, removed
+	assert_bool(e_bob.has_relationship(Relationship.new(C_Eats.new(45), e_apple), false)).is_false() # 45 > 30, removed
+	assert_bool(e_bob.has_relationship(Relationship.new(C_Likes.new(100), e_apple), false)).is_true() # different type, still exists
+	
+	# Test 4: Query-based removal with range criteria
+	e_bob.add_relationship(Relationship.new(C_Eats.new(50), e_apple))
+	e_bob.add_relationship(Relationship.new(C_Eats.new(75), e_apple))
+	e_bob.add_relationship(Relationship.new(C_Eats.new(100), e_apple))
+	
+	# Remove eating relationships in range 40-80
+	e_bob.remove_relationship(Relationship.new({C_Eats: {"value": {"_gte": 40, "_lte": 80}}}, e_apple))
+	
+	assert_bool(e_bob.has_relationship(Relationship.new(C_Eats.new(25), e_apple), false)).is_true() # 25 < 40, still exists
+	assert_bool(e_bob.has_relationship(Relationship.new(C_Eats.new(50), e_apple), false)).is_false() # 40 <= 50 <= 80, removed
+	assert_bool(e_bob.has_relationship(Relationship.new(C_Eats.new(75), e_apple), false)).is_false() # 40 <= 75 <= 80, removed
+	assert_bool(e_bob.has_relationship(Relationship.new(C_Eats.new(100), e_apple), false)).is_true() # 100 > 80, still exists
+	
+	# Test 5: Wildcard target with component query (remove from any target)
+	e_bob.add_relationship(Relationship.new(C_Eats.new(25), e_pizza))
+	e_bob.add_relationship(Relationship.new(C_Eats.new(25), e_alice))
+	
+	# Remove all eating relationships with value exactly 25, regardless of target
+	e_bob.remove_relationship(Relationship.new({C_Eats: {"value": {"_eq": 25}}}, null))
+	
+	assert_bool(e_bob.has_relationship(Relationship.new(C_Eats.new(25), e_apple), false)).is_false() # removed
+	assert_bool(e_bob.has_relationship(Relationship.new(C_Eats.new(25), e_pizza), false)).is_false() # removed
+	assert_bool(e_bob.has_relationship(Relationship.new(C_Eats.new(25), e_alice), false)).is_false() # removed
+	assert_bool(e_bob.has_relationship(Relationship.new(C_Eats.new(100), e_apple), false)).is_true() # different value, still exists
+
+
+func test_limited_relationship_removal():
+	# Test the new limit parameter for relationship removal
+	# Clear existing relationships first to have a clean slate
+	e_bob.relationships.clear()
+	
+	# Add multiple relationships of the same type
+	e_bob.add_relationship(Relationship.new(C_Eats.new(10), e_apple))
+	e_bob.add_relationship(Relationship.new(C_Eats.new(20), e_apple))
+	e_bob.add_relationship(Relationship.new(C_Eats.new(30), e_apple))
+	e_bob.add_relationship(Relationship.new(C_Eats.new(40), e_apple))
+	e_bob.add_relationship(Relationship.new(C_Likes.new(5), e_apple)) # Different component type
+	
+	# Verify all relationships were added
+	assert_int(e_bob.relationships.size()).is_equal(5)
+	assert_bool(e_bob.has_relationship(Relationship.new(C_Eats.new(10), e_apple), false)).is_true()
+	assert_bool(e_bob.has_relationship(Relationship.new(C_Eats.new(20), e_apple), false)).is_true()
+	assert_bool(e_bob.has_relationship(Relationship.new(C_Eats.new(30), e_apple), false)).is_true()
+	assert_bool(e_bob.has_relationship(Relationship.new(C_Eats.new(40), e_apple), false)).is_true()
+	assert_bool(e_bob.has_relationship(Relationship.new(C_Likes.new(5), e_apple), false)).is_true()
+	
+	# Test 1: Remove with limit 0 (should remove nothing)
+	e_bob.remove_relationship(Relationship.new({C_Eats: {}}, e_apple), 0)
+	assert_int(e_bob.relationships.size()).is_equal(5) # All should still exist
+	
+	# Test 2: Remove with limit 1 (should remove only one)
+	e_bob.remove_relationship(Relationship.new({C_Eats: {}}, e_apple), 1)
+	assert_int(e_bob.relationships.size()).is_equal(4) # One C_Eats should be removed
+	
+	# Count remaining C_Eats relationships
+	var eats_count = 0
+	for rel in e_bob.relationships:
+		if rel.relation is C_Eats and rel.target == e_apple:
+			eats_count += 1
+	assert_int(eats_count).is_equal(3) # Should have 3 C_Eats relationships left
+	
+	# Test 3: Remove with limit 2 (should remove two more)
+	e_bob.remove_relationship(Relationship.new({C_Eats: {}}, e_apple), 2)
+	assert_int(e_bob.relationships.size()).is_equal(2) # Two more C_Eats should be removed
+	
+	# Count remaining C_Eats relationships
+	eats_count = 0
+	for rel in e_bob.relationships:
+		if rel.relation is C_Eats and rel.target == e_apple:
+			eats_count += 1
+	assert_int(eats_count).is_equal(1) # Should have 1 C_Eats relationship left
+	
+	# Verify C_Likes relationship is still there (different component type)
+	assert_bool(e_bob.has_relationship(Relationship.new(C_Likes.new(5), e_apple), false)).is_true()
+	
+	# Test 4: Remove with limit -1 (should remove all remaining)
+	e_bob.remove_relationship(Relationship.new({C_Eats: {}}, e_apple), -1)
+	assert_int(e_bob.relationships.size()).is_equal(1) # Only C_Likes should remain
+	
+	# Count remaining C_Eats relationships
+	eats_count = 0
+	for rel in e_bob.relationships:
+		if rel.relation is C_Eats and rel.target == e_apple:
+			eats_count += 1
+	assert_int(eats_count).is_equal(0) # Should have no C_Eats relationships left
+	
+	# Verify C_Likes relationship is still there
+	assert_bool(e_bob.has_relationship(Relationship.new(C_Likes.new(5), e_apple), false)).is_true()
+	
+	# Test 5: Remove with limit higher than available relationships
+	e_bob.add_relationship(Relationship.new(C_Eats.new(50), e_apple))
+	e_bob.add_relationship(Relationship.new(C_Eats.new(60), e_apple))
+	e_bob.remove_relationship(Relationship.new({C_Eats: {}}, e_apple), 10) # Try to remove 10, but only 2 exist
+	
+	# Count remaining C_Eats relationships
+	eats_count = 0
+	for rel in e_bob.relationships:
+		if rel.relation is C_Eats and rel.target == e_apple:
+			eats_count += 1
+	assert_int(eats_count).is_equal(0) # Should have removed both (all available)
+
+
+func test_limited_relationship_removal_with_strong_matching():
+	# Test limit parameter with strong matching (specific component instances)
+	e_alice.relationships.clear()
+	
+	# Add multiple relationships with the same exact component data
+	e_alice.add_relationship(Relationship.new(C_Eats.new(25), e_pizza))
+	e_alice.add_relationship(Relationship.new(C_Eats.new(25), e_pizza))
+	e_alice.add_relationship(Relationship.new(C_Eats.new(25), e_pizza))
+	e_alice.add_relationship(Relationship.new(C_Eats.new(30), e_pizza)) # Different value
+	
+	assert_int(e_alice.relationships.size()).is_equal(4)
+	
+	# Remove with limit 2 using strong matching (specific component instance)
+	e_alice.remove_relationship(Relationship.new(C_Eats.new(25), e_pizza), 2)
+	
+	# Should have removed 2 of the 3 matching relationships
+	assert_int(e_alice.relationships.size()).is_equal(2)
+	
+	# Check that one C_Eats(25) and one C_Eats(30) relationship remain
+	var count_25 = 0
+	var count_30 = 0
+	for rel in e_alice.relationships:
+		if rel.relation is C_Eats and rel.target == e_pizza:
+			if rel.relation.value == 25:
+				count_25 += 1
+			elif rel.relation.value == 30:
+				count_30 += 1
+	
+	assert_int(count_25).is_equal(1) # One C_Eats(25) should remain
+	assert_int(count_30).is_equal(1) # One C_Eats(30) should remain
+
+
 # # FIXME: This is not working
 # func test_reverse_relationships_a():
 

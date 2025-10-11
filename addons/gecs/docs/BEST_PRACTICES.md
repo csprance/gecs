@@ -552,6 +552,115 @@ static func damage_entity(entity: Entity, amount: float):
     return false
 ```
 
+## 🎛️ Relationship Management Best Practices
+
+### Limited Removal Patterns
+
+**Use Descriptive Constants:**
+
+```gdscript
+# ✅ Good - Clear intent with constants
+const WEAK_CLEANSE = 1
+const MEDIUM_CLEANSE = 3
+const STRONG_CLEANSE = -1  # All
+
+# ✅ Good - Stack-based constants
+const SINGLE_STACK = 1
+const PARTIAL_STACKS = 3
+const ALL_STACKS = -1
+
+func cleanse_debuffs(entity: Entity, power: int):
+    match power:
+        1: entity.remove_relationship(Relations.any_debuff(), WEAK_CLEANSE)
+        2: entity.remove_relationship(Relations.any_debuff(), MEDIUM_CLEANSE)
+        3: entity.remove_relationship(Relations.any_debuff(), STRONG_CLEANSE)
+```
+
+**Validate Before Removal:**
+
+```gdscript
+# ✅ Excellent - Safe removal with validation
+func safe_partial_heal(entity: Entity, heal_amount: int):
+    var damage_rels = entity.get_relationships(Relations.any_damage())
+    if damage_rels.is_empty():
+        print("Entity has no damage to heal")
+        return
+    
+    var to_heal = min(heal_amount, damage_rels.size())
+    entity.remove_relationship(Relations.any_damage(), to_heal)
+    print("Healed ", to_heal, " damage effects")
+
+# ✅ Good - Helper function with built-in safety
+func remove_poison_stacks(entity: Entity, stacks_to_remove: int):
+    if stacks_to_remove <= 0:
+        return
+    entity.remove_relationship(Relations.poison_effect(), stacks_to_remove)
+```
+
+**System Integration Patterns:**
+
+```gdscript
+# ✅ Excellent - Integration with game systems
+class_name StatusEffectSystem extends System
+
+func process_cleanse_spell(caster: Entity, target: Entity, spell_power: int):
+    # Calculate cleanse strength based on spell power and caster stats
+    var cleanse_strength = calculate_cleanse_strength(caster, spell_power)
+    
+    # Apply graduated cleansing based on strength
+    match cleanse_strength:
+        1..3:   target.remove_relationship(Relations.any_debuff(), 1)
+        4..6:   target.remove_relationship(Relations.any_debuff(), 2)
+        7..9:   target.remove_relationship(Relations.any_debuff(), 3)
+        _:      target.remove_relationship(Relations.any_debuff())  # Remove all
+
+func process_antidote_item(user: Entity, antidote_strength: int):
+    # Remove poison based on antidote quality
+    user.remove_relationship(Relations.poison_effect(), antidote_strength)
+    
+    # Remove poison resistance temporarily to prevent immediate repoison
+    user.add_relationship(Relations.poison_immunity(), 5.0)  # 5 second immunity
+
+class_name InventorySystem extends System
+
+func consume_item_stack(entity: Entity, item_type: Script, count: int):
+    # Consume specific number of items from inventory
+    entity.remove_relationship(
+        Relationship.new(C_HasItem.new(), item_type), 
+        count
+    )
+    
+func use_consumable(entity: Entity, item: Component, quantity: int = 1):
+    # Use consumable items with quantity
+    entity.remove_relationship(
+        Relationship.new(C_HasItem.new(), item), 
+        quantity
+    )
+```
+
+**Performance Optimization:**
+
+```gdscript
+# ✅ Good - Cache relationships for multiple operations
+func optimize_bulk_removal(entity: Entity):
+    # Cache the relationship for reuse
+    var poison_rel = Relations.poison_effect()
+    var damage_rel = Relations.any_damage()
+    
+    # Multiple targeted removals
+    entity.remove_relationship(poison_rel, 2)      # Remove 2 poison
+    entity.remove_relationship(damage_rel, 1)      # Remove 1 damage
+    entity.remove_relationship(poison_rel, 1)      # Remove 1 more poison
+
+# ✅ Excellent - Batch removal patterns
+func batch_cleanup(entities: Array[Entity]):
+    var cleanup_rel = Relations.temporary_effect()
+    
+    for entity in entities:
+        # Remove up to 3 temporary effects from each entity
+        entity.remove_relationship(cleanup_rel, 3)
+```
+
 ## 🎯 Next Steps
 
 Now that you understand best practices:

@@ -251,20 +251,51 @@ func add_relationships(_relationships: Array):
 
 
 ## Removes a relationship from the entity.[br]
-## [param relationship] The [Relationship] to remove.
-func remove_relationship(relationship: Relationship) -> void:
+## [param relationship] The [Relationship] to remove.[br]
+## [param limit] Maximum number of relationships to remove. -1 = all (default), 0 = none, >0 = up to that many.[br]
+## [br]
+## [b]Examples:[/b]
+## [codeblock]
+## # Remove all matching relationships (default behavior)
+## entity.remove_relationship(Relationship.new(C_Damage.new(), target))
+## 
+## # Remove only one matching relationship
+## entity.remove_relationship(Relationship.new(C_Damage.new(), target), 1)
+## 
+## # Remove up to 3 matching relationships
+## entity.remove_relationship(Relationship.new(C_Damage.new(), target), 3)
+## 
+## # Remove no relationships (useful for testing/debugging)
+## entity.remove_relationship(Relationship.new(C_Damage.new(), target), 0)
+## [/codeblock]
+func remove_relationship(relationship: Relationship, limit: int = -1) -> void:
+	if limit == 0:
+		return
+	
 	var to_remove = []
+	var removed_count = 0
+	
 	for rel in relationships:
-		if rel.matches(relationship):
+		# Auto-detect matching mode: component queries use weak matching, instances use strong
+		var use_weak = relationship.is_component_query
+		if rel.matches(relationship, use_weak):
 			to_remove.append(rel)
+			removed_count += 1
+			# If limit is positive and we've reached it, stop collecting
+			if limit > 0 and removed_count >= limit:
+				break
+	
 	for rel in to_remove:
 		relationships.erase(rel)
 		relationship_removed.emit(self, rel)
 
 
-func remove_relationships(_relationships: Array):
+## Removes multiple relationships from the entity.[br]
+## [param _relationships] Array of [Relationship]s to remove.[br]
+## [param limit] Maximum number of relationships to remove per relationship type. -1 = all (default), 0 = none, >0 = up to that many.
+func remove_relationships(_relationships: Array, limit: int = -1):
 	for relationship in _relationships:
-		remove_relationship(relationship)
+		remove_relationship(relationship, limit)
 
 
 ## Retrieves a specific [Relationship] from the entity.
