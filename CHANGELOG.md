@@ -1,4 +1,110 @@
-# GECS v3.8.0 - Performance Boost & Documentation Overhaul
+# GECS Changelog
+
+## [5.1.0] - 2025-01-XX - Relationship System Enhancements
+
+### ⚠️ BREAKING CHANGES
+
+#### Relationship Matching Default Changed to Weak Matching
+- **`Relationship.matches()` now defaults to weak matching** (`weak = true` instead of `weak = false`)
+- **Impact**: Relationship matching now prioritizes component type over exact data matching by default
+- **Migration**: Review relationship removal code that relies on exact data matching
+
+**Before (v5.0 and earlier):**
+```gdscript
+# Strong matching by default - only matched exact component data
+relationship.matches(other_relationship)  # weak = false (default)
+```
+
+**After (v5.1+):**
+```gdscript
+# Weak matching by default - matches by component type
+relationship.matches(other_relationship)  # weak = true (default)
+
+# For exact data matching, explicitly use strong matching:
+relationship.matches(other_relationship, false)
+```
+
+### ✨ New Features
+
+#### Component Query Support in Relationships
+- **Added dictionary-based component queries in relationships** - Filter relationships by component properties
+- **Automatic weak/strong matching detection** - Component queries automatically use weak matching
+- **New `ComponentQueryMatcher`** - Advanced property-based matching for relationships
+
+#### Limited Relationship Removal
+- **Added `limit` parameter to `Entity.remove_relationship()`** - Control exactly how many matching relationships to remove
+- **Added `limit` parameter to `Entity.remove_relationships()`** - Apply limits to batch relationship removal operations
+- **Backward compatible** - Default behavior unchanged (`limit = -1` removes all matching relationships)
+
+### 🚨 Migration Guide
+
+#### 1. Review Relationship Matching Code
+**Check any manual calls to `relationship.matches()`:**
+
+```gdscript
+# ❌ This behavior changed (now uses weak matching by default)
+if rel.matches(search_relationship):
+    # This now matches by component type, not exact data
+
+# ✅ Explicit strong matching (preserves old behavior)
+if rel.matches(search_relationship, false):
+    # This matches exact component data like before
+```
+
+#### 2. Entity Relationship Removal (Usually No Change Needed)
+The auto-detection in `Entity.remove_relationship()` maintains expected behavior:
+
+```gdscript
+# These work the same as before:
+entity.remove_relationship(Relationship.new(C_Damage.new(50), target))  # Strong matching
+entity.remove_relationship(Relationship.new({C_Damage: {"value": {"_gt": 20}}}, null))  # Weak matching (auto-detected)
+```
+
+#### 3. Test Relationship-Heavy Code
+**Areas to test carefully:**
+- Custom relationship matching logic
+- Systems that rely on exact component data matching
+- Relationship queries with specific data requirements
+
+### 🎯 New Use Cases Enabled
+
+#### Advanced Component Queries in Relationships
+```gdscript
+# Remove damage effects above 50 points
+entity.remove_relationship(
+    Relationship.new({C_Damage: {"amount": {"_gt": 50}}}, null)
+)
+
+# Remove buffs with less than 5 seconds remaining
+entity.remove_relationship(
+    Relationship.new({C_Buff: {"duration": {"_lt": 5.0}}}, null)
+)
+```
+
+#### Limited Relationship Removal
+```gdscript
+# Remove 2 poison stacks instead of all
+entity.remove_relationship(Relationship.new(C_Poison.new(), null), 2)
+
+# Healing potion removes 3 damage effects
+entity.remove_relationship(Relationship.new(C_Damage.new(), null), 3)
+
+# Consume 5 health potions
+entity.remove_relationship(Relationship.new(C_HasItem.new(), C_HealthPotion), 5)
+```
+
+### 📦 Files Changed
+- `addons/gecs/ecs/relationship.gd` - **BREAKING**: Default weak matching, component queries
+- `addons/gecs/ecs/entity.gd` - Added limit parameter support with auto-detection
+- `addons/gecs/lib/component_query_matcher.gd` - **NEW**: Advanced component query system  
+- `addons/gecs/docs/RELATIONSHIPS.md` - Comprehensive updates for new features
+- `addons/gecs/docs/BEST_PRACTICES.md` - Migration guidance and best practices
+- `addons/gecs/tests/core/test_relationships.gd` - Test coverage for all new functionality
+- `CLAUDE.md` - Quick reference updates
+
+---
+
+## [3.8.0] - 2024-XX-XX - Performance Boost & Documentation Overhaul
 
 ## 🎯 Major Improvements
 
