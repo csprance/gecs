@@ -1,21 +1,24 @@
 # GECS Changelog
 
-## [5.1.0] - 2025-01-XX - Relationship System Enhancements
+## [5.0.0] - 2025-01-XX - Relationship System Enhancements
 
 ### ⚠️ BREAKING CHANGES
 
 #### Relationship Matching Default Changed to Weak Matching
+
 - **`Relationship.matches()` now defaults to weak matching** (`weak = true` instead of `weak = false`)
 - **Impact**: Relationship matching now prioritizes component type over exact data matching by default
 - **Migration**: Review relationship removal code that relies on exact data matching
 
 **Before (v5.0 and earlier):**
+
 ```gdscript
 # Strong matching by default - only matched exact component data
 relationship.matches(other_relationship)  # weak = false (default)
 ```
 
 **After (v5.1+):**
+
 ```gdscript
 # Weak matching by default - matches by component type
 relationship.matches(other_relationship)  # weak = true (default)
@@ -27,11 +30,13 @@ relationship.matches(other_relationship, false)
 ### ✨ New Features
 
 #### Component Query Support in Relationships
+
 - **Added dictionary-based component queries in relationships** - Filter relationships by component properties
 - **Automatic weak/strong matching detection** - Component queries automatically use weak matching
 - **New `ComponentQueryMatcher`** - Advanced property-based matching for relationships
 
 #### Limited Relationship Removal
+
 - **Added `limit` parameter to `Entity.remove_relationship()`** - Control exactly how many matching relationships to remove
 - **Added `limit` parameter to `Entity.remove_relationships()`** - Apply limits to batch relationship removal operations
 - **Backward compatible** - Default behavior unchanged (`limit = -1` removes all matching relationships)
@@ -39,6 +44,7 @@ relationship.matches(other_relationship, false)
 ### 🚨 Migration Guide
 
 #### 1. Review Relationship Matching Code
+
 **Check any manual calls to `relationship.matches()`:**
 
 ```gdscript
@@ -52,6 +58,7 @@ if rel.matches(search_relationship, false):
 ```
 
 #### 2. Entity Relationship Removal (Usually No Change Needed)
+
 The auto-detection in `Entity.remove_relationship()` maintains expected behavior:
 
 ```gdscript
@@ -61,7 +68,9 @@ entity.remove_relationship(Relationship.new({C_Damage: {"value": {"_gt": 20}}}, 
 ```
 
 #### 3. Test Relationship-Heavy Code
+
 **Areas to test carefully:**
+
 - Custom relationship matching logic
 - Systems that rely on exact component data matching
 - Relationship queries with specific data requirements
@@ -69,6 +78,7 @@ entity.remove_relationship(Relationship.new({C_Damage: {"value": {"_gt": 20}}}, 
 ### 🎯 New Use Cases Enabled
 
 #### Advanced Component Queries in Relationships
+
 ```gdscript
 # Remove damage effects above 50 points
 entity.remove_relationship(
@@ -82,6 +92,7 @@ entity.remove_relationship(
 ```
 
 #### Limited Relationship Removal
+
 ```gdscript
 # Remove 2 poison stacks instead of all
 entity.remove_relationship(Relationship.new(C_Poison.new(), null), 2)
@@ -94,9 +105,10 @@ entity.remove_relationship(Relationship.new(C_HasItem.new(), C_HealthPotion), 5)
 ```
 
 ### 📦 Files Changed
+
 - `addons/gecs/ecs/relationship.gd` - **BREAKING**: Default weak matching, component queries
 - `addons/gecs/ecs/entity.gd` - Added limit parameter support with auto-detection
-- `addons/gecs/lib/component_query_matcher.gd` - **NEW**: Advanced component query system  
+- `addons/gecs/lib/component_query_matcher.gd` - **NEW**: Advanced component query system
 - `addons/gecs/docs/RELATIONSHIPS.md` - Comprehensive updates for new features
 - `addons/gecs/docs/BEST_PRACTICES.md` - Migration guidance and best practices
 - `addons/gecs/tests/core/test_relationships.gd` - Test coverage for all new functionality
@@ -154,18 +166,21 @@ entity.remove_relationship(Relationship.new(C_HasItem.new(), C_HealthPotion), 5)
 ## 📈 Performance Metrics
 
 ### Array Operations Benchmarks
+
 - **Intersection Operations**: 4.6x faster (0.888ms → 0.194ms)
-- **Difference Operations**: 2.6x faster (0.361ms → 0.141ms) 
+- **Difference Operations**: 2.6x faster (0.361ms → 0.141ms)
 - **Union Operations**: 1.8x faster (0.372ms → 0.209ms)
 - **No Overlap Scenarios**: 4.2x faster (0.629ms → 0.149ms)
 
 ### Algorithmic Improvements
+
 - **O(n²) → O(n) Complexity**: Replaced Array.has() with Dictionary lookups
 - **Smart Size Optimization**: Intersect operations use smaller array for lookup table
 - **Uniqueness Tracking**: Union operations prevent duplicates with dictionary-based deduplication
 - **Consistent Optimization Pattern**: All array operations use same high-performance approach
 
 ### Framework Performance
+
 - **Query Caching**: 1.58x speedup for repeated queries
 - **Component Operations**: Reduced double-processing bugs
 - **Memory Usage**: Better cleanup and resource management
