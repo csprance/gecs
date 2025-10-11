@@ -4,3 +4,4 @@
 repomix-output.txt
 
 reports/
+.claude/settings.local.json
