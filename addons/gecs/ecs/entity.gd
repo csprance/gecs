@@ -301,7 +301,8 @@ func remove_relationships(_relationships: Array, limit: int = -1):
 ## Retrieves a specific [Relationship] from the entity.
 ## [param relationship] The [Relationship] to retrieve.
 ## [param return] - The FIRST matching [Relationship] if it exists, otherwise `null` or `[]` if single = false
-func get_relationship(relationship: Relationship, single = true, weak = false):
+func get_relationship(relationship: Relationship, single = true, weak = true):
+		
 	var results = []
 	var to_remove = []
 	for rel in relationships:
@@ -327,13 +328,13 @@ func get_relationship(relationship: Relationship, single = true, weak = false):
 ## Retrieves [Relationship]s from the entity.
 ## [param relationship] The [Relationship]s to retrieve.
 ## [param return] - All matching [Relationship]s if it exists, otherwise `null`.
-func get_relationships(relationship: Relationship, weak = false) -> Array:
+func get_relationships(relationship: Relationship, weak = true) -> Array:
 	return get_relationship(relationship, false, weak)
 
 
 ## Checks if the entity has a specific relationship.[br]
 ## [param relationship] The [Relationship] to check for.
-func has_relationship(relationship: Relationship, weak = false) -> bool:
+func has_relationship(relationship: Relationship, weak = true) -> bool:
 	return get_relationship(relationship, true, weak) != null
 
 
