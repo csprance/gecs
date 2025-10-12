@@ -971,6 +971,20 @@ func test_limited_relationship_removal_with_strong_matching():
 	assert_int(count_25).is_equal(1) # One C_Eats(25) should remain
 	assert_int(count_30).is_equal(1) # One C_Eats(30) should remain
 
+func test_component_target_relationship_by_component_query():
+	e_bob.add_relationship(Relationship.new(C_TestA.new(10), C_TestC.new()))
+	e_alice.add_relationship(Relationship.new(C_TestA.new(20), C_TestC.new()))
+	e_heather.add_relationship(Relationship.new(C_TestA.new(10), C_TestD.new()))
+	e_heather.add_relationship(Relationship.new(C_TestB.new(10), C_TestC.new()))
+	
+	var entities_with_strength_buff = Array(ECS.world.query.with_relationship([Relationship.new({C_TestA: {}}, C_TestC.new())]).execute())
+	
+	assert_bool(entities_with_strength_buff.has(e_bob)).is_true()
+	assert_bool(entities_with_strength_buff.has(e_alice)).is_true()
+	assert_bool(entities_with_strength_buff.has(e_heather)).is_false()
+	
+	var rel_love_attack = e_bob.get_relationship(Relationship.new({C_TestA: {}}, C_TestC.new()))
+	assert_int(rel_love_attack.relation.value).is_equal(10)
 
 # # FIXME: This is not working
 # func test_reverse_relationships_a():
