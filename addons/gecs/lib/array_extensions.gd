@@ -95,9 +95,9 @@ static func topological_sort(systems_by_group: Dictionary) -> void:
 			# If present, each item in s.Runs.Before means "s must run before that item"
 			# So we add the item to adjacency[s], and increment the item's indegree
 			# If item is null or ECS.wildcard, we treat it as "run before everything" by pushing 's' onto wildcard_front
-			if deps_dict.has(s.Runs.Before):
-				for b in deps_dict[s.Runs.Before]:
-					if b == ECS.wildcard:
+			if deps_dict.has(System.Runs.Before):
+				for b in deps_dict[System.Runs.Before]:
+					if b == null:
 						# ECS.wildcard AKA 'null' means s should run before all systems
 						wildcard_front.append(s)
 					elif systems.has(b):
@@ -109,9 +109,9 @@ static func topological_sort(systems_by_group: Dictionary) -> void:
 			# If present, each item in s.Runs.After means "s must run after that item"
 			# So we add 's' to adjacency[item], and increment s's indegree
 			# If item is null or ECS.wildcard, we treat it as "run after everything" by pushing 's' onto wildcard_back
-			if deps_dict.has(s.Runs.After):
-				for a in deps_dict[s.Runs.After]:
-					if a == ECS.wildcard:
+			if deps_dict.has(System.Runs.After):
+				for a in deps_dict[System.Runs.After]:
+					if a == null:
 						# ECS.wildcard AKA 'null' means s should run after all systems
 						wildcard_back.append(s)
 					elif systems.has(a):
