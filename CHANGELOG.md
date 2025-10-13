@@ -1,118 +1,152 @@
 # GECS Changelog
 
-## [5.0.0] - 2025-01-XX - Relationship System Enhancements
+## [5.0.0] - 2025-01-XX - Relationship System Complete Overhaul
 
 ### ⚠️ BREAKING CHANGES
 
-#### Relationship Matching Default Changed to Weak Matching
+#### Removed Weak/Strong Matching System
 
-- **`Relationship.matches()` now defaults to weak matching** (`weak = true` instead of `weak = false`)
-- **Impact**: Relationship matching now prioritizes component type over exact data matching by default
-- **Migration**: Review relationship removal code that relies on exact data matching
+The weak/strong matching system has been completely replaced with a simpler, more intuitive approach:
 
-**Before (v5.0 and earlier):**
+- **`weak` parameter removed** from all relationship methods
+- **`Component.equals()` method removed** - use component queries instead
+- **Type matching is now the default** - matches by component type only
+- **Component queries for property matching** - use dictionaries for property-based filtering
 
-```gdscript
-# Strong matching by default - only matched exact component data
-relationship.matches(other_relationship)  # weak = false (default)
-```
+**Migration:**
 
-**After (v5.1+):**
+| Old (v4.x)                                                                     | New (v5.0)                                                                                              |
+| ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------- |
+| `entity.has_relationship(Relationship.new(C_Eats.new(5), target), false)`     | `entity.has_relationship(Relationship.new({C_Eats: {'value': {"_eq": 5}}}, target))`                   |
+| `entity.has_relationship(Relationship.new(C_Eats.new(), target), true)`       | `entity.has_relationship(Relationship.new(C_Eats.new(), target))`                                      |
+| `entity.get_relationship(rel, true, true)`                                     | `entity.get_relationship(rel)`                                                                          |
+| `entity.get_relationships(rel, true)`                                          | `entity.get_relationships(rel)`                                                                         |
+| Override `equals()` in component                                               | Use component queries: `{C_Type: {'prop': {"_eq": value}}}`                                            |
 
-```gdscript
-# Weak matching by default - matches by component type
-relationship.matches(other_relationship)  # weak = true (default)
+#### Component Query Improvements
 
-# For exact data matching, explicitly use strong matching:
-relationship.matches(other_relationship, false)
-```
+- **Target component queries added** - Query both relation AND target component properties
+- **Cannot add query relationships to entities** - Queries are for matching only, not storage
+- **Fixed bug with falsy values** - Component queries now correctly handle `0`, `false`, etc.
 
 ### ✨ New Features
 
-#### Component Query Support in Relationships
+#### Simplified Relationship Matching
 
-- **Added dictionary-based component queries in relationships** - Filter relationships by component properties
-- **Automatic weak/strong matching detection** - Component queries automatically use weak matching
-- **New `ComponentQueryMatcher`** - Advanced property-based matching for relationships
+```gdscript
+# Type matching (default) - matches by component type
+entity.has_relationship(Relationship.new(C_Damage.new(), target))
+
+# Component query - matches by property criteria
+entity.has_relationship(Relationship.new({C_Damage: {'amount': {"_gte": 50}}}, target))
+
+# Query both relation AND target
+var strong_buffs = ECS.world.query.with_relationship([
+    Relationship.new(
+        {C_Buff: {'duration': {"_gt": 10}}},
+        {C_Player: {'level': {"_gte": 5}}}
+    )
+]).execute()
+```
+
+#### Target Component Queries (NEW!)
+
+```gdscript
+# Query relationships by target component properties
+var high_hp_targets = ECS.world.query.with_relationship([
+    Relationship.new(C_Targeting.new(), {C_Health: {'hp': {"_gte": 100}}})
+]).execute()
+
+# Mix relation and target queries
+var critical_effects = ECS.world.query.with_relationship([
+    Relationship.new(
+        {C_Damage: {'type': {"_in": ["fire", "ice"]}}},
+        {C_Entity: {'level': {"_gte": 10}}}
+    )
+]).execute()
+```
 
 #### Limited Relationship Removal
 
-- **Added `limit` parameter to `Entity.remove_relationship()`** - Control exactly how many matching relationships to remove
-- **Added `limit` parameter to `Entity.remove_relationships()`** - Apply limits to batch relationship removal operations
-- **Backward compatible** - Default behavior unchanged (`limit = -1` removes all matching relationships)
+```gdscript
+# Remove specific number of relationships
+entity.remove_relationship(Relationship.new(C_Damage.new(), null), 1)  # Remove 1 damage
+entity.remove_relationship(Relationship.new(C_Buff.new(), null), 3)    # Remove up to 3 buffs
+
+# Combine with component queries
+entity.remove_relationship(
+    Relationship.new({C_Damage: {'amount': {"_gt": 20}}}, null),
+    2  # Remove up to 2 high-damage effects
+)
+```
 
 ### 🚨 Migration Guide
 
-#### 1. Review Relationship Matching Code
-
-**Check any manual calls to `relationship.matches()`:**
+#### 1. Remove `weak` Parameters
 
 ```gdscript
-# ❌ This behavior changed (now uses weak matching by default)
-if rel.matches(search_relationship):
-    # This now matches by component type, not exact data
+# ❌ Old (v4.x)
+entity.has_relationship(rel, true)
+entity.get_relationship(rel, true, true)
+entity.get_relationships(rel, false)
 
-# ✅ Explicit strong matching (preserves old behavior)
-if rel.matches(search_relationship, false):
-    # This matches exact component data like before
+# ✅ New (v5.0)
+entity.has_relationship(rel)
+entity.get_relationship(rel)
+entity.get_relationships(rel)
 ```
 
-#### 2. Entity Relationship Removal (Usually No Change Needed)
-
-The auto-detection in `Entity.remove_relationship()` maintains expected behavior:
+#### 2. Replace Strong Matching with Component Queries
 
 ```gdscript
-# These work the same as before:
-entity.remove_relationship(Relationship.new(C_Damage.new(50), target))  # Strong matching
-entity.remove_relationship(Relationship.new({C_Damage: {"value": {"_gt": 20}}}, null))  # Weak matching (auto-detected)
+# ❌ Old (v4.x) - strong matching for exact values
+entity.has_relationship(Relationship.new(C_Eats.new(5), target), false)
+
+# ✅ New (v5.0) - component query
+entity.has_relationship(Relationship.new({C_Eats: {'value': {"_eq": 5}}}, target))
 ```
 
-#### 3. Test Relationship-Heavy Code
-
-**Areas to test carefully:**
-
-- Custom relationship matching logic
-- Systems that rely on exact component data matching
-- Relationship queries with specific data requirements
-
-### 🎯 New Use Cases Enabled
-
-#### Advanced Component Queries in Relationships
+#### 3. Remove `equals()` Overrides
 
 ```gdscript
-# Remove damage effects above 50 points
-entity.remove_relationship(
-    Relationship.new({C_Damage: {"amount": {"_gt": 50}}}, null)
-)
+# ❌ Old (v4.x) - custom equals() method
+class_name C_Damage extends Component:
+    @export var amount: int = 0
 
-# Remove buffs with less than 5 seconds remaining
-entity.remove_relationship(
-    Relationship.new({C_Buff: {"duration": {"_lt": 5.0}}}, null)
-)
+    func equals(other: Component) -> bool:
+        return amount == other.amount
+
+# ✅ New (v5.0) - use component queries
+# No equals() method needed!
+# Query by property: {C_Damage: {'amount': {"_eq": 50}}}
 ```
 
-#### Limited Relationship Removal
+### 🧪 Test Suite Improvements
 
-```gdscript
-# Remove 2 poison stacks instead of all
-entity.remove_relationship(Relationship.new(C_Poison.new(), null), 2)
+#### Performance Test Cleanup
+- **Eliminated orphan nodes** - Refactored all performance tests to use `scene_runner` pattern
+- **Proper lifecycle management** - Tests now use `auto_free()` and `world.purge()` for cleanup
+- **Consistent test structure** - All performance tests follow same pattern as core tests
+- **Zero orphan nodes** - Performance tests now maintain clean test environment
 
-# Healing potion removes 3 damage effects
-entity.remove_relationship(Relationship.new(C_Damage.new(), null), 3)
-
-# Consume 5 health potions
-entity.remove_relationship(Relationship.new(C_HasItem.new(), C_HealthPotion), 5)
-```
+**Files Updated:**
+- `addons/gecs/tests/performance/performance_test_base.gd` - Uses scene_runner for proper test setup
+- `addons/gecs/tests/performance/performance_test_entities.gd` - Refactored to use auto_free pattern
+- `addons/gecs/tests/performance/performance_test_components.gd` - Simplified cleanup using world.purge
+- `addons/gecs/tests/performance/performance_test_queries.gd` - Removed manual cleanup code
+- `addons/gecs/tests/performance/performance_test_systems.gd` - Uses scene_runner for world management
+- `addons/gecs/tests/performance/performance_test_integration.gd` - Consistent with core test patterns
+- `addons/gecs/tests/performance/performance_test_system_process.gd` - Proper node lifecycle management
 
 ### 📦 Files Changed
 
-- `addons/gecs/ecs/relationship.gd` - **BREAKING**: Default weak matching, component queries
-- `addons/gecs/ecs/entity.gd` - Added limit parameter support with auto-detection
-- `addons/gecs/lib/component_query_matcher.gd` - **NEW**: Advanced component query system
-- `addons/gecs/docs/RELATIONSHIPS.md` - Comprehensive updates for new features
-- `addons/gecs/docs/BEST_PRACTICES.md` - Migration guidance and best practices
-- `addons/gecs/tests/core/test_relationships.gd` - Test coverage for all new functionality
-- `CLAUDE.md` - Quick reference updates
+- `addons/gecs/ecs/relationship.gd` - **BREAKING**: Removed weak parameter, added target_query support
+- `addons/gecs/ecs/entity.gd` - **BREAKING**: Removed weak parameters from all methods, added limit parameter for removal
+- `addons/gecs/ecs/component.gd` - **BREAKING**: Removed equals() method
+- `addons/gecs/lib/component_query_matcher.gd` - **FIXED**: Properly handle falsy values (0, false, etc.)
+- `addons/gecs/docs/RELATIONSHIPS.md` - Complete rewrite for new system
+- `addons/gecs/docs/CLAUDE.md` - Updated with new relationship patterns
+- `addons/gecs/tests/core/test_relationships.gd` - Updated all tests to new API
 
 ---
 
