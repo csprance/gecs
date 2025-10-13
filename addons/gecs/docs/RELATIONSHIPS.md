@@ -108,11 +108,16 @@ e_hero.remove_relationship(Relationship.new(C_Damage.new(), null), -1)   # Remov
 **Query for Specific Relationships:**
 
 ```gdscript
-# Any entity that likes alice
+# Any entity that likes alice (type matching)
 ECS.world.query.with_relationship([Relationship.new(C_Likes.new(), e_alice)])
 
-# Any entity that eats 5 apples
-ECS.world.query.with_relationship([Relationship.new(C_Eats.new(5), e_apple)])
+# Any entity that eats apples (type matching)
+ECS.world.query.with_relationship([Relationship.new(C_Eats.new(), e_apple)])
+
+# Any entity that eats 5 or more apples (component query)
+ECS.world.query.with_relationship([
+    Relationship.new({C_Eats: {'quantity': {"_gte": 5}}}, e_apple)
+])
 
 # Any entity that likes the Food entity type
 ECS.world.query.with_relationship([Relationship.new(C_Likes.new(), Food)])
@@ -167,76 +172,102 @@ var damaged_entities = ECS.world.query.with_relationship([
     Relationship.new(C_Damaged.new(), null)
 ]).execute()
 
-# Query for entities with specific fire damage amount
-var fire_damaged_50 = ECS.world.query.with_relationship([
-    Relationship.new(C_Damaged.new(), C_FireDamage.new(50))
+# Query for entities with fire damage >= 50 using component query
+var high_fire_damaged = ECS.world.query.with_relationship([
+    Relationship.new(C_Damaged.new(), {C_FireDamage: {"amount": {"_gte": 50}}})
 ]).execute()
 
-# Query for entities with any fire damage (archetype)
+# Query for entities with any fire damage (type matching)
 var any_fire_damaged = ECS.world.query.with_relationship([
     Relationship.new(C_Damaged.new(), C_FireDamage)
 ]).execute()
 ```
 
-### Weak vs Strong Matching
+### Matching Modes
 
-Control how precisely relationships are matched:
+GECS relationships support two matching modes:
+
+#### Type Matching (Default)
+Matches relationships by component type, ignoring property values:
 
 ```gdscript
-# Strong matching (default) - exact component data match
-entity.has_relationship(Relationship.new(C_Damaged.new(), C_FireDamage.new(50)), false)
+# Matches any C_Damaged relationship regardless of amount
+entity.has_relationship(Relationship.new(C_Damaged.new(), target))
 
-# Weak matching - matches by component type, ignores data values
-entity.has_relationship(Relationship.new(C_Damaged.new(), C_FireDamage.new(999)), true)
+# Matches any fire damage effect by type
+entity.has_relationship(Relationship.new(C_Damaged.new(), C_FireDamage.new()))
 
-# Get actual damage data using weak matching
-var damage_rel = entity.get_relationship(
-    Relationship.new(C_Damaged.new(), C_FireDamage.new(999)), true, true
-)
-if damage_rel:
-    print("Fire damage amount: ", damage_rel.target.amount)  # Actual damage value
+# Query for any entities with fire damage (type matching)
+var any_fire_damaged = ECS.world.query.with_relationship([
+    Relationship.new(C_Damaged.new(), C_FireDamage)
+]).execute()
+```
+
+#### Component Query Matching
+Match relationships by specific property criteria using dictionaries:
+
+```gdscript
+# Match C_Damaged relationships where amount >= 50
+var high_damage = ECS.world.query.with_relationship([
+    Relationship.new({C_Damaged: {'amount': {"_gte": 50}}}, target)
+]).execute()
+
+# Match fire damage with specific duration
+var lasting_fire = ECS.world.query.with_relationship([
+    Relationship.new(
+        C_Damaged.new(),
+        {C_FireDamage: {'duration': {"_gt": 5.0}}}
+    )
+]).execute()
+
+# Match both relation AND target with queries
+var strong_buffs = ECS.world.query.with_relationship([
+    Relationship.new(
+        {C_Buff: {'duration': {"_gt": 10}}},
+        {C_Player: {'level': {"_gte": 5}}}
+    )
+]).execute()
 ```
 
 **When to Use Each:**
-- **Strong Matching**: Find entities with exact damage amounts, specific buff values
-- **Weak Matching**: Find entities with "any fire damage", "any buff of this type"
+- **Type Matching**: Find entities with "any fire damage", "any buff of this type"
+- **Component Queries**: Find entities with exact damage amounts, specific buff durations, or property criteria
 
-**Important: Query System Behavior**
-- **World queries always use strong matching**: `ECS.world.query.with_relationship()` uses exact component data matching
-- **Entity queries support both**: Use `entity.has_relationship(rel, weak)` to control matching mode
-- **For flexible type-based queries**: Combine world queries with manual filtering or use entity-level weak matching
+### Component Queries in Relationships
 
-**Advanced: Custom Matching with equals() Override**
-
-For precise control over relationship matching, override the `equals()` method in your components:
+Query relationships by specific property values using dictionaries:
 
 ```gdscript
-class_name C_DamageRange extends Component
-    @export var min_damage: float = 0.0
-    @export var max_damage: float = 100.0
-    @export var damage_type: String = "physical"
-    
-    func _init(min_dmg: float = 0.0, max_dmg: float = 100.0, type: String = "physical"):
-        min_damage = min_dmg
-        max_damage = max_dmg
-        damage_type = type
-    
-    # Custom equals - only match damage type, ignore damage values
-    func equals(other: Component) -> bool:
-        if not other is C_DamageRange:
-            return false
-        return damage_type == other.damage_type
+# Query by relation property
+var heavy_eaters = ECS.world.query.with_relationship([
+    Relationship.new({C_Eats: {'amount': {"_gte": 5}}}, e_apple)
+]).execute()
 
-# Usage example:
-entity.add_relationship(Relationship.new(C_HasEffect.new(), C_DamageRange.new(50, 100, "fire")))
+# Query by target component property
+var high_hp_targets = ECS.world.query.with_relationship([
+    Relationship.new(C_Targeting.new(), {C_Health: {'hp': {"_gte": 100}}})
+]).execute()
 
-# This will match any fire damage regardless of amount due to custom equals()
-var has_fire_damage = entity.has_relationship(
-    Relationship.new(C_HasEffect.new(), C_DamageRange.new(0, 0, "fire")), false
-)
+# Query operators: _eq, _ne, _gt, _lt, _gte, _lte, _in, _nin, func
+var special_damage = ECS.world.query.with_relationship([
+    Relationship.new(
+        {C_Damage: {'type': {"_in": ["fire", "ice"]}}},
+        null
+    )
+]).execute()
+
+# Complex multi-property queries
+var critical_effects = ECS.world.query.with_relationship([
+    Relationship.new(
+        {C_Effect: {
+            'damage': {"_gt": 20},
+            'duration': {"_gte": 10.0},
+            'type': {"_eq": "critical"}
+        }},
+        null
+    )
+]).execute()
 ```
-
-This allows you to create sophisticated matching rules while still using strong matching in queries.
 
 ### Reverse Relationships
 
@@ -372,7 +403,7 @@ Combine component queries with limits for precise control:
 ```gdscript
 # Remove only high-damage effects (damage > 20), up to 2 of them
 entity.remove_relationship(
-    Relationship.new({C_Damage: {"damage_amount": {"_gt": 20}}}, null), 
+    Relationship.new({C_Damage: {"amount": {"_gt": 20}}}, null),
     2
 )
 
@@ -382,10 +413,25 @@ entity.remove_relationship(
     1
 )
 
-# Remove all fire damage regardless of amount (no limit)
+# Remove fire damage with specific amount range, up to 3 instances
+entity.remove_relationship(
+    Relationship.new(
+        C_Damage.new(),
+        {C_FireDamage: {"amount": {"_gte": 10, "_lte": 50}}}
+    ),
+    3
+)
+
+# Remove all fire damage regardless of amount (no limit, type matching)
 entity.remove_relationship(
     Relationship.new(C_Damage.new(), C_FireDamage),
     -1
+)
+
+# Remove buffs with specific multiplier, limit to 2
+entity.remove_relationship(
+    Relationship.new({C_Buff: {"multiplier": {"_gte": 1.5}}}, null),
+    2
 )
 ```
 
@@ -540,42 +586,42 @@ func query():
     return ECS.world.query.with_relationship([Relationship.new(C_HasEffect.new(), null)])
 
 func process_fire_damage():
-    # Find entities with any fire damage effect
+    # Find entities with any fire damage effect (type matching)
     var fire_damaged = ECS.world.query.with_relationship([
         Relationship.new(C_HasEffect.new(), C_FireDamage)
     ]).execute()
-    
+
     for entity in fire_damaged:
-        # Use weak matching to get the actual fire damage data
+        # Get the actual fire damage data using type matching
         var fire_rel = entity.get_relationship(
-            Relationship.new(C_HasEffect.new(), C_FireDamage.new()), true, true
+            Relationship.new(C_HasEffect.new(), C_FireDamage.new())
         )
         var fire_damage = fire_rel.target as C_FireDamage
-        
+
         # Apply damage
         apply_damage(entity, fire_damage.damage_per_second * delta)
-        
+
         # Reduce duration
         fire_damage.duration -= delta
         if fire_damage.duration <= 0:
             entity.remove_relationship(fire_rel)
 
 func process_speed_buffs():
-    # Find entities with speed buffs using archetype matching
+    # Find entities with speed buffs using type matching
     var speed_buffed = ECS.world.query.with_relationship([
         Relationship.new(C_HasEffect.new(), C_SpeedBuff)
     ]).execute()
-    
+
     for entity in speed_buffed:
-        # Get actual speed buff data
+        # Get actual speed buff data using type matching
         var speed_rel = entity.get_relationship(
-            Relationship.new(C_HasEffect.new(), C_SpeedBuff.new()), true, true
+            Relationship.new(C_HasEffect.new(), C_SpeedBuff.new())
         )
         var speed_buff = speed_rel.target as C_SpeedBuff
-        
+
         # Apply speed modification
         apply_speed_modifier(entity, speed_buff.multiplier)
-        
+
         # Handle duration
         speed_buff.duration -= delta
         if speed_buff.duration <= 0:
@@ -656,6 +702,13 @@ func get_entities_attacking_player():
     var player = get_player_entity()
     return ECS.world.query.with_relationship([
         Relationship.new(C_IsAttacking.new(), player)
+    ]).execute()
+
+func get_high_damage_attackers():
+    var player = get_player_entity()
+    # Find entities attacking player with damage >= 20
+    return ECS.world.query.with_relationship([
+        Relationship.new({C_IsAttacking: {'damage': {"_gte": 20.0}}}, player)
     ]).execute()
 
 func get_player_allies():
@@ -802,15 +855,23 @@ func safe_remove_effects(entity: Entity, count: int):
 
 ## 🎯 Next Steps
 
-Now that you understand relationships and limited removal:
+Now that you understand relationships, component queries, and limited removal:
 
 1. **Design relationship schemas** for your game's entities
 2. **Experiment with wildcard queries** for dynamic systems
-3. **Implement limited removal** for stack-based and graduated systems
-4. **Combine relationships with component queries** for powerful filtering
-5. **Optimize with static relationship factories** for better performance
-6. **Use limit parameters** for fine-grained control in healing, crafting, and effect systems
-7. **Learn advanced patterns** in [Best Practices Guide](BEST_PRACTICES.md)
+3. **Use component queries** to filter relationships by property criteria
+4. **Implement limited removal** for stack-based and graduated systems
+5. **Combine type matching with component queries** for flexible filtering
+6. **Optimize with static relationship factories** for better performance
+7. **Use limit parameters** for fine-grained control in healing, crafting, and effect systems
+8. **Learn advanced patterns** in [Best Practices Guide](BEST_PRACTICES.md)
+
+**Quick Start Checklist for Component Queries:**
+- ✅ Try basic component query: `Relationship.new({C_Damage: {'amount': {"_gt": 10}}}, null)`
+- ✅ Use query operators: `_eq`, `_ne`, `_gt`, `_lt`, `_gte`, `_lte`, `_in`, `_nin`
+- ✅ Query both relation and target properties
+- ✅ Combine queries with wildcards for flexible filtering
+- ✅ Use type matching for "any component of this type" queries
 
 **Quick Start Checklist for Limited Removal:**
 - ✅ Try basic limit syntax: `entity.remove_relationship(rel, 1)`
@@ -818,6 +879,7 @@ Now that you understand relationships and limited removal:
 - ✅ Create helper functions for common removal patterns
 - ✅ Integrate limits into your game systems (healing, cleansing, etc.)
 - ✅ Test edge cases (limit > available relationships)
+- ✅ Combine component queries with limits for precise control
 
 ## 📚 Related Documentation
 

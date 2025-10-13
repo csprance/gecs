@@ -100,10 +100,13 @@ static func topological_sort(systems_by_group: Dictionary) -> void:
 					if b == null:
 						# ECS.wildcard AKA 'null' means s should run before all systems
 						wildcard_front.append(s)
-					elif systems.has(b):
-						# Normal dependency within the group
-						adjacency[s].append(b)
-						indegree[b] += 1
+					else:
+						# Find system instance that matches the dependency type
+						var target_system = _find_system_by_type(systems, b)
+						if target_system:
+							# Normal dependency within the group
+							adjacency[s].append(target_system)
+							indegree[target_system] += 1
 
 			# Check for Runs.After array on s
 			# If present, each item in s.Runs.After means "s must run after that item"
@@ -114,10 +117,13 @@ static func topological_sort(systems_by_group: Dictionary) -> void:
 					if a == null:
 						# ECS.wildcard AKA 'null' means s should run after all systems
 						wildcard_back.append(s)
-					elif systems.has(a):
-						# Normal dependency within the group
-						adjacency[a].append(s)
-						indegree[s] += 1
+					else:
+						# Find system instance that matches the dependency type
+						var dependency_system = _find_system_by_type(systems, a)
+						if dependency_system:
+							# Normal dependency within the group
+							adjacency[dependency_system].append(s)
+							indegree[s] += 1
 
 		# Kahn's Algorithm begins:
 		# 1) Insert all systems with zero indegree into a queue
@@ -176,3 +182,15 @@ static func topological_sort(systems_by_group: Dictionary) -> void:
 			systems_by_group[group] = systems
 
 	# The function modifies 'systems_by_group' in-place with a topologically sorted order
+
+
+## Helper function to find a system instance by its type/class
+static func _find_system_by_type(systems: Array, target_type) -> System:
+	for system in systems:
+		# Check if the system is an instance of the target type
+		if system.get_script() == target_type:
+			return system
+		# Also check class name matching for backward compatibility
+		if system.get_script() and system.get_script().get_global_name() == str(target_type).get_file().get_basename():
+			return system
+	return null

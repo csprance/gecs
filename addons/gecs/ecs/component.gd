@@ -13,6 +13,18 @@
 ##
 ##  @export var velocity: Vector2 = Vector2.ZERO
 ##[/codeblock]
+##[br]
+## [b]Component Queries:[/b][br]
+## Use component query dictionaries to match components by specific property criteria in queries and relationships:[br]
+##[codeblock]
+##  # Query entities with health >= 50
+##  var entities = ECS.world.query.with_all([{C_Health: {'amount': {"_gte": 50}}}]).execute()
+##
+##  # Query relationships with specific damage values
+##  var entities = ECS.world.query.with_relationship([
+##      Relationship.new({C_Damage: {'amount': {"_eq": 100}}}, target)
+##  ]).execute()
+##[/codeblock]
 @icon("res://addons/gecs/assets/component.svg")
 class_name Component
 extends Resource
@@ -21,16 +33,7 @@ extends Resource
 signal property_changed(component, property_name, old_value, new_value)
 
 
-## Checks if this component equals another, including data
-func equals(other: Component) -> bool:
-	for prop in self.get_property_list():
-		var prop_name = prop.name
-		if self.get(prop_name) != other.get(prop_name):
-			return false
-	return true
-
-
-## Used to serialize the component to a dictionar with only the export variables
+## Used to serialize the component to a dictionary with only the export variables
 ## This is used for the debugger to send the data to the editor
 func serialize() -> Dictionary:
 	var data: Dictionary = {}

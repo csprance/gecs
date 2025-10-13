@@ -62,8 +62,8 @@ var systems: Array[System]:
 		return all_systems
 ## [Component] to [Entity] Index - This stores entities by component for efficient querying.
 var component_entity_index: Dictionary = {}
-## UUID to [Entity] registry - Prevents duplicate UUIDs and enables fast UUID lookups
-var entity_uuid_registry: Dictionary = {} # String (uuid) -> Entity
+## ID to [Entity] registry - Prevents duplicate IDs and enables fast ID lookups and singleton behavior
+var entity_id_registry: Dictionary = {} # String (id) -> Entity
 ## Pool of QueryBuilder instances to reduce creation overhead
 var _query_builder_pool: Array[QueryBuilder] = []
 var _pool_size_limit: int = 10
@@ -204,15 +204,19 @@ func update_pause_state(paused: bool) -> void:
 ## world.add_entity(other_entity, [component_a, component_b])
 ## [/codeblock]
 func add_entity(entity: Entity, components = null, add_to_tree = true) -> void:
-	# Check for UUID collision - if entity with same UUID exists, replace it
-	var entity_uuid = entity.uuid
-	if entity_uuid in entity_uuid_registry:
-		var existing_entity = entity_uuid_registry[entity_uuid]
-		_worldLogger.debug("UUID collision detected, replacing entity: ", existing_entity.name, " with: ", entity.name)
+	# Check for ID collision - if entity with same ID exists, replace it
+	var entity_id = GECSIO.uuid() if not entity.id else entity.id
+	entity.id = entity_id # update entity with it's new id
+	
+	if entity_id in entity_id_registry:
+		var existing_entity = entity_id_registry[entity_id]
+		_worldLogger.debug("ID collision detected, replacing entity: ", existing_entity.name, " with: ", entity.name)
 		remove_entity(existing_entity)
 	
-	# Register this entity's UUID
-	entity_uuid_registry[entity_uuid] = entity
+	# Register this entity's ID
+	entity_id_registry[entity_id] = entity
+
+	# ID will auto-generate in _enter_tree if empty, or via property getter on first access
 	
 	# Update index
 	_worldLogger.debug("add_entity Adding Entity to World: ", entity)
@@ -269,6 +273,7 @@ func add_entities(_entities: Array, components = null):
 ##      [codeblock]world.remove_entity(player_entity)[/codeblock]
 func remove_entity(entity) -> void:
 	entity = entity as Entity
+	
 	for processor in ECS.entity_postprocessors:
 		processor.call(entity)
 	entity_removed.emit(entity)
@@ -290,10 +295,11 @@ func remove_entity(entity) -> void:
 	if entity.relationship_removed.is_connected(_on_entity_relationship_removed):
 		entity.relationship_removed.disconnect(_on_entity_relationship_removed)
 	
-	# Remove from UUID registry
-	var entity_uuid = entity.uuid
-	if entity_uuid in entity_uuid_registry and entity_uuid_registry[entity_uuid] == entity:
-		entity_uuid_registry.erase(entity_uuid)
+	# Remove from ID registry
+	var entity_id = entity.id
+	if entity_id != "" and entity_id in entity_id_registry and entity_id_registry[entity_id] == entity:
+		entity_id_registry.erase(entity_id)
+	
 	
 	# Destroy entity normally
 	entity.on_destroy()
@@ -386,18 +392,19 @@ func enable_entity(entity: Entity, components = null) -> void:
 		GECSEditorDebuggerMessages.entity_enabled(entity)
 
 
-## Find an entity by its persistent UUID
-## [param uuid] The uuid to search for
-## [return] The Entity with matching UUID, or null if not found
-func get_entity_by_uuid(uuid: String) -> Entity:
-	return entity_uuid_registry.get(uuid, null)
+## Find an entity by its persistent ID
+## [param id] The id to search for
+## [return] The Entity with matching ID, or null if not found
+func get_entity_by_id(id: String) -> Entity:
+	return entity_id_registry.get(id, null)
 
 
-## Check if an entity with the given UUID exists in the world
-## [param uuid] The uuid to check
-## [return] true if an entity with this UUID exists, false otherwise  
-func has_entity_with_uuid(uuid: String) -> bool:
-	return uuid in entity_uuid_registry
+## Check if an entity with the given ID exists in the world
+## [param id] The id to check
+## [return] true if an entity with this ID exists, false otherwise
+func has_entity_with_id(id: String) -> bool:
+	return id in entity_id_registry
+
 
 #region Systems
 

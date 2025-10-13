@@ -54,16 +54,16 @@ func test_complex_nested_relationships_serialization():
 	world.add_entity(attachment2)
 	
 	# Store original UUIDs for verification
-	var player_uuid = player.uuid
-	var weapon_uuid = weapon.uuid
-	var attachment_uuid = attachment.uuid
-	var attachment2_uuid = attachment2.uuid
+	var player_id = player.id
+	var weapon_id = weapon.id
+	var attachment_id = attachment.id
+	var attachment2_id = attachment2.id
 	
 	print("=== BEFORE SERIALIZATION ===")
-	print("Player UUID: ", player_uuid)
-	print("Weapon UUID: ", weapon_uuid)
-	print("Attachment UUID: ", attachment_uuid)
-	print("Attachment2 UUID: ", attachment2_uuid)
+	print("Player UUID: ", player_id)
+	print("Weapon UUID: ", weapon_id)
+	print("Attachment UUID: ", attachment_id)
+	print("Attachment2 UUID: ", attachment2_id)
 	print("Player relationships: ", player.relationships.size())
 	print("Weapon relationships: ", weapon.relationships.size())
 	
@@ -86,7 +86,7 @@ func test_complex_nested_relationships_serialization():
 	var attachment2_data = null
 	
 	for entity_data in serialized_data.entities:
-		print("Entity: ", entity_data.entity_name, " - Auto-included: ", entity_data.auto_included, " - UUID: ", entity_data.uuid)
+		print("Entity: ", entity_data.entity_name, " - Auto-included: ", entity_data.auto_included, " - id: ", entity_data.id)
 		
 		if entity_data.auto_included:
 			auto_included_count += 1
@@ -130,7 +130,7 @@ func test_complex_nested_relationships_serialization():
 	# 10. Clear the world to simulate fresh start
 	world.purge(false)
 	assert_that(world.entities).has_size(0)
-	assert_that(world.entity_uuid_registry).has_size(0)
+	assert_that(world.entity_id_registry).has_size(0)
 	
 	# 11. Deserialize and add back to world
 	var deserialized_entities = ECS.deserialize(file_path)
@@ -146,13 +146,13 @@ func test_complex_nested_relationships_serialization():
 	
 	# 12. Verify world state after deserialization
 	assert_that(world.entities).has_size(4)
-	assert_that(world.entity_uuid_registry).has_size(4)
+	assert_that(world.entity_id_registry).has_size(4)
 	
 	# Find entities by UUID to verify they're properly restored
-	var restored_player = world.get_entity_by_uuid(player_uuid)
-	var restored_weapon = world.get_entity_by_uuid(weapon_uuid)
-	var restored_attachment = world.get_entity_by_uuid(attachment_uuid)
-	var restored_attachment2 = world.get_entity_by_uuid(attachment2_uuid)
+	var restored_player = world.get_entity_by_id(player_id)
+	var restored_weapon = world.get_entity_by_id(weapon_id)
+	var restored_attachment = world.get_entity_by_id(attachment_id)
+	var restored_attachment2 = world.get_entity_by_id(attachment2_id)
 	
 	print("=== RESTORED ENTITIES ===")
 	print("Player found: ", restored_player != null, " - Name: ", restored_player.name if restored_player else "null")
@@ -211,19 +211,19 @@ func test_complex_nested_relationships_serialization():
 	world.remove_entities(deserialized_entities)
 
 
-func test_relationship_replacement_with_uuid_collision():
+func test_relationship_replacement_with_id_collision():
 	# Test that when entities with relationships are replaced via UUID collision,
 	# the relationships update correctly to point to the new entities
 	# 1. Create initial setup: Player -> Weapon
 	var player = Entity.new()
 	player.name = "Player"
 	player.add_component(C_TestA.new())
-	player.set("uuid", "player-uuid-123")
+	player.set("id", "player-id-123")
 	
 	var old_weapon = Entity.new()
 	old_weapon.name = "OldWeapon"
 	old_weapon.add_component(C_TestB.new())
-	old_weapon.set("uuid", "weapon-uuid-456")
+	old_weapon.set("id", "weapon-id-456")
 	
 	var player_weapon_rel = Relationship.new(C_TestA.new(), old_weapon)
 	player.add_relationship(player_weapon_rel)
@@ -247,14 +247,14 @@ func test_relationship_replacement_with_uuid_collision():
 	new_weapon.name = "NewUpgradedWeapon"
 	new_weapon.add_component(C_TestB.new())
 	new_weapon.add_component(C_TestC.new()) # Added component
-	new_weapon.set("uuid", "weapon-uuid-456") # Same UUID!
+	new_weapon.set("id", "weapon-id-456") # Same UUID!
 	
 	# 4. Add new weapon (should replace old weapon)
 	world.add_entity(new_weapon)
 	
 	# Verify replacement occurred
 	assert_that(world.entities).has_size(2) # Still only 2 entities
-	var current_weapon = world.get_entity_by_uuid("weapon-uuid-456")
+	var current_weapon = world.get_entity_by_id("weapon-id-456")
 	assert_that(current_weapon).is_equal(new_weapon)
 	assert_that(current_weapon.name).is_equal("NewUpgradedWeapon")
 	assert_that(current_weapon.has_component(C_TestC)).is_true()
@@ -274,12 +274,12 @@ func test_relationship_replacement_with_uuid_collision():
 		world.add_entity(entity) # Should trigger replacements
 	
 	# Verify entities were replaced with old state
-	var final_weapon = world.get_entity_by_uuid("weapon-uuid-456")
+	var final_weapon = world.get_entity_by_id("weapon-id-456")
 	print("Final weapon name: ", final_weapon.name)
 	assert_that(final_weapon.has_component(C_TestC)).is_false() # Lost the added component
 	
 	# Verify relationship points to restored weapon
-	var final_player = world.get_entity_by_uuid("player-uuid-123")
+	var final_player = world.get_entity_by_id("player-id-123")
 	assert_that(final_player.relationships).has_size(1)
 	assert_that(final_player.relationships[0].target).is_equal(final_weapon)
 	print("Final relationship target name: ", final_player.relationships[0].target.name)

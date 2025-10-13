@@ -3,17 +3,17 @@ class_name GECSIO
 
 static func serialize(query: QueryBuilder, config: GECSSerializeConfig = null) -> GecsData:
 	var entity_data_array: Array[GecsEntityData] = []
-	var processed_entities: Dictionary = {} # uuid -> bool
-	var entity_uuid_mapping: Dictionary = {} # uuid -> Entity
-	
+	var processed_entities: Dictionary = {} # id -> bool
+	var entity_id_mapping: Dictionary = {} # id -> Entity
+
 	# Pass 1: Serialize entities from original query
 	var query_entities = query.execute() as Array[Entity]
 	for entity in query_entities:
 		var effective_config = _resolve_config(entity, config)
 		var entity_data = _serialize_entity(entity, false, effective_config)
 		entity_data_array.append(entity_data)
-		processed_entities[entity.uuid] = true
-		entity_uuid_mapping[entity.uuid] = entity
+		processed_entities[entity.id] = true
+		entity_id_mapping[entity.id] = entity
 	
 	# Pass 2: Scan relationships and auto-include referenced entities (if enabled)
 	var entities_to_check = query_entities.duplicate()
@@ -29,15 +29,15 @@ static func serialize(query: QueryBuilder, config: GECSSerializeConfig = null) -
 			for relationship in entity.relationships:
 				if relationship.target is Entity:
 					var target_entity = relationship.target as Entity
-					var target_id = target_entity.uuid
-					
+					var target_id = target_entity.id
+
 					# If this entity hasn't been processed yet, auto-include it
 					if not processed_entities.has(target_id):
 						var target_config = _resolve_config(target_entity, config)
 						var auto_entity_data = _serialize_entity(target_entity, true, target_config)
 						entity_data_array.append(auto_entity_data)
 						processed_entities[target_id] = true
-						entity_uuid_mapping[target_id] = target_entity
+						entity_id_mapping[target_id] = target_entity
 						
 						# Add to list for further relationship checking
 						entities_to_check.append(target_entity)
@@ -77,7 +77,7 @@ static func _serialize_entity(entity: Entity, auto_included: bool, config: GECSS
 		components,
 		relationships,
 		auto_included,
-		entity.uuid
+		entity.id
 	)
 
 
@@ -120,22 +120,22 @@ static func _load_from_path(file_path: String) -> Array[Entity]:
 	
 	print("GECS _load_from_path: Loaded GecsData with ", gecs_data.entities.size(), " entities")
 	var entities: Array[Entity] = []
-	var uuid_to_entity: Dictionary = {} # uuid -> Entity
-	
-	# Pass 1: Create all entities and build UUID mapping
+	var id_to_entity: Dictionary = {} # id -> Entity
+
+	# Pass 1: Create all entities and build ID mapping
 	for entity_data in gecs_data.entities:
 		var entity = _deserialize_entity(entity_data)
 		entities.append(entity)
-		uuid_to_entity[entity.uuid] = entity
-	
-	# Pass 2: Restore relationships using UUID mapping
+		id_to_entity[entity.id] = entity
+
+	# Pass 2: Restore relationships using ID mapping
 	for i in entities.size():
 		var entity = entities[i]
 		var entity_data = gecs_data.entities[i]
-		
+
 		# Restore relationships
 		for rel_data in entity_data.relationships:
-			var relationship = rel_data.to_relationship(uuid_to_entity)
+			var relationship = rel_data.to_relationship(id_to_entity)
 			if relationship != null:
 				entity.add_relationship(relationship)
 			# Note: Invalid relationships are skipped with warning logged in to_relationship()
@@ -166,16 +166,9 @@ static func _deserialize_entity(entity_data: GecsEntityData) -> Entity:
 	
 	# Set entity name
 	entity.name = entity_data.entity_name
-	
-	# Restore uuid (important: set this before accessing the property to avoid generating new UUID)
-	if entity_data.uuid != "":
-		# Set the uuid directly (bypassing the property getter to avoid UUID generation)
-		entity.set("uuid", entity_data.uuid)
-	else:
-		# Fallback for old format: generate UUID but log warning
-		push_warning("GECS deserialize: Entity '" + entity_data.entity_name + "' missing uuid, generating new UUID")
-		# Let the property getter generate a new UUID
-		var __ = entity.uuid
+
+	# Restore id (important: set this directly)
+	entity.id = entity_data.id
 	
 	# Add components (they're already properly typed as Component resources)
 	for component in entity_data.components:

@@ -48,7 +48,7 @@ func test_serialize_entity_with_basic_relationship():
 	assert_that(entity_a_data.relationships).has_size(1)
 	var rel_data = entity_a_data.relationships[0]
 	assert_that(rel_data.target_type).is_equal("Entity")
-	assert_that(rel_data.target_entity_id).is_equal(entity_b.uuid)
+	assert_that(rel_data.target_entity_id).is_equal(entity_b.id)
 
 func test_deserialize_entity_with_basic_relationship():
 	# Create and serialize entities with relationship
@@ -201,28 +201,28 @@ func test_script_target_relationship():
 	# Cleanup
 	auto_free(des_entity)
 
-func test_uuid_persistence_across_save_load_cycles():
+func test_id_persistence_across_save_load_cycles():
 	# Create entity and save its UUID
 	var entity = Entity.new()
 	entity.name = "UUIDTestEntity"
 	entity.add_component(C_TestA.new())
 	
 	world.add_entity(entity)
-	var original_uuid = entity.uuid
+	var original_id = entity.id
 	
 	# Serialize, save, and load multiple times
 	var query = world.query.with_all([C_TestA])
 	
 	for cycle in range(3):
 		var serialized_data = ECS.serialize(query)
-		var file_path = "res://reports/test_uuid_cycle_" + str(cycle) + ".tres"
+		var file_path = "res://reports/test_id_cycle_" + str(cycle) + ".tres"
 		ECS.save(serialized_data, file_path)
 		
 		var deserialized_entities = ECS.deserialize(file_path)
 		assert_that(deserialized_entities).has_size(1)
 		
 		var des_entity = deserialized_entities[0]
-		assert_that(des_entity.uuid).is_equal(original_uuid)
+		assert_that(des_entity.id).is_equal(original_id)
 		
 		# Cleanup
 		auto_free(des_entity)
@@ -296,7 +296,7 @@ func test_backward_compatibility_no_relationships():
 	var des_entity = deserialized_entities[0]
 	assert_that(des_entity.name).is_equal("NoRelationshipEntity")
 	assert_that(des_entity.relationships).has_size(0)
-	assert_that(des_entity.uuid).is_not_equal("")
+	assert_that(des_entity.id).is_not_equal("")
 	
 	# Cleanup
 	auto_free(des_entity)

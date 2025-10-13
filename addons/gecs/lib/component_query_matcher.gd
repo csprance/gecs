@@ -44,7 +44,8 @@ static func matches_query(component: Component, query: Dictionary) -> bool:
 		return true
 
 	for property in query:
-		if not component.get(property):
+		# Check if property exists (can't use truthiness check because 0, false, etc. are valid values)
+		if not property in component:
 			return false
 
 		var property_value = component.get(property)

@@ -44,16 +44,13 @@ signal relationship_removed(entity: Entity, relationship: Relationship)
 #endregion Signals
 
 #region Exported Variables
+## The id of the entity either UUID or custom string. 
+## This must be unique within a [World]. If left blank, a UUID will be generated when the entity is added to a world.
+@export var id: String
 ## Is this entity active? (Will show up in queries)
 @export var enabled: bool = true
 ## [Component]s to be attached to the entity set in the editor. These will be loaded for you and added to the [Entity]
 @export var component_resources: Array[Component] = []
-## Persistent unique identifier for this entity that survives save/load cycles
-@export var uuid: String = "":
-	get:
-		if uuid == "":
-			uuid = GECSIO.uuid()
-		return uuid
 ## Serialization config override for this specific entity (optional)
 @export var serialize_config: GECSSerializeConfig
 
@@ -62,13 +59,16 @@ signal relationship_removed(entity: Entity, relationship: Relationship)
 #region Public Variables
 ## [Component]s attached to the [Entity] in the form of Dict[resource_path:String, Component]
 var components: Dictionary = {}
+
 ## Relationships attached to the entity
 var relationships: Array[Relationship] = []
+
 ## Cache for component resource paths to avoid repeated .get_script().resource_path calls
 var _component_path_cache: Dictionary = {}
 
 ## Logger for entities to only log to a specific domain
 var _entityLogger = GECSLogger.new().domain("Entity")
+
 ## We can store ephemeral state on the entity
 var _state = {}
 
@@ -104,13 +104,6 @@ func _initialize(_components: Array = []) -> void:
 
 	# Call the lifecycle method on_ready
 	on_ready()
-
-
-func _enter_tree() -> void:
-	if Engine.is_editor_hint():
-		return
-	uuid = GECSIO.uuid() if uuid == "" else uuid
-	notify_property_list_changed()
 
 
 #endregion Built-in Virtual Methods
@@ -240,6 +233,10 @@ func has_component(component: Resource) -> bool:
 ## Adds a relationship to this entity.[br]
 ## [param relationship] The [Relationship] to add.
 func add_relationship(relationship: Relationship) -> void:
+	assert(
+		not relationship._is_query_relationship,
+		"Cannot add query relationships to entities. Query relationships (created with dictionaries) are for matching only, not for storage."
+	)
 	relationship.source = self
 	relationships.append(relationship)
 	relationship_added.emit(self, relationship)
@@ -271,20 +268,18 @@ func add_relationships(_relationships: Array):
 func remove_relationship(relationship: Relationship, limit: int = -1) -> void:
 	if limit == 0:
 		return
-	
+
 	var to_remove = []
 	var removed_count = 0
-	
+
 	for rel in relationships:
-		# Auto-detect matching mode: component queries use weak matching, instances use strong
-		var use_weak = relationship.is_component_query
-		if rel.matches(relationship, use_weak):
+		if rel.matches(relationship):
 			to_remove.append(rel)
 			removed_count += 1
 			# If limit is positive and we've reached it, stop collecting
 			if limit > 0 and removed_count >= limit:
 				break
-	
+
 	for rel in to_remove:
 		relationships.erase(rel)
 		relationship_removed.emit(self, rel)
@@ -300,42 +295,51 @@ func remove_relationships(_relationships: Array, limit: int = -1):
 
 ## Retrieves a specific [Relationship] from the entity.
 ## [param relationship] The [Relationship] to retrieve.
-## [param return] - The FIRST matching [Relationship] if it exists, otherwise `null` or `[]` if single = false
-func get_relationship(relationship: Relationship, single = true, weak = true):
-		
-	var results = []
+## [return] The first matching [Relationship] if it exists, otherwise `null`
+func get_relationship(relationship: Relationship) -> Relationship:
 	var to_remove = []
 	for rel in relationships:
 		# Check if the relationship is valid
 		if not rel.valid():
 			to_remove.append(rel)
 			continue
-		if rel.matches(relationship, weak):
-			if single:
-				return rel
+		if rel.matches(relationship):
+			# Remove invalid relationships before returning
+			for invalid_rel in to_remove:
+				relationships.erase(invalid_rel)
+				relationship_removed.emit(self, invalid_rel)
+			return rel
+	# Remove invalid relationships
+	for rel in to_remove:
+		relationships.erase(rel)
+		relationship_removed.emit(self, rel)
+	return null
+
+
+## Retrieves [Relationship]s from the entity.
+## [param relationship] The [Relationship]s to retrieve.
+## [return] Array of all matching [Relationship]s (empty array if none found).
+func get_relationships(relationship: Relationship) -> Array[Relationship]:
+	var results: Array[Relationship] = []
+	var to_remove = []
+	for rel in relationships:
+		# Check if the relationship is valid
+		if not rel.valid():
+			to_remove.append(rel)
+			continue
+		if rel.matches(relationship):
 			results.append(rel)
 	# Remove invalid relationships
 	for rel in to_remove:
 		relationships.erase(rel)
 		relationship_removed.emit(self, rel)
-	var retval = null if results.is_empty() else results
-	if not single and retval == null:
-		return []
-
-	return retval
-
-
-## Retrieves [Relationship]s from the entity.
-## [param relationship] The [Relationship]s to retrieve.
-## [param return] - All matching [Relationship]s if it exists, otherwise `null`.
-func get_relationships(relationship: Relationship, weak = true) -> Array:
-	return get_relationship(relationship, false, weak)
+	return results
 
 
 ## Checks if the entity has a specific relationship.[br]
 ## [param relationship] The [Relationship] to check for.
-func has_relationship(relationship: Relationship, weak = true) -> bool:
-	return get_relationship(relationship, true, weak) != null
+func has_relationship(relationship: Relationship) -> bool:
+	return get_relationship(relationship) != null
 
 
 #endregion Relationships

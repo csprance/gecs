@@ -48,9 +48,6 @@ enum Runs {
 #endregion Exported Variables
 
 #region Public Variables
-## The order in which this system should run (Determined by kahns algorithm and the deps method Runs.Before and Runs.After deps)
-var order := 0
-
 ## Is this system paused. (Will be skipped if true)
 var paused := false
 

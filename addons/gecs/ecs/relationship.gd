@@ -12,8 +12,8 @@
 ## [br]• [b]Archetype Relationships:[/b] Link entities to component/entity classes
 ##
 ## [b]Query Features:[/b]
-## [br]• [b]Exact Matching:[/b] Find entities with specific relationship data
-## [br]• [b]Weak Matching:[/b] Find entities by relationship type regardless of data
+## [br]• [b]Type Matching:[/b] Find entities by relationship component type (default)
+## [br]• [b]Query Matching:[/b] Use dictionaries to match by specific property criteria
 ## [br]• [b]Wildcard Queries:[/b] Use [code]null[/code] targets to find any relationship of a type
 ##
 ## [b]Basic Entity Relationship Example:[/b]
@@ -42,36 +42,36 @@
 ##         Relationship.new(C_Damaged.new(), null)
 ##     ]).execute()
 ##     
-##     # Query for entities with specific fire damage amount
+##     # Query for entities with fire damage amount >= 50 using component query
 ##     var fire_damaged = ECS.world.query.with_relationship([
-##         Relationship.new(C_Damaged.new(), C_FireDamage.new(50))
+##         Relationship.new(C_Damaged.new(), {C_FireDamage: {'amount': {"_gte": 50}}})
 ##     ]).execute()
-##     
-##     # Check if entity has any fire damage using weak matching
+##
+##     # Check if entity has any fire damage (type matching)
 ##     var has_fire_damage = entity.has_relationship(
-##         Relationship.new(C_Damaged.new(), C_FireDamage.new(999)), true
+##         Relationship.new(C_Damaged.new(), C_FireDamage.new())
 ##     )
 ## [/codeblock]
 ##
-## [b]Weak vs Strong Matching:[/b]
+## [b]Component Query Examples:[/b]
 ## [codeblock]
-##     # Strong matching (default) - exact component data match
-##     entity.has_relationship(Relationship.new(C_Eats.new(5), target), false)
-##     
-##     # Weak matching - matches by component type, ignores data
-##     entity.has_relationship(Relationship.new(C_Eats.new(999), target), true)
-## [/codeblock]
+##     # Query relation by property value
+##     var entities = ECS.world.query.with_relationship([
+##         Relationship.new({C_Eats: {'value': {"_eq": 8}}}, e_apple)
+##     ]).execute()
 ##
-## [b]Custom Matching with equals() Override:[/b]
-## [codeblock]
-##     # Override equals() in your component for custom matching logic
-##     class_name C_DamageType extends Component:
-##         @export var damage_type: String = "physical"
-##         
-##         func equals(other: Component) -> bool:
-##             if not other is C_DamageType:
-##                 return false
-##             return damage_type == other.damage_type  # Only match by type
+##     # Query target by property value
+##     var entities = ECS.world.query.with_relationship([
+##         Relationship.new(C_Damage.new(), {C_Health: {'amount': {"_gte": 50}}})
+##     ]).execute()
+##
+##     # Query both relation AND target
+##     var entities = ECS.world.query.with_relationship([
+##         Relationship.new(
+##             {C_Buff: {'duration': {"_gt": 10}}},
+##             {C_Player: {'level': {"_gte": 5}}}
+##         )
+##     ]).execute()
 ## [/codeblock]
 class_name Relationship
 extends Resource
@@ -90,20 +90,34 @@ var source
 ## Component query for relation matching (if relation was created from dictionary)
 var relation_query: Dictionary = {}
 
-## Flag to track if this relationship was created from a component query dictionary
-var is_component_query: bool = false
+## Component query for target matching (if target was created from dictionary)
+var target_query: Dictionary = {}
+
+## Flag to track if this relationship was created from a component query dictionary (private - used for validation)
+var _is_query_relationship: bool = false
 
 
 func _init(_relation = null, _target = null):
 	# Handle component queries (dictionaries) for relation
 	if _relation is Dictionary:
-		is_component_query = true
+		_is_query_relationship = true
 		# Extract component type and query from dictionary
 		for component_type in _relation:
 			var query = _relation[component_type]
 			# Store the query and create component instance
 			relation_query = query
 			_relation = component_type.new()
+			break
+
+	# Handle component queries (dictionaries) for target
+	if _target is Dictionary:
+		_is_query_relationship = true
+		# Extract component type and query from dictionary
+		for component_type in _target:
+			var query = _target[component_type]
+			# Store the query and create component instance
+			target_query = query
+			_target = component_type.new()
 			break
 
 	# Assert for class reference vs instance for relation (skip for dictionaries)
@@ -118,11 +132,12 @@ func _init(_relation = null, _target = null):
 		_relation == null or _relation is Component, "Relation must be null or a Component instance"
 	)
 
-	# Assert for class reference vs instance for target
-	assert(
-		not (_target != null and _target is GDScript and _target is Component),
-		"Target must be an instance of Component (did you forget to call .new()?)"
-	)
+	# Assert for class reference vs instance for target (skip for dictionaries)
+	if not _target is Dictionary:
+		assert(
+			not (_target != null and _target is GDScript and _target is Component),
+			"Target must be an instance of Component (did you forget to call .new()?)"
+		)
 
 	# Assert for target type
 	assert(
@@ -136,14 +151,13 @@ func _init(_relation = null, _target = null):
 
 ## Checks if this relationship matches another relationship.
 ## [param other]: The [Relationship] to compare with.
-## [param weak]: If [code]true[/code], uses weak matching (component type and queries). If [code]false[/code], uses strong matching (exact component data).
-## [return]: `true` if both the relation and target match according to the matching mode, `false` otherwise.
+## [return]: `true` if both the relation and target match, `false` otherwise.
 ##
 ## [b]Matching Modes:[/b]
-## [br]• [b]Weak Matching (default as of v5.0):[/b] Components match by type, component queries are evaluated
-## [br]• [b]Strong Matching:[/b] Components must have identical data using [code]equals()[/code] method
+## [br]• [b]Type Matching:[/b] Components match by type (default behavior)
+## [br]• [b]Query Matching:[/b] If component query dictionary used, evaluates property criteria
 ## [br]• [b]Wildcard Matching:[/b] [code]null[/code] relations or targets act as wildcards and match anything
-func matches(other: Relationship, weak = true) -> bool:
+func matches(other: Relationship) -> bool:
 	var rel_match = false
 	var target_match = false
 
@@ -152,27 +166,23 @@ func matches(other: Relationship, weak = true) -> bool:
 		# If either relation is null, consider it a match (wildcard)
 		rel_match = true
 	else:
-		if weak:
-			# Check if other relation has component query (query relationships)
-			if not other.relation_query.is_empty():
-				# Other has component query, check if this relation matches that query
-				if relation.get_script() == other.relation.get_script():
-					rel_match = ComponentQueryMatcher.matches_query(relation, other.relation_query)
-				else:
-					rel_match = false
-			# Check if this relation has component query (this is query relationship)
-			elif not relation_query.is_empty():
-				# This has component query, check if other relation matches this query
-				if relation.get_script() == other.relation.get_script():
-					rel_match = ComponentQueryMatcher.matches_query(other.relation, relation_query)
-				else:
-					rel_match = false
+		# Check if other relation has component query (query relationships)
+		if not other.relation_query.is_empty():
+			# Other has component query, check if this relation matches that query
+			if relation.get_script() == other.relation.get_script():
+				rel_match = ComponentQueryMatcher.matches_query(relation, other.relation_query)
 			else:
-				# Standard weak matching by script type
-				rel_match = relation.get_script() == other.relation.get_script()
+				rel_match = false
+		# Check if this relation has component query (this is query relationship)
+		elif not relation_query.is_empty():
+			# This has component query, check if other relation matches this query
+			if relation.get_script() == other.relation.get_script():
+				rel_match = ComponentQueryMatcher.matches_query(other.relation, relation_query)
+			else:
+				rel_match = false
 		else:
-			# Use the equals method from the Component class to compare relations
-			rel_match = relation.equals(other.relation)
+			# Standard type matching by script type
+			rel_match = relation.get_script() == other.relation.get_script()
 
 	# Compare targets
 	if other.target == null or target == null:
@@ -194,11 +204,24 @@ func matches(other: Relationship, weak = true) -> bool:
 			# Both targets are archetypes; compare directly
 			target_match = target == other.target
 		elif target is Component and other.target is Component:
-			# Both targets are components; use weak or strong matching
-			if weak:
-				target_match = target.get_script() == other.target.get_script()
+			# Both targets are components; check for query or type matching
+			# Check if other target has component query
+			if not other.target_query.is_empty():
+				# Other has component query, check if this target matches that query
+				if target.get_script() == other.target.get_script():
+					target_match = ComponentQueryMatcher.matches_query(target, other.target_query)
+				else:
+					target_match = false
+			# Check if this target has component query
+			elif not target_query.is_empty():
+				# This has component query, check if other target matches this query
+				if target.get_script() == other.target.get_script():
+					target_match = ComponentQueryMatcher.matches_query(other.target, target_query)
+				else:
+					target_match = false
 			else:
-				target_match = target.equals(other.target)
+				# Standard type matching by script type
+				target_match = target.get_script() == other.target.get_script()
 		elif target is Component and other.target is Script:
 			# target is component instance, other.target is component archetype
 			target_match = target.get_script() == other.target

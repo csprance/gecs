@@ -13,7 +13,7 @@ extends Resource
 ## Valid values: "Entity", "Component", "Script"
 @export var target_type: String = ""
 
-## The uuid of the target entity (used when target_type is "Entity")
+## The id of the target entity (used when target_type is "Entity")
 @export var target_entity_id: String = ""
 
 ## The target component data (used when target_type is "Component")
@@ -49,7 +49,7 @@ static func from_relationship(relationship: Relationship) -> GecsRelationshipDat
 		data.target_type = "null"
 	elif relationship.target is Entity:
 		data.target_type = "Entity"
-		data.target_entity_id = relationship.target.uuid
+		data.target_entity_id = relationship.target.id
 	elif relationship.target is Component:
 		data.target_type = "Component"
 		data.target_component_data = relationship.target.duplicate(true)
