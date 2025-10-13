@@ -8,19 +8,6 @@
 
 config_version=5
 
-[addons]
-
-resources_spreadsheet_view/array_color_tint=100.0
-resources_spreadsheet_view/color_rows=true
-resources_spreadsheet_view/array_min_width=128.0
-resources_spreadsheet_view/resource_preview_size=32.0
-resources_spreadsheet_view/clip_headers=false
-resources_spreadsheet_view/dupe_arrays=true
-resources_spreadsheet_view/context_menu_on_leftclick=false
-resources_spreadsheet_view/fold_docks=true
-resources_spreadsheet_view/resource_cell_label_mode=1
-resources_spreadsheet_view/freeze_first_column=true
-
 [application]
 
 config/name="GECS"
@@ -44,37 +31,9 @@ manager/music/bus="Music"
 ECS="*res://addons/gecs/ecs/ecs.gd"
 DebugMenu="*res://addons/debug_menu/debug_menu.tscn"
 
-[debug]
-
-settings/stdout/verbose_stdout=true
-file_logging/enable_file_logging=true
-gdscript/warnings/unused_parameter=0
-gdscript/warnings/unused_signal=0
-
-[display]
-
-window/size/always_on_top=true
-
-[editor]
-
-movie_writer/movie_file="D:/code/zamn/qt/recordings/godot-movie-recording.avi"
-
 [editor_plugins]
 
 enabled=PackedStringArray("res://addons/debug_menu/plugin.cfg", "res://addons/gdUnit4/plugin.cfg", "res://addons/gecs/plugin.cfg")
-
-[file_customization]
-
-folder_colors={
-"res://game/actions/": "pink",
-"res://game/ai/": "yellow",
-"res://game/assets/": "green",
-"res://game/components/": "gray",
-"res://game/data/": "blue",
-"res://game/entities/": "purple",
-"res://game/lib/": "teal",
-"res://game/systems/": "orange"
-}
 
 [gdunit4]
 
@@ -105,10 +64,6 @@ baking/use_crash_prevention_checks=false
 [physics]
 
 3d/physics_engine="Jolt Physics"
-
-[plugins]
-
-gdscript_utilities/print_internal_messages=true
 
 [rendering]
 
