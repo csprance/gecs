@@ -42,69 +42,131 @@ ECS.process(delta)
 
 ## Development Commands
 
-### Running Tests
+### Running Tests with GdUnit4
 
 The project uses gdUnit4 for testing. Tests are located in `addons/gecs/tests/`.
 
-**Prerequisites:**
-Set the GODOT_BIN environment variable to your Godot executable path.
+#### Prerequisites
 
-**Test Commands:**
+**Windows:**
+```cmd
+# Set environment variable (one-time setup)
+setx GODOT_BIN "D:\path\to\Godot.exe"
+
+# Enable colored console output (one-time setup)
+REG ADD HKCU\CONSOLE /f /v VirtualTerminalLevel /t REG_DWORD /d 1
+```
+
+**Mac/Linux:**
+```bash
+# Set environment variable (add to ~/.bashrc or ~/.zshrc)
+export GODOT_BIN="/Applications/Godot.app/Contents/MacOS/Godot"
+
+# Make script executable
+chmod +x ./addons/gdUnit4/runtest.sh
+```
+
+#### Basic Test Commands
+
+**IMPORTANT:** Always use `res://` prefix for file paths!
 
 ```bash
 # Windows
-addons/gdUnit4/runtest.cmd -a "addons\\gecs\\tests"
-addons/gdUnit4/runtest.cmd -a res://addons/gecs/tests/test_world.gd
-addons/gdUnit4/runtest.cmd -a res://addons/gecs/tests/ -c
+addons/gdUnit4/runtest.cmd -a "res://addons/gecs/tests"
+addons/gdUnit4/runtest.cmd -a "res://addons/gecs/tests/core/test_world.gd"
+addons/gdUnit4/runtest.cmd -a "res://addons/gecs/tests" -c
 
 # Linux/Mac
-addons/gdUnit4/runtest.sh -a "addons\\gecs\\tests"
-addons/gdUnit4/runtest.sh -a res://addons/gecs/tests/test_world.gd
-addons/gdUnit4/runtest.sh -a res://addons/gecs/tests/ -c
+addons/gdUnit4/runtest.sh -a "res://addons/gecs/tests"
+addons/gdUnit4/runtest.sh -a "res://addons/gecs/tests/core/test_world.gd"
+addons/gdUnit4/runtest.sh -a "res://addons/gecs/tests" -c
 ```
 
-**Running Specific Tests:**
+#### Running Specific Tests
 
 ```bash
-# Run specific test file
-addons/gdUnit4/runtest.sh -a "addons/gecs/tests/performance/performance_test_components.gd"
+# Run specific test file (use res:// prefix!)
+addons/gdUnit4/runtest.sh -a "res://addons/gecs/tests/core/test_entity.gd"
 
-# Run specific test method using ignore flag (opposite selection)
-addons/gdUnit4/runtest.sh -a "addons/gecs/tests/performance" -i "PerformanceTestComponents:test_method_to_skip"
+# Run specific test method with :: syntax (NO SPACES)
+addons/gdUnit4/runtest.sh -a "res://addons/gecs/tests/core/test_entity.gd::test_add_and_get_component"
 
 # Run multiple test directories
-addons/gdUnit4/runtest.sh -a "addons/gecs/tests/core" -a "addons/gecs/tests/performance"
+addons/gdUnit4/runtest.sh -a "res://addons/gecs/tests/core" -a "res://addons/gecs/tests/performance"
+
+# Ignore specific tests (opposite selection)
+addons/gdUnit4/runtest.sh -a "res://addons/gecs/tests/performance" -i "TestEntityPerf:test_entity_creation"
 
 # Continue on failures (don't fail fast)
-addons/gdUnit4/runtest.sh -a "addons/gecs/tests" -c
+addons/gdUnit4/runtest.sh -a "res://addons/gecs/tests" -c
 
 # Use specific test configuration
 addons/gdUnit4/runtest.sh -conf GdUnitRunner.cfg
 ```
 
-**Key Options:**
-- `-a, --add`: Add test suite/directory to execution
-- `-i, --ignore`: Ignore specific test suite or test case  
+#### Command Line Options
+
+- `-a, --add`: Add test suite/directory to execution (REQUIRED)
+- `-i, --ignore`: Ignore specific test suite or test case
 - `-c, --continue`: Continue on test failures (don't fail fast)
 - `-conf, --config`: Run tests from specific config file
+- `--help`: Show all available commands
+- `--help-advanced`: Show advanced options
+
+#### Parameterized Tests
+
+GdUnit4 supports parameterized tests to run the same test with different inputs:
+
+```gdscript
+# Example: test with multiple scales
+func test_entity_creation(scale: int, test_parameters := [[100], [1000], [10000]]):
+    var entities = []
+
+    for i in scale:
+        entities.append(Entity.new())
+
+    # Test will run 3 times with scale = 100, 1000, 10000
+```
+
+#### Common Gotchas
+
+1. **Always use `res://` prefix** for file paths
+2. **No spaces around `::`** when running specific test methods
+3. **Path format matters**: Windows uses backslashes in regular paths but forward slashes with `res://`
+4. **Test names are case-sensitive**
+5. **Make sure GODOT_BIN is set** before running tests
 
 ### Performance Testing
 
-Comprehensive performance test suite available for tracking optimization effectiveness:
+Simple performance tests that record timing data to JSONL files for easy graphing:
 
 ```bash
-# Windows
-addons/gdUnit4/runtest.cmd -a res://addons/gecs/tests/performance/performance_test_master.gd
-addons/gdUnit4/runtest.cmd -a res://addons/gecs/tests/performance/performance_test_master.gd::test_performance_smoke_test
-addons/gdUnit4/runtest.cmd -a res://addons/gecs/tests/performance/performance_test_[entities|components|queries|systems|arrays|integration].gd
+# Run all performance tests
+addons/gdUnit4/runtest.sh -a "res://addons/gecs/tests/performance"
 
-# Linux/Mac
-addons/gdUnit4/runtest.sh -a res://addons/gecs/tests/performance/performance_test_master.gd
-addons/gdUnit4/runtest.sh -a res://addons/gecs/tests/performance/performance_test_master.gd::test_performance_smoke_test
-addons/gdUnit4/runtest.sh -a res://addons/gecs/tests/performance/performance_test_[entities|components|queries|systems|arrays|integration].gd
+# Run specific performance category
+addons/gdUnit4/runtest.sh -a "res://addons/gecs/tests/performance/test_entity_perf.gd"
+addons/gdUnit4/runtest.sh -a "res://addons/gecs/tests/performance/test_component_perf.gd"
+addons/gdUnit4/runtest.sh -a "res://addons/gecs/tests/performance/test_query_perf.gd"
+addons/gdUnit4/runtest.sh -a "res://addons/gecs/tests/performance/test_system_perf.gd"
+
+# Run specific test with specific scale
+addons/gdUnit4/runtest.sh -a "res://addons/gecs/tests/performance/test_entity_perf.gd::test_entity_creation"
 ```
 
-Performance tests cover all critical ECS operations and provide regression detection. See `addons/gecs/docs/PERFORMANCE_TESTING.md` for detailed documentation.
+**Performance Results:**
+- Each test writes to `reports/perf/{test_name}.jsonl`
+- One JSON per line format for easy parsing
+- Track performance over time by test name and scale
+- Example: `reports/perf/entity_creation.jsonl`
+
+```jsonl
+{"timestamp":"2025-01-13T10:23:45","test":"entity_creation","scale":100,"time_ms":12.5,"godot_version":"4.5"}
+{"timestamp":"2025-01-13T11:30:12","test":"entity_creation","scale":100,"time_ms":11.8,"godot_version":"4.5"}
+```
+
+**Using Parameterized Tests:**
+Performance tests use GdUnit4's parameterized test feature to automatically run tests at different scales (100, 1000, 10000 entities). Each scale generates a separate result entry.
 
 ### Creating Releases
 
@@ -189,19 +251,48 @@ The project provides script templates in `script_templates/Node/` for:
 
 ## Relationships System
 
-GECS supports entity relationships for hierarchical queries:
+GECS supports entity relationships for hierarchical queries with two matching modes:
 
+### Type Matching (Default)
 ```gdscript
 # Add relationship
-entity.add_relationship(Relationship.new(R_ChildOf, parent_entity))
+entity.add_relationship(Relationship.new(C_ChildOf.new(), parent_entity))
 
-# Query relationships
-q.with_relationship([R_ChildOf])
+# Query by type (matches any component of this type)
+q.with_relationship([Relationship.new(C_ChildOf.new(), parent_entity)])
 
-# Remove relationships with limits (NEW in v5.1+)
+# Check relationships by type
+entity.has_relationship(Relationship.new(C_Damage.new(), target))
+```
+
+### Component Query Matching
+```gdscript
+# Query relationships by property criteria
+var high_damage = q.with_relationship([
+    Relationship.new({C_Damage: {'amount': {"_gte": 50}}}, target)
+]).execute()
+
+# Query both relation AND target properties
+var strong_buffs = q.with_relationship([
+    Relationship.new(
+        {C_Buff: {'duration': {"_gt": 10}}},
+        {C_Player: {'level': {"_gte": 5}}}
+    )
+]).execute()
+```
+
+### Limited Removal (NEW in v5.1+)
+```gdscript
+# Remove specific number of relationships
 entity.remove_relationship(Relationship.new(C_Damage.new(), null), 1)  # Remove 1 damage
 entity.remove_relationship(Relationship.new(C_Buff.new(), null), 3)    # Remove up to 3 buffs
 entity.remove_relationship(Relationship.new(C_Effect.new(), null))     # Remove all effects (default)
+
+# Remove with component queries
+entity.remove_relationship(
+    Relationship.new({C_Damage: {'amount': {"_gt": 20}}}, null),
+    2  # Remove up to 2 high-damage effects
+)
 ```
 
 ## Common Patterns
