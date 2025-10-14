@@ -1,0 +1,33 @@
+{
+	"servers": {
+		"godot": {
+			"command": "npx",
+			"args": [
+				"godot-mcp@0.1.0"
+			],
+			"cwd": "${input:cwd}",
+			"env": {
+				"GODOT_PATH": "${input:godot_path}",
+				"DEBUG": "${input:debug}"
+			},
+			"type": "stdio"
+		}
+	},
+	"inputs": [
+		{
+			"id": "cwd",
+			"type": "promptString",
+			"description": "What is the working directory for your Godot projects? (cwd)"
+		},
+		{
+			"id": "godot_path",
+			"type": "promptString",
+			"description": "Do you want to specify a custom path to the Godot executable? (GODOT_PATH)"
+		},
+		{
+			"id": "debug",
+			"type": "promptString",
+			"description": "Do you want to enable debug logging? (DEBUG)"
+		}
+	]
+}
