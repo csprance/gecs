@@ -1,7 +1,0 @@
-# Godot 4+ specific ignores
-.godot/
-/android/
-repomix-output.txt
-
-reports/
-.claude/settings.local.json
