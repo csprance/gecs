@@ -39,10 +39,6 @@ enabled=PackedStringArray("res://addons/debug_menu/plugin.cfg", "res://addons/gd
 
 ui/inspector/tree_view_mode=1
 
-[gecs]
-
-settings/log_level=1
-
 [global_group]
 
 navigation_mesh_source_group=""
