@@ -1,10 +1,11 @@
-[gd_scene load_steps=13 format=3 uid="uid://bwg3a55vnyovm"]
+[gd_scene load_steps=14 format=3 uid="uid://bwg3a55vnyovm"]
 
 [ext_resource type="Script" uid="uid://dv6gko4duu5ic" path="res://example/entities/random_mover.gd" id="1_c1i3g"]
 [ext_resource type="Script" uid="uid://b6k13gc2m4e5s" path="res://addons/gecs/ecs/component.gd" id="2_o4fpx"]
 [ext_resource type="Script" uid="uid://b7r4xkfiy8qi0" path="res://example/components/c_velocity.gd" id="3_5rwi4"]
 [ext_resource type="Script" uid="uid://bx3pmlknhmilu" path="res://example/components/c_timer.gd" id="4_5rwi4"]
 [ext_resource type="Script" uid="uid://d0fit03sansqe" path="res://example/components/c_lifetime.gd" id="5_k3wa3"]
+[ext_resource type="PackedScene" uid="uid://dnkm23kafd5qn" path="res://example/lib/entity_visible_on_screen_enabler_3d.tscn" id="6_b8ng6"]
 
 [sub_resource type="Resource" id="Resource_p5wvt"]
 script = ExtResource("4_5rwi4")
@@ -138,6 +139,8 @@ _data = {
 [node name="RandomMover" type="Node3D"]
 script = ExtResource("1_c1i3g")
 component_resources = Array[ExtResource("2_o4fpx")]([SubResource("Resource_p5wvt"), SubResource("Resource_k3wa3"), SubResource("Resource_b8ng6")])
+
+[node name="EntityVisibleOnScreenEnabler3D" parent="." instance=ExtResource("6_b8ng6")]
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="."]
 mesh = SubResource("TorusMesh_o4fpx")

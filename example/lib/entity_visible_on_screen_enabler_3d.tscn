@@ -1,0 +1,10 @@
+[gd_scene load_steps=2 format=3 uid="uid://dnkm23kafd5qn"]
+
+[ext_resource type="Script" uid="uid://bi0236cfu4osr" path="res://game/lib/entity_visible_on_screen_enabler_3d.gd" id="1_t0x7q"]
+
+[node name="EntityVisibleOnScreenEnabler3D" type="VisibleOnScreenEnabler3D"]
+aabb = AABB(-1.46329, -1.69021, -1.51593, 2.92658, 3.38042, 3.03186)
+script = ExtResource("1_t0x7q")
+
+[connection signal="screen_entered" from="." to="." method="_on_screen_entered"]
+[connection signal="screen_exited" from="." to="." method="_on_screen_exited"]
