@@ -109,17 +109,28 @@ func _return_query_builder_to_pool(query_builder: QueryBuilder) -> void:
 
 
 ## Generate a cache key for query parameters
-func _generate_query_cache_key(all_components: Array, any_components: Array, exclude_components: Array) -> String:
-	var all_paths = all_components.map(func(x): return x.resource_path if x.has_method("resource_path") else str(x))
-	var any_paths = any_components.map(func(x): return x.resource_path if x.has_method("resource_path") else str(x))
-	var exclude_paths = exclude_components.map(func(x): return x.resource_path if x.has_method("resource_path") else str(x))
-	
-	# Sort arrays to ensure consistent cache keys regardless of order
-	all_paths.sort()
-	any_paths.sort()
-	exclude_paths.sort()
-	
-	return "ALL:%s|ANY:%s|EXCLUDE:%s" % [",".join(all_paths), ",".join(any_paths), ",".join(exclude_paths)]
+## Uses component resource_path for stable cache keys across query builder instances
+func _generate_query_cache_key(all_components: Array, any_components: Array, exclude_components: Array) -> int:
+	# Use resource_path hash (stable across instances) - much faster than string concat
+	# We XOR component hashes with different primes to ensure unique combinations
+	var h = 0
+
+	# Hash all_components (use prime 31)
+	for comp in all_components:
+		var path = comp.resource_path if comp.has_method("resource_path") else str(comp)
+		h = h ^ (hash(path) * 31)
+
+	# Hash any_components (use prime 37 for different domain)
+	for comp in any_components:
+		var path = comp.resource_path if comp.has_method("resource_path") else str(comp)
+		h = h ^ (hash(path) * 37)
+
+	# Hash exclude_components (use prime 41)
+	for comp in exclude_components:
+		var path = comp.resource_path if comp.has_method("resource_path") else str(comp)
+		h = h ^ (hash(path) * 41)
+
+	return h
 
 
 #endregion Private Methods
@@ -548,7 +559,9 @@ func _query(all_components = [], any_components = [], exclude_components = [], e
 	var cache_key = _generate_query_cache_key(all_components, any_components, exclude_components)
 	if _query_result_cache.has(cache_key):
 		_cache_hits += 1
-		return _query_result_cache[cache_key].duplicate()
+		# Return cached array directly - user must not modify returned array!
+		# This is standard ECS practice: query results are read-only views
+		return _query_result_cache[cache_key]
 
 	_cache_misses += 1
 	var map_resource_path = func(x): return x.resource_path
@@ -627,7 +640,8 @@ func _query(all_components = [], any_components = [], exclude_components = [], e
 
 	# Cache the result for future queries
 	_query_result_cache[cache_key] = result.to_array()
-	return _query_result_cache[cache_key].duplicate()
+	# Return cached array directly - user must not modify returned array!
+	return _query_result_cache[cache_key]
 
 
 #region Index Management Functions

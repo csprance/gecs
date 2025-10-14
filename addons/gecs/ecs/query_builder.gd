@@ -186,9 +186,10 @@ func execute() -> Array:
 		_cache_valid = true
 
 	# Apply component queries on the cached result
-	if not _all_components_queries.is_empty():
+	# Only filter if there are actual property queries (not just empty {} placeholders)
+	if not _all_components_queries.is_empty() and _has_actual_queries(_all_components_queries):
 		result = _filter_entities_by_queries(result, _all_components, _all_components_queries, true)
-	if not _any_components_queries.is_empty():
+	if not _any_components_queries.is_empty() and _has_actual_queries(_any_components_queries):
 		result = _filter_entities_by_queries(
 			result, _any_components, _any_components_queries, false
 		)
@@ -265,6 +266,14 @@ func _internal_execute() -> Array:
 	# Return the structural query result (caching handled in execute())
 	# Note: enabled/disabled filtering is now handled in World._query for optimal performance
 	return result
+
+
+## Check if any query in the array has actual property filters (not just empty {})
+func _has_actual_queries(queries: Array) -> bool:
+	for query in queries:
+		if not query.is_empty():
+			return true
+	return false
 
 
 ## Filter entities based on component queries
