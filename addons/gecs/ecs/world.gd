@@ -62,6 +62,10 @@ var systems: Array[System]:
 		return all_systems
 ## [Component] to [Entity] Index - This stores entities by component for efficient querying.
 var component_entity_index: Dictionary = {}
+## [Component] to [Enabled Entity] Index - Separate index for enabled entities only
+var component_enabled_entity_index: Dictionary = {}
+## [Component] to [Disabled Entity] Index - Separate index for disabled entities only
+var component_disabled_entity_index: Dictionary = {}
 ## ID to [Entity] registry - Prevents duplicate IDs and enables fast ID lookups and singleton behavior
 var entity_id_registry: Dictionary = {} # String (id) -> Entity
 ## Pool of QueryBuilder instances to reduce creation overhead
@@ -329,6 +333,10 @@ func disable_entity(entity) -> Entity:
 	entity.enabled = false # This will trigger _on_entity_enabled_changed via setter
 	entity_disabled.emit(entity)
 	_worldLogger.debug("disable_entity Disabling Entity: ", entity)
+
+	# Move entity from enabled index to disabled index
+	_move_entity_to_disabled_index(entity)
+
 	entity.component_added.disconnect(_on_entity_component_added)
 	entity.component_removed.disconnect(_on_entity_component_removed)
 	entity.relationship_added.disconnect(_on_entity_relationship_added)
@@ -368,6 +376,9 @@ func enable_entity(entity: Entity, components = null) -> void:
 	_worldLogger.debug("enable_entity Enabling Entity to World: ", entity)
 	entity.enabled = true # This will trigger _on_entity_enabled_changed via setter
 	entity_enabled.emit(entity)
+
+	# Move entity from disabled index to enabled index
+	_move_entity_to_enabled_index(entity)
 
 	# Connect to entity signals for components so we can track global component state
 	if not entity.component_added.is_connected(_on_entity_component_added):
@@ -528,23 +539,32 @@ func purge(should_free = true, keep := []) -> void:
 
 #endregion Systems
 
-func _query(all_components = [], any_components = [], exclude_components = []) -> Array:
+func _query(all_components = [], any_components = [], exclude_components = [], enabled_filter = null) -> Array:
 	# Early return if no components specified
 	if all_components.is_empty() and any_components.is_empty() and exclude_components.is_empty():
 		return entities
-	
+
 	# Check world-level cache first
 	var cache_key = _generate_query_cache_key(all_components, any_components, exclude_components)
 	if _query_result_cache.has(cache_key):
 		_cache_hits += 1
 		return _query_result_cache[cache_key].duplicate()
-	
+
 	_cache_misses += 1
 	var map_resource_path = func(x): return x.resource_path
 	# Convert all component arrays to resource paths
 	var _all := all_components.map(map_resource_path)
 	var _any := any_components.map(map_resource_path)
 	var _exclude := exclude_components.map(map_resource_path)
+
+	# Choose the appropriate index based on enabled_filter
+	var active_index: Dictionary
+	if enabled_filter == true:
+		active_index = component_enabled_entity_index
+	elif enabled_filter == false:
+		active_index = component_disabled_entity_index
+	else:
+		active_index = component_entity_index
 
 	var result: Set
 
@@ -558,7 +578,7 @@ func _query(all_components = [], any_components = [], exclude_components = []) -
 			var smallest_component_key := ""
 
 			for component in _all:
-				var component_entities = component_entity_index.get(component, Set.new())
+				var component_entities = active_index.get(component, Set.new())
 				var size = component_entities.size()
 				# Early exit if any required component has no entities
 				if size == 0:
@@ -568,24 +588,24 @@ func _query(all_components = [], any_components = [], exclude_components = []) -
 					smallest_component_key = component
 
 			# Start with the smallest set and intersect others
-			result = component_entity_index.get(smallest_component_key, Set.new())
+			result = active_index.get(smallest_component_key, Set.new())
 			for component in _all:
 				# Early exit if result is empty
 				if result.is_empty():
 					return []
 				if component == smallest_component_key:
 					continue
-				result = result.intersect(component_entity_index.get(component, Set.new()))
+				result = result.intersect(active_index.get(component, Set.new()))
 
 		# Handle any_components
 		if not _any.is_empty():
 			var any_result: Set = Set.new()
 			# Start with first component's entities
 			if _any.size() > 0:
-				any_result = component_entity_index.get(_any[0], Set.new())
+				any_result = active_index.get(_any[0], Set.new())
 				# Union with remaining components
 				for i in range(1, _any.size()):
-					var entities_with_component = component_entity_index.get(_any[i], Set.new())
+					var entities_with_component = active_index.get(_any[i], Set.new())
 					any_result = any_result.union(entities_with_component)
 
 			if result:
@@ -601,7 +621,7 @@ func _query(all_components = [], any_components = [], exclude_components = []) -
 	# Handle exclude_components
 	if not _exclude.is_empty():
 		for component in _exclude:
-			var excluded = component_entity_index.get(component, Set.new())
+			var excluded = active_index.get(component, Set.new())
 			if not excluded.is_empty():
 				result = result.difference(excluded)
 
@@ -617,22 +637,83 @@ func _query(all_components = [], any_components = [], exclude_components = []) -
 ## [param entity] The entity to index.[br]
 ## [param component_key] The component's resource path.
 func _add_entity_to_index(entity: Entity, component_key: String) -> void:
+	# Add to main index (all entities)
 	if not component_entity_index.has(component_key):
 		component_entity_index[component_key] = Set.new()
 	var entity_list = component_entity_index[component_key]
-	# Use direct append since we control when this is called - no duplicates expected
 	entity_list.add(entity)
+
+	# Add to enabled/disabled index based on entity state
+	if entity.enabled:
+		if not component_enabled_entity_index.has(component_key):
+			component_enabled_entity_index[component_key] = Set.new()
+		component_enabled_entity_index[component_key].add(entity)
+	else:
+		if not component_disabled_entity_index.has(component_key):
+			component_disabled_entity_index[component_key] = Set.new()
+		component_disabled_entity_index[component_key].add(entity)
 
 
 ## Removes an entity from the component index.[br]
 ## [param entity] The entity to remove.[br]
 ## [param component_key] The component's resource path.
 func _remove_entity_from_index(entity, component_key: String) -> void:
+	# Remove from main index
 	if component_entity_index.has(component_key):
 		var entity_list: Set = component_entity_index[component_key]
 		entity_list.erase(entity)
 		if entity_list.size() == 0:
 			component_entity_index.erase(component_key)
+
+	# Remove from enabled index
+	if component_enabled_entity_index.has(component_key):
+		var enabled_list: Set = component_enabled_entity_index[component_key]
+		enabled_list.erase(entity)
+		if enabled_list.size() == 0:
+			component_enabled_entity_index.erase(component_key)
+
+	# Remove from disabled index
+	if component_disabled_entity_index.has(component_key):
+		var disabled_list: Set = component_disabled_entity_index[component_key]
+		disabled_list.erase(entity)
+		if disabled_list.size() == 0:
+			component_disabled_entity_index.erase(component_key)
+
+
+## Moves an entity from disabled index to enabled index for all its components.[br]
+## Called when an entity is enabled.[br]
+## [param entity] The entity being enabled.
+func _move_entity_to_enabled_index(entity: Entity) -> void:
+	for component_key in entity.components.keys():
+		# Remove from disabled index
+		if component_disabled_entity_index.has(component_key):
+			var disabled_list: Set = component_disabled_entity_index[component_key]
+			disabled_list.erase(entity)
+			if disabled_list.size() == 0:
+				component_disabled_entity_index.erase(component_key)
+
+		# Add to enabled index
+		if not component_enabled_entity_index.has(component_key):
+			component_enabled_entity_index[component_key] = Set.new()
+		component_enabled_entity_index[component_key].add(entity)
+
+
+## Moves an entity from enabled index to disabled index for all its components.[br]
+## Called when an entity is disabled.[br]
+## [param entity] The entity being disabled.
+func _move_entity_to_disabled_index(entity: Entity) -> void:
+	for component_key in entity.components.keys():
+		# Remove from enabled index
+		if component_enabled_entity_index.has(component_key):
+			var enabled_list: Set = component_enabled_entity_index[component_key]
+			enabled_list.erase(entity)
+			if enabled_list.size() == 0:
+				component_enabled_entity_index.erase(component_key)
+
+		# Add to disabled index
+		if not component_disabled_entity_index.has(component_key):
+			component_disabled_entity_index[component_key] = Set.new()
+		component_disabled_entity_index[component_key].add(entity)
 
 
 #endregion Index Management Functions

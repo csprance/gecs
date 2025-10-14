@@ -127,3 +127,99 @@ func test_query_empty_world(scale: int, test_parameters := [[100], [1000], [1000
 
 	PerfHelpers.record_result("query_empty_world", scale, time_ms)
 	world.purge(false)
+
+## Test that disabled entities don't contribute to query time
+## Creates many disabled entities with only a few enabled ones
+## Query time should be similar to querying with only the enabled count
+func test_query_disabled_entities_no_impact(scale: int, test_parameters := [[100], [1000], [10000]]):
+	# Create mostly disabled entities
+	var enabled_count = 10  # Always use 10 enabled entities regardless of scale
+
+	# First, create disabled entities (scale - enabled_count)
+	for i in (scale - enabled_count):
+		var entity = Entity.new()
+		entity.name = "DisabledEntity_%d" % i
+		entity.enabled = false
+		entity.add_component(C_TestA.new())
+		world.add_entity(entity, null, false)
+
+	# Then create the few enabled entities
+	for i in enabled_count:
+		var entity = Entity.new()
+		entity.name = "EnabledEntity_%d" % i
+		entity.enabled = true
+		entity.add_component(C_TestA.new())
+		world.add_entity(entity, null, false)
+
+	# Time querying only enabled entities
+	var time_ms = PerfHelpers.time_it(func():
+		var entities = world.query.with_all([C_TestA]).enabled().execute()
+	)
+
+	PerfHelpers.record_result("query_disabled_entities_no_impact", scale, time_ms)
+	world.purge(false)
+
+## Baseline test: query with only enabled entities (no disabled ones)
+## This should have similar performance to test_query_disabled_entities_no_impact
+func test_query_only_enabled_baseline(scale: int, test_parameters := [[100], [1000], [10000]]):
+	var enabled_count = 10  # Same as test_query_disabled_entities_no_impact
+
+	# Create only enabled entities
+	for i in enabled_count:
+		var entity = Entity.new()
+		entity.name = "EnabledEntity_%d" % i
+		entity.enabled = true
+		entity.add_component(C_TestA.new())
+		world.add_entity(entity, null, false)
+
+	# Time querying enabled entities
+	var time_ms = PerfHelpers.time_it(func():
+		var entities = world.query.with_all([C_TestA]).enabled().execute()
+	)
+
+	PerfHelpers.record_result("query_only_enabled_baseline", scale, time_ms)
+	world.purge(false)
+
+## Test group query performance using Godot's optimized get_nodes_in_group()
+## This should be very fast since it uses Godot's native group indexing
+func test_query_with_group(scale: int, test_parameters := [[100], [1000], [10000]]):
+	# Create entities and add them to a group
+	for i in scale:
+		var entity = Entity.new()
+		entity.name = "GroupEntity_%d" % i
+		entity.add_component(C_TestA.new())
+		world.add_entity(entity, null, true)  # Must be in tree for groups
+		entity.add_to_group("test_group")
+
+	# Time querying by group
+	var time_ms = PerfHelpers.time_it(func():
+		var entities = world.query.with_group(["test_group"]).execute()
+	)
+
+	PerfHelpers.record_result("query_with_group", scale, time_ms)
+	world.purge(false)
+
+## Test group query combined with component filtering
+## This tests the common case of filtering entities by both group and components
+func test_query_group_with_components(scale: int, test_parameters := [[100], [1000], [10000]]):
+	# Create diverse entities in a group
+	for i in scale:
+		var entity = Entity.new()
+		entity.name = "GroupEntity_%d" % i
+
+		# Add various components
+		if i % 2 == 0:
+			entity.add_component(C_TestA.new())
+		if i % 3 == 0:
+			entity.add_component(C_TestB.new())
+
+		world.add_entity(entity, null, true)  # Must be in tree for groups
+		entity.add_to_group("test_group")
+
+	# Time querying by group + components
+	var time_ms = PerfHelpers.time_it(func():
+		var entities = world.query.with_group(["test_group"]).with_all([C_TestA]).execute()
+	)
+
+	PerfHelpers.record_result("query_group_with_components", scale, time_ms)
+	world.purge(false)

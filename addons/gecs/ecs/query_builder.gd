@@ -200,32 +200,46 @@ func _internal_execute() -> Array:
 	# If we have groups or exclude groups, gather entities from those groups
 	if not _groups.is_empty() or not _exclude_groups.is_empty():
 		var entities_in_group = []
-		# Find entities in group from the world
+
+		# Use Godot's optimized get_nodes_in_group() instead of filtering
 		if not _groups.is_empty():
-			entities_in_group = _world.entities.filter(
-				func(e):
-					for g in _groups:
-						if e.is_in_group(g):
-							return true
-					return false
-			)
+			# For multiple groups, use set operations for efficiency
+			var group_set: Set
+
+			for i in range(_groups.size()):
+				var group_name = _groups[i]
+				var nodes_in_group = _world.get_tree().get_nodes_in_group(group_name)
+
+				# Filter to only Entity nodes
+				var entities_in_this_group = nodes_in_group.filter(func(n): return n is Entity)
+
+				if i == 0:
+					# First group - start with these entities
+					group_set = Set.new(entities_in_this_group)
+				else:
+					# Subsequent groups - intersect (entity must be in ALL groups)
+					group_set = group_set.intersect(Set.new(entities_in_this_group))
+
+			entities_in_group = group_set.to_array() if group_set else []
+
 		# Filter out entities in excluded groups
 		if not _exclude_groups.is_empty():
-			entities_in_group = entities_in_group.filter(
-				func(e):
-					if not e:
-						return false
-					for g in _exclude_groups:
-						if e.is_in_group(g):
-							return false
-					return true
-			)
+			var exclude_set = Set.new()
+			for group_name in _exclude_groups:
+				var nodes_in_group = _world.get_tree().get_nodes_in_group(group_name)
+				var entities_in_excluded = nodes_in_group.filter(func(n): return n is Entity)
+				exclude_set = exclude_set.union(Set.new(entities_in_excluded))
+
+			# Remove excluded entities
+			var result_set = Set.new(entities_in_group)
+			entities_in_group = result_set.difference(exclude_set).to_array()
+
 		# match the entities in the group with the query
 		return matches(entities_in_group)
 
-	# Otherwise, query the world
+	# Otherwise, query the world with enabled filter for optimal performance
 	var result = (
-		_world._query(_all_components, _any_components, _exclude_components) as Array[Entity]
+		_world._query(_all_components, _any_components, _exclude_components, _enabled_filter) as Array[Entity]
 	)
 
 	# Handle relationship filtering
@@ -248,13 +262,8 @@ func _internal_execute() -> Array:
 				filtered_entities.append(entity)
 		result = filtered_entities
 
-	# Apply enabled/disabled filtering if specified
-	if _enabled_filter == true:
-		result = result.filter(func(entity): return entity.enabled)
-	elif _enabled_filter == false:
-		result = result.filter(func(entity): return not entity.enabled)
-	
 	# Return the structural query result (caching handled in execute())
+	# Note: enabled/disabled filtering is now handled in World._query for optimal performance
 	return result
 
 
