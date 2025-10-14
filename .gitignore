@@ -5,3 +5,6 @@ repomix-output.txt
 
 reports/
 .claude/settings.local.json
+
+release/
+!release/web/serve.py
