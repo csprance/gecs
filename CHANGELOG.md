@@ -15,13 +15,13 @@ The weak/strong matching system has been completely replaced with a simpler, mor
 
 **Migration:**
 
-| Old (v4.x)                                                                     | New (v5.0)                                                                                              |
-| ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------- |
-| `entity.has_relationship(Relationship.new(C_Eats.new(5), target), false)`     | `entity.has_relationship(Relationship.new({C_Eats: {'value': {"_eq": 5}}}, target))`                   |
-| `entity.has_relationship(Relationship.new(C_Eats.new(), target), true)`       | `entity.has_relationship(Relationship.new(C_Eats.new(), target))`                                      |
-| `entity.get_relationship(rel, true, true)`                                     | `entity.get_relationship(rel)`                                                                          |
-| `entity.get_relationships(rel, true)`                                          | `entity.get_relationships(rel)`                                                                         |
-| Override `equals()` in component                                               | Use component queries: `{C_Type: {'prop': {"_eq": value}}}`                                            |
+| Old (v4.x)                                                                | New (v5.0)                                                                           |
+| ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| `entity.has_relationship(Relationship.new(C_Eats.new(5), target), false)` | `entity.has_relationship(Relationship.new({C_Eats: {'value': {"_eq": 5}}}, target))` |
+| `entity.has_relationship(Relationship.new(C_Eats.new(), target), true)`   | `entity.has_relationship(Relationship.new(C_Eats.new(), target))`                    |
+| `entity.get_relationship(rel, true, true)`                                | `entity.get_relationship(rel)`                                                       |
+| `entity.get_relationships(rel, true)`                                     | `entity.get_relationships(rel)`                                                      |
+| Override `equals()` in component                                          | Use component queries: `{C_Type: {'prop': {"_eq": value}}}`                          |
 
 #### Component Query Improvements
 
@@ -121,15 +121,23 @@ class_name C_Damage extends Component:
 # Query by property: {C_Damage: {'amount': {"_eq": 50}}}
 ```
 
+#### 4. Check any deps function and sorting order
+
+Topological sort was broken in previous versions. It is now fixed and as a result some systems may now be running in the correct order defined in the deps
+but it may end up to be the wrong order for your game code. Check these depenencies by doing: `print(ECS.world.systems_by_group)` this will show you the sorted
+systems and how they are running. Do a comparison between this version and the previous versions of GECS.
+
 ### 🧪 Test Suite Improvements
 
 #### Performance Test Cleanup
+
 - **Eliminated orphan nodes** - Refactored all performance tests to use `scene_runner` pattern
 - **Proper lifecycle management** - Tests now use `auto_free()` and `world.purge()` for cleanup
 - **Consistent test structure** - All performance tests follow same pattern as core tests
 - **Zero orphan nodes** - Performance tests now maintain clean test environment
 
 **Files Updated:**
+
 - `addons/gecs/tests/performance/performance_test_base.gd` - Uses scene_runner for proper test setup
 - `addons/gecs/tests/performance/performance_test_entities.gd` - Refactored to use auto_free pattern
 - `addons/gecs/tests/performance/performance_test_components.gd` - Simplified cleanup using world.purge
