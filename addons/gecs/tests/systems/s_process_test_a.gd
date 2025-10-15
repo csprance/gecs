@@ -6,7 +6,7 @@ extends System
 
 var process_count: int = 0
 
-func _init(_process_empty:bool = false):
+func _init(_process_empty: bool = false):
 	process_empty = _process_empty
 	
 
@@ -15,7 +15,7 @@ func query():
 
 
 # override process_all function for batch processing
-func process_all(entities: Array, delta: float) -> bool:
+func process_all(entities: Array, delta: float):
 	process_count += 1
 	var components = ECS.get_components(entities, C_TestA)
 	for i in range(entities.size()):
