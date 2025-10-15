@@ -64,7 +64,7 @@ var lastRunData := {}
 ## Cached query to avoid recreating it every frame (lazily initialized)
 var _query_cache: QueryBuilder = null
 ## Cached subsystems to avoid recreating them every frame (lazily initialized)
-var _subsystems_cache: Array[Array] = []
+var _subsystems_cache: Array = []
 ## Set to false when sub_systems() is called and returns empty array
 var _has_subsystems: bool = true
 
@@ -205,7 +205,7 @@ func _try_run_subsystems(delta: float) -> bool:
 		var subsystem_callable := subsystem_tuple[1] as Callable
 		var process_all_at_once: bool = subsystem_tuple[2] if subsystem_tuple.size() > 2 else false
 
-		var matching_entities := subsystem_query.execute() as Array[Entity]
+		var matching_entities := subsystem_query.execute() as Array
 
 		if process_all_at_once:
 			# Call once with all entities
@@ -217,7 +217,7 @@ func _try_run_subsystems(delta: float) -> bool:
 
 		assert(_update_debug_data(func(): return {
 			subsystem_index: {
-				"query": str(subsystem_query),
+				"subsystem_index": subsystem_index,
 				"entity_count": matching_entities.size(),
 				"process_all": process_all_at_once
 			}
@@ -246,7 +246,10 @@ func _run_query_system(delta: float) -> void:
 
 ## Debug helper - updates lastRunData (compiled out in production)
 func _update_debug_data(callable: Callable = func(): return {}) -> bool:
-	lastRunData.assign(callable.call()) if ECS.debug else {}
+	if ECS.debug:
+		var data = callable.call()
+		if data:
+			lastRunData.assign(data)
 	return true
 
 
