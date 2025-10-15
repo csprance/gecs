@@ -1,50 +1,32 @@
 # GECS Changelog
 
-## [5.0.0-rc4] - 2025-10-14 - Query Performance Optimization
+## [5.0.0] - 2025-10-15 - Major ECS Overhaul & Performance Awesomeness (Some Small Breaking Changes)
 
-### 🚀 Performance Improvements
+**GECS v5.0.0 is a major release with massive performance improvements, API simplification, and relationship system overhaul.**
 
-#### Massive Query Cache Key Optimization
-
-**85% faster cache key generation** leading to dramatic query performance improvements:
-
-- **Cache key generation**: 283ms → 43ms (**85% faster**)
-- **Query caching**: 500ms → 4.7ms (**99% faster**)
-- **Query with all**: 13ms → 0.55ms (**96% faster**)
-- **Query with any**: 27ms → 5.6ms (**79% faster**)
-- **Complex queries**: Significantly improved scaling
-
-**Technical Details:**
-
-- Replaced expensive `str(comp)` fallbacks with direct `get_instance_id()` calls
-- Eliminated conditional checks in cache key generation hot path
-- Implemented polynomial rolling hash with XOR for collision resistance
-- Used different prime multipliers (31, 37, 41) for component type separation
-
-**Impact:**
-
-- Query system now scales linearly instead of exponentially
-- ECS performance optimized for large-scale applications (10,000+ entities)
-- No performance regressions in any core ECS operations
-- Cache effectiveness dramatically improved
-
-See performance test results in `reports/perf/` for detailed metrics.
-
-## [5.0.0] - 2025-01-XX - Relationship System Complete Overhaul
-
-**GECS v5.0.0 is a major release focusing on API simplification, proper ECS architecture enforcement, and relationship system improvements.**
+This release combines all improvements from v5.0.0-rc1 through v5.0.0-rc4, delivering the most performant and cleanest GECS API to date.
 
 ### 📦 What's in This Release
 
-This release includes **3 breaking changes** and several new features:
+**3 Breaking Changes:**
 
 1. **Entity.on_update() removed** - Enforces proper ECS separation of concerns
 2. **System.process_all() no longer returns bool** - Simplified internal API
 3. **Relationship system overhaul** - Removed weak/strong matching in favor of component queries
-4. **Target component queries** - Query both relation and target entity properties
-5. **Limited relationship removal** - Remove specific number of relationships
-6. **Topological sort fix** - System dependencies now execute in correct order
-7. **Performance improvements** - 2-7% faster system processing
+
+**Major Performance Improvements:**
+
+1. **Query cache key optimization** - 85% faster cache key generation
+2. **Query system speedup** - 96-99% faster for cached queries
+3. **System processing** - 2-7% faster across all benchmarks
+4. **Linear scaling** - Query system now scales linearly instead of exponentially
+
+**New Features:**
+
+1. **Target component queries** - Query both relation and target entity properties
+2. **Limited relationship removal** - Remove specific number of relationships
+3. **Topological sort fix** - System dependencies now execute in correct order
+4. **Improved test suite** - Zero orphan nodes, proper lifecycle management
 
 ### ⚠️ BREAKING CHANGES
 
@@ -58,10 +40,10 @@ The `on_update(delta)` lifecycle method has been removed from the Entity class:
 
 **Migration:**
 
-| Old (v4.x)                                             | New (v5.0)                                  |
-| ------------------------------------------------------ | ------------------------------------------- |
-| Override `on_update(delta)` in Entity class           | Create a System that processes the entity   |
-| `entity.on_update(delta)` called every frame          | System.process(entity, delta)              |
+| Old (v4.x)                                   | New (v5.0)                                |
+| -------------------------------------------- | ----------------------------------------- |
+| Override `on_update(delta)` in Entity class  | Create a System that processes the entity |
+| `entity.on_update(delta)` called every frame | System.process(entity, delta)             |
 
 **Example Migration:**
 
@@ -86,7 +68,7 @@ class_name MySystem extends System:
 **Why this change?**
 This enforces proper ECS architecture where Entities are pure data containers and all logic lives in Systems. This makes code more modular, testable, and performant.
 
-#### System.process_all() and System._process_parallel() No Longer Return Booleans
+#### System.process_all() and System.\_process_parallel() No Longer Return Booleans
 
 The `process_all()` and `_process_parallel()` methods now return `void` instead of `bool`:
 
@@ -96,10 +78,10 @@ The `process_all()` and `_process_parallel()` methods now return `void` instead 
 
 **Migration:**
 
-| Old (v4.x)                                             | New (v5.0)                                  |
-| ------------------------------------------------------ | ------------------------------------------- |
-| `var result = system.process_all(entities, delta)`    | `system.process_all(entities, delta)`       |
-| Override `process_all()` returning `bool`             | Override `process_all()` returning `void`   |
+| Old (v4.x)                                         | New (v5.0)                                |
+| -------------------------------------------------- | ----------------------------------------- |
+| `var result = system.process_all(entities, delta)` | `system.process_all(entities, delta)`     |
+| Override `process_all()` returning `bool`          | Override `process_all()` returning `void` |
 
 **Why this change?**
 The boolean return values were historical artifacts that were never actually used anywhere in the codebase. Removing them simplifies the API and makes the code cleaner.
@@ -246,11 +228,36 @@ systems and how they are running. Do a comparison between this version and the p
 - `addons/gecs/tests/performance/performance_test_integration.gd` - Consistent with core test patterns
 - `addons/gecs/tests/performance/performance_test_system_process.gd` - Proper node lifecycle management
 
-### 📊 Performance Improvements
+### 🚀 Performance Improvements
 
-All changes maintain or improve performance:
+#### Massive Query Cache Key Optimization (from v5.0.0-rc4)
 
-- **System processing**: 2-7% faster across all benchmarks
+**85% faster cache key generation** leading to dramatic query performance improvements:
+
+- **Cache key generation**: 283ms → 43ms (**85% faster**)
+- **Query caching**: 500ms → 4.7ms (**99% faster**)
+- **Query with all**: 13ms → 0.55ms (**96% faster**)
+- **Query with any**: 27ms → 5.6ms (**79% faster**)
+- **Complex queries**: Significantly improved scaling
+
+**Technical Details:**
+
+- Replaced expensive `str(comp)` fallbacks with direct `get_instance_id()` calls
+- Eliminated conditional checks in cache key generation hot path
+- Implemented polynomial rolling hash with XOR for collision resistance
+- Used different prime multipliers (31, 37, 41) for component type separation
+
+**Impact:**
+
+- Query system now scales linearly instead of exponentially
+- ECS performance optimized for large-scale applications (10,000+ entities)
+- No performance regressions in any core ECS operations
+- Cache effectiveness dramatically improved
+
+#### System Processing Improvements (from v5.0.0 final)
+
+Removing unused internal tracking improved system performance:
+
 - **system_processing** (10k): 25.256ms → 24.183ms (**4.2% faster**)
 - **multiple_systems** (10k): 136.064ms → 132.285ms (**2.8% faster**)
 - **system_no_matches** (10k): 0.081ms → 0.075ms (**7.4% faster**)
@@ -260,6 +267,7 @@ Removing unused boolean returns and `did_run` tracking reduced conditional logic
 ### 📦 Files Changed in This Release
 
 **Core Framework Changes:**
+
 - `addons/gecs/ecs/entity.gd` - **BREAKING**: Removed `on_update()` lifecycle method and weak parameters from relationship methods
 - `addons/gecs/ecs/system.gd` - **BREAKING**: `process_all()` and `_process_parallel()` now return `void` instead of `bool`
 - `addons/gecs/ecs/relationship.gd` - **BREAKING**: Removed weak parameter, added target_query support
@@ -268,9 +276,11 @@ Removing unused boolean returns and `did_run` tracking reduced conditional logic
 - `addons/gecs/ecs/ecs.gd` - Updated for new system processing
 
 **Library Updates:**
+
 - `addons/gecs/lib/component_query_matcher.gd` - **FIXED**: Properly handle falsy values (0, false, etc.)
 
 **Documentation Updates:**
+
 - `addons/gecs/docs/CORE_CONCEPTS.md` - Updated entity lifecycle and system examples
 - `addons/gecs/docs/RELATIONSHIPS.md` - Complete rewrite for new relationship system
 - `addons/gecs/docs/CLAUDE.md` - Updated with new relationship patterns
@@ -278,15 +288,57 @@ Removing unused boolean returns and `did_run` tracking reduced conditional logic
 - `README.md` - Updated for v5.0.0 release
 
 **Test Updates:**
+
 - `addons/gecs/tests/core/test_relationships.gd` - Updated all tests to new API
 - `addons/gecs/tests/systems/s_performance_test.gd` - Updated for new system signatures
 - `addons/gecs/tests/systems/s_noop.gd` - New test helper system
 - `addons/gecs/tests/performance/test_hotpath_breakdown.gd` - New performance test
 
 **Example Updates:**
+
 - `example/main.gd` - Updated to use v5.0.0 API
 - `example/systems/s_velocity.gd` - Updated system implementation
 - `example/systems/s_random_velocity.gd` - Updated system implementation
+
+### 📜 Release Candidate History
+
+This v5.0.0 release consolidates all improvements from the RC phase:
+
+**v5.0.0-rc1 (Relationship System Overhaul):**
+
+- Removed weak/strong matching system
+- Introduced component queries for relationships
+- Added target component queries
+- Fixed topological sort for system dependencies
+
+**v5.0.0-rc2 & rc3 (Test Suite Improvements):**
+
+- Eliminated orphan nodes in performance tests
+- Proper lifecycle management with `auto_free()` and `world.purge()`
+- Consistent test structure across all test suites
+- Zero memory leaks in test environment
+
+**v5.0.0-rc4 (Query Performance Revolution):**
+
+- 85% faster cache key generation
+- 96-99% faster query caching
+- Linear scaling instead of exponential
+- Optimized hash algorithms with collision resistance
+
+**v5.0.0-final (API Cleanup):**
+
+- Removed `Entity.on_update()` lifecycle method
+- Simplified `System.process_all()` to return `void`
+- Updated documentation for proper ECS patterns
+- 2-7% faster system processing
+
+### 🌟 Community & Support
+
+- **Discord**: [Join our community](https://discord.gg/eB43XU2tmn)
+- **Documentation**: [Complete guides](addons/gecs/README.md)
+- **Issues**: [Report bugs or request features](https://github.com/csprance/gecs/issues)
+
+**Full Changelog**: [v4.x...v5.0.0](https://github.com/csprance/gecs/compare/v4.0.0...v5.0.0)
 
 ---
 
