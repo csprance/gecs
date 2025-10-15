@@ -1,11 +1,11 @@
-[gd_scene load_steps=14 format=3 uid="uid://bwg3a55vnyovm"]
+[gd_scene load_steps=13 format=3 uid="uid://bwg3a55vnyovm"]
 
+[ext_resource type="TorusMesh" uid="uid://06i561htr8bk" path="res://new_torus_mesh.tres" id="1_b8ng6"]
 [ext_resource type="Script" uid="uid://dv6gko4duu5ic" path="res://example/entities/random_mover.gd" id="1_c1i3g"]
 [ext_resource type="Script" uid="uid://b6k13gc2m4e5s" path="res://addons/gecs/ecs/component.gd" id="2_o4fpx"]
 [ext_resource type="Script" uid="uid://b7r4xkfiy8qi0" path="res://example/components/c_velocity.gd" id="3_5rwi4"]
 [ext_resource type="Script" uid="uid://bx3pmlknhmilu" path="res://example/components/c_timer.gd" id="4_5rwi4"]
 [ext_resource type="Script" uid="uid://d0fit03sansqe" path="res://example/components/c_lifetime.gd" id="5_k3wa3"]
-[ext_resource type="PackedScene" uid="uid://dnkm23kafd5qn" path="res://example/lib/entity_visible_on_screen_enabler_3d.tscn" id="6_b8ng6"]
 
 [sub_resource type="Resource" id="Resource_p5wvt"]
 script = ExtResource("4_5rwi4")
@@ -22,14 +22,12 @@ script = ExtResource("5_k3wa3")
 lifetime = 25.0
 metadata/_custom_type_script = "uid://d0fit03sansqe"
 
-[sub_resource type="TorusMesh" id="TorusMesh_o4fpx"]
-
 [sub_resource type="Animation" id="Animation_b8ng6"]
 length = 0.001
 tracks/0/type = "bezier"
 tracks/0/imported = false
 tracks/0/enabled = true
-tracks/0/path = NodePath("MeshInstance3D:rotation:x")
+tracks/0/path = NodePath(".:rotation:x")
 tracks/0/interp = 1
 tracks/0/loop_wrap = true
 tracks/0/keys = {
@@ -40,7 +38,7 @@ tracks/0/keys = {
 tracks/1/type = "bezier"
 tracks/1/imported = false
 tracks/1/enabled = true
-tracks/1/path = NodePath("MeshInstance3D:rotation:y")
+tracks/1/path = NodePath(".:rotation:y")
 tracks/1/interp = 1
 tracks/1/loop_wrap = true
 tracks/1/keys = {
@@ -51,7 +49,7 @@ tracks/1/keys = {
 tracks/2/type = "bezier"
 tracks/2/imported = false
 tracks/2/enabled = true
-tracks/2/path = NodePath("MeshInstance3D:rotation:z")
+tracks/2/path = NodePath(".:rotation:z")
 tracks/2/interp = 1
 tracks/2/loop_wrap = true
 tracks/2/keys = {
@@ -66,68 +64,35 @@ loop_mode = 1
 tracks/0/type = "bezier"
 tracks/0/imported = false
 tracks/0/enabled = true
-tracks/0/path = NodePath("MeshInstance3D:position:x")
+tracks/0/path = NodePath(".:rotation:x")
 tracks/0/interp = 1
 tracks/0/loop_wrap = true
 tracks/0/keys = {
-"handle_modes": PackedInt32Array(0),
-"points": PackedFloat32Array(0, -0.25, 0, 0.25, 0),
-"times": PackedFloat32Array(0)
+"handle_modes": PackedInt32Array(0, 2, 2),
+"points": PackedFloat32Array(0, -0.25, 0, 0.25, 0, 1.6842427, -0.083333336, 0, 0.083333336, 0, 0, -0.16666667, 0, 0, 0),
+"times": PackedFloat32Array(0, 0.5, 1)
 }
 tracks/1/type = "bezier"
 tracks/1/imported = false
 tracks/1/enabled = true
-tracks/1/path = NodePath("MeshInstance3D:position:y")
+tracks/1/path = NodePath(".:rotation:y")
 tracks/1/interp = 1
 tracks/1/loop_wrap = true
 tracks/1/keys = {
-"handle_modes": PackedInt32Array(0),
-"points": PackedFloat32Array(0, -0.25, 0, 0.25, 0),
-"times": PackedFloat32Array(0)
+"handle_modes": PackedInt32Array(0, 2, 2),
+"points": PackedFloat32Array(0, -0.25, 0, 0.25, 0, 1.1693707, -0.083333336, 0, 0.083333336, 0, 0, -0.16666667, 0, 0, 0),
+"times": PackedFloat32Array(0, 0.5, 1)
 }
 tracks/2/type = "bezier"
 tracks/2/imported = false
 tracks/2/enabled = true
-tracks/2/path = NodePath("MeshInstance3D:position:z")
+tracks/2/path = NodePath(".:rotation:z")
 tracks/2/interp = 1
 tracks/2/loop_wrap = true
 tracks/2/keys = {
-"handle_modes": PackedInt32Array(0),
-"points": PackedFloat32Array(0, -0.25, 0, 0.25, 0),
-"times": PackedFloat32Array(0)
-}
-tracks/3/type = "bezier"
-tracks/3/imported = false
-tracks/3/enabled = true
-tracks/3/path = NodePath("MeshInstance3D:rotation:x")
-tracks/3/interp = 1
-tracks/3/loop_wrap = true
-tracks/3/keys = {
-"handle_modes": PackedInt32Array(2, 0, 2, 2),
-"points": PackedFloat32Array(0, 0, 0, 0.085, 0.51050884, 3.063053, -0.25, 0, 0.25, 0, 6.2325706, -0.07833334, 0.49987325, 0.0016666651, -0.01063559, 0, -0.080000006, 0.51050884, 0, 0),
-"times": PackedFloat32Array(0, 0.51, 0.98, 0.99)
-}
-tracks/4/type = "bezier"
-tracks/4/imported = false
-tracks/4/enabled = true
-tracks/4/path = NodePath("MeshInstance3D:rotation:y")
-tracks/4/interp = 1
-tracks/4/loop_wrap = true
-tracks/4/keys = {
-"handle_modes": PackedInt32Array(2, 0, 2, 2),
-"points": PackedFloat32Array(0, 0, 0, 0.085, 0.38397247, 2.3038347, -0.25, 0, 0.25, 0, 6.0405846, -0.07833334, 0.37597305, 0.0016666651, -0.007999418, 0, -0.080000006, 0.38397247, 0, 0),
-"times": PackedFloat32Array(0, 0.51, 0.98, 0.99)
-}
-tracks/5/type = "bezier"
-tracks/5/imported = false
-tracks/5/enabled = true
-tracks/5/path = NodePath("MeshInstance3D:rotation:z")
-tracks/5/interp = 1
-tracks/5/loop_wrap = true
-tracks/5/keys = {
-"handle_modes": PackedInt32Array(2, 0, 2, 2),
-"points": PackedFloat32Array(0, 0, 0, 0.085, 0.43633232, 2.6179938, -0.25, 0, 0.25, 0, 6.213372, -0.07833334, 0.42724207, 0.0016666651, -0.009090248, 0, -0.080000006, 0.43633232, 0, 0),
-"times": PackedFloat32Array(0, 0.51, 0.98, 0.99)
+"handle_modes": PackedInt32Array(0, 2, 2),
+"points": PackedFloat32Array(0, -0.25, 0, 0.25, 0, 1.8675023, -0.083333336, 0, 0.083333336, 0, 0, -0.16666667, 0, 0, 0),
+"times": PackedFloat32Array(0, 0.5, 1)
 }
 
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_jlt61"]
@@ -136,16 +101,15 @@ _data = {
 &"test": SubResource("Animation_k3wa3")
 }
 
-[node name="RandomMover" type="Node3D"]
+[node name="RandomMover" type="MeshInstance3D" groups=["movers"]]
+mesh = ExtResource("1_b8ng6")
 script = ExtResource("1_c1i3g")
 component_resources = Array[ExtResource("2_o4fpx")]([SubResource("Resource_p5wvt"), SubResource("Resource_k3wa3"), SubResource("Resource_b8ng6")])
 
-[node name="EntityVisibleOnScreenEnabler3D" parent="." instance=ExtResource("6_b8ng6")]
-
-[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
-mesh = SubResource("TorusMesh_o4fpx")
-
 [node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+process_thread_group = 1
+process_thread_group_order = 1
+process_thread_messages = 1
 libraries = {
 &"": SubResource("AnimationLibrary_jlt61")
 }
