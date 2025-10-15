@@ -16,7 +16,7 @@ func process(entity: Entity, delta: float) -> void:
 	var component = entity.get_component(C_TestA)
 	if component:
 		# Access component data (simulates typical system work)
-		var _data = component.serialize()
+		var _value = component.value  # Read property directly, not via reflection
 
 
 func reset_count():

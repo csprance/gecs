@@ -100,57 +100,6 @@ var _cache_misses: int = 0
 
 #endregion Public Variables
 
-#region Private Methods
-## Return a QueryBuilder instance to the pool for reuse
-func _return_query_builder_to_pool(query_builder: QueryBuilder) -> void:
-	if _query_builder_pool.size() < _pool_size_limit:
-		query_builder.clear()
-		_query_builder_pool.append(query_builder)
-
-
-## Generate a cache key for query parameters
-## 
-## Uses a polynomial rolling hash algorithm combined with XOR to create stable,
-## collision-resistant cache keys from component instance IDs. This approach
-## ensures that queries with the same components produce identical cache keys
-## while different component combinations produce distinct keys.
-##
-## Algorithm details:
-## - Each component type (all/any/exclude) uses a different prime multiplier
-## - Instance IDs are multiplied by their respective prime and XORed into the hash
-## - XOR operations preserve commutativity (order doesn't matter within each array)
-## - Different primes ensure separation between component type domains
-##
-## Time complexity: O(n) where n is total number of components
-## Space complexity: O(1)
-##
-## References:
-## - Rolling hash: https://en.wikipedia.org/wiki/Rolling_hash
-## - Universal hashing: https://en.wikipedia.org/wiki/Universal_hashing
-## - Hash functions: https://en.wikipedia.org/wiki/Hash_function
-func _generate_query_cache_key(all_components: Array, any_components: Array, exclude_components: Array) -> int:
-	# Direct instance ID access with XOR for clean, fast hashing
-	# Use different prime multipliers to distinguish component types
-	var h = 0
-	
-	# Process all arrays with different primes for uniqueness
-	# all_components: prime 31 (commonly used in string hashing)
-	for comp in all_components:
-		h ^= comp.get_instance_id() * 31
-	
-	# any_components: prime 37 (ensures domain separation)
-	for comp in any_components:
-		h ^= comp.get_instance_id() * 37
-	
-	# exclude_components: prime 41 (further domain separation)
-	for comp in exclude_components:
-		h ^= comp.get_instance_id() * 41
-	
-	return h
-
-
-#endregion Private Methods
-
 #region Built-in Virtual Methods
 ## Called when the World node is ready.
 func _ready() -> void:
@@ -195,8 +144,7 @@ func initialize():
 	add_entities(_entities)
 	_worldLogger.debug("_initialize Added Entities from Scene Tree: ", _entities)
 
-	if ECS.debug:
-		GECSEditorDebuggerMessages.world_init(self)
+	assert(GECSEditorDebuggerMessages.world_init(self) if ECS.debug else true, '')
 
 
 #endregion Built-in Virtual Methods
@@ -206,12 +154,11 @@ func initialize():
 ## [param delta] The time elapsed since the last frame.
 ## [param group] The string for the group we should run. If empty runs all systems in default "" group.
 func process(delta: float, group: String = "") -> void:
-	if ECS.debug:
-		GECSEditorDebuggerMessages.process_world(delta, group)
 	if systems_by_group.has(group):
 		for system in systems_by_group[group]:
 			if system.active:
 				system._handle(delta)
+	assert(GECSEditorDebuggerMessages.process_world(delta, group) if ECS.debug else true, '')
 
 
 ## Updates the pause behavior for all systems based on the provided paused state.
@@ -283,9 +230,8 @@ func add_entity(entity: Entity, components = null, add_to_tree = true) -> void:
 	# All the entities are ready so we should run the pre-processors now
 	for processor in ECS.entity_preprocessors:
 		processor.call(entity)
-	
-	if ECS.debug:
-		GECSEditorDebuggerMessages.entity_added(entity)
+
+	assert(GECSEditorDebuggerMessages.entity_added(entity) if ECS.debug else true, '')
 
 
 ## Adds multiple entities to the world.[br]
@@ -310,8 +256,6 @@ func remove_entity(entity) -> void:
 	entity_removed.emit(entity)
 	_worldLogger.debug("remove_entity Removing Entity: ", entity)
 	entities.erase(entity) # FIXME: This doesn't always work for some reason?
-	if ECS.debug:
-		GECSEditorDebuggerMessages.entity_removed(entity)
 	# Update index
 	for component_key in entity.components.keys():
 		_remove_entity_from_index(entity, component_key)
@@ -339,6 +283,7 @@ func remove_entity(entity) -> void:
 	# Clear our query cache when component structure changes
 	_query_result_cache.clear()
 	cache_invalidated.emit()
+	assert(GECSEditorDebuggerMessages.entity_removed(entity) if ECS.debug else true, '')
 
 
 ## Removes an Array of [Entity] from the world.[br]
@@ -374,8 +319,7 @@ func disable_entity(entity) -> Entity:
 	# Clear our query cache when component structure changes
 	_query_result_cache.clear()
 	cache_invalidated.emit()
-	if ECS.debug:
-		GECSEditorDebuggerMessages.entity_disabled(entity)
+	assert(GECSEditorDebuggerMessages.entity_disabled(entity) if ECS.debug else true, '')
 	return entity
 
 
@@ -426,8 +370,7 @@ func enable_entity(entity: Entity, components = null) -> void:
 	# Clear our query cache when component structure changes
 	_query_result_cache.clear()
 	cache_invalidated.emit()
-	if ECS.debug:
-		GECSEditorDebuggerMessages.entity_enabled(entity)
+	assert(GECSEditorDebuggerMessages.entity_enabled(entity) if ECS.debug else true, '')
 
 
 ## Find an entity by its persistent ID
@@ -464,8 +407,7 @@ func add_system(system: System, topo_sort: bool = false) -> void:
 	system.setup()
 	if topo_sort:
 		ArrayExtensions.topological_sort(systems_by_group)
-	if ECS.debug:
-		GECSEditorDebuggerMessages.system_added(system)
+	assert(GECSEditorDebuggerMessages.system_added(system) if ECS.debug else true, '')
 
 
 ## Adds multiple systems to the world.
@@ -491,13 +433,12 @@ func remove_system(system, topo_sort: bool = false) -> void:
 	systems_by_group[system.group].erase(system)
 	if systems_by_group[system.group].size() == 0:
 		systems_by_group.erase(system.group)
-	if ECS.debug:
-		GECSEditorDebuggerMessages.system_removed(system)
 	system_removed.emit(system)
 	# Update index
 	system.queue_free()
 	if topo_sort:
 		ArrayExtensions.topological_sort(systems_by_group)
+	assert(GECSEditorDebuggerMessages.system_removed(system) if ECS.debug else true, '')
 
 
 ## Removes an Array of [System] from the world.[br]
@@ -775,8 +716,7 @@ func _on_entity_component_added(entity: Entity, component: Resource) -> void:
 		# and notify observers
 		entity.component_property_changed.connect(_on_entity_component_property_change)
 
-	if ECS.debug:
-		GECSEditorDebuggerMessages.entity_component_added(entity, component)
+	assert(GECSEditorDebuggerMessages.entity_component_added(entity, component) if ECS.debug else true, '')
 
 
 ## Called when a component property changes through signals called on the components and connected to.[br]
@@ -795,23 +735,13 @@ func _on_entity_component_property_change(
 ) -> void:
 	# Notify the World to trigger observers
 	_handle_observer_component_changed(entity, component, property_name, new_value, old_value)
-
-	# Send the message to the debugger if we're in debug
-	if ECS.debug:
-		(
-			GECSEditorDebuggerMessages
-			.entity_component_property_changed(
-				entity,
-				component,
-				property_name,
-				old_value,
-				new_value,
-			)
-		)
-
 	# Clear our query cache when component structure changes
 	_query_result_cache.clear()
 	cache_invalidated.emit()
+	# Send the message to the debugger if we're in debug
+	assert(GECSEditorDebuggerMessages.entity_component_property_changed(
+		entity, component, property_name, old_value, new_value
+	) if ECS.debug else true, '')
 
 
 ## [signal Entity.component_removed] Callback when a component is removed from an entity.[br]
@@ -824,13 +754,12 @@ func _on_entity_component_removed(entity, component: Resource) -> void:
 
 	# Handle observers for component removed
 	_handle_observer_component_removed(entity, component)
-
-	if ECS.debug:
-		GECSEditorDebuggerMessages.entity_component_removed(entity, component)
 	
 	# Clear query cache when components are removed
 	_query_result_cache.clear()
 	cache_invalidated.emit()
+
+	assert(GECSEditorDebuggerMessages.entity_component_removed(entity, component) if ECS.debug else true, '')
 	
 
 ## (Optional) Update index when a relationship is added.
@@ -853,8 +782,7 @@ func _on_entity_relationship_added(entity: Entity, relationship: Relationship) -
 	
 	# Emit Signal
 	relationship_added.emit(entity, relationship)
-	if ECS.debug:
-		GECSEditorDebuggerMessages.entity_relationship_added(entity, relationship)
+	assert(GECSEditorDebuggerMessages.entity_relationship_added(entity, relationship) if ECS.debug else true, '')
 
 
 ## (Optional) Update index when a relationship is removed.
@@ -874,8 +802,7 @@ func _on_entity_relationship_removed(entity: Entity, relationship: Relationship)
 	
 	# Emit Signal
 	relationship_removed.emit(entity, relationship)
-	if ECS.debug:
-		GECSEditorDebuggerMessages.entity_relationship_removed(entity, relationship)
+	assert(GECSEditorDebuggerMessages.entity_relationship_removed(entity, relationship) if ECS.debug else true, '')
 
 
 ## Adds a single [Observer] to the [World].
@@ -1026,5 +953,54 @@ func get_cache_stats() -> Dictionary:
 func reset_cache_stats() -> void:
 	_cache_hits = 0
 	_cache_misses = 0
+
+
+## Return a QueryBuilder instance to the pool for reuse
+func _return_query_builder_to_pool(query_builder: QueryBuilder) -> void:
+	if _query_builder_pool.size() < _pool_size_limit:
+		query_builder.clear()
+		_query_builder_pool.append(query_builder)
+
+
+## Generate a cache key for query parameters
+## 
+## Uses a polynomial rolling hash algorithm combined with XOR to create stable,
+## collision-resistant cache keys from component instance IDs. This approach
+## ensures that queries with the same components produce identical cache keys
+## while different component combinations produce distinct keys.
+##
+## Algorithm details:
+## - Each component type (all/any/exclude) uses a different prime multiplier
+## - Instance IDs are multiplied by their respective prime and XORed into the hash
+## - XOR operations preserve commutativity (order doesn't matter within each array)
+## - Different primes ensure separation between component type domains
+##
+## Time complexity: O(n) where n is total number of components
+## Space complexity: O(1)
+##
+## References:
+## - Rolling hash: https://en.wikipedia.org/wiki/Rolling_hash
+## - Universal hashing: https://en.wikipedia.org/wiki/Universal_hashing
+## - Hash functions: https://en.wikipedia.org/wiki/Hash_function
+func _generate_query_cache_key(all_components: Array, any_components: Array, exclude_components: Array) -> int:
+	# Direct instance ID access with XOR for clean, fast hashing
+	# Use different prime multipliers to distinguish component types
+	var h = 0
+	
+	# Process all arrays with different primes for uniqueness
+	# all_components: prime 31 (commonly used in string hashing)
+	for comp in all_components:
+		h ^= comp.get_instance_id() * 31
+	
+	# any_components: prime 37 (ensures domain separation)
+	for comp in any_components:
+		h ^= comp.get_instance_id() * 37
+	
+	# exclude_components: prime 41 (further domain separation)
+	for comp in exclude_components:
+		h ^= comp.get_instance_id() * 41
+	
+	return h
+
 
 #endregion Utility Methods

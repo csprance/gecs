@@ -46,9 +46,9 @@ var world: World:
 			if not world.is_connected("tree_exited", _on_world_exited):
 				world.connect("tree_exited", _on_world_exited)
 		world_changed.emit(world)
-		if debug:
-			GECSEditorDebuggerMessages.set_world(world)
-
+		assert(GECSEditorDebuggerMessages.set_world(world) if debug else true, 'Debug Data')
+		
+			
 ## Are we in debug mode? Controlled by project setting gecs/debug_mode
 var debug := ProjectSettings.get_setting(GecsSettings.SETTINGS_DEBUG_MODE, false)
 ## This is an array of functions that get called on the entities when they get added to the world (after they are ready)
@@ -88,9 +88,8 @@ func get_components(entities, component_type, default_component = null) -> Array
 func _on_world_exited() -> void:
 	world = null
 	world_exited.emit()
-	if debug:
-		GECSEditorDebuggerMessages.exit_world()
-
+	assert(GECSEditorDebuggerMessages.exit_world() if debug else true, 'Debug Data')
+		
 
 func serialize(query: QueryBuilder, config: GECSSerializeConfig = null) -> GecsData:
 	return GECSIO.serialize(query, config)

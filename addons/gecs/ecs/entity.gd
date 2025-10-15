@@ -353,13 +353,6 @@ func on_ready() -> void:
 	pass
 
 
-## Called every time the entity is updated in a system.[br]
-## Override this method to perform per-frame updates on the entity.[br]
-## [param delta] The time elapsed since the last frame.
-func on_update(delta: float) -> void:
-	pass
-
-
 ## Called right before the entity is freed from memory.[br]
 ## Override this method to perform any necessary cleanup before the entity is destroyed.
 func on_destroy() -> void:

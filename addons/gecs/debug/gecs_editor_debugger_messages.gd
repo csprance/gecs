@@ -26,56 +26,57 @@ static func can_send_message() -> bool:
 	return not Engine.is_editor_hint() and OS.has_feature("editor")
 
 
-static func world_init(world: World) -> void:
+static func world_init(world: World) -> bool:
 	if can_send_message():
 		EngineDebugger.send_message(Msg.WORLD_INIT, [world.get_instance_id(), world.get_path()])
+	return true
 
-
-static func system_metric(system: System, time: float) -> void:
+static func system_metric(system: System, time: float) -> bool:
 	if can_send_message():
 		EngineDebugger.send_message(
 			Msg.SYSTEM_METRIC, [system.get_instance_id(), system.name, time]
 		)
+	return true
 
-
-static func set_world(world: World) -> void:
+static func set_world(world: World) -> bool:
 	if can_send_message():
 		EngineDebugger.send_message(
 			Msg.SET_WORLD, [world.get_instance_id(), world.get_path()] if world else []
 		)
+	return true
 
-
-static func process_world(delta: float, group_name: String) -> void:
+static func process_world(delta: float, group_name: String) -> bool:
 	if can_send_message():
 		EngineDebugger.send_message(Msg.PROCESS_WORLD, [delta, group_name])
+	return true
 
 
-static func exit_world() -> void:
+static func exit_world() -> bool:
 	if can_send_message():
 		EngineDebugger.send_message(Msg.EXIT_WORLD, [])
+	return true
 
-
-static func entity_added(ent: Entity) -> void:
+static func entity_added(ent: Entity) -> bool:
 	if can_send_message():
 		EngineDebugger.send_message(Msg.ENTITY_ADDED, [ent.get_instance_id(), ent.get_path()])
+	return true
 
-
-static func entity_removed(ent: Entity) -> void:
+static func entity_removed(ent: Entity) -> bool:
 	if can_send_message():
 		EngineDebugger.send_message(Msg.ENTITY_REMOVED, [ent.get_instance_id(), ent.get_path()])
+	return true
 
-
-static func entity_disabled(ent: Entity) -> void:
+static func entity_disabled(ent: Entity) -> bool:
 	if can_send_message():
 		EngineDebugger.send_message(Msg.ENTITY_DISABLED, [ent.get_instance_id(), ent.get_path()])
+	return true
 
-
-static func entity_enabled(ent: Entity) -> void:
+static func entity_enabled(ent: Entity) -> bool:
 	if can_send_message():
 		EngineDebugger.send_message(Msg.ENTITY_ENABLED, [ent.get_instance_id(), ent.get_path()])
+	return true
 
-
-static func system_added(sys: System) -> void:
+static func system_added(sys: System) -> bool:
 	if can_send_message():
 		EngineDebugger.send_message(
 			Msg.SYSTEM_ADDED,
@@ -88,12 +89,12 @@ static func system_added(sys: System) -> void:
 				sys.get_path()
 			]
 		)
+	return true
 
-
-static func system_removed(sys: System) -> void:
+static func system_removed(sys: System) -> bool:
 	if can_send_message():
 		EngineDebugger.send_message(Msg.SYSTEM_REMOVED, [sys.get_instance_id(), sys.get_path()])
-
+	return true
 
 static func _get_type_name_for_debugger(obj) -> String:
 	if obj == null:
@@ -108,7 +109,7 @@ static func _get_type_name_for_debugger(obj) -> String:
 	return str(typeof(obj))
 
 
-static func entity_component_added(ent: Entity, comp: Resource) -> void:
+static func entity_component_added(ent: Entity, comp: Resource) -> bool:
 	if can_send_message():
 		EngineDebugger.send_message(
 			Msg.ENTITY_COMPONENT_ADDED,
@@ -119,34 +120,35 @@ static func entity_component_added(ent: Entity, comp: Resource) -> void:
 				comp.serialize()
 			]
 		)
+	return true
 
-
-static func entity_component_removed(ent: Entity, comp: Resource) -> void:
+static func entity_component_removed(ent: Entity, comp: Resource) -> bool:
 	if can_send_message():
 		EngineDebugger.send_message(
 			Msg.ENTITY_COMPONENT_REMOVED, [ent.get_instance_id(), comp.get_instance_id()]
 		)
-
+	return true
 
 static func entity_component_property_changed(
 	ent: Entity, comp: Resource, property_name: String, old_value: Variant, new_value: Variant
-) -> void:
+) -> bool:
 	if can_send_message():
 		EngineDebugger.send_message(
 			Msg.COMPONENT_PROPERTY_CHANGED,
 			[ent.get_instance_id(), comp.get_instance_id(), property_name, old_value, new_value]
 		)
+	return true
 
-
-static func entity_relationship_added(ent: Entity, rel: Relationship) -> void:
+static func entity_relationship_added(ent: Entity, rel: Relationship) -> bool:
 	if can_send_message():
 		EngineDebugger.send_message(
 			Msg.ENTITY_RELATIONSHIP_ADDED, [ent.get_instance_id(), rel.get_instance_id()]
 		)
+	return true
 
-
-static func entity_relationship_removed(ent: Entity, rel: Relationship) -> void:
+static func entity_relationship_removed(ent: Entity, rel: Relationship) -> bool:
 	if can_send_message():
 		EngineDebugger.send_message(
 			Msg.ENTITY_RELATIONSHIP_REMOVED, [ent.get_instance_id(), rel.get_instance_id()]
 		)
+	return true

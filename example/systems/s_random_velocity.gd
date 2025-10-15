@@ -4,10 +4,10 @@ extends System
 @export var time_between_updates: float = 0.1 # Time in seconds between updates
 
 func query() -> QueryBuilder:
-	return q.with_all([C_Velocity, C_Timer])
+	return q.with_all([C_Velocity, C_Timer]).enabled()
 	
 
-func process_all(entities: Array, delta: float) -> bool:
+func process_all(entities: Array, delta: float):
 	for entity in entities:
 		# Check to see if we went over the time limit
 		var c_timer = entity.get_component(C_Timer) as C_Timer
@@ -19,5 +19,3 @@ func process_all(entities: Array, delta: float) -> bool:
 		# Randomly change the velocity
 		var c_velocity = entity.get_component(C_Velocity) as C_Velocity
 		c_velocity.velocity += Vector3(randf_range(-1, 1), randf_range(-1, 1), randf_range(-1, 1))
-	
-	return true

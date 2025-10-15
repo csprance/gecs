@@ -94,9 +94,10 @@ Entities have a managed lifecycle:
 1. **Initialization** - Entity added to world, components loaded from `component_resources`
 2. **define_components()** - Called to add components via code
 3. **on_ready()** - Setup initial states, sync transforms
-4. **on_update(delta)** - Called by systems each frame
-5. **on_destroy()** - Cleanup before removal
-6. **on_disable()/on_enable()** - Handle enable/disable states
+4. **on_destroy()** - Cleanup before removal
+5. **on_disable()/on_enable()** - Handle enable/disable states
+
+> **Note:** In GECS v5.0+, entity logic should be handled by Systems, not in entity methods. Entities are pure data containers.
 
 ### Entity Naming Conventions
 
@@ -308,14 +309,13 @@ func query() -> QueryBuilder:
 	return q.with_all([C_Velocity])
 	
 
-func process_all(entities: Array, delta: float) -> bool:
+func process_all(entities: Array, delta: float) -> void:
 	for entity in entities:
 		var velocity_component: C_Velocity = entity.get_component(C_Velocity)
 		# Update the entity's position based on its velocity
 		var position: Vector3 = entity.transform.origin
 		position += velocity_component.velocity * delta
 		entity.transform.origin = position
-	return true # Return true to indicate processing was successful
 
 ```
 

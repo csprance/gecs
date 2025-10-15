@@ -40,7 +40,9 @@ enum Runs {
 @export var process_empty := false
 ## Is this system active. (Will be skipped if false)
 @export var active := true
-## Enable parallel processing for this system's entities
+
+@export_group("Parallel Processing")
+## Enable parallel processing for this system's entities (No access to scene tree in process method)
 @export var parallel_processing := false
 ## Minimum entities required to use parallel processing (performance threshold)
 @export var parallel_threshold := 50
@@ -56,13 +58,15 @@ var q: QueryBuilder
 
 ## Logger for system debugging and tracing
 var systemLogger = GECSLogger.new().domain("System")
+## Data for debugger and profiling
+var lastRunData := {}
 
-## Internal flag to track if this system uses subsystems
-var _using_subsystems = true
-## Cached query to avoid recreating it every frame
-var _cached_query: QueryBuilder
-## Cached subsystems to avoid recreating them every frame
-var _cached_subsystems: Array
+## Cached query to avoid recreating it every frame (lazily initialized)
+var _query_cache: QueryBuilder = null
+## Cached subsystems to avoid recreating them every frame (lazily initialized)
+var _subsystems_cache: Array[Array] = []
+## Set to false when sub_systems() is called and returns empty array
+var _has_subsystems: bool = true
 
 #endregion Public Variables
 
@@ -86,7 +90,7 @@ func query() -> QueryBuilder:
 
 ## Override this method to define any sub-systems that should be processed by this system.[br]
 func sub_systems() -> Array[Array]:
-	_using_subsystems = false # If this method is not overridden then we are not using sub systems
+	_has_subsystems = false # If this method is not overridden then we are not using sub systems
 	return []
 
 
@@ -96,7 +100,8 @@ func setup():
 
 
 ## The main processing function for the system.[br]
-## This method should be overridden by subclasses to define the system's behavior.[br]
+## This method can be overridden by subclasses to define the system's behavior if using query().[br]
+## If using [method System.sub_systems] then this method will not be called.[br]
 ## [param entity] The [Entity] being processed.[br]
 ## [param delta] The time elapsed since the last frame.
 func process(entity: Entity, delta: float) -> void:
@@ -112,57 +117,50 @@ func process(entity: Entity, delta: float) -> void:
 ## but you can override this method to do something different.[br]
 ## [param entities] The [Entity]s to process.[br]
 ## [param delta] The time elapsed since the last frame.
-func process_all(entities: Array, delta: float) -> bool:
+func process_all(entities: Array, delta: float) -> void:
 	# If we have no entities and we want to process even when empty do it once and return
 	if entities.size() == 0 and process_empty:
 		process(null, delta)
-		return true
-	
-	var did_run = false
-	
+		assert(_debug_data({"processed_entities": 0}), 'Debug data')
+		return
+
 	# Use parallel processing if enabled and we have enough entities
 	if parallel_processing and entities.size() >= parallel_threshold:
-		did_run = _process_parallel(entities, delta)
+		_process_parallel(entities, delta)
 	else:
 		# otherwise process all the entities sequentially (wont happen if empty array)
 		for entity in entities:
-			did_run = true
 			process(entity, delta)
-			entity.on_update(delta)
-	
-	return did_run
+		assert(_debug_data({"processed_entities": entities.size()}), 'Debug data')
 
+#endregion Public Methods
+
+#region Private Methods
 
 ## Process entities in parallel using WorkerThreadPool
-func _process_parallel(entities: Array, delta: float) -> bool:
+func _process_parallel(entities: Array, delta: float) -> void:
 	if entities.is_empty():
-		return false
-	
+		return
+
 	# Use OS thread count as fallback since WorkerThreadPool.get_thread_count() doesn't exist
 	var worker_count = OS.get_processor_count()
 	var batch_size = max(1, entities.size() / worker_count)
 	var batches = []
 	var tasks = []
-	
+
 	# Split entities into batches
 	for i in range(0, entities.size(), batch_size):
 		var batch = entities.slice(i, min(i + batch_size, entities.size()))
 		batches.append(batch)
-	
+
 	# Submit tasks for each batch
 	for batch in batches:
 		var task_id = WorkerThreadPool.add_task(_process_batch_callable.bind(batch, delta))
 		tasks.append(task_id)
-	
+
 	# Wait for all tasks to complete
 	for task_id in tasks:
 		WorkerThreadPool.wait_for_task_completion(task_id)
-	
-	# Call on_update for all entities on main thread (required for Godot node operations)
-	for entity in entities:
-		entity.on_update(delta)
-	
-	return true
 
 
 ## Process a batch of entities - called by worker threads
@@ -171,63 +169,92 @@ func _process_batch_callable(batch: Array, delta: float) -> void:
 		process(entity, delta)
 
 
-## Set the query builder to the systems q object.[br]
-func set_q():
+## Called by World.process() each frame - main entry point for system execution
+## [param delta] The time elapsed since the last frame
+func _handle(delta: float) -> void:
+	# Early exit: system is disabled or paused
+	if not active or paused:
+		return
+
+	# Ensure query builder is available for both paths
 	if not q:
 		q = ECS.world.query
 
+	# Path 1: Process using subsystems (if defined)
+	if _has_subsystems:
+		if _try_run_subsystems(delta):
+			return # Subsystems handled everything, we're done
 
-#endregion Public Methods
-
-#region Private Methods
-## Handles the processing of all [Entity]s that match the system's query [Component]s.[br]
-## [param delta] The time elapsed since the last frame.
-func _handle(delta: float):
-	if not active or paused:
-		return
-	if _handle_subsystems(delta):
-		return
-	set_q()
-	var did_run := false
-	# Cache query on first call to avoid recreating it every frame
-	if not _cached_query:
-		_cached_query = query()
-	var entities = _cached_query.execute()
-	
-	if entities.size() == 0 and not process_empty:
-		return
-		
-	did_run = process_all(entities, delta)
-	# Avoid calling on_update twice - process_all already calls it
+	# Path 2: Process using query() + process() (standard ECS pattern)
+	_run_query_system(delta)
 
 
-func _handle_subsystems(delta: float):
-	# Cache subsystems on first call to avoid recreating them every frame
-	if not _cached_subsystems:
-		_cached_subsystems = sub_systems()
-	if not _using_subsystems:
-		return false
-	set_q()
-	var sub_systems_ran = false
-	for sub_sys_tuple in _cached_subsystems:
-		var did_run = false
-		sub_systems_ran = true
-		var query = sub_sys_tuple[0]
-		var sub_sys_process = sub_sys_tuple[1] as Callable
-		var should_process_all = sub_sys_tuple[2] if sub_sys_tuple.size() > 2 else false
-		var entities = query.execute() as Array[Entity]
-		if should_process_all:
-			did_run = sub_sys_process.call(entities, delta)
+## Execution path for subsystems - returns true if subsystems were executed
+func _try_run_subsystems(delta: float) -> bool:
+	# Lazy initialize subsystems cache
+	if _subsystems_cache.is_empty():
+		_subsystems_cache = sub_systems()
+		# If user didn't override sub_systems(), _has_subsystems is now false
+		if not _has_subsystems:
+			return false
+
+	# Execute each subsystem
+	var subsystem_index := 0
+	for subsystem_tuple in _subsystems_cache:
+		var subsystem_query := subsystem_tuple[0] as QueryBuilder
+		var subsystem_callable := subsystem_tuple[1] as Callable
+		var process_all_at_once: bool = subsystem_tuple[2] if subsystem_tuple.size() > 2 else false
+
+		var matching_entities := subsystem_query.execute() as Array[Entity]
+
+		if process_all_at_once:
+			# Call once with all entities
+			subsystem_callable.call(matching_entities, delta)
 		else:
-			# Avoid unnecessary did_run check in tight loop
-			if not entities.is_empty():
-				did_run = true
-				for entity in entities:
-					sub_sys_process.call(entity, delta)
-		if did_run:
-			# Call on_update for all entities that were processed
-			for entity in entities:
-				entity.on_update(delta)
-	return sub_systems_ran
+			# Call once per entity
+			for entity in matching_entities:
+				subsystem_callable.call(entity, delta)
+
+		assert(_update_debug_data(func(): return {
+			subsystem_index: {
+				"query": str(subsystem_query),
+				"entity_count": matching_entities.size(),
+				"process_all": process_all_at_once
+			}
+		}), 'Debug data')
+		subsystem_index += 1
+
+	return true
+
+
+## Execution path for standard query-based systems
+func _run_query_system(delta: float) -> void:
+	# Lazy initialize query cache
+	if not _query_cache:
+		_query_cache = query()
+
+	# Execute query to get matching entities
+	var matching_entities := _query_cache.execute()
+
+	# Early exit: no entities and we don't process when empty
+	if matching_entities.is_empty() and not process_empty:
+		return
+
+	# Process entities (handles empty case, parallel processing, etc.)
+	process_all(matching_entities, delta)
+
+
+## Debug helper - updates lastRunData (compiled out in production)
+func _update_debug_data(callable: Callable = func(): return {}) -> bool:
+	lastRunData.assign(callable.call()) if ECS.debug else {}
+	return true
+
+
+## Debug helper - sets lastRunData (compiled out in production)
+func _debug_data(_lrd: Dictionary, callable: Callable = func(): return {}) -> bool:
+	if ECS.debug:
+		lastRunData = _lrd
+		lastRunData.assign(callable.call())
+	return true
 
 #endregion Private Methods
