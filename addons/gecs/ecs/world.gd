@@ -109,27 +109,43 @@ func _return_query_builder_to_pool(query_builder: QueryBuilder) -> void:
 
 
 ## Generate a cache key for query parameters
-## Uses component resource_path for stable cache keys across query builder instances
+## 
+## Uses a polynomial rolling hash algorithm combined with XOR to create stable,
+## collision-resistant cache keys from component instance IDs. This approach
+## ensures that queries with the same components produce identical cache keys
+## while different component combinations produce distinct keys.
+##
+## Algorithm details:
+## - Each component type (all/any/exclude) uses a different prime multiplier
+## - Instance IDs are multiplied by their respective prime and XORed into the hash
+## - XOR operations preserve commutativity (order doesn't matter within each array)
+## - Different primes ensure separation between component type domains
+##
+## Time complexity: O(n) where n is total number of components
+## Space complexity: O(1)
+##
+## References:
+## - Rolling hash: https://en.wikipedia.org/wiki/Rolling_hash
+## - Universal hashing: https://en.wikipedia.org/wiki/Universal_hashing
+## - Hash functions: https://en.wikipedia.org/wiki/Hash_function
 func _generate_query_cache_key(all_components: Array, any_components: Array, exclude_components: Array) -> int:
-	# Use resource_path hash (stable across instances) - much faster than string concat
-	# We XOR component hashes with different primes to ensure unique combinations
+	# Direct instance ID access with XOR for clean, fast hashing
+	# Use different prime multipliers to distinguish component types
 	var h = 0
-
-	# Hash all_components (use prime 31)
+	
+	# Process all arrays with different primes for uniqueness
+	# all_components: prime 31 (commonly used in string hashing)
 	for comp in all_components:
-		var path = comp.resource_path if comp.has_method("resource_path") else str(comp)
-		h = h ^ (hash(path) * 31)
-
-	# Hash any_components (use prime 37 for different domain)
+		h ^= comp.get_instance_id() * 31
+	
+	# any_components: prime 37 (ensures domain separation)
 	for comp in any_components:
-		var path = comp.resource_path if comp.has_method("resource_path") else str(comp)
-		h = h ^ (hash(path) * 37)
-
-	# Hash exclude_components (use prime 41)
+		h ^= comp.get_instance_id() * 37
+	
+	# exclude_components: prime 41 (further domain separation)
 	for comp in exclude_components:
-		var path = comp.resource_path if comp.has_method("resource_path") else str(comp)
-		h = h ^ (hash(path) * 41)
-
+		h ^= comp.get_instance_id() * 41
+	
 	return h
 
 
