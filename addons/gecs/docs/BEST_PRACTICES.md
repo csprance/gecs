@@ -239,6 +239,33 @@ func on_ready():
 
 ## 🚀 Performance Best Practices
 
+### Choose the Right Query Method ⭐ NEW!
+
+**Query Performance Ranking** (v5.0.0-rc4+):
+
+```gdscript
+# 🏆 FASTEST - Enabled/disabled queries (constant time)
+class_name ActiveEntitiesOnly extends System
+func query():
+    return q.enabled(true)  # ~0.05ms for any number of entities
+
+# 🥈 EXCELLENT - Component queries (heavily optimized)
+class_name MovementSystem extends System
+func query():
+    return q.with_all([C_Position, C_Velocity])  # ~0.6ms for 10K entities
+
+# 🥉 GOOD - Use with_any strategically
+class_name DamageableSystem extends System
+func query():
+    return q.with_any([C_Player, C_Enemy]).with_all([C_Health])  # ~5.6ms for 10K
+
+# 🐌 AVOID - Group queries are slowest
+class_name PlayerSystem extends System
+func query():
+    return q.with_group("player")  # ~16ms for 10K entities
+    # Better: q.with_all([C_Player])
+```
+
 ### Use Batch Processing for Performance
 
 ```gdscript
@@ -259,12 +286,23 @@ func process_all(entities: Array, _delta):
 ### Use Specific Queries
 
 ```gdscript
-# ✅ Good - Specific query
-class_name PlayerInputSystem extends System
+# ✅ BEST - Combine enabled filter with components
+class_name ActivePlayerInputSystem extends System
 func query():
-    return q.with_all([C_Input, C_Movement]).with_group("player")
+    return q.with_all([C_Input, C_Movement]).enabled(true)
+    # Super fast: enabled filtering + component matching
 
-# ❌ Avoid - Overly broad queries
+# ✅ GOOD - Specific component query
+class_name ProjectileSystem extends System
+func query():
+    return q.with_all([C_Projectile, C_Velocity])  # Fast and specific
+
+# ❌ AVOID - Group-based queries (slow)
+class_name PlayerSystem extends System
+func query():
+    return q.with_group("player")  # Use q.with_all([C_Player]) instead
+
+# ❌ AVOID - Overly broad queries
 class_name UniversalMovementSystem extends System
 func query():
     return q.with_all([C_Transform])  # Too broad - matches everything
@@ -585,7 +623,7 @@ func safe_partial_heal(entity: Entity, heal_amount: int):
     if damage_rels.is_empty():
         print("Entity has no damage to heal")
         return
-    
+
     var to_heal = min(heal_amount, damage_rels.size())
     entity.remove_relationship(Relations.any_damage(), to_heal)
     print("Healed ", to_heal, " damage effects")
@@ -606,7 +644,7 @@ class_name StatusEffectSystem extends System
 func process_cleanse_spell(caster: Entity, target: Entity, spell_power: int):
     # Calculate cleanse strength based on spell power and caster stats
     var cleanse_strength = calculate_cleanse_strength(caster, spell_power)
-    
+
     # Apply graduated cleansing based on strength
     match cleanse_strength:
         1..3:   target.remove_relationship(Relations.any_debuff(), 1)
@@ -617,7 +655,7 @@ func process_cleanse_spell(caster: Entity, target: Entity, spell_power: int):
 func process_antidote_item(user: Entity, antidote_strength: int):
     # Remove poison based on antidote quality
     user.remove_relationship(Relations.poison_effect(), antidote_strength)
-    
+
     # Remove poison resistance temporarily to prevent immediate repoison
     user.add_relationship(Relations.poison_immunity(), 5.0)  # 5 second immunity
 
@@ -626,14 +664,14 @@ class_name InventorySystem extends System
 func consume_item_stack(entity: Entity, item_type: Script, count: int):
     # Consume specific number of items from inventory
     entity.remove_relationship(
-        Relationship.new(C_HasItem.new(), item_type), 
+        Relationship.new(C_HasItem.new(), item_type),
         count
     )
-    
+
 func use_consumable(entity: Entity, item: Component, quantity: int = 1):
     # Use consumable items with quantity
     entity.remove_relationship(
-        Relationship.new(C_HasItem.new(), item), 
+        Relationship.new(C_HasItem.new(), item),
         quantity
     )
 ```
@@ -646,7 +684,7 @@ func optimize_bulk_removal(entity: Entity):
     # Cache the relationship for reuse
     var poison_rel = Relations.poison_effect()
     var damage_rel = Relations.any_damage()
-    
+
     # Multiple targeted removals
     entity.remove_relationship(poison_rel, 2)      # Remove 2 poison
     entity.remove_relationship(damage_rel, 1)      # Remove 1 damage
@@ -655,7 +693,7 @@ func optimize_bulk_removal(entity: Entity):
 # ✅ Excellent - Batch removal patterns
 func batch_cleanup(entities: Array[Entity]):
     var cleanup_rel = Relations.temporary_effect()
-    
+
     for entity in entities:
         # Remove up to 3 temporary effects from each entity
         entity.remove_relationship(cleanup_rel, 3)
