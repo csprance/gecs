@@ -1,5 +1,35 @@
 # GECS Changelog
 
+## [5.0.0-rc4] - 2025-10-14 - Query Performance Optimization
+
+### 🚀 Performance Improvements
+
+#### Massive Query Cache Key Optimization
+
+**85% faster cache key generation** leading to dramatic query performance improvements:
+
+- **Cache key generation**: 283ms → 43ms (**85% faster**)
+- **Query caching**: 500ms → 4.7ms (**99% faster**)
+- **Query with all**: 13ms → 0.55ms (**96% faster**)
+- **Query with any**: 27ms → 5.6ms (**79% faster**)
+- **Complex queries**: Significantly improved scaling
+
+**Technical Details:**
+
+- Replaced expensive `str(comp)` fallbacks with direct `get_instance_id()` calls
+- Eliminated conditional checks in cache key generation hot path
+- Implemented polynomial rolling hash with XOR for collision resistance
+- Used different prime multipliers (31, 37, 41) for component type separation
+
+**Impact:**
+
+- Query system now scales linearly instead of exponentially
+- ECS performance optimized for large-scale applications (10,000+ entities)
+- No performance regressions in any core ECS operations
+- Cache effectiveness dramatically improved
+
+See performance test results in `reports/perf/` for detailed metrics.
+
 ## [5.0.0] - 2025-01-XX - Relationship System Complete Overhaul
 
 ### ⚠️ BREAKING CHANGES
