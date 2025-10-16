@@ -2,10 +2,10 @@ name: 🛠️ Build GECS Release
 on:
   push:
     tags:
-      - 'v*'  # Triggers on any version tag like v1.0.0, v1.2.3, v3.9.1-beta, etc.
+      - "v*" # Triggers on any version tag like v1.0.0, v1.2.3, v3.9.1-beta, etc.
 
 permissions:
-  contents: write  # Required for git push operations
+  contents: write # Required for git push operations
 
 jobs:
   make-submodule:
@@ -42,7 +42,7 @@ jobs:
           cp LICENSE addons/gecs/
           cp -r addons/gecs/* .
           rm -rf addons
-          
+
           # Remove test directories to avoid dependency issues
           rm -rf tests/
 
@@ -61,6 +61,8 @@ jobs:
   make-godot-asset-library:
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/')
+    environment:
+      name: godot-asset-library-approval
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -90,14 +92,14 @@ jobs:
           mkdir -p addons/gecs
 
           # Copy addon contents and other necessary files from the tag commit
-          git checkout "$COMMIT_SHA" -- README.md LICENSE addons/gecs
+          git checkout "$COMMIT_SHA" -- README.md LICENSE addons/gecs script_templates
 
           # Copy README.md to addon folder
           cp README.md addons/gecs/
 
           # Copy LICENSE to addon folder
           cp LICENSE addons/gecs/
-          
+
           # Remove test directories for Asset Library submission
           rm -rf addons/gecs/tests/
 
