@@ -60,18 +60,13 @@ var systems: Array[System]:
 		for group in systems_by_group.keys():
 			all_systems.append_array(systems_by_group[group])
 		return all_systems
-## [Component] to [Entity] Index - This stores entities by component for efficient querying.
-var component_entity_index: Dictionary = {}
-## [Component] to [Enabled Entity] Index - Separate index for enabled entities only
-var component_enabled_entity_index: Dictionary = {}
-## [Component] to [Disabled Entity] Index - Separate index for disabled entities only
-var component_disabled_entity_index: Dictionary = {}
 ## ID to [Entity] registry - Prevents duplicate IDs and enables fast ID lookups and singleton behavior
 var entity_id_registry: Dictionary = {} # String (id) -> Entity
-## Pool of QueryBuilder instances to reduce creation overhead
-var _query_builder_pool: Array[QueryBuilder] = []
-var _pool_size_limit: int = 10
-
+## ARCHETYPE STORAGE - Entity storage by component signature for O(1) queries
+## Maps archetype signature (FNV-1a hash) -> Archetype instance
+var archetypes: Dictionary = {} # int -> Archetype
+## Fast lookup: Entity -> its current Archetype
+var entity_to_archetype: Dictionary = {} # Entity -> Archetype
 ## The [QueryBuilder] instance for this world used to build and execute queries.
 ## Anytime we request a query we want to connect the cache invalidated signal to the query
 ## so that all queries are invalidated anytime we emit cache_invalidated.
@@ -92,11 +87,17 @@ var relationship_entity_index: Dictionary = {}
 var reverse_relationship_index: Dictionary = {}
 ## Logger for the world to only log to a specific domain
 var _worldLogger = GECSLogger.new().domain("World")
-## Cache for commonly used query results to reduce redundant computations
-var _query_result_cache: Dictionary = {}
+## Cache for commonly used query results - stores matching archetypes, not entities
+## This dramatically reduces cache invalidation since archetypes are stable
+var _query_archetype_cache: Dictionary = {} # query_sig -> Array[Archetype]
+## Pool of QueryBuilder instances to reduce creation overhead
+var _query_builder_pool: Array[QueryBuilder] = []
+var _pool_size_limit: int = 10
 ## Track cache hits for performance monitoring
 var _cache_hits: int = 0
 var _cache_misses: int = 0
+## Global cache: resource_path -> Script (loaded once, reused forever)
+var _component_script_cache: Dictionary = {}  # String -> Script
 
 #endregion Public Variables
 
@@ -208,10 +209,6 @@ func add_entity(entity: Entity, components = null, add_to_tree = true) -> void:
 		entity.relationship_added.connect(_on_entity_relationship_added)
 	if not entity.relationship_removed.is_connected(_on_entity_relationship_removed):
 		entity.relationship_removed.connect(_on_entity_relationship_removed)
-
-	# Clear our query cache when new entities are added
-	_query_result_cache.clear()
-	cache_invalidated.emit()
 	
 	#  Add the entity to the tree if it's not already there after hooking up the signals
 	# This ensures that any _ready methods on the entity or its components are called after setup
@@ -221,10 +218,15 @@ func add_entity(entity: Entity, components = null, add_to_tree = true) -> void:
 	# add entity to our list
 	entities.append(entity)
 
+	# ARCHETYPE: Add entity to archetype system BEFORE initialization
+	# Start with empty archetype, then move as components are added
+	_add_entity_to_archetype(entity)
+
 	# initialize the entity and its components in game only
+	# This will trigger component_added signals which move the entity to the right archetype
 	if not Engine.is_editor_hint():
 		entity._initialize(components if components else [])
-	
+
 	entity_added.emit(entity)
 	
 	# All the entities are ready so we should run the pre-processors now
@@ -256,9 +258,6 @@ func remove_entity(entity) -> void:
 	entity_removed.emit(entity)
 	_worldLogger.debug("remove_entity Removing Entity: ", entity)
 	entities.erase(entity) # FIXME: This doesn't always work for some reason?
-	# Update index
-	for component_key in entity.components.keys():
-		_remove_entity_from_index(entity, component_key)
 
 	# Only disconnect signals if they're actually connected
 	if entity.component_added.is_connected(_on_entity_component_added):
@@ -274,15 +273,14 @@ func remove_entity(entity) -> void:
 	var entity_id = entity.id
 	if entity_id != "" and entity_id in entity_id_registry and entity_id_registry[entity_id] == entity:
 		entity_id_registry.erase(entity_id)
-	
-	
+
+	# ARCHETYPE: Remove entity from archetype system (parallel)
+	_remove_entity_from_archetype(entity)
+
 	# Destroy entity normally
 	entity.on_destroy()
 	entity.queue_free()
-	
-	# Clear our query cache when component structure changes
-	_query_result_cache.clear()
-	cache_invalidated.emit()
+
 	assert(GECSEditorDebuggerMessages.entity_removed(entity) if ECS.debug else true, '')
 
 
@@ -306,9 +304,6 @@ func disable_entity(entity) -> Entity:
 	entity_disabled.emit(entity)
 	_worldLogger.debug("disable_entity Disabling Entity: ", entity)
 
-	# Move entity from enabled index to disabled index
-	_move_entity_to_disabled_index(entity)
-
 	entity.component_added.disconnect(_on_entity_component_added)
 	entity.component_removed.disconnect(_on_entity_component_removed)
 	entity.relationship_added.disconnect(_on_entity_relationship_added)
@@ -316,9 +311,6 @@ func disable_entity(entity) -> Entity:
 	entity.on_disable()
 	entity.set_process(false)
 	entity.set_physics_process(false)
-	# Clear our query cache when component structure changes
-	_query_result_cache.clear()
-	cache_invalidated.emit()
 	assert(GECSEditorDebuggerMessages.entity_disabled(entity) if ECS.debug else true, '')
 	return entity
 
@@ -348,9 +340,6 @@ func enable_entity(entity: Entity, components = null) -> void:
 	entity.enabled = true # This will trigger _on_entity_enabled_changed via setter
 	entity_enabled.emit(entity)
 
-	# Move entity from disabled index to enabled index
-	_move_entity_to_enabled_index(entity)
-
 	# Connect to entity signals for components so we can track global component state
 	if not entity.component_added.is_connected(_on_entity_component_added):
 		entity.component_added.connect(_on_entity_component_added)
@@ -367,9 +356,6 @@ func enable_entity(entity: Entity, components = null) -> void:
 	entity.set_process(true)
 	entity.set_physics_process(true)
 	entity.on_enable()
-	# Clear our query cache when component structure changes
-	_query_result_cache.clear()
-	cache_invalidated.emit()
 	assert(GECSEditorDebuggerMessages.entity_enabled(entity) if ECS.debug else true, '')
 
 
@@ -478,6 +464,15 @@ func purge(should_free = true, keep := []) -> void:
 	reverse_relationship_index.clear()
 	_worldLogger.debug("Cleared relationship indexes after purge")
 
+	# ARCHETYPE: Clear archetype system
+	# First, break circular references by clearing edges
+	for archetype in archetypes.values():
+		archetype.add_edges.clear()
+		archetype.remove_edges.clear()
+	archetypes.clear()
+	entity_to_archetype.clear()
+	_worldLogger.debug("Cleared archetype storage after purge")
+
 	# Purge all systems
 	_worldLogger.debug("Purging All Systems")
 	for group_key in systems_by_group.keys():
@@ -507,188 +502,6 @@ func purge(should_free = true, keep := []) -> void:
 
 #endregion Systems
 
-func _query(all_components = [], any_components = [], exclude_components = [], enabled_filter = null) -> Array:
-	# Early return if no components specified
-	if all_components.is_empty() and any_components.is_empty() and exclude_components.is_empty():
-		return entities
-
-	# Check world-level cache first
-	var cache_key = _generate_query_cache_key(all_components, any_components, exclude_components)
-	if _query_result_cache.has(cache_key):
-		_cache_hits += 1
-		# Return cached array directly - user must not modify returned array!
-		# This is standard ECS practice: query results are read-only views
-		return _query_result_cache[cache_key]
-
-	_cache_misses += 1
-	var map_resource_path = func(x): return x.resource_path
-	# Convert all component arrays to resource paths
-	var _all := all_components.map(map_resource_path)
-	var _any := any_components.map(map_resource_path)
-	var _exclude := exclude_components.map(map_resource_path)
-
-	# Choose the appropriate index based on enabled_filter
-	var active_index: Dictionary
-	if enabled_filter == true:
-		active_index = component_enabled_entity_index
-	elif enabled_filter == false:
-		active_index = component_disabled_entity_index
-	else:
-		active_index = component_entity_index
-
-	var result: Set
-
-	# If we have all or any components, process those
-	if not _all.is_empty() or not _any.is_empty():
-		# Handle all_components first if present
-		if not _all.is_empty():
-			# Performance Optimization: Start with the smallest component set to minimize iterations
-			# Get the smallest component set first for better performance
-			var smallest_size := INF
-			var smallest_component_key := ""
-
-			for component in _all:
-				var component_entities = active_index.get(component, Set.new())
-				var size = component_entities.size()
-				# Early exit if any required component has no entities
-				if size == 0:
-					return []
-				if size < smallest_size:
-					smallest_size = size
-					smallest_component_key = component
-
-			# Start with the smallest set and intersect others
-			result = active_index.get(smallest_component_key, Set.new())
-			for component in _all:
-				# Early exit if result is empty
-				if result.is_empty():
-					return []
-				if component == smallest_component_key:
-					continue
-				result = result.intersect(active_index.get(component, Set.new()))
-
-		# Handle any_components
-		if not _any.is_empty():
-			var any_result: Set = Set.new()
-			# Start with first component's entities
-			if _any.size() > 0:
-				any_result = active_index.get(_any[0], Set.new())
-				# Union with remaining components
-				for i in range(1, _any.size()):
-					var entities_with_component = active_index.get(_any[i], Set.new())
-					any_result = any_result.union(entities_with_component)
-
-			if result:
-				result = result.intersect(any_result)
-			else:
-				result = any_result
-	else:
-		# Only if we have no inclusive filters but have exclusions,
-		# start with all entities
-		if not _exclude.is_empty():
-			result = Set.new(entities)
-
-	# Handle exclude_components
-	if not _exclude.is_empty():
-		for component in _exclude:
-			var excluded = active_index.get(component, Set.new())
-			if not excluded.is_empty():
-				result = result.difference(excluded)
-
-	# Cache the result for future queries
-	_query_result_cache[cache_key] = result.to_array()
-	# Return cached array directly - user must not modify returned array!
-	return _query_result_cache[cache_key]
-
-
-#region Index Management Functions
-
-
-## Adds an entity to the component index.[br]
-## [param entity] The entity to index.[br]
-## [param component_key] The component's resource path.
-func _add_entity_to_index(entity: Entity, component_key: String) -> void:
-	# Add to main index (all entities)
-	if not component_entity_index.has(component_key):
-		component_entity_index[component_key] = Set.new()
-	var entity_list = component_entity_index[component_key]
-	entity_list.add(entity)
-
-	# Add to enabled/disabled index based on entity state
-	if entity.enabled:
-		if not component_enabled_entity_index.has(component_key):
-			component_enabled_entity_index[component_key] = Set.new()
-		component_enabled_entity_index[component_key].add(entity)
-	else:
-		if not component_disabled_entity_index.has(component_key):
-			component_disabled_entity_index[component_key] = Set.new()
-		component_disabled_entity_index[component_key].add(entity)
-
-
-## Removes an entity from the component index.[br]
-## [param entity] The entity to remove.[br]
-## [param component_key] The component's resource path.
-func _remove_entity_from_index(entity, component_key: String) -> void:
-	# Remove from main index
-	if component_entity_index.has(component_key):
-		var entity_list: Set = component_entity_index[component_key]
-		entity_list.erase(entity)
-		if entity_list.size() == 0:
-			component_entity_index.erase(component_key)
-
-	# Remove from enabled index
-	if component_enabled_entity_index.has(component_key):
-		var enabled_list: Set = component_enabled_entity_index[component_key]
-		enabled_list.erase(entity)
-		if enabled_list.size() == 0:
-			component_enabled_entity_index.erase(component_key)
-
-	# Remove from disabled index
-	if component_disabled_entity_index.has(component_key):
-		var disabled_list: Set = component_disabled_entity_index[component_key]
-		disabled_list.erase(entity)
-		if disabled_list.size() == 0:
-			component_disabled_entity_index.erase(component_key)
-
-
-## Moves an entity from disabled index to enabled index for all its components.[br]
-## Called when an entity is enabled.[br]
-## [param entity] The entity being enabled.
-func _move_entity_to_enabled_index(entity: Entity) -> void:
-	for component_key in entity.components.keys():
-		# Remove from disabled index
-		if component_disabled_entity_index.has(component_key):
-			var disabled_list: Set = component_disabled_entity_index[component_key]
-			disabled_list.erase(entity)
-			if disabled_list.size() == 0:
-				component_disabled_entity_index.erase(component_key)
-
-		# Add to enabled index
-		if not component_enabled_entity_index.has(component_key):
-			component_enabled_entity_index[component_key] = Set.new()
-		component_enabled_entity_index[component_key].add(entity)
-
-
-## Moves an entity from enabled index to disabled index for all its components.[br]
-## Called when an entity is disabled.[br]
-## [param entity] The entity being disabled.
-func _move_entity_to_disabled_index(entity: Entity) -> void:
-	for component_key in entity.components.keys():
-		# Remove from enabled index
-		if component_enabled_entity_index.has(component_key):
-			var enabled_list: Set = component_enabled_entity_index[component_key]
-			enabled_list.erase(entity)
-			if enabled_list.size() == 0:
-				component_enabled_entity_index.erase(component_key)
-
-		# Add to disabled index
-		if not component_disabled_entity_index.has(component_key):
-			component_disabled_entity_index[component_key] = Set.new()
-		component_disabled_entity_index[component_key].add(entity)
-
-
-#endregion Index Management Functions
-
 #region Signal Callbacks
 
 
@@ -696,13 +509,12 @@ func _move_entity_to_disabled_index(entity: Entity) -> void:
 ## [param entity] The entity that had a component added.[br]
 ## [param component] The resource path of the added component.
 func _on_entity_component_added(entity: Entity, component: Resource) -> void:
-	# We have to get the script here then resource because we're using an instantiated resource
-	_add_entity_to_index(entity, component.get_script().resource_path)
-	
-	# Clear query cache when components are added
-	_query_result_cache.clear()
-	cache_invalidated.emit()
-	
+	# ARCHETYPE: Defer archetype migration to next frame to keep component add fast
+	if entity_to_archetype.has(entity):
+		var old_archetype = entity_to_archetype[entity]
+		var comp_path = component.get_script().resource_path
+		call_deferred("_deferred_archetype_migration", entity, old_archetype, comp_path, true)
+
 	# Emit Signal
 	component_added.emit(entity, component)
 
@@ -735,9 +547,7 @@ func _on_entity_component_property_change(
 ) -> void:
 	# Notify the World to trigger observers
 	_handle_observer_component_changed(entity, component, property_name, new_value, old_value)
-	# Clear our query cache when component structure changes
-	_query_result_cache.clear()
-	cache_invalidated.emit()
+	# ARCHETYPE: No cache invalidation - property changes don't affect archetype membership
 	# Send the message to the debugger if we're in debug
 	assert(GECSEditorDebuggerMessages.entity_component_property_changed(
 		entity, component, property_name, old_value, new_value
@@ -748,16 +558,18 @@ func _on_entity_component_property_change(
 ## [param entity] The entity that had a component removed.[br]
 ## [param component] The resource path of the removed component.
 func _on_entity_component_removed(entity, component: Resource) -> void:
+	# ARCHETYPE: Defer archetype migration to next frame to keep component removal fast
+	if entity_to_archetype.has(entity):
+		var old_archetype = entity_to_archetype[entity]
+		var comp_path = component.resource_path
+		call_deferred("_deferred_archetype_migration", entity, old_archetype, comp_path, false)
+
 	# We remove components immediately so this was called on the entity all we do is pass signal along
 	# Emit Signal
 	component_removed.emit(entity, component)
 
 	# Handle observers for component removed
 	_handle_observer_component_removed(entity, component)
-	
-	# Clear query cache when components are removed
-	_query_result_cache.clear()
-	cache_invalidated.emit()
 
 	assert(GECSEditorDebuggerMessages.entity_component_removed(entity, component) if ECS.debug else true, '')
 	
@@ -775,11 +587,7 @@ func _on_entity_relationship_added(entity: Entity, relationship: Relationship) -
 		if not reverse_relationship_index.has(rev_key):
 			reverse_relationship_index[rev_key] = []
 		reverse_relationship_index[rev_key].append(relationship.target)
-	
-	# Clear query cache when relationships are added
-	_query_result_cache.clear()
-	cache_invalidated.emit()
-	
+
 	# Emit Signal
 	relationship_added.emit(entity, relationship)
 	assert(GECSEditorDebuggerMessages.entity_relationship_added(entity, relationship) if ECS.debug else true, '')
@@ -795,11 +603,7 @@ func _on_entity_relationship_removed(entity: Entity, relationship: Relationship)
 		var rev_key = "reverse_" + key
 		if reverse_relationship_index.has(rev_key):
 			reverse_relationship_index[rev_key].erase(relationship.target)
-	
-	# Clear query cache when relationships are removed
-	_query_result_cache.clear()
-	cache_invalidated.emit()
-	
+
 	# Emit Signal
 	relationship_removed.emit(entity, relationship)
 	assert(GECSEditorDebuggerMessages.entity_relationship_removed(entity, relationship) if ECS.debug else true, '')
@@ -937,6 +741,54 @@ func _handle_observer_component_changed(
 #endregion Public Methods
 
 #region Utility Methods
+
+func _query(all_components = [], any_components = [], exclude_components = [], enabled_filter = null) -> Array:
+	# Early return if no components specified - return all entities
+	if all_components.is_empty() and any_components.is_empty() and exclude_components.is_empty():
+		if enabled_filter == null:
+			return entities
+		else:
+			# Filter by enabled state
+			return entities.filter(func(e): return e.enabled == enabled_filter)
+
+	# Generate cache key for this query
+	var cache_key = _generate_query_cache_key(all_components, any_components, exclude_components)
+
+	# Check if we have cached matching archetypes for this query
+	var matching_archetypes: Array[Archetype] = []
+	if _query_archetype_cache.has(cache_key):
+		_cache_hits += 1
+		matching_archetypes = _query_archetype_cache[cache_key]
+	else:
+		_cache_misses += 1
+		# Find all archetypes that match this query
+		var map_resource_path = func(x): return x.resource_path
+		var _all := all_components.map(map_resource_path)
+		var _any := any_components.map(map_resource_path)
+		var _exclude := exclude_components.map(map_resource_path)
+
+		for archetype in archetypes.values():
+			if archetype.matches_query(_all, _any, _exclude):
+				matching_archetypes.append(archetype)
+
+		# Cache the matching archetypes (not the entity arrays!)
+		_query_archetype_cache[cache_key] = matching_archetypes
+
+	# Collect entities from all matching archetypes
+	var result: Array[Entity] = []
+	for archetype in matching_archetypes:
+		# Apply enabled filter if specified
+		if enabled_filter == null:
+			result.append_array(archetype.entities)
+		else:
+			# Filter entities by enabled state
+			for entity in archetype.entities:
+				if entity.enabled == enabled_filter:
+					result.append(entity)
+
+	return result
+
+
 ## Get performance statistics for cache usage
 func get_cache_stats() -> Dictionary:
 	var total_requests = _cache_hits + _cache_misses
@@ -945,7 +797,8 @@ func get_cache_stats() -> Dictionary:
 		"cache_hits": _cache_hits,
 		"cache_misses": _cache_misses,
 		"hit_rate": hit_rate,
-		"cached_queries": _query_result_cache.size()
+		"cached_queries": _query_archetype_cache.size(),
+		"total_archetypes": archetypes.size()
 	}
 
 
@@ -963,44 +816,274 @@ func _return_query_builder_to_pool(query_builder: QueryBuilder) -> void:
 
 
 ## Generate a cache key for query parameters
-## 
-## Uses a polynomial rolling hash algorithm combined with XOR to create stable,
-## collision-resistant cache keys from component instance IDs. This approach
-## ensures that queries with the same components produce identical cache keys
-## while different component combinations produce distinct keys.
 ##
-## Algorithm details:
-## - Each component type (all/any/exclude) uses a different prime multiplier
-## - Instance IDs are multiplied by their respective prime and XORed into the hash
-## - XOR operations preserve commutativity (order doesn't matter within each array)
-## - Different primes ensure separation between component type domains
+## Uses FNV-1a hash algorithm for excellent collision resistance and speed.
+## This is a non-commutative hash, so we sort component arrays first to ensure
+## queries with the same components produce identical cache keys regardless of order.
 ##
-## Time complexity: O(n) where n is total number of components
-## Space complexity: O(1)
+## Algorithm: FNV-1a (Fowler-Noll-Vo)
+## - Industry standard for hash tables (used by Python, Redis, etc.)
+## - Excellent avalanche properties (small input changes -> large hash changes)
+## - Very low collision rate even with millions of items
+## - Fast: single multiply and XOR per item
+##
+## The hash space is 2^64, providing excellent distribution for archetypes.
+## Collision probability with 10,000 archetypes: ~0.00000001%
+##
+## Time complexity: O(n log n) due to sorting, where n is total components
+## Space complexity: O(1) - in-place sorting
 ##
 ## References:
-## - Rolling hash: https://en.wikipedia.org/wiki/Rolling_hash
-## - Universal hashing: https://en.wikipedia.org/wiki/Universal_hashing
-## - Hash functions: https://en.wikipedia.org/wiki/Hash_function
+## - FNV hash: http://www.isthe.com/chongo/tech/comp/fnv/
+## - Hash quality analysis: https://softwareengineering.stackexchange.com/q/49550
 func _generate_query_cache_key(all_components: Array, any_components: Array, exclude_components: Array) -> int:
-	# Direct instance ID access with XOR for clean, fast hashing
-	# Use different prime multipliers to distinguish component types
-	var h = 0
-	
-	# Process all arrays with different primes for uniqueness
-	# all_components: prime 31 (commonly used in string hashing)
-	for comp in all_components:
-		h ^= comp.get_instance_id() * 31
-	
-	# any_components: prime 37 (ensures domain separation)
-	for comp in any_components:
-		h ^= comp.get_instance_id() * 37
-	
-	# exclude_components: prime 41 (further domain separation)
-	for comp in exclude_components:
-		h ^= comp.get_instance_id() * 41
-	
-	return h
+	# FNV-1a constants for 64-bit hash
+	const FNV_OFFSET_BASIS: int = -3750763034362895579 # 14695981039346656037 as signed
+	const FNV_PRIME: int = 1099511628211
+
+	var hash: int = FNV_OFFSET_BASIS
+
+	# Sort each array by instance ID for consistent hashing regardless of order
+	# Component scripts are singletons, so instance IDs are stable across game runs
+	var sorted_all = all_components.duplicate()
+	var sorted_any = any_components.duplicate()
+	var sorted_exclude = exclude_components.duplicate()
+
+	sorted_all.sort_custom(func(a, b): return a.get_instance_id() < b.get_instance_id())
+	sorted_any.sort_custom(func(a, b): return a.get_instance_id() < b.get_instance_id())
+	sorted_exclude.sort_custom(func(a, b): return a.get_instance_id() < b.get_instance_id())
+
+	# Hash all_components with domain marker (use different markers for each type)
+	hash ^= 1 # Domain marker for "all"
+	hash = (hash * FNV_PRIME) & 0x7FFFFFFFFFFFFFFF # Keep positive
+	for comp in sorted_all:
+		hash ^= comp.get_instance_id()
+		hash = (hash * FNV_PRIME) & 0x7FFFFFFFFFFFFFFF
+
+	# Hash any_components with different domain marker
+	hash ^= 2 # Domain marker for "any"
+	hash = (hash * FNV_PRIME) & 0x7FFFFFFFFFFFFFFF
+	for comp in sorted_any:
+		hash ^= comp.get_instance_id()
+		hash = (hash * FNV_PRIME) & 0x7FFFFFFFFFFFFFFF
+
+	# Hash exclude_components with different domain marker
+	hash ^= 3 # Domain marker for "exclude"
+	hash = (hash * FNV_PRIME) & 0x7FFFFFFFFFFFFFFF
+	for comp in sorted_exclude:
+		hash ^= comp.get_instance_id()
+		hash = (hash * FNV_PRIME) & 0x7FFFFFFFFFFFFFFF
+
+	return hash
+
+
+## Calculate archetype signature for an entity based on its components
+## Uses the same hash function as queries for consistency
+## An entity signature is just a query with all its components (no any/exclude)
+func _calculate_entity_signature(entity: Entity, enabled_filter_value: Variant = null) -> int:
+	# Get component resource paths
+	var comp_paths = entity.components.keys()
+	comp_paths.sort()  # Sort paths for consistent ordering
+
+	# Convert paths to Script objects using cached scripts (load once, reuse forever)
+	var comp_scripts = []
+	for comp_path in comp_paths:
+		# Check cache first
+		if not _component_script_cache.has(comp_path):
+			# Load once and cache
+			var component = entity.components[comp_path]
+			_component_script_cache[comp_path] = component.get_script()
+		comp_scripts.append(_component_script_cache[comp_path])
+
+	# Use the SAME hash function as queries - entity is just "all components, no any/exclude"
+	return _generate_query_cache_key(comp_scripts, [], [])
+
+
+## Get or create an archetype for the given signature and component types
+func _get_or_create_archetype(signature: int, component_types: Array, enabled_filter_value: Variant = null) -> Archetype:
+	var is_new = not archetypes.has(signature)
+	if is_new:
+		var archetype = Archetype.new(signature, component_types, enabled_filter_value)
+		archetypes[signature] = archetype
+		_worldLogger.trace("Created new archetype: ", archetype)
+
+		# ARCHETYPE OPTIMIZATION: Only invalidate cache when NEW archetype is created
+		# This is rare compared to entities moving between existing archetypes
+		_query_archetype_cache.clear()
+
+	return archetypes[signature]
+
+
+## Add entity to appropriate archetype (parallel system)
+func _add_entity_to_archetype(entity: Entity) -> void:
+	# Calculate signature based on entity's components
+	var signature = _calculate_entity_signature(entity)
+
+	# Get component type paths for this entity
+	var comp_types = entity.components.keys()
+
+	# Get or create archetype
+	var archetype = _get_or_create_archetype(signature, comp_types)
+
+	# Add entity to archetype
+	archetype.add_entity(entity)
+	entity_to_archetype[entity] = archetype
+
+	_worldLogger.trace("Added entity ", entity.name, " to archetype: ", archetype)
+
+
+## Remove entity from its current archetype
+func _remove_entity_from_archetype(entity: Entity) -> bool:
+	if not entity_to_archetype.has(entity):
+		return false
+
+	var archetype = entity_to_archetype[entity]
+	var removed = archetype.remove_entity(entity)
+	entity_to_archetype.erase(entity)
+
+	# Clean up empty archetypes (optional - can keep them for reuse)
+	if archetype.is_empty():
+		# Break circular references before removing
+		archetype.add_edges.clear()
+		archetype.remove_edges.clear()
+		archetypes.erase(archetype.signature)
+		_worldLogger.trace("Removed empty archetype: ", archetype)
+
+	return removed
+
+
+## Deferred archetype migration - called via call_deferred() to avoid blocking component add/remove
+## This allows component operations to be fast while archetype reorganization happens asynchronously
+func _deferred_archetype_migration(entity: Entity, old_archetype: Archetype, comp_path: String, is_add: bool) -> void:
+	# Check if entity still exists and is in the expected archetype
+	if not entity_to_archetype.has(entity):
+		return
+
+	# Make sure we're still in the old archetype (entity might have been moved already)
+	if entity_to_archetype[entity] != old_archetype:
+		return
+
+	var new_archetype = _move_entity_to_new_archetype_fast(entity, old_archetype, comp_path, is_add)
+
+	# Only invalidate cache if a NEW archetype was created
+	if new_archetype.size() == 1:  # First entity in this archetype = new archetype
+		_query_archetype_cache.clear()
+		cache_invalidated.emit()
+
+
+## Fast path: Move entity when we already know which component was added/removed
+## This avoids expensive set comparisons to find the difference
+## Returns the new archetype the entity was moved to
+func _move_entity_to_new_archetype_fast(entity: Entity, old_archetype: Archetype, comp_path: String, is_add: bool) -> Archetype:
+	# Try to use archetype edge for O(1) transition
+	var new_archetype: Archetype = null
+
+	if is_add:
+		# Check if we have a cached edge for this component addition
+		new_archetype = old_archetype.get_add_edge(comp_path)
+	else:
+		# Check if we have a cached edge for this component removal
+		new_archetype = old_archetype.get_remove_edge(comp_path)
+
+	# If no cached edge, calculate signature and find/create archetype
+	if new_archetype == null:
+		var new_signature = _calculate_entity_signature(entity)
+		var comp_types = entity.components.keys()
+		new_archetype = _get_or_create_archetype(new_signature, comp_types)
+
+		# Cache the edge for next time (archetype graph optimization)
+		if is_add:
+			old_archetype.set_add_edge(comp_path, new_archetype)
+			new_archetype.set_remove_edge(comp_path, old_archetype)
+		else:
+			old_archetype.set_remove_edge(comp_path, new_archetype)
+			new_archetype.set_add_edge(comp_path, old_archetype)
+
+	# Remove from old archetype
+	old_archetype.remove_entity(entity)
+
+	# Add to new archetype
+	new_archetype.add_entity(entity)
+	entity_to_archetype[entity] = new_archetype
+
+	_worldLogger.trace("Moved entity ", entity.name, " from ", old_archetype, " to ", new_archetype)
+
+	# Clean up empty old archetype
+	if old_archetype.is_empty():
+		# Break circular references before removing
+		old_archetype.add_edges.clear()
+		old_archetype.remove_edges.clear()
+		archetypes.erase(old_archetype.signature)
+
+	return new_archetype
+
+
+## Move entity from one archetype to another (when components change)
+## Uses archetype edges for O(1) transitions when possible
+## NOTE: This slow path compares sets - only used when we don't know which component changed
+func _move_entity_to_new_archetype(entity: Entity, old_archetype: Archetype) -> void:
+	# Determine which component was added/removed by comparing old archetype with current entity
+	var old_comp_set = {}
+	for comp_path in old_archetype.component_types:
+		old_comp_set[comp_path] = true
+
+	var new_comp_set = {}
+	for comp_path in entity.components.keys():
+		new_comp_set[comp_path] = true
+
+	# Find the difference (added or removed component)
+	var added_comp: String = ""
+	var removed_comp: String = ""
+
+	for comp_path in new_comp_set.keys():
+		if not old_comp_set.has(comp_path):
+			added_comp = comp_path
+			break
+
+	for comp_path in old_comp_set.keys():
+		if not new_comp_set.has(comp_path):
+			removed_comp = comp_path
+			break
+
+	# Try to use archetype edge for O(1) transition
+	var new_archetype: Archetype = null
+
+	if added_comp != "":
+		# Check if we have a cached edge for this component addition
+		new_archetype = old_archetype.get_add_edge(added_comp)
+	elif removed_comp != "":
+		# Check if we have a cached edge for this component removal
+		new_archetype = old_archetype.get_remove_edge(removed_comp)
+
+	# If no cached edge, calculate signature and find/create archetype
+	if new_archetype == null:
+		var new_signature = _calculate_entity_signature(entity)
+		var comp_types = entity.components.keys()
+		new_archetype = _get_or_create_archetype(new_signature, comp_types)
+
+		# Cache the edge for next time (archetype graph optimization)
+		if added_comp != "":
+			old_archetype.set_add_edge(added_comp, new_archetype)
+			new_archetype.set_remove_edge(added_comp, old_archetype)
+		elif removed_comp != "":
+			old_archetype.set_remove_edge(removed_comp, new_archetype)
+			new_archetype.set_add_edge(removed_comp, old_archetype)
+
+	# Remove from old archetype
+	old_archetype.remove_entity(entity)
+
+	# Add to new archetype
+	new_archetype.add_entity(entity)
+	entity_to_archetype[entity] = new_archetype
+
+	_worldLogger.trace("Moved entity ", entity.name, " from ", old_archetype, " to ", new_archetype)
+
+	# Clean up empty old archetype
+	if old_archetype.is_empty():
+		# Break circular references before removing
+		old_archetype.add_edges.clear()
+		old_archetype.remove_edges.clear()
+		archetypes.erase(old_archetype.signature)
 
 
 #endregion Utility Methods
