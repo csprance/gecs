@@ -1,4 +1,4 @@
-[gd_scene load_steps=13 format=3 uid="uid://bwg3a55vnyovm"]
+[gd_scene load_steps=10 format=3 uid="uid://bwg3a55vnyovm"]
 
 [ext_resource type="Script" uid="uid://dv6gko4duu5ic" path="res://example/entities/random_mover.gd" id="1_c1i3g"]
 [ext_resource type="Script" uid="uid://b6k13gc2m4e5s" path="res://addons/gecs/ecs/component.gd" id="2_o4fpx"]
@@ -20,99 +20,10 @@ metadata/_custom_type_script = "uid://b7r4xkfiy8qi0"
 
 [sub_resource type="Resource" id="Resource_b8ng6"]
 script = ExtResource("5_k3wa3")
-lifetime = 25.0
+lifetime = 55.0
 metadata/_custom_type_script = "uid://d0fit03sansqe"
-
-[sub_resource type="Animation" id="Animation_b8ng6"]
-length = 0.001
-tracks/0/type = "bezier"
-tracks/0/imported = false
-tracks/0/enabled = true
-tracks/0/path = NodePath(".:rotation:x")
-tracks/0/interp = 1
-tracks/0/loop_wrap = true
-tracks/0/keys = {
-"handle_modes": PackedInt32Array(0),
-"points": PackedFloat32Array(0, -0.25, 0, 0.25, 0),
-"times": PackedFloat32Array(0)
-}
-tracks/1/type = "bezier"
-tracks/1/imported = false
-tracks/1/enabled = true
-tracks/1/path = NodePath(".:rotation:y")
-tracks/1/interp = 1
-tracks/1/loop_wrap = true
-tracks/1/keys = {
-"handle_modes": PackedInt32Array(0),
-"points": PackedFloat32Array(0, -0.25, 0, 0.25, 0),
-"times": PackedFloat32Array(0)
-}
-tracks/2/type = "bezier"
-tracks/2/imported = false
-tracks/2/enabled = true
-tracks/2/path = NodePath(".:rotation:z")
-tracks/2/interp = 1
-tracks/2/loop_wrap = true
-tracks/2/keys = {
-"handle_modes": PackedInt32Array(0),
-"points": PackedFloat32Array(0, -0.25, 0, 0.25, 0),
-"times": PackedFloat32Array(0)
-}
-
-[sub_resource type="Animation" id="Animation_k3wa3"]
-resource_name = "test"
-loop_mode = 1
-tracks/0/type = "bezier"
-tracks/0/imported = false
-tracks/0/enabled = true
-tracks/0/path = NodePath(".:rotation:x")
-tracks/0/interp = 1
-tracks/0/loop_wrap = true
-tracks/0/keys = {
-"handle_modes": PackedInt32Array(0, 2, 2),
-"points": PackedFloat32Array(0, -0.25, 0, 0.25, 0, 1.6842427, -0.083333336, 0, 0.083333336, 0, 0, -0.16666667, 0, 0, 0),
-"times": PackedFloat32Array(0, 0.5, 1)
-}
-tracks/1/type = "bezier"
-tracks/1/imported = false
-tracks/1/enabled = true
-tracks/1/path = NodePath(".:rotation:y")
-tracks/1/interp = 1
-tracks/1/loop_wrap = true
-tracks/1/keys = {
-"handle_modes": PackedInt32Array(0, 2, 2),
-"points": PackedFloat32Array(0, -0.25, 0, 0.25, 0, 1.1693707, -0.083333336, 0, 0.083333336, 0, 0, -0.16666667, 0, 0, 0),
-"times": PackedFloat32Array(0, 0.5, 1)
-}
-tracks/2/type = "bezier"
-tracks/2/imported = false
-tracks/2/enabled = true
-tracks/2/path = NodePath(".:rotation:z")
-tracks/2/interp = 1
-tracks/2/loop_wrap = true
-tracks/2/keys = {
-"handle_modes": PackedInt32Array(0, 2, 2),
-"points": PackedFloat32Array(0, -0.25, 0, 0.25, 0, 1.8675023, -0.083333336, 0, 0.083333336, 0, 0, -0.16666667, 0, 0, 0),
-"times": PackedFloat32Array(0, 0.5, 1)
-}
-
-[sub_resource type="AnimationLibrary" id="AnimationLibrary_jlt61"]
-_data = {
-&"RESET": SubResource("Animation_b8ng6"),
-&"test": SubResource("Animation_k3wa3")
-}
 
 [node name="RandomMover" type="MeshInstance3D" groups=["movers"]]
 mesh = SubResource("TorusMesh_k3wa3")
 script = ExtResource("1_c1i3g")
 component_resources = Array[ExtResource("2_o4fpx")]([SubResource("Resource_p5wvt"), SubResource("Resource_k3wa3"), SubResource("Resource_b8ng6")])
-
-[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
-process_thread_group = 1
-process_thread_group_order = 1
-process_thread_messages = 1
-libraries = {
-&"": SubResource("AnimationLibrary_jlt61")
-}
-autoplay = "test"
-speed_scale = 0.3
