@@ -2,19 +2,19 @@ extends GdUnitTestSuite
 
 ## Test archetype-based system execution
 
+var runner: GdUnitSceneRunner
 var world: World
 
 
-func before_test():
-	world = World.new()
-	add_child(world)
-	world.initialize()
+func before():
+	runner = scene_runner("res://addons/gecs/tests/test_scene.tscn")
+	world = runner.get_property("world")
+	ECS.world = world
 
 
 func after_test():
 	if world:
-		world.purge()
-		world = null
+		world.purge(false)
 
 
 func test_archetype_system_processes_entities():
@@ -136,7 +136,9 @@ func test_archetype_modifies_components():
 	world.process(0.1)
 
 	# Value should have been incremented each time
-	assert_int(comp.value).is_equal(8)
+	# Get the component from the entity (not the local reference)
+	var updated_comp = entity.get_component(C_TestA)
+	assert_int(updated_comp.value).is_equal(8)
 
 
 func test_archetype_requires_iterate_call():
@@ -153,100 +155,3 @@ func test_archetype_requires_iterate_call():
 
 	# System shouldn't have processed anything (early return on error)
 	assert_int(test_system.processed).is_equal(0)
-
-
-#region Test Systems
-
-## Basic archetype test system
-class ArchetypeTestSystem extends System:
-	var archetype_call_count = 0
-	var entities_processed = 0
-
-	func query() -> QueryBuilder:
-		return ECS.world.query.with_all([C_TestA]).iterate([C_TestA])
-
-	func archetype(entities: Array[Entity], components: Array, delta: float) -> void:
-		archetype_call_count += 1
-		entities_processed += entities.size()
-
-
-## Test system that verifies component order
-class ArchetypeOrderTestSystem extends System:
-	var order_correct = false
-
-	func query() -> QueryBuilder:
-		# Intentionally reverse order from with_all to test iterate() controls order
-		return ECS.world.query.with_all([C_TestA, C_TestB]).iterate([C_TestB, C_TestA])
-
-	func archetype(entities: Array[Entity], components: Array, delta: float) -> void:
-		if components.size() == 2:
-			# First should be C_TestB, second should be C_TestA
-			var first = components[0][0] if components[0].size() > 0 else null
-			var second = components[1][0] if components[1].size() > 0 else null
-
-			if first is C_TestB and second is C_TestA:
-				order_correct = true
-
-
-## Test system that queries for subset of entity components
-class ArchetypeSubsetTestSystem extends System:
-	var entities_processed = 0
-
-	func query() -> QueryBuilder:
-		# Query for A and B, even though entity has A, B, C
-		return ECS.world.query.with_all([C_TestA, C_TestB]).iterate([C_TestA, C_TestB])
-
-	func archetype(entities: Array[Entity], components: Array, delta: float) -> void:
-		entities_processed += entities.size()
-
-
-## Test system that tracks multiple archetype calls
-class ArchetypeMultipleArchetypesTestSystem extends System:
-	var archetype_call_count = 0
-	var total_entities_processed = 0
-
-	func query() -> QueryBuilder:
-		return ECS.world.query.with_all([C_TestA, C_TestB]).iterate([C_TestA, C_TestB])
-
-	func archetype(entities: Array[Entity], components: Array, delta: float) -> void:
-		archetype_call_count += 1
-		total_entities_processed += entities.size()
-
-
-## Test system that verifies column data
-class ArchetypeColumnDataTestSystem extends System:
-	var values_seen = []
-
-	func query() -> QueryBuilder:
-		return ECS.world.query.with_all([C_TestA]).iterate([C_TestA])
-
-	func archetype(entities: Array[Entity], components: Array, delta: float) -> void:
-		var test_a_components = components[0]
-		for comp in test_a_components:
-			if comp:
-				values_seen.append(comp.value)
-
-
-## Test system that modifies components
-class ArchetypeModifyTestSystem extends System:
-	func query() -> QueryBuilder:
-		return ECS.world.query.with_all([C_TestA]).iterate([C_TestA])
-
-	func archetype(entities: Array[Entity], components: Array, delta: float) -> void:
-		var test_a_components = components[0]
-		for comp in test_a_components:
-			if comp:
-				comp.value += 1
-
-
-## Test system that doesn't call iterate() (should error)
-class ArchetypeNoIterateSystem extends System:
-	var processed = 0
-
-	func query() -> QueryBuilder:
-		return ECS.world.query.with_all([C_TestA]) # Missing .iterate()!
-
-	func archetype(entities: Array[Entity], components: Array, delta: float) -> void:
-		processed += 1
-
-#endregion
