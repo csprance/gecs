@@ -5,7 +5,7 @@ func deps():
 	return {Runs.After: [], Runs.Before: []}
 
 func query():
-	return q.with_all([C_TestOrderComponent])
+	return ECS.world.query.with_all([C_TestOrderComponent])
 
 func process(entity: Entity, delta: float):
 	var comp = entity.get_component(C_TestOrderComponent)

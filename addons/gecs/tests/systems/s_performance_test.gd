@@ -7,7 +7,7 @@ var process_count: int = 0
 
 
 func query():
-	return q.with_all([C_TestA])
+	return ECS.world.query.with_all([C_TestA])
 
 
 func process(entity: Entity, delta: float) -> void:
@@ -16,7 +16,7 @@ func process(entity: Entity, delta: float) -> void:
 	var component = entity.get_component(C_TestA)
 	if component:
 		# Access component data (simulates typical system work)
-		var _value = component.value  # Read property directly, not via reflection
+		var _value = component.value # Read property directly, not via reflection
 
 
 func reset_count():

@@ -11,7 +11,7 @@ func _init(_process_empty: bool = false):
 	
 
 func query():
-	return q.with_all([C_TestA])
+	return ECS.world.query.with_all([C_TestA])
 
 
 # override process_all function for batch processing

@@ -10,7 +10,7 @@ func _init(_process_empty: bool = false):
 	
 
 func query():
-	return q.with_all([C_TestB])
+	return ECS.world.query.with_all([C_TestB])
 
 
 func process(entity: Entity, delta: float):

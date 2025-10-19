@@ -16,7 +16,7 @@ func watch() -> Resource:
 # What the entity needs to match for the system to run
 func match() -> QueryBuilder:
 	# The query the entity needs to match
-	return q.with_none([C_TestB])
+	return ECS.world.query.with_none([C_TestB])
 
 
 # What to do when a property on C_Transform just changed on an entity that matches the query

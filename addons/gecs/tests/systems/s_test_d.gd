@@ -11,7 +11,7 @@ func deps():
 
 
 func query():
-	return q.with_all([C_TestC])
+	return ECS.world.query.with_all([C_TestC])
 
 
 func process(entity: Entity, delta: float):

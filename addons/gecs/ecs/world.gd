@@ -390,11 +390,15 @@ func add_system(system: System, topo_sort: bool = false) -> void:
 	if not system.is_inside_tree():
 		get_node(system_nodes_root).add_child(system)
 	_worldLogger.trace("add_system Adding System: ", system)
+
+	# Give the system a reference to this world
+	system._world = self
+
 	if not systems_by_group.has(system.group):
 		systems_by_group[system.group] = []
 	systems_by_group[system.group].push_back(system)
 	system_added.emit(system)
-	system.setup()
+	system._internal_setup()  # Determines execution method and calls user setup()
 	if topo_sort:
 		ArrayExtensions.topological_sort(systems_by_group)
 	assert(GECSEditorDebuggerMessages.system_added(system) if ECS.debug else true, '')
@@ -867,10 +871,16 @@ func get_matching_archetypes(query_builder: QueryBuilder) -> Array[Archetype]:
 	if _query_archetype_cache.has(cache_key):
 		return _query_archetype_cache[cache_key]
 
+	# Convert Script objects to resource paths (same as _query does)
+	var map_resource_path = func(x): return x.resource_path
+	var _all := all_components.map(map_resource_path)
+	var _any := any_components.map(map_resource_path)
+	var _exclude := exclude_components.map(map_resource_path)
+
 	# Find matching archetypes
 	var matching: Array[Archetype] = []
 	for archetype in archetypes.values():
-		if archetype.matches_query(all_components, any_components, exclude_components):
+		if archetype.matches_query(_all, _any, _exclude):
 			matching.append(archetype)
 
 	# Cache and return

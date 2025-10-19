@@ -7,7 +7,7 @@ var process_count: int = 0
 
 
 func query():
-	return q.with_all([C_TestA, C_TestB])
+	return ECS.world.query.with_all([C_TestA, C_TestB])
 
 
 func process(entity: Entity, delta: float) -> void:
