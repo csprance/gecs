@@ -46,6 +46,10 @@ var _enabled_filter = null
 var _cache_valid: bool = false
 var _cached_result: Array = []
 
+# OPTIMIZATION: Cache the query hash key to avoid recalculating FNV-1a hash every frame
+var _cache_key: int = -1
+var _cache_key_valid: bool = false
+
 
 ## Initializes the QueryBuilder with the specified [param world]
 func _init(world: World = null):
@@ -71,6 +75,7 @@ func clear():
 	_exclude_groups = []
 	_enabled_filter = null
 	_cache_valid = false
+	_cache_key_valid = false
 	return self
 
 
@@ -82,6 +87,7 @@ func with_all(components: Array = []) -> QueryBuilder:
 	_all_components = processed.components
 	_all_components_queries = processed.queries
 	_cache_valid = false
+	_cache_key_valid = false
 	return self
 
 
@@ -93,6 +99,7 @@ func with_any(components: Array = []) -> QueryBuilder:
 	_any_components = processed.components
 	_any_components_queries = processed.queries
 	_cache_valid = false
+	_cache_key_valid = false
 	return self
 
 
@@ -105,6 +112,7 @@ func with_none(components: Array = []) -> QueryBuilder:
 		func(comp): return comp if not comp is Dictionary else comp.keys()[0]
 	)
 	_cache_valid = false
+	_cache_key_valid = false
 	return self
 
 
@@ -114,6 +122,7 @@ func with_none(components: Array = []) -> QueryBuilder:
 func with_relationship(relationships: Array = []) -> QueryBuilder:
 	_relationships = relationships
 	_cache_valid = false
+	_cache_key_valid = false
 	return self
 
 
@@ -123,6 +132,7 @@ func with_relationship(relationships: Array = []) -> QueryBuilder:
 func without_relationship(relationships: Array = []) -> QueryBuilder:
 	_exclude_relationships = relationships
 	_cache_valid = false
+	_cache_key_valid = false
 	return self
 
 
@@ -134,6 +144,7 @@ func with_reverse_relationship(relationships: Array = []) -> QueryBuilder:
 			if _world.reverse_relationship_index.has(rev_key):
 				return self.with_all(_world.reverse_relationship_index[rev_key])
 	_cache_valid = false
+	_cache_key_valid = false
 	return self
 
 
@@ -141,6 +152,7 @@ func with_reverse_relationship(relationships: Array = []) -> QueryBuilder:
 func with_group(groups: Array[String] = []) -> QueryBuilder:
 	_groups.append_array(groups)
 	_cache_valid = false
+	_cache_key_valid = false
 	return self
 
 
@@ -148,6 +160,7 @@ func with_group(groups: Array[String] = []) -> QueryBuilder:
 func without_group(groups: Array[String] = []) -> QueryBuilder:
 	_exclude_groups.append_array(groups)
 	_cache_valid = false
+	_cache_key_valid = false
 	return self
 
 
@@ -156,6 +169,7 @@ func without_group(groups: Array[String] = []) -> QueryBuilder:
 func enabled() -> QueryBuilder:
 	_enabled_filter = true
 	_cache_valid = false
+	_cache_key_valid = false
 	return self
 
 ## Filter to only disabled entities using internal arrays for optimal performance.[br]
@@ -163,6 +177,7 @@ func enabled() -> QueryBuilder:
 func disabled() -> QueryBuilder:
 	_enabled_filter = false
 	_cache_valid = false
+	_cache_key_valid = false
 	return self
 
 
@@ -239,8 +254,9 @@ func _internal_execute() -> Array:
 		return matches(entities_in_group)
 
 	# Otherwise, query the world with enabled filter for optimal performance
+	# OPTIMIZATION: Pass pre-calculated cache key to avoid rehashing
 	var result = (
-		_world._query(_all_components, _any_components, _exclude_components, _enabled_filter) as Array[Entity]
+		_world._query(_all_components, _any_components, _exclude_components, _enabled_filter, get_cache_key()) as Array[Entity]
 	)
 
 	# Handle relationship filtering
@@ -487,3 +503,21 @@ func compile(query: String) -> QueryBuilder:
 
 func invalidate_cache():
 	_cache_valid = false
+	_cache_key_valid = false
+
+
+## Get the cached query hash key, calculating it only once
+## OPTIMIZATION: Avoids recalculating FNV-1a hash every frame in hot path queries
+func get_cache_key() -> int:
+	if not _cache_key_valid:
+		# Calculate using World's hash function
+		if _world:
+			_cache_key = _world._generate_query_cache_key(
+				_all_components,
+				_any_components,
+				_exclude_components
+			)
+			_cache_key_valid = true
+		else:
+			return -1
+	return _cache_key

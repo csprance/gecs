@@ -227,6 +227,10 @@ func add_entity(entity: Entity, components = null, add_to_tree = true) -> void:
 	if not Engine.is_editor_hint():
 		entity._initialize(components if components else [])
 
+	# Invalidate query caches since a new entity is added
+	# (Queries like query.all() would return different results)
+	cache_invalidated.emit()
+
 	entity_added.emit(entity)
 	
 	# All the entities are ready so we should run the pre-processors now
@@ -509,11 +513,16 @@ func purge(should_free = true, keep := []) -> void:
 ## [param entity] The entity that had a component added.[br]
 ## [param component] The resource path of the added component.
 func _on_entity_component_added(entity: Entity, component: Resource) -> void:
-	# ARCHETYPE: Defer archetype migration to next frame to keep component add fast
+	# ARCHETYPE: Move entity synchronously - queries need correct archetype immediately
 	if entity_to_archetype.has(entity):
 		var old_archetype = entity_to_archetype[entity]
 		var comp_path = component.get_script().resource_path
-		call_deferred("_deferred_archetype_migration", entity, old_archetype, comp_path, true)
+		var new_archetype = _move_entity_to_new_archetype_fast(entity, old_archetype, comp_path, true)
+
+		# Only invalidate cache if a NEW archetype was created
+		if new_archetype.size() == 1:
+			_query_archetype_cache.clear()
+			cache_invalidated.emit()
 
 	# Emit Signal
 	component_added.emit(entity, component)
@@ -558,11 +567,16 @@ func _on_entity_component_property_change(
 ## [param entity] The entity that had a component removed.[br]
 ## [param component] The resource path of the removed component.
 func _on_entity_component_removed(entity, component: Resource) -> void:
-	# ARCHETYPE: Defer archetype migration to next frame to keep component removal fast
+	# ARCHETYPE: Move entity synchronously - queries need correct archetype immediately
 	if entity_to_archetype.has(entity):
 		var old_archetype = entity_to_archetype[entity]
 		var comp_path = component.resource_path
-		call_deferred("_deferred_archetype_migration", entity, old_archetype, comp_path, false)
+		var new_archetype = _move_entity_to_new_archetype_fast(entity, old_archetype, comp_path, false)
+
+		# Only invalidate cache if a NEW archetype was created
+		if new_archetype.size() == 1:
+			_query_archetype_cache.clear()
+			cache_invalidated.emit()
 
 	# We remove components immediately so this was called on the entity all we do is pass signal along
 	# Emit Signal
@@ -588,6 +602,9 @@ func _on_entity_relationship_added(entity: Entity, relationship: Relationship) -
 			reverse_relationship_index[rev_key] = []
 		reverse_relationship_index[rev_key].append(relationship.target)
 
+	# Invalidate QueryBuilder caches since relationship queries may be affected
+	cache_invalidated.emit()
+
 	# Emit Signal
 	relationship_added.emit(entity, relationship)
 	assert(GECSEditorDebuggerMessages.entity_relationship_added(entity, relationship) if ECS.debug else true, '')
@@ -603,6 +620,9 @@ func _on_entity_relationship_removed(entity: Entity, relationship: Relationship)
 		var rev_key = "reverse_" + key
 		if reverse_relationship_index.has(rev_key):
 			reverse_relationship_index[rev_key].erase(relationship.target)
+
+	# Invalidate QueryBuilder caches since relationship queries may be affected
+	cache_invalidated.emit()
 
 	# Emit Signal
 	relationship_removed.emit(entity, relationship)
@@ -742,7 +762,7 @@ func _handle_observer_component_changed(
 
 #region Utility Methods
 
-func _query(all_components = [], any_components = [], exclude_components = [], enabled_filter = null) -> Array:
+func _query(all_components = [], any_components = [], exclude_components = [], enabled_filter = null, precalculated_cache_key: int = -1) -> Array:
 	# Early return if no components specified - return all entities
 	if all_components.is_empty() and any_components.is_empty() and exclude_components.is_empty():
 		if enabled_filter == null:
@@ -751,8 +771,8 @@ func _query(all_components = [], any_components = [], exclude_components = [], e
 			# Filter by enabled state
 			return entities.filter(func(e): return e.enabled == enabled_filter)
 
-	# Generate cache key for this query
-	var cache_key = _generate_query_cache_key(all_components, any_components, exclude_components)
+	# OPTIMIZATION: Use pre-calculated cache key if provided (avoids FNV-1a hash recalculation)
+	var cache_key = precalculated_cache_key if precalculated_cache_key != -1 else _generate_query_cache_key(all_components, any_components, exclude_components)
 
 	# Check if we have cached matching archetypes for this query
 	var matching_archetypes: Array[Archetype] = []
@@ -774,6 +794,11 @@ func _query(all_components = [], any_components = [], exclude_components = [], e
 		# Cache the matching archetypes (not the entity arrays!)
 		_query_archetype_cache[cache_key] = matching_archetypes
 
+	# OPTIMIZATION: If there's only ONE matching archetype with no filtering, return it directly
+	# This avoids array allocation and copying for the common case
+	if matching_archetypes.size() == 1 and enabled_filter == null:
+		return matching_archetypes[0].entities
+
 	# Collect entities from all matching archetypes
 	var result: Array[Entity] = []
 	for archetype in matching_archetypes:
@@ -787,6 +812,29 @@ func _query(all_components = [], any_components = [], exclude_components = [], e
 					result.append(entity)
 
 	return result
+
+
+## OPTIMIZATION: Group entities by their archetype for column-based iteration
+## Enables systems to use get_column() for cache-friendly array access
+## [param entities] Array of entities to group
+## [returns] Dictionary mapping Archetype -> Array[Entity]
+##
+## Example usage in a System:
+## [codeblock]
+## func process_all(entities: Array, delta: float):
+##     var grouped = ECS.world.group_entities_by_archetype(entities)
+##     for archetype in grouped.keys():
+##         process_columns(archetype, delta)
+## [/codeblock]
+func group_entities_by_archetype(entities: Array) -> Dictionary:
+	var grouped = {}
+	for entity in entities:
+		if entity_to_archetype.has(entity):
+			var archetype = entity_to_archetype[entity]
+			if not grouped.has(archetype):
+				grouped[archetype] = []
+			grouped[archetype].append(entity)
+	return grouped
 
 
 ## Get performance statistics for cache usage
@@ -950,25 +998,6 @@ func _remove_entity_from_archetype(entity: Entity) -> bool:
 		_worldLogger.trace("Removed empty archetype: ", archetype)
 
 	return removed
-
-
-## Deferred archetype migration - called via call_deferred() to avoid blocking component add/remove
-## This allows component operations to be fast while archetype reorganization happens asynchronously
-func _deferred_archetype_migration(entity: Entity, old_archetype: Archetype, comp_path: String, is_add: bool) -> void:
-	# Check if entity still exists and is in the expected archetype
-	if not entity_to_archetype.has(entity):
-		return
-
-	# Make sure we're still in the old archetype (entity might have been moved already)
-	if entity_to_archetype[entity] != old_archetype:
-		return
-
-	var new_archetype = _move_entity_to_new_archetype_fast(entity, old_archetype, comp_path, is_add)
-
-	# Only invalidate cache if a NEW archetype was created
-	if new_archetype.size() == 1:  # First entity in this archetype = new archetype
-		_query_archetype_cache.clear()
-		cache_invalidated.emit()
 
 
 ## Fast path: Move entity when we already know which component was added/removed

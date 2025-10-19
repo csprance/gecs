@@ -45,6 +45,12 @@ var entities: Array[Entity] = []
 ## Enables O(1) entity removal using swap-remove technique
 var entity_to_index: Dictionary = {}  # Entity -> int
 
+## OPTIMIZATION: Structure of Arrays (SoA) column storage for cache-friendly iteration
+## Maps component_path -> Array of component instances
+## Enables Flecs-style direct array iteration without dictionary lookups
+## Example: columns["res://c_velocity.gd"] = [vel1, vel2, vel3, ...]
+var columns: Dictionary = {}  # String (component_path) -> Array of components
+
 ## Is this archetype for enabled entities only? (null = mixed, true = enabled, false = disabled)
 ## Used to optimize queries with enabled/disabled filters
 var enabled_filter: Variant = null
@@ -62,17 +68,32 @@ func _init(p_signature: int, p_component_types: Array, p_enabled_filter: Variant
 	component_types.sort()  # Ensure sorted for consistent matching
 	enabled_filter = p_enabled_filter
 
+	# Initialize column arrays for each component type
+	for comp_type in component_types:
+		columns[comp_type] = []
+
 
 ## Add an entity to this archetype
 ## Uses O(1) append and tracks index for fast removal
+## OPTIMIZATION: Also populates column arrays for cache-friendly iteration
 func add_entity(entity: Entity) -> void:
 	var index = entities.size()
 	entities.append(entity)
 	entity_to_index[entity] = index
 
+	# OPTIMIZATION: Populate column arrays from entity.components
+	for comp_path in component_types:
+		if entity.components.has(comp_path):
+			columns[comp_path].append(entity.components[comp_path])
+		else:
+			# Entity doesn't have this component yet (might be mid-initialization)
+			# Push null placeholder, will be fixed when component is added
+			columns[comp_path].append(null)
+
 
 ## Remove an entity from this archetype using swap-remove
 ## O(1) operation: swaps with last entity and pops
+## OPTIMIZATION: Also maintains column arrays in sync
 func remove_entity(entity: Entity) -> bool:
 	if not entity_to_index.has(entity):
 		return false
@@ -80,15 +101,24 @@ func remove_entity(entity: Entity) -> bool:
 	var index = entity_to_index[entity]
 	var last_index = entities.size() - 1
 
-	# Swap with last element
+	# Swap with last element in entities array
 	if index != last_index:
 		var last_entity = entities[last_index]
 		entities[index] = last_entity
 		entity_to_index[last_entity] = index
 
-	# Remove last element
+		# OPTIMIZATION: Swap in column arrays too (maintain same ordering)
+		for comp_path in component_types:
+			columns[comp_path][index] = columns[comp_path][last_index]
+
+	# Remove last element from entities
 	entities.pop_back()
 	entity_to_index.erase(entity)
+
+	# OPTIMIZATION: Remove last element from all columns
+	for comp_path in component_types:
+		columns[comp_path].pop_back()
+
 	return true
 
 
@@ -111,6 +141,10 @@ func is_empty() -> bool:
 func clear() -> void:
 	entities.clear()
 	entity_to_index.clear()
+
+	# OPTIMIZATION: Clear column arrays
+	for comp_path in component_types:
+		columns[comp_path].clear()
 
 
 ## Check if this archetype matches a query with all/any/exclude components
@@ -177,3 +211,20 @@ func get_add_edge(component_path: String) -> Archetype:
 ## Get the target archetype when removing a component (if edge exists)
 func get_remove_edge(component_path: String) -> Archetype:
 	return remove_edges.get(component_path, null)
+
+
+## OPTIMIZATION: Get component column array for cache-friendly iteration
+## Enables Flecs-style direct array access instead of dictionary lookups per entity
+## [param component_path] The resource path of the component type (e.g., C_Velocity.resource_path)
+## [returns] Array of component instances in entity index order, or empty array if not found
+##
+## Example:
+## [codeblock]
+## var velocities = archetype.get_column(C_Velocity.resource_path)
+## for i in range(velocities.size()):
+##     var velocity = velocities[i]
+##     var entity = archetype.entities[i]
+##     # Process with cache-friendly sequential access
+## [/codeblock]
+func get_column(component_path: String) -> Array:
+	return columns.get(component_path, [])

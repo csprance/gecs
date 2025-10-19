@@ -195,10 +195,10 @@ func test_manual_cache_clearing():
 	
 	var query = world.query.with_all([C_TestA])
 	var result1 = query.execute() # Cache the result
-	
-	# Manually clear cache
-	world._query_result_cache.clear()
-	
+
+	# Manually clear cache (now using archetype cache)
+	world._query_archetype_cache.clear()
+
 	# Should not affect correctness
 	var result2 = query.execute()
 	assert_array(result1).is_equal(result2)
