@@ -10,4 +10,6 @@ func _ready() -> void:
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta: float) -> void:
 	world.process(delta, 'gameplay')
+
+func _physics_process(delta: float) -> void:
 	world.process(delta, 'physics')

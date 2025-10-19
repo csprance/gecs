@@ -837,6 +837,47 @@ func group_entities_by_archetype(entities: Array) -> Dictionary:
 	return grouped
 
 
+## OPTIMIZATION: Get matching archetypes directly from query (no entity array flattening)
+## This is MUCH faster than query().execute() + group_entities_by_archetype()
+## [param query_builder] The query to execute
+## [returns] Array of matching archetypes
+##
+## Example usage in a System:
+## [codeblock]
+## func process_all(entities: Array, delta: float):
+##     # OLD WAY (slow):
+##     # var grouped = ECS.world.group_entities_by_archetype(entities)
+##
+##     # NEW WAY (fast):
+##     var archetypes = ECS.world.get_matching_archetypes(q.with_all([C_Velocity]))
+##     for archetype in archetypes:
+##         var velocities = archetype.get_column(C_Velocity.resource_path)
+##         for i in range(velocities.size()):
+##             # Process with cache-friendly column access
+## [/codeblock]
+func get_matching_archetypes(query_builder: QueryBuilder) -> Array[Archetype]:
+	# Use the same cache mechanism as _query
+	var all_components = query_builder._all_components
+	var any_components = query_builder._any_components
+	var exclude_components = query_builder._exclude_components
+
+	var cache_key = query_builder.get_cache_key()
+
+	# Check cache first
+	if _query_archetype_cache.has(cache_key):
+		return _query_archetype_cache[cache_key]
+
+	# Find matching archetypes
+	var matching: Array[Archetype] = []
+	for archetype in archetypes.values():
+		if archetype.matches_query(all_components, any_components, exclude_components):
+			matching.append(archetype)
+
+	# Cache and return
+	_query_archetype_cache[cache_key] = matching
+	return matching
+
+
 ## Get performance statistics for cache usage
 func get_cache_stats() -> Dictionary:
 	var total_requests = _cache_hits + _cache_misses

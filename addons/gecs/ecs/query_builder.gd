@@ -521,3 +521,18 @@ func get_cache_key() -> int:
 		else:
 			return -1
 	return _cache_key
+
+
+## Get matching archetypes directly for column-based iteration
+## OPTIMIZATION: Skip entity flattening, return archetypes directly for cache-friendly processing
+## [br][br]
+## [b]Example:[/b]
+## [codeblock]
+## func process_all(entities: Array, delta: float):
+##     for archetype in query().archetypes():
+##         var transforms = archetype.get_column(transform_path)
+##         for i in range(transforms.size()):
+##             # Process transform directly from packed array
+## [/codeblock]
+func archetypes() -> Array[Archetype]:
+	return _world.get_matching_archetypes(self)
