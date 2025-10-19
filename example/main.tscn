@@ -35,7 +35,6 @@ metadata/_custom_type_script = "uid://b3vi2ingux88g"
 [node name="RandomSpawnerSystem" type="Node" parent="World/Systems/physics"]
 script = ExtResource("6_dhpm0")
 random_mover_scene = ExtResource("3_h2yge")
-group = &"physics"
 process_empty = true
 
 [node name="RandomVelocitySystem" type="Node" parent="World/Systems/physics"]
@@ -44,7 +43,6 @@ process_thread_group_order = 0
 process_thread_messages = 1
 script = ExtResource("5_7mycd")
 time_between_updates = 1.0
-group = &"physics"
 parallel_processing = true
 parallel_threshold = 32
 
@@ -54,14 +52,12 @@ metadata/_custom_type_script = "uid://b3vi2ingux88g"
 
 [node name="LifetimeSystem" type="Node" parent="World/Systems/gameplay"]
 script = ExtResource("7_wqluj")
-group = &"gameplay"
 
 [node name="VelocitySystem" type="Node" parent="World/Systems/gameplay"]
 process_thread_group = 2
 process_thread_group_order = 0
 process_thread_messages = 1
 script = ExtResource("4_lquwl")
-group = &"gameplay"
 parallel_processing = true
 
 [node name="Camera3D" type="Camera3D" parent="."]
