@@ -8,7 +8,7 @@ func query() -> QueryBuilder:
 
 
 ## OPTIMIZED: Archetype mode for cache-friendly performance
-func archetype(entities: Array[Entity], components: Array, delta: float) -> void:
+func process_batch(entities: Array[Entity], components: Array, delta: float) -> void:
 	var velocities = components[0] # C_Velocity (first in iterate)
 	var timers = components[1] # C_Timer (second in iterate)
 

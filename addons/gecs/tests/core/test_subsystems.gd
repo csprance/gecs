@@ -80,7 +80,7 @@ func test_subsystem_archetype_execution():
 	# Process system
 	world.process(0.016)
 
-	# Verify: archetype_subsystem called with component arrays
+	# Verify: process_batch_subsystem called with component arrays
 	assert_int(system.call_count).is_greater_equal(1) # At least once per archetype
 	assert_int(system.total_entities_processed).is_equal(2)
 	assert_bool(system.received_component_arrays).is_true()
@@ -387,10 +387,10 @@ class SubsystemArchetypeTest extends System:
 
 	func sub_systems() -> Array[Array]:
 		return [
-			[ECS.world.query.with_all([C_TestA]).iterate([C_TestA]), archetype_subsystem, System.ExecutionMethod.ARCHETYPE]
+			[ECS.world.query.with_all([C_TestA]).iterate([C_TestA]), process_batch_subsystem, System.ExecutionMethod.ARCHETYPE]
 		]
 
-	func archetype_subsystem(entities: Array[Entity], components: Array, delta: float):
+	func process_batch_subsystem(entities: Array[Entity], components: Array, delta: float):
 		call_count += 1
 		total_entities_processed += entities.size()
 		if components.size() > 0 and components[0] is Array:
@@ -407,7 +407,7 @@ class SubsystemMixedTest extends System:
 		return [
 			[ECS.world.query.with_all([C_TestA]), process_sub, System.ExecutionMethod.PROCESS],
 			[ECS.world.query.with_all([C_TestB]), process_all_sub, System.ExecutionMethod.PROCESS_ALL],
-			[ECS.world.query.with_all([C_TestA]).iterate([C_TestA]), archetype_sub, System.ExecutionMethod.ARCHETYPE]
+			[ECS.world.query.with_all([C_TestA]).iterate([C_TestA]), process_batch_sub, System.ExecutionMethod.ARCHETYPE]
 		]
 
 	func process_sub(entity: Entity, delta: float):
@@ -416,7 +416,7 @@ class SubsystemMixedTest extends System:
 	func process_all_sub(entities: Array, delta: float):
 		process_all_count += 1
 
-	func archetype_sub(entities: Array[Entity], components: Array, delta: float):
+	func process_batch_sub(entities: Array[Entity], components: Array, delta: float):
 		archetype_count += 1
 
 
@@ -466,10 +466,10 @@ class SubsystemArchetypeMissingIterateTest extends System:
 	func sub_systems() -> Array[Array]:
 		return [
 			# Missing .iterate() - should error
-			[ECS.world.query.with_all([C_TestA]), archetype_subsystem, System.ExecutionMethod.ARCHETYPE]
+			[ECS.world.query.with_all([C_TestA]), process_batch_subsystem, System.ExecutionMethod.ARCHETYPE]
 		]
 
-	func archetype_subsystem(entities: Array[Entity], components: Array, delta: float):
+	func process_batch_subsystem(entities: Array[Entity], components: Array, delta: float):
 		call_count += 1
 
 

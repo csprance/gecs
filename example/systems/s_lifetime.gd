@@ -6,7 +6,7 @@ func query() -> QueryBuilder:
 
 
 ## OPTIMIZED: Archetype mode for cache-friendly performance
-func archetype(entities: Array[Entity], components: Array, delta: float) -> void:
+func process_batch(entities: Array[Entity], components: Array, delta: float) -> void:
 	var lifetimes = components[0] # C_Lifetime (first in iterate)
 
 	# Iterate backwards to safely remove entities

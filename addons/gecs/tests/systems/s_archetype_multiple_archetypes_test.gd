@@ -10,6 +10,6 @@ func query() -> QueryBuilder:
 	return ECS.world.query.with_all([C_TestA, C_TestB]).iterate([C_TestA, C_TestB])
 
 
-func archetype(entities: Array[Entity], components: Array, delta: float) -> void:
+func process_batch(entities: Array[Entity], components: Array, delta: float) -> void:
 	archetype_call_count += 1
 	total_entities_processed += entities.size()

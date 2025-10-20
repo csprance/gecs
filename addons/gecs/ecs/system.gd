@@ -37,7 +37,7 @@ enum ExecutionMethod {
 	PROCESS = 0,
 	## Bulk processing using process_all()
 	PROCESS_ALL = 1,
-	## Cache-friendly archetype processing using archetype()
+	## Cache-friendly batch processing using process_batch()
 	ARCHETYPE = 2,
 	## Custom subsystem logic using sub_systems()
 	SUBSYSTEMS = 3,
@@ -116,25 +116,25 @@ func sub_systems() -> Array[Array]:
 	return [] # Base returns empty - overridden systems return populated Array[Array]
 
 
-## Override this method to use optimized archetype-based iteration.[br]
-## Receives entities and component arrays per archetype for cache-friendly processing.[br]
+## Override this method to use optimized batch processing with Structure-of-Arrays (SoA).[br]
+## Receives entities and component arrays in batches for cache-friendly processing.[br]
 ## Components are provided in the same order as defined in query.iterate()[br][br]
 ## [b]Example:[/b]
 ## [codeblock]
 ## func query() -> QueryBuilder:
 ##     return _world.query.with_all([C_Velocity, C_Transform]).iterate([C_Velocity, C_Transform])
 ##
-## func archetype(entities: Array[Entity], components: Array, delta: float) -> void:
+## func process_batch(entities: Array[Entity], components: Array, delta: float) -> void:
 ##     var velocities = components[0]  # C_Velocity (first in iterate)
 ##     var transforms = components[1]  # C_Transform (second in iterate)
 ##
 ##     for i in entities.size():
 ##         transforms[i].position += velocities[i].velocity * delta
 ## [/codeblock]
-## [param entities] Array of entities in this archetype[br]
-## [param components] Array of component arrays, ordered by with_all() definition[br]
+## [param entities] Array of entities in this batch[br]
+## [param components] Array of component arrays, ordered by iterate() definition[br]
 ## [param delta] Time elapsed since last frame
-func archetype(entities: Array[Entity], components: Array, delta: float) -> void:
+func process_batch(entities: Array[Entity], components: Array, delta: float) -> void:
 	pass # Base implementation - systems can override this
 
 
@@ -175,7 +175,7 @@ func _internal_setup():
 	if not subs.is_empty():
 		_execution_method = ExecutionMethod.SUBSYSTEMS
 	# Check which method is overridden
-	elif _is_method_overridden("archetype"):
+	elif _is_method_overridden("process_batch"):
 		_execution_method = ExecutionMethod.ARCHETYPE
 	elif _is_method_overridden("process_all"):
 		_execution_method = ExecutionMethod.PROCESS_ALL
@@ -337,9 +337,9 @@ func _run_archetype_mode(delta: float) -> void:
 	if _archetype_component_paths.is_empty():
 		var iterate_comps = _query_cache._iterate_components
 
-		# EXPLICIT: Must specify iterate() for archetype mode
+		# EXPLICIT: Must specify iterate() for batch processing mode
 		if iterate_comps.is_empty():
-			push_error("System '%s' uses archetype() but query() doesn't call iterate(). You must explicitly specify components to iterate: query().with_all([...]).iterate([...])" % get_script().resource_path)
+			push_error("System '%s' uses process_batch() but query() doesn't call iterate(). You must explicitly specify components to iterate: query().with_all([...]).iterate([...])" % get_script().resource_path)
 			return
 
 		# Cache component resource paths in iteration order
@@ -363,7 +363,7 @@ func _run_archetype_mode(delta: float) -> void:
 
 	# If no entities but process_empty is true, call once with empty data
 	if not has_entities and process_empty:
-		archetype([], [], delta)
+		process_batch([], [], delta)
 		return
 
 	# Iterate each archetype separately for cache locality
@@ -380,8 +380,8 @@ func _run_archetype_mode(delta: float) -> void:
 		for comp_path in _archetype_component_paths:
 			components.append(arch.get_column(comp_path))
 
-		# Call user's archetype() callback with this archetype's data
-		archetype(arch_entities, components, delta)
+		# Call user's process_batch() callback with this archetype's data
+		process_batch(arch_entities, components, delta)
 
 
 ## Execution path for standard process() method

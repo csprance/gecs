@@ -184,8 +184,8 @@ func disabled() -> QueryBuilder:
 	return self
 
 
-## Specifies the component order for archetype mode iteration.[br]
-## This determines the order of component arrays passed to System.archetype()[br]
+## Specifies the component order for batch processing iteration.[br]
+## This determines the order of component arrays passed to System.process_batch()[br]
 ## [param components] An array of component types in the desired iteration order[br]
 ## [param returns] [QueryBuilder] instance for chaining.[br][br]
 ## [b]Example:[/b]
@@ -193,7 +193,7 @@ func disabled() -> QueryBuilder:
 ## func query() -> QueryBuilder:
 ##     return q.with_all([C_Velocity, C_Timer]).enabled().iterate([C_Velocity, C_Timer])
 ##
-## func archetype(entities: Array[Entity], components: Array, delta: float) -> void:
+## func process_batch(entities: Array[Entity], components: Array, delta: float) -> void:
 ##     var velocities = components[0] # C_Velocity (first in iterate)
 ##     var timers = components[1] # C_Timer (second in iterate)
 ## [/codeblock]
