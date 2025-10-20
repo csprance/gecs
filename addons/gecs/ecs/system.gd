@@ -3,7 +3,7 @@
 ## The base class for all systems within the ECS framework.[br]
 ##
 ## Systems contain the core logic and behavior, processing [Entity]s that have specific [Component]s.[br]
-## Each system overrides the [method System.query] and returns a query using [code]ECS.world.query[/code][br]
+## Each system overrides the [method System.query] and returns a query using [code]q[/code] or [code]ECS.world.query[/code][br]
 ## to define the required [Component]s for it to process an [Entity] and implements the [method System.process] method.[br][br]
 ## [b]Example:[/b]
 ##[codeblock]
@@ -11,7 +11,7 @@
 ##     extends System
 ##
 ##     func query():
-##         return _world.query.with_all([Transform, Velocity])
+##         return q.with_all([Transform, Velocity])
 ##
 ##     func process(entity: Entity, delta: float) -> void:
 ##         var transform = entity.get_component(Transform)
@@ -72,6 +72,10 @@ var lastRunData := {}
 
 ## Reference to the world this system belongs to (set by World.add_system)
 var _world: World = null
+## Convenience property for accessing query builder (returns _world.query or ECS.world.query)
+var q: QueryBuilder:
+	get:
+		return _world.query if _world else ECS.world.query
 ## Cached query to avoid recreating it every frame (lazily initialized)
 var _query_cache: QueryBuilder = null
 ## Cached subsystems to avoid recreating them every frame (lazily initialized)
@@ -95,7 +99,8 @@ func deps() -> Dictionary[int, Array]:
 
 
 ## Override this method and return a [QueryBuilder] to define the required [Component]s for the system.[br]
-## If not overridden, the system will run on every update with no entities.
+## If not overridden, the system will run on every update with no entities.[br][br]
+## You can use [code]q[/code] or [code]ECS.world.query[/code] - both are equivalent.
 func query() -> QueryBuilder:
 	process_empty = true
 	return _world.query if _world else ECS.world.query
@@ -104,12 +109,13 @@ func query() -> QueryBuilder:
 ## Override this method to define any sub-systems that should be processed by this system.[br]
 ## Each subsystem is defined as [QueryBuilder, Callable, ExecutionMethod][br]
 ## Return empty array if not using subsystems (base implementation)[br][br]
+## You can use [code]q[/code] or [code]ECS.world.query[/code] in subsystems - both work.[br][br]
 ## [b]Example:[/b]
 ## [codeblock]
 ## func sub_systems() -> Array[Array]:
 ##     return [
-##         [ECS.world.query.with_all([C_Velocity]).iterate([C_Velocity]), process_velocity, ExecutionMethod.PROCESS_BATCH],
-##         [ECS.world.query.with_all([C_Health]), process_health, ExecutionMethod.PROCESS]
+##         [q.with_all([C_Velocity]).iterate([C_Velocity]), process_velocity, ExecutionMethod.PROCESS_BATCH],
+##         [q.with_all([C_Health]), process_health, ExecutionMethod.PROCESS]
 ##     ]
 ## [/codeblock]
 func sub_systems() -> Array[Array]:
@@ -122,7 +128,7 @@ func sub_systems() -> Array[Array]:
 ## [b]Example:[/b]
 ## [codeblock]
 ## func query() -> QueryBuilder:
-##     return _world.query.with_all([C_Velocity, C_Transform]).iterate([C_Velocity, C_Transform])
+##     return q.with_all([C_Velocity, C_Transform]).iterate([C_Velocity, C_Transform])
 ##
 ## func process_batch(entities: Array[Entity], components: Array, delta: float) -> void:
 ##     var velocities = components[0]  # C_Velocity (first in iterate)
