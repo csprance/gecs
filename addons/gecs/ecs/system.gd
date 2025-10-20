@@ -38,7 +38,7 @@ enum ExecutionMethod {
 	## Bulk processing using process_all()
 	PROCESS_ALL = 1,
 	## Cache-friendly batch processing using process_batch()
-	ARCHETYPE = 2,
+	PROCESS_BATCH = 2,
 	## Custom subsystem logic using sub_systems()
 	SUBSYSTEMS = 3,
 }
@@ -76,8 +76,8 @@ var _world: World = null
 var _query_cache: QueryBuilder = null
 ## Cached subsystems to avoid recreating them every frame (lazily initialized)
 var _subsystems_cache: Array = []
-## Cached component resource paths from iterate() for archetype mode (lazily initialized)
-var _archetype_component_paths: Array[String] = []
+## Cached component resource paths from iterate() for batch mode (lazily initialized)
+var _batch_component_paths: Array[String] = []
 ## Cached execution method determined once at setup
 var _execution_method: ExecutionMethod = ExecutionMethod.PROCESS
 
@@ -108,7 +108,7 @@ func query() -> QueryBuilder:
 ## [codeblock]
 ## func sub_systems() -> Array[Array]:
 ##     return [
-##         [ECS.world.query.with_all([C_Velocity]).iterate([C_Velocity]), process_velocity, ExecutionMethod.ARCHETYPE],
+##         [ECS.world.query.with_all([C_Velocity]).iterate([C_Velocity]), process_velocity, ExecutionMethod.PROCESS_BATCH],
 ##         [ECS.world.query.with_all([C_Health]), process_health, ExecutionMethod.PROCESS]
 ##     ]
 ## [/codeblock]
@@ -176,7 +176,7 @@ func _internal_setup():
 		_execution_method = ExecutionMethod.SUBSYSTEMS
 	# Check which method is overridden
 	elif _is_method_overridden("process_batch"):
-		_execution_method = ExecutionMethod.ARCHETYPE
+		_execution_method = ExecutionMethod.PROCESS_BATCH
 	elif _is_method_overridden("process_all"):
 		_execution_method = ExecutionMethod.PROCESS_ALL
 	elif _is_method_overridden("process"):
@@ -261,8 +261,8 @@ func _handle(delta: float) -> void:
 	match _execution_method:
 		ExecutionMethod.SUBSYSTEMS:
 			_run_subsystems(delta)
-		ExecutionMethod.ARCHETYPE:
-			_run_archetype_mode(delta)
+		ExecutionMethod.PROCESS_BATCH:  # Batch processing with Structure-of-Arrays
+			_run_batch_mode(delta)
 		ExecutionMethod.PROCESS_ALL:
 			_run_process_all_mode(delta)
 		ExecutionMethod.PROCESS:
@@ -294,13 +294,13 @@ func _run_subsystems(delta: float) -> void:
 				var matching_entities := subsystem_query.execute() as Array
 				subsystem_callable.call(matching_entities, delta)
 
-			ExecutionMethod.ARCHETYPE:
-				# Call once per archetype with component columns
+			ExecutionMethod.PROCESS_BATCH:
+				# Call once per batch with component columns
 				var iterate_comps = subsystem_query._iterate_components
 
-				# EXPLICIT: Must specify iterate() for archetype mode
+				# EXPLICIT: Must specify iterate() for batch processing mode
 				if iterate_comps.is_empty():
-					push_error("Subsystem in '%s' uses ExecutionMethod.ARCHETYPE but query doesn't call iterate(). You must explicitly specify components: query.with_all([...]).iterate([...])" % get_script().resource_path)
+					push_error("Subsystem in '%s' uses ExecutionMethod.PROCESS_BATCH but query doesn't call iterate(). You must explicitly specify components: query.with_all([...]).iterate([...])" % get_script().resource_path)
 					continue
 
 				var matching_archetypes = subsystem_query.archetypes()
@@ -327,14 +327,14 @@ func _run_subsystems(delta: float) -> void:
 		subsystem_index += 1
 
 
-## Execution path for archetype mode
-func _run_archetype_mode(delta: float) -> void:
+## Execution path for batch mode
+func _run_batch_mode(delta: float) -> void:
 	# Lazy initialize query cache
 	if not _query_cache:
 		_query_cache = query()
 
 	# Lazy initialize component paths from iterate()
-	if _archetype_component_paths.is_empty():
+	if _batch_component_paths.is_empty():
 		var iterate_comps = _query_cache._iterate_components
 
 		# EXPLICIT: Must specify iterate() for batch processing mode
@@ -345,7 +345,7 @@ func _run_archetype_mode(delta: float) -> void:
 		# Cache component resource paths in iteration order
 		for comp_type in iterate_comps:
 			var comp_path = comp_type.resource_path if comp_type is Script else comp_type.get_script().resource_path
-			_archetype_component_paths.append(comp_path)
+			_batch_component_paths.append(comp_path)
 
 	# Get matching archetypes directly (zero-copy, cache-friendly)
 	var matching_archetypes = _query_cache.archetypes()
@@ -377,7 +377,7 @@ func _run_archetype_mode(delta: float) -> void:
 		var components = []
 
 		# Gather component columns in iteration order (from iterate() or with_all())
-		for comp_path in _archetype_component_paths:
+		for comp_path in _batch_component_paths:
 			components.append(arch.get_column(comp_path))
 
 		# Call user's process_batch() callback with this archetype's data

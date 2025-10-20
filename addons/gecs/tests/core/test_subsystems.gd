@@ -387,7 +387,7 @@ class SubsystemArchetypeTest extends System:
 
 	func sub_systems() -> Array[Array]:
 		return [
-			[ECS.world.query.with_all([C_TestA]).iterate([C_TestA]), process_batch_subsystem, System.ExecutionMethod.ARCHETYPE]
+			[ECS.world.query.with_all([C_TestA]).iterate([C_TestA]), process_batch_subsystem, System.ExecutionMethod.PROCESS_BATCH]
 		]
 
 	func process_batch_subsystem(entities: Array[Entity], components: Array, delta: float):
@@ -407,7 +407,7 @@ class SubsystemMixedTest extends System:
 		return [
 			[ECS.world.query.with_all([C_TestA]), process_sub, System.ExecutionMethod.PROCESS],
 			[ECS.world.query.with_all([C_TestB]), process_all_sub, System.ExecutionMethod.PROCESS_ALL],
-			[ECS.world.query.with_all([C_TestA]).iterate([C_TestA]), process_batch_sub, System.ExecutionMethod.ARCHETYPE]
+			[ECS.world.query.with_all([C_TestA]).iterate([C_TestA]), process_batch_sub, System.ExecutionMethod.PROCESS_BATCH]
 		]
 
 	func process_sub(entity: Entity, delta: float):
@@ -439,7 +439,7 @@ class SubsystemSignatureTest extends System:
 		return [
 			[ECS.world.query.with_all([C_TestA]), test_process, System.ExecutionMethod.PROCESS],
 			[ECS.world.query.with_all([C_TestB]), test_process_all, System.ExecutionMethod.PROCESS_ALL],
-			[ECS.world.query.with_all([C_TestC]).iterate([C_TestC]), test_archetype, System.ExecutionMethod.ARCHETYPE]
+			[ECS.world.query.with_all([C_TestC]).iterate([C_TestC]), test_archetype, System.ExecutionMethod.PROCESS_BATCH]
 		]
 
 	func test_process(entity: Entity, delta: float):
@@ -466,7 +466,7 @@ class SubsystemArchetypeMissingIterateTest extends System:
 	func sub_systems() -> Array[Array]:
 		return [
 			# Missing .iterate() - should error
-			[ECS.world.query.with_all([C_TestA]), process_batch_subsystem, System.ExecutionMethod.ARCHETYPE]
+			[ECS.world.query.with_all([C_TestA]), process_batch_subsystem, System.ExecutionMethod.PROCESS_BATCH]
 		]
 
 	func process_batch_subsystem(entities: Array[Entity], components: Array, delta: float):
