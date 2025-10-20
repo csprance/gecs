@@ -792,6 +792,11 @@ func _query(all_components = [], any_components = [], exclude_components = [], e
 		var _exclude := exclude_components.map(map_resource_path)
 
 		for archetype in archetypes.values():
+			# OPTIMIZATION: Filter by enabled state BEFORE checking component match
+			# This makes .enabled() queries skip entire archetypes instead of checking each entity
+			if enabled_filter != null and archetype.enabled_filter != enabled_filter:
+				continue  # Skip archetypes with wrong enabled state
+
 			if archetype.matches_query(_all, _any, _exclude):
 				matching_archetypes.append(archetype)
 
@@ -804,16 +809,10 @@ func _query(all_components = [], any_components = [], exclude_components = [], e
 		return matching_archetypes[0].entities
 
 	# Collect entities from all matching archetypes
+	# OPTIMIZATION: No need to filter by enabled state - archetypes are already filtered!
 	var result: Array[Entity] = []
 	for archetype in matching_archetypes:
-		# Apply enabled filter if specified
-		if enabled_filter == null:
-			result.append_array(archetype.entities)
-		else:
-			# Filter entities by enabled state
-			for entity in archetype.entities:
-				if entity.enabled == enabled_filter:
-					result.append(entity)
+		result.append_array(archetype.entities)
 
 	return result
 
@@ -998,8 +997,18 @@ func _calculate_entity_signature(entity: Entity, enabled_filter_value: Variant =
 			_component_script_cache[comp_path] = component.get_script()
 		comp_scripts.append(_component_script_cache[comp_path])
 
+	# OPTIMIZATION: Include entity.enabled in signature so enabled/disabled entities
+	# go to separate archetypes. This makes .enabled() queries O(1) instead of O(n).
+	var enabled_marker = 1 if entity.enabled else 0
+
 	# Use the SAME hash function as queries - entity is just "all components, no any/exclude"
-	return _generate_query_cache_key(comp_scripts, [], [])
+	# Add enabled state as a synthetic "component" for signature uniqueness
+	var signature = _generate_query_cache_key(comp_scripts, [], [])
+
+	# Mix in enabled state (XOR with shifted enabled marker to avoid collisions)
+	signature ^= (enabled_marker << 31)
+
+	return signature
 
 
 ## Get or create an archetype for the given signature and component types
@@ -1019,14 +1028,14 @@ func _get_or_create_archetype(signature: int, component_types: Array, enabled_fi
 
 ## Add entity to appropriate archetype (parallel system)
 func _add_entity_to_archetype(entity: Entity) -> void:
-	# Calculate signature based on entity's components
+	# Calculate signature based on entity's components AND enabled state
 	var signature = _calculate_entity_signature(entity)
 
 	# Get component type paths for this entity
 	var comp_types = entity.components.keys()
 
-	# Get or create archetype
-	var archetype = _get_or_create_archetype(signature, comp_types)
+	# Get or create archetype (with enabled filter value)
+	var archetype = _get_or_create_archetype(signature, comp_types, entity.enabled)
 
 	# Add entity to archetype
 	archetype.add_entity(entity)
