@@ -17,7 +17,7 @@ func deps() -> Dictionary[int, Array]:
 ## Override this method and return a [QueryBuilder] to define the required [Component]s for the system.[br]
 ## If not overridden, the system will run on every update with no entities.
 func query() -> QueryBuilder:
-	return q.with_all([]) # Use q.with_all([YourComponent]) or ECS.world.query
+	return q.with_all([]) # Use q.with_all([YourComponent])
 
 
 ## Runs once after the system has been added to the [World] to setup anything on the system one time[br]
@@ -27,24 +27,27 @@ func query() -> QueryBuilder:
 
 ## Override this method to define any sub-systems that should be processed by this system.[br]
 # func sub_systems() -> Array[Array]:
-# 	_has_subsystems = false # If this method is not overridden then we are not using sub systems
-# 	return []
+# 	return [
+# 		[q.with_all([YourComponent]), process_subsystem]
+# 	]
+#
+# func process_subsystem(entities: Array[Entity], components: Array, delta: float):
+# 	pass
 
 
 ## The main processing function for the system.[br]
-## This method can be overridden by subclasses to define the system's behavior if using query().[br]
-## If using [method System.sub_systems] then this method will not be called.[br]
-## [param entity] The [Entity] being processed.[br]
-## [param delta] The time elapsed since the last frame.
-func process(entity: Entity, delta: float) -> void:
-	pass # Code here...
+## Override this method to define your system's behavior.[br]
+## [param entities] Array of entities matching the system's query[br]
+## [param components] Array of component arrays (in order from iterate()), or empty if no iterate() call[br]
+## [param delta] The time elapsed since the last frame[br][br]
+## [b]Simple approach:[/b] Loop through entities and use get_component()[br]
+## [b]Fast approach:[/b] Use iterate() in query and access component arrays directly
+func process(entities: Array[Entity], components: Array, delta: float) -> void:
+	# Per-entity processing (simple)
+	for entity in entities:
+		pass # Your code here...
 
-
-## Often you want to process all entities that match the system's query, this method does that.[br]
-## This way instead of running one function for each entity you can run one function for all entities.[br]
-## By default this method will run the [method System.process] method for each entity.[br]
-## but you can override this method to do something different.[br]
-## [param entities] The [Entity]s to process.[br]
-## [param delta] The time elapsed since the last frame.
-# func process_all(entities: Array, delta: float) -> void:
-# 	pass
+	# OR batch processing (fast) - requires query().iterate([Components])
+	# var your_components = components[0]
+	# for i in entities.size():
+	# 	# Process entities[i] with your_components[i]
