@@ -7,6 +7,7 @@ func deps():
 func query():
 	return ECS.world.query.with_all([C_TestOrderComponent])
 
-func process(entity: Entity, delta: float):
-	var c = entity.get_component(C_TestOrderComponent)
-	c.execution_log.append("E")
+func process(entities: Array[Entity], components: Array, delta: float):
+	for entity in entities:
+		var c = entity.get_component(C_TestOrderComponent)
+		c.execution_log.append("E")

@@ -7,5 +7,6 @@ func query():
 	return ECS.world.query.with_all([C_Velocity])
 
 
-func process(entity: Entity, delta: float) -> void:
-	pass # Do nothing - used for measuring pure framework overhead
+func process(entities: Array[Entity], components: Array, delta: float):
+	for entity in entities:
+		pass # Do nothing - used for measuring pure framework overhead

@@ -10,7 +10,7 @@ func query() -> QueryBuilder:
 	return ECS.world.query.with_all([C_TestA, C_TestB]).iterate([C_TestB, C_TestA])
 
 
-func process_batch(entities: Array[Entity], components: Array, delta: float) -> void:
+func process(entities: Array[Entity], components: Array, delta: float) -> void:
 	if components.size() == 2:
 		# First should be C_TestB, second should be C_TestA
 		var first = components[0][0] if components[0].size() > 0 else null

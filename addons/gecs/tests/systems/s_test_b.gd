@@ -13,7 +13,8 @@ func query():
 	return ECS.world.query.with_all([C_TestB])
 
 
-func process(entity: Entity, delta: float):
-	var a = entity.get_component(C_TestB)
-	a.value += 1
-	print("TestBSystem: ", a.value)
+func process(entities: Array[Entity], components: Array, delta: float):
+	for entity in entities:
+		var a = entity.get_component(C_TestB)
+		a.value += 1
+		print("TestBSystem: ", a.value)

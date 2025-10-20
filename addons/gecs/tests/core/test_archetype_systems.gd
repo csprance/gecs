@@ -141,17 +141,16 @@ func test_archetype_modifies_components():
 	assert_int(updated_comp.value).is_equal(8)
 
 
-func test_archetype_requires_iterate_call():
-	# System that doesn't call iterate() should error
+func test_archetype_works_without_iterate_call():
+	# System that doesn't call iterate() still works, just gets empty components array
 	var test_system = ArchetypeNoIterateSystem.new()
 	world.add_system(test_system)
 
 	var entity = Entity.new()
 	world.add_entity(entity, [C_TestA.new()])
 
-	# Should push error when processing
-	# We can't easily test push_error, but at least verify it doesn't crash
+	# Should work fine - system can use get_component() instead
 	world.process(0.1)
 
-	# System shouldn't have processed anything (early return on error)
-	assert_int(test_system.processed).is_equal(0)
+	# System should have processed the entity
+	assert_int(test_system.processed).is_equal(1)

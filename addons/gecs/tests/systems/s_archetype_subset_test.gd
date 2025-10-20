@@ -10,5 +10,5 @@ func query() -> QueryBuilder:
 	return ECS.world.query.with_all([C_TestA, C_TestB]).iterate([C_TestA, C_TestB])
 
 
-func process_batch(entities: Array[Entity], components: Array, delta: float) -> void:
+func process(entities: Array[Entity], components: Array, delta: float) -> void:
 	entities_processed += entities.size()
