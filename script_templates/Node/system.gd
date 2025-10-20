@@ -17,7 +17,7 @@ func deps() -> Dictionary[int, Array]:
 ## Override this method and return a [QueryBuilder] to define the required [Component]s for the system.[br]
 ## If not overridden, the system will run on every update with no entities.
 func query() -> QueryBuilder:
-	return ECS.world.query
+	return q.with_all([]) # Use q.with_all([YourComponent]) or ECS.world.query
 
 
 ## Runs once after the system has been added to the [World] to setup anything on the system one time[br]
