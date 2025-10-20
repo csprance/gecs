@@ -257,6 +257,20 @@ func _handle(delta: float) -> void:
 	if not active or paused:
 		return
 
+	# DEBUG: Track execution time (compiled out in production, disabled via ECS.debug in perf tests)
+	var start_time_usec := 0
+	assert((func():
+		if not ECS.debug:
+			return true
+		start_time_usec = Time.get_ticks_usec()
+		lastRunData = {
+			"system_name": get_script().resource_path.get_file().get_basename(),
+			"execution_method": ExecutionMethod.keys()[_execution_method],
+			"frame_delta": delta,
+		}
+		return true
+	).call())
+
 	# Execute using cached execution method (determined once at setup by World)
 	match _execution_method:
 		ExecutionMethod.SUBSYSTEMS:
@@ -267,6 +281,16 @@ func _handle(delta: float) -> void:
 			_run_process_all_mode(delta)
 		ExecutionMethod.PROCESS:
 			_run_process_mode(delta)
+
+	# DEBUG: Record execution time (compiled out in production, disabled via ECS.debug in perf tests)
+	assert((func():
+		if not ECS.debug:
+			return true
+		var end_time_usec = Time.get_ticks_usec()
+		var execution_time_ms = (end_time_usec - start_time_usec) / 1000.0
+		lastRunData["execution_time_ms"] = execution_time_ms
+		return true
+	).call())
 
 
 ## Execution path for subsystems
@@ -282,16 +306,21 @@ func _run_subsystems(delta: float) -> void:
 		var subsystem_callable := subsystem_tuple[1] as Callable
 		var execution_method: ExecutionMethod = subsystem_tuple[2] if subsystem_tuple.size() > 2 else ExecutionMethod.PROCESS
 
+		# DEBUG: Track entity count per subsystem
+		var entity_count := 0
+
 		match execution_method:
 			ExecutionMethod.PROCESS:
 				# Call once per entity
 				var matching_entities := subsystem_query.execute() as Array
+				entity_count = matching_entities.size()
 				for entity in matching_entities:
 					subsystem_callable.call(entity, delta)
 
 			ExecutionMethod.PROCESS_ALL:
 				# Call once with all entities
 				var matching_entities := subsystem_query.execute() as Array
+				entity_count = matching_entities.size()
 				subsystem_callable.call(matching_entities, delta)
 
 			ExecutionMethod.PROCESS_BATCH:
@@ -308,6 +337,8 @@ func _run_subsystems(delta: float) -> void:
 					if archetype.entities.is_empty():
 						continue
 
+					entity_count += archetype.entities.size()
+
 					var components = []
 					# Gather component columns in iteration order
 					for comp_type in iterate_comps:
@@ -320,8 +351,8 @@ func _run_subsystems(delta: float) -> void:
 		assert(_update_debug_data(func(): return {
 			subsystem_index: {
 				"subsystem_index": subsystem_index,
-				"entity_count": 0, # TODO: count based on execution method
-				"execution_method": execution_method
+				"entity_count": entity_count,
+				"execution_method": ExecutionMethod.keys()[execution_method]
 			}
 		}), 'Debug data')
 		subsystem_index += 1
@@ -350,12 +381,19 @@ func _run_batch_mode(delta: float) -> void:
 	# Get matching archetypes directly (zero-copy, cache-friendly)
 	var matching_archetypes = _query_cache.archetypes()
 	var has_entities = false
+	var total_entity_count := 0
 
 	# Check if we have any entities at all
 	for arch in matching_archetypes:
 		if not arch.entities.is_empty():
 			has_entities = true
-			break
+			total_entity_count += arch.entities.size()
+
+	# DEBUG: Track entity count (compiled out in production)
+	assert(_update_debug_data(func(): return {
+		"entity_count": total_entity_count,
+		"archetype_count": matching_archetypes.size()
+	}))
 
 	# If no entities and we don't process when empty, exit early
 	if not has_entities and not process_empty:
@@ -400,17 +438,21 @@ func _run_process_mode(delta: float) -> void:
 	# Process entities one by one using process()
 	if matching_entities.size() == 0 and process_empty:
 		process(null, delta)
-		assert(_debug_data({"processed_entities": 0}), 'Debug data')
+		assert(_update_debug_data(func(): return {"entity_count": 0}))
 		return
+
+	# DEBUG: Track entity count (compiled out in production)
+	assert(_update_debug_data(func(): return {"entity_count": matching_entities.size()}))
 
 	# Use parallel processing if enabled and we have enough entities
 	if parallel_processing and matching_entities.size() >= parallel_threshold:
+		assert(_update_debug_data(func(): return {"parallel": true, "threshold": parallel_threshold}))
 		_process_parallel(matching_entities, delta)
 	else:
 		# Otherwise process all the entities sequentially
+		assert(_update_debug_data(func(): return {"parallel": false}))
 		for entity in matching_entities:
 			process(entity, delta)
-		assert(_debug_data({"processed_entities": matching_entities.size()}), 'Debug data')
 
 
 ## Execution path for custom process_all() method
@@ -421,6 +463,9 @@ func _run_process_all_mode(delta: float) -> void:
 
 	# Execute query to get matching entities
 	var matching_entities := _query_cache.execute()
+
+	# DEBUG: Track entity count (compiled out in production)
+	assert(_update_debug_data(func(): return {"entity_count": matching_entities.size()}))
 
 	# Early exit: no entities and we don't process when empty
 	if matching_entities.is_empty() and not process_empty:
