@@ -21,7 +21,7 @@ func test_debug_tracking_process_mode():
 	# Create entities
 	for i in range(10):
 		var entity = Entity.new()
-		entity.add_component(C_DebugTestA.new())
+		entity.add_component(C_DebugTrackingTestA.new())
 		world.add_entity(entity)
 
 	# Create system with PROCESS execution method
@@ -31,15 +31,18 @@ func test_debug_tracking_process_mode():
 	# Process once
 	world.process(0.016)
 
+	# Debug: Print what's in lastRunData
+	print("DEBUG: ECS.debug = ", ECS.debug)
+	print("DEBUG: lastRunData = ", system.lastRunData)
+	print("DEBUG: lastRunData keys = ", system.lastRunData.keys())
+
 	# Verify debug data
 	assert_that(system.lastRunData.has("system_name")).is_true()
-	assert_that(system.lastRunData.has("execution_method")).is_true()
 	assert_that(system.lastRunData.has("frame_delta")).is_true()
 	assert_that(system.lastRunData.has("entity_count")).is_true()
 	assert_that(system.lastRunData.has("execution_time_ms")).is_true()
 
 	# Verify values
-	assert_that(system.lastRunData["execution_method"]).is_equal("PROCESS")
 	assert_that(system.lastRunData["frame_delta"]).is_equal(0.016)
 	assert_that(system.lastRunData["entity_count"]).is_equal(10)
 	assert_that(system.lastRunData["execution_time_ms"]).is_greater(0.0)
@@ -65,7 +68,7 @@ func test_debug_tracking_process_all_mode():
 	# Create entities
 	for i in range(15):
 		var entity = Entity.new()
-		entity.add_component(C_DebugTestB.new())
+		entity.add_component(C_DebugTrackingTestB.new())
 		world.add_entity(entity)
 
 	# Create system with PROCESS_ALL execution method
@@ -76,7 +79,6 @@ func test_debug_tracking_process_all_mode():
 	world.process(0.016)
 
 	# Verify debug data
-	assert_that(system.lastRunData["execution_method"]).is_equal("PROCESS_ALL")
 	assert_that(system.lastRunData["entity_count"]).is_equal(15)
 	assert_that(system.lastRunData["execution_time_ms"]).is_greater(0.0)
 
@@ -99,13 +101,13 @@ func test_debug_tracking_process_batch_mode():
 	# Create entities with different component combinations (multiple archetypes)
 	for i in range(10):
 		var entity = Entity.new()
-		entity.add_component(C_DebugTestA.new())
+		entity.add_component(C_DebugTrackingTestA.new())
 		world.add_entity(entity)
 
 	for i in range(5):
 		var entity = Entity.new()
-		entity.add_component(C_DebugTestA.new())
-		entity.add_component(C_DebugTestB.new())
+		entity.add_component(C_DebugTrackingTestA.new())
+		entity.add_component(C_DebugTrackingTestB.new())
 		world.add_entity(entity)
 
 	# Create system with PROCESS_BATCH execution method
@@ -116,7 +118,6 @@ func test_debug_tracking_process_batch_mode():
 	world.process(0.016)
 
 	# Verify debug data
-	assert_that(system.lastRunData["execution_method"]).is_equal("PROCESS_BATCH")
 	assert_that(system.lastRunData["entity_count"]).is_equal(15)
 	assert_that(system.lastRunData["archetype_count"]).is_greater_equal(2)
 	assert_that(system.lastRunData["execution_time_ms"]).is_greater(0.0)
@@ -132,8 +133,8 @@ func test_debug_tracking_subsystems():
 	# Create entities
 	for i in range(10):
 		var entity = Entity.new()
-		entity.add_component(C_DebugTestA.new())
-		entity.add_component(C_DebugTestB.new())
+		entity.add_component(C_DebugTrackingTestA.new())
+		entity.add_component(C_DebugTrackingTestB.new())
 		world.add_entity(entity)
 
 	# Create system with SUBSYSTEMS execution method
@@ -144,20 +145,17 @@ func test_debug_tracking_subsystems():
 	world.process(0.016)
 
 	# Verify debug data
-	assert_that(system.lastRunData["execution_method"]).is_equal("SUBSYSTEMS")
 	assert_that(system.lastRunData["execution_time_ms"]).is_greater(0.0)
 
 	# Verify subsystem data
 	assert_that(system.lastRunData.has(0)).is_true()
 	assert_that(system.lastRunData.has(1)).is_true()
 
-	# First subsystem (PROCESS mode)
+	# First subsystem
 	assert_that(system.lastRunData[0]["entity_count"]).is_equal(10)
-	assert_that(system.lastRunData[0]["execution_method"]).is_equal("PROCESS")
 
-	# Second subsystem (PROCESS_BATCH mode)
+	# Second subsystem
 	assert_that(system.lastRunData[1]["entity_count"]).is_equal(10)
-	assert_that(system.lastRunData[1]["execution_method"]).is_equal("PROCESS_BATCH")
 
 	print("Subsystem 0: %s" % [system.lastRunData[0]])
 	print("Subsystem 1: %s" % [system.lastRunData[1]])
@@ -170,7 +168,7 @@ func test_debug_disabled_has_no_data():
 	# Create entities
 	for i in range(5):
 		var entity = Entity.new()
-		entity.add_component(C_DebugTestA.new())
+		entity.add_component(C_DebugTrackingTestA.new())
 		world.add_entity(entity)
 
 	# Create system
@@ -198,7 +196,7 @@ func test_execution_time_not_accumulating():
 	# Create entities
 	for i in range(20):
 		var entity = Entity.new()
-		entity.add_component(C_DebugTestA.new())
+		entity.add_component(C_DebugTrackingTestA.new())
 		world.add_entity(entity)
 
 	var system = ProcessSystem.new()
@@ -232,38 +230,32 @@ func test_execution_time_not_accumulating():
 	assert_that(max_time).is_less(avg_time * 2.0)
 
 
-# Test components - using unique names to avoid global class collision
-class C_DebugTestA extends Component:
-	@export var value: float = 0.0
-
-class C_DebugTestB extends Component:
-	@export var count: int = 0
-
 # Test system - PROCESS mode
 class ProcessSystem extends System:
 	func query() -> QueryBuilder:
-		return ECS.world.query.with_all([C_DebugTestA])
+		return ECS.world.query.with_all([C_DebugTrackingTestA])
 
-	func process(entity: Entity, delta: float) -> void:
-		var comp = entity.get_component(C_DebugTestA)
-		comp.value += delta
+	func process(entities: Array[Entity], components: Array, delta: float) -> void:
+		for entity in entities:
+			var comp = entity.get_component(C_DebugTrackingTestA)
+			comp.value += delta
 
-# Test system - PROCESS_ALL mode
+# Test system - unified process
 class ProcessAllSystem extends System:
 	func query() -> QueryBuilder:
-		return ECS.world.query.with_all([C_DebugTestB])
+		return ECS.world.query.with_all([C_DebugTrackingTestB])
 
-	func process_all(entities: Array[Entity], delta: float) -> void:
+	func process(entities: Array[Entity], components: Array, delta: float) -> void:
 		for entity in entities:
-			var comp = entity.get_component(C_DebugTestB)
+			var comp = entity.get_component(C_DebugTrackingTestB)
 			comp.count += 1
 
-# Test system - PROCESS_BATCH mode
+# Test system - batch processing with iterate
 class ProcessBatchSystem extends System:
 	func query() -> QueryBuilder:
-		return ECS.world.query.with_all([C_DebugTestA]).iterate([C_DebugTestA])
+		return ECS.world.query.with_all([C_DebugTrackingTestA]).iterate([C_DebugTrackingTestA])
 
-	func process_batch(entities: Array[Entity], components: Array, delta: float) -> void:
+	func process(entities: Array[Entity], components: Array, delta: float) -> void:
 		var test_a_components = components[0]
 		for i in range(entities.size()):
 			test_a_components[i].value += delta
@@ -272,15 +264,17 @@ class ProcessBatchSystem extends System:
 class SubsystemsTestSystem extends System:
 	func sub_systems() -> Array[Array]:
 		return [
-			[ECS.world.query.with_all([C_DebugTestA]), process_sub, System.ExecutionMethod.PROCESS],
-			[ECS.world.query.with_all([C_DebugTestB]).iterate([C_DebugTestB]), batch_sub, System.ExecutionMethod.PROCESS_BATCH]
+			[ECS.world.query.with_all([C_DebugTrackingTestA]), process_sub],
+			[ECS.world.query.with_all([C_DebugTrackingTestB]).iterate([C_DebugTrackingTestB]), batch_sub]
 		]
 
-	func process_sub(entity: Entity, delta: float) -> void:
-		var comp = entity.get_component(C_DebugTestA)
-		comp.value += delta
+	func process_sub(entities: Array[Entity], components: Array, delta: float) -> void:
+		for entity in entities:
+			var comp = entity.get_component(C_DebugTrackingTestA)
+			comp.value += delta
 
 	func batch_sub(entities: Array[Entity], components: Array, delta: float) -> void:
-		var test_b_components = components[0]
-		for i in range(entities.size()):
-			test_b_components[i].count += 1
+		if components.size() > 0 and components[0].size() > 0:
+			var test_b_components = components[0]
+			for i in range(entities.size()):
+				test_b_components[i].count += 1
