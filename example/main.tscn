@@ -32,37 +32,36 @@ metadata/_custom_type_script = "uid://cdu5tlyk72uu4"
 script = ExtResource("4_c6clk")
 metadata/_custom_type_script = "uid://b3vi2ingux88g"
 
-[node name="VelocitySystem" type="Node" parent="World/Systems/physics"]
-process_thread_group = 2
-process_thread_group_order = 0
-process_thread_messages = 1
-script = ExtResource("4_lquwl")
-group = &"physics"
-parallel_processing = true
-
-[node name="gameplay" type="Node" parent="World/Systems"]
-script = ExtResource("4_c6clk")
-metadata/_custom_type_script = "uid://b3vi2ingux88g"
-
-[node name="RandomVelocitySystem" type="Node" parent="World/Systems/gameplay"]
+[node name="RandomVelocitySystem" type="Node" parent="World/Systems/physics"]
 process_thread_group = 2
 process_thread_group_order = 0
 process_thread_messages = 1
 script = ExtResource("5_7mycd")
 time_between_updates = 1.0
-group = &"gameplay"
+group = &"physics"
 parallel_processing = true
 parallel_threshold = 32
+
+[node name="gameplay" type="Node" parent="World/Systems"]
+script = ExtResource("4_c6clk")
+metadata/_custom_type_script = "uid://b3vi2ingux88g"
 
 [node name="RandomSpawnerSystem" type="Node" parent="World/Systems/gameplay"]
 script = ExtResource("6_dhpm0")
 random_mover_scene = ExtResource("3_h2yge")
-group = &"gameplay"
 process_empty = true
 
 [node name="LifetimeSystem" type="Node" parent="World/Systems/gameplay"]
 script = ExtResource("7_wqluj")
 group = &"gameplay"
+
+[node name="VelocitySystem" type="Node" parent="World/Systems/gameplay"]
+process_thread_group = 2
+process_thread_group_order = 0
+process_thread_messages = 1
+script = ExtResource("4_lquwl")
+group = &"gameplay"
+parallel_processing = true
 
 [node name="Camera3D" type="Camera3D" parent="."]
 transform = Transform3D(0.25402874, 0.4997186, -0.8281007, -0.095907584, 0.8649813, 0.49255362, 0.9624298, -0.045701638, 0.26765692, -5.016063, 4.1297154, 2.0313835)

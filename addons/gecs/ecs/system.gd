@@ -3,9 +3,9 @@
 ## The base class for all systems within the ECS framework.[br]
 ##
 ## Systems contain the core logic and behavior, processing [Entity]s that have specific [Component]s.[br]
-## Each system overrides the [method System.query] and returns a query using the [QueryBuilder][br]
-## exposed as [member System.q] required for it to process an [Entity] and implements the [method System.process] method.[br][br]
-## [b]Example:[/b]
+## Each system overrides the [method System.query] and returns a query using [code]q[/code] or [code]ECS.world.query[/code][br]
+## to define the required [Component]s for it to process [Entity]s and implements the [method System.process] method.[br][br]
+## [b]Example (Simple):[/b]
 ##[codeblock]
 ##     class_name MovementSystem
 ##     extends System
@@ -13,10 +13,24 @@
 ##     func query():
 ##         return q.with_all([Transform, Velocity])
 ##
-##     func process(entity: Entity, delta: float) -> void:
-##         var transform = entity.get_component(Transform)
-##         var velocity = entity.get_component(Velocity)
-##         transform.position += velocity.direction * velocity.speed * delta
+##     func process(entities: Array[Entity], components: Array, delta: float) -> void:
+##         # Per-entity processing (simple but slower)
+##         for entity in entities:
+##             var transform = entity.get_component(Transform)
+##             var velocity = entity.get_component(Velocity)
+##             transform.position += velocity.direction * velocity.speed * delta
+##[/codeblock]
+## [b]Example (Optimized with iterate()):[/b]
+##[codeblock]
+##     func query():
+##         return q.with_all([Transform, Velocity]).iterate([Transform, Velocity])
+##
+##     func process(entities: Array[Entity], components: Array, delta: float) -> void:
+##         # Batch processing with component arrays (faster)
+##         var transforms = components[0]
+##         var velocities = components[1]
+##         for i in entities.size():
+##             transforms[i].position += velocities[i].velocity * delta
 ##[/codeblock]
 @icon("res://addons/gecs/assets/system.svg")
 class_name System
@@ -53,20 +67,23 @@ enum Runs {
 ## Is this system paused. (Will be skipped if true)
 var paused := false
 
-## The [QueryBuilder] object exposed for convenience to use in the system and to create the query.
-var q: QueryBuilder
-
 ## Logger for system debugging and tracing
 var systemLogger = GECSLogger.new().domain("System")
 ## Data for debugger and profiling
 var lastRunData := {}
 
+## Reference to the world this system belongs to (set by World.add_system)
+var _world: World = null
+## Convenience property for accessing query builder (returns _world.query or ECS.world.query)
+var q: QueryBuilder:
+	get:
+		return _world.query if _world else ECS.world.query
 ## Cached query to avoid recreating it every frame (lazily initialized)
 var _query_cache: QueryBuilder = null
 ## Cached subsystems to avoid recreating them every frame (lazily initialized)
 var _subsystems_cache: Array = []
-## Set to false when sub_systems() is called and returns empty array
-var _has_subsystems: bool = true
+## Cached component resource paths from iterate() for batch mode (lazily initialized)
+var _component_paths: Array[String] = []
 
 #endregion Public Variables
 
@@ -82,80 +99,87 @@ func deps() -> Dictionary[int, Array]:
 
 
 ## Override this method and return a [QueryBuilder] to define the required [Component]s for the system.[br]
-## If not overridden, the system will run on every update with no entities.
+## If not overridden, the system will run on every update with no entities.[br][br]
+## You can use [code]q[/code] or [code]ECS.world.query[/code] - both are equivalent.
 func query() -> QueryBuilder:
 	process_empty = true
-	return q
+	return _world.query if _world else ECS.world.query
 
 
 ## Override this method to define any sub-systems that should be processed by this system.[br]
+## Each subsystem is defined as [QueryBuilder, Callable][br]
+## Return empty array if not using subsystems (base implementation)[br][br]
+## You can use [code]q[/code] or [code]ECS.world.query[/code] in subsystems - both work.[br][br]
+## [b]Example:[/b]
+## [codeblock]
+## func sub_systems() -> Array[Array]:
+##     return [
+##         [q.with_all([C_Velocity]).iterate([C_Velocity]), process_velocity],
+##         [q.with_all([C_Health]), process_health]
+##     ]
+##
+## func process_velocity(entities: Array[Entity], components: Array, delta: float):
+##     var velocities = components[0]
+##     for i in entities.size():
+##         entities[i].position += velocities[i].velocity * delta
+##
+## func process_health(entities: Array[Entity], components: Array, delta: float):
+##     for entity in entities:
+##         var health = entity.get_component(C_Health)
+##         health.regenerate(delta)
+## [/codeblock]
 func sub_systems() -> Array[Array]:
-	_has_subsystems = false # If this method is not overridden then we are not using sub systems
-	return []
+	return [] # Base returns empty - overridden systems return populated Array[Array]
 
 
 ## Runs once after the system has been added to the [World] to setup anything on the system one time[br]
 func setup():
-	pass
+	pass # Override in subclasses if needed
 
 
 ## The main processing function for the system.[br]
-## This method can be overridden by subclasses to define the system's behavior if using query().[br]
-## If using [method System.sub_systems] then this method will not be called.[br]
-## [param entity] The [Entity] being processed.[br]
-## [param delta] The time elapsed since the last frame.
-func process(entity: Entity, delta: float) -> void:
-	assert(
-		false,
-		"The 'process' method must be overridden in subclasses if it is not using sub systems."
-	)
-
-
-## Sometimes you want to process all entities that match the system's query, this method does that.[br]
-## This way instead of running one function for each entity you can run one function for all entities.[br]
-## By default this method will run the [method System.process] method for each entity.[br]
-## but you can override this method to do something different.[br]
-## [param entities] The [Entity]s to process.[br]
-## [param delta] The time elapsed since the last frame.
-func process_all(entities: Array, delta: float) -> void:
-	# If we have no entities and we want to process even when empty do it once and return
-	if entities.size() == 0 and process_empty:
-		process(null, delta)
-		assert(_debug_data({"processed_entities": 0}), 'Debug data')
-		return
-
-	# Use parallel processing if enabled and we have enough entities
-	if parallel_processing and entities.size() >= parallel_threshold:
-		_process_parallel(entities, delta)
-	else:
-		# otherwise process all the entities sequentially (wont happen if empty array)
-		for entity in entities:
-			process(entity, delta)
-		assert(_debug_data({"processed_entities": entities.size()}), 'Debug data')
+## Override this method to define your system's behavior.[br]
+## [param entities] Array of entities matching the system's query[br]
+## [param components] Array of component arrays (in order from iterate()), or empty if no iterate() call[br]
+## [param delta] The time elapsed since the last frame[br][br]
+## [b]Simple approach:[/b] Loop through entities and use get_component()[br]
+## [b]Fast approach:[/b] Use iterate() in query and access component arrays directly
+func process(entities: Array[Entity], components: Array, delta: float) -> void:
+	pass # Override in subclasses - base implementation does nothing
 
 #endregion Public Methods
 
 #region Private Methods
 
+
+## INTERNAL: Called by World.add_system() to initialize the system
+## DO NOT CALL OR OVERRIDE - this is framework code
+func _internal_setup():
+	# Call user setup
+	setup()
+
 ## Process entities in parallel using WorkerThreadPool
-func _process_parallel(entities: Array, delta: float) -> void:
+## Splits entities into batches and processes them concurrently
+func _process_parallel(entities: Array[Entity], components: Array, delta: float) -> void:
 	if entities.is_empty():
 		return
 
 	# Use OS thread count as fallback since WorkerThreadPool.get_thread_count() doesn't exist
 	var worker_count = OS.get_processor_count()
 	var batch_size = max(1, entities.size() / worker_count)
-	var batches = []
 	var tasks = []
 
-	# Split entities into batches
-	for i in range(0, entities.size(), batch_size):
-		var batch = entities.slice(i, min(i + batch_size, entities.size()))
-		batches.append(batch)
-
 	# Submit tasks for each batch
-	for batch in batches:
-		var task_id = WorkerThreadPool.add_task(_process_batch_callable.bind(batch, delta))
+	for batch_start in range(0, entities.size(), batch_size):
+		var batch_end = min(batch_start + batch_size, entities.size())
+
+		# Slice entities and components for this batch
+		var batch_entities = entities.slice(batch_start, batch_end)
+		var batch_components = []
+		for comp_array in components:
+			batch_components.append(comp_array.slice(batch_start, batch_end))
+
+		var task_id = WorkerThreadPool.add_task(_process_batch_callable.bind(batch_entities, batch_components, delta))
 		tasks.append(task_id)
 
 	# Wait for all tasks to complete
@@ -164,9 +188,8 @@ func _process_parallel(entities: Array, delta: float) -> void:
 
 
 ## Process a batch of entities - called by worker threads
-func _process_batch_callable(batch: Array, delta: float) -> void:
-	for entity in batch:
-		process(entity, delta)
+func _process_batch_callable(entities: Array[Entity], components: Array, delta: float) -> void:
+	process(entities, components, delta)
 
 
 ## Called by World.process() each frame - main entry point for system execution
@@ -176,72 +199,144 @@ func _handle(delta: float) -> void:
 	if not active or paused:
 		return
 
-	# Ensure query builder is available for both paths
-	if not q:
-		q = ECS.world.query
+	# DEBUG: Track execution time (compiled out in production, disabled via ECS.debug in perf tests)
+	var start_time_usec := 0
+	assert((func():
+		if not ECS.debug:
+			return true
+		start_time_usec = Time.get_ticks_usec()
+		lastRunData = {
+			"system_name": get_script().resource_path.get_file().get_basename(),
+			"frame_delta": delta,
+		}
+		return true
+	).call())
 
-	# Path 1: Process using subsystems (if defined)
-	if _has_subsystems:
-		if _try_run_subsystems(delta):
-			return # Subsystems handled everything, we're done
+	# Check if using subsystems or main query
+	var subs = sub_systems()
+	if not subs.is_empty():
+		_run_subsystems(delta)
+	else:
+		_run_process(delta)
 
-	# Path 2: Process using query() + process() (standard ECS pattern)
-	_run_query_system(delta)
+	# DEBUG: Record execution time (compiled out in production, disabled via ECS.debug in perf tests)
+	assert((func():
+		if not ECS.debug:
+			return true
+		var end_time_usec = Time.get_ticks_usec()
+		var execution_time_ms = (end_time_usec - start_time_usec) / 1000.0
+		lastRunData["execution_time_ms"] = execution_time_ms
+		return true
+	).call())
 
 
-## Execution path for subsystems - returns true if subsystems were executed
-func _try_run_subsystems(delta: float) -> bool:
+## Execution path for subsystems
+func _run_subsystems(delta: float) -> void:
 	# Lazy initialize subsystems cache
 	if _subsystems_cache.is_empty():
 		_subsystems_cache = sub_systems()
-		# If user didn't override sub_systems(), _has_subsystems is now false
-		if not _has_subsystems:
-			return false
 
 	# Execute each subsystem
 	var subsystem_index := 0
 	for subsystem_tuple in _subsystems_cache:
 		var subsystem_query := subsystem_tuple[0] as QueryBuilder
 		var subsystem_callable := subsystem_tuple[1] as Callable
-		var process_all_at_once: bool = subsystem_tuple[2] if subsystem_tuple.size() > 2 else false
 
-		var matching_entities := subsystem_query.execute() as Array
+		# Get matching archetypes and process them
+		var matching_archetypes = subsystem_query.archetypes()
+		var iterate_comps = subsystem_query._iterate_components
+		var total_entity_count := 0
 
-		if process_all_at_once:
-			# Call once with all entities
-			subsystem_callable.call(matching_entities, delta)
-		else:
-			# Call once per entity
-			for entity in matching_entities:
-				subsystem_callable.call(entity, delta)
+		# Process each archetype separately for cache locality
+		for archetype in matching_archetypes:
+			if archetype.entities.is_empty():
+				continue
+
+			total_entity_count += archetype.entities.size()
+
+			var components = []
+			# Gather component columns if iterate() was called
+			if not iterate_comps.is_empty():
+				for comp_type in iterate_comps:
+					var comp_path = comp_type.resource_path if comp_type is Script else comp_type.get_script().resource_path
+					components.append(archetype.get_column(comp_path))
+
+			# Call with archetype data
+			subsystem_callable.call(archetype.entities, components, delta)
 
 		assert(_update_debug_data(func(): return {
 			subsystem_index: {
 				"subsystem_index": subsystem_index,
-				"entity_count": matching_entities.size(),
-				"process_all": process_all_at_once
+				"entity_count": total_entity_count
 			}
 		}), 'Debug data')
 		subsystem_index += 1
 
-	return true
 
-
-## Execution path for standard query-based systems
-func _run_query_system(delta: float) -> void:
+## Unified execution path for main system query
+func _run_process(delta: float) -> void:
 	# Lazy initialize query cache
 	if not _query_cache:
 		_query_cache = query()
 
-	# Execute query to get matching entities
-	var matching_entities := _query_cache.execute()
+	# Lazy initialize component paths from iterate()
+	if _component_paths.is_empty():
+		var iterate_comps = _query_cache._iterate_components
+		# Cache component resource paths in iteration order (if iterate() was called)
+		for comp_type in iterate_comps:
+			var comp_path = comp_type.resource_path if comp_type is Script else comp_type.get_script().resource_path
+			_component_paths.append(comp_path)
 
-	# Early exit: no entities and we don't process when empty
-	if matching_entities.is_empty() and not process_empty:
+	# Get matching archetypes directly (zero-copy, cache-friendly)
+	var matching_archetypes = _query_cache.archetypes()
+	var iterate_comps = _query_cache._iterate_components
+	var has_entities = false
+	var total_entity_count := 0
+
+	# Check if we have any entities at all
+	for arch in matching_archetypes:
+		if not arch.entities.is_empty():
+			has_entities = true
+			total_entity_count += arch.entities.size()
+
+	# DEBUG: Track entity count (compiled out in production)
+	assert(_update_debug_data(func(): return {
+		"entity_count": total_entity_count,
+		"archetype_count": matching_archetypes.size()
+	}))
+
+	# If no entities and we don't process when empty, exit early
+	if not has_entities and not process_empty:
 		return
 
-	# Process entities (handles empty case, parallel processing, etc.)
-	process_all(matching_entities, delta)
+	# If no entities but process_empty is true, call once with empty data
+	if not has_entities and process_empty:
+		process([], [], delta)
+		return
+
+	# Iterate each archetype separately for cache locality
+	for arch in matching_archetypes:
+		var arch_entities = arch.entities
+
+		# Skip empty archetypes (we only call with actual entities)
+		if arch_entities.is_empty():
+			continue
+
+		var components = []
+
+		# Gather component columns if iterate() was called
+		if not iterate_comps.is_empty():
+			for comp_path in _component_paths:
+				components.append(arch.get_column(comp_path))
+
+		# Use parallel processing if enabled and we have enough entities
+		if parallel_processing and arch_entities.size() >= parallel_threshold:
+			assert(_update_debug_data(func(): return {"parallel": true, "threshold": parallel_threshold}))
+			_process_parallel(arch_entities, components, delta)
+		else:
+			# Call user's process() callback with this archetype's data
+			assert(_update_debug_data(func(): return {"parallel": false}))
+			process(arch_entities, components, delta)
 
 
 ## Debug helper - updates lastRunData (compiled out in production)

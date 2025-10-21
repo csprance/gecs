@@ -10,10 +10,11 @@ func deps():
 
 
 func query():
-	return q.with_all([C_TestC])
+	return ECS.world.query.with_all([C_TestC])
 
 
-func process(entity: Entity, delta: float):
-	var a = entity.get_component(C_TestC)
-	a.value += 1
-	print("TestASystem: ", a.value)
+func process(entities: Array[Entity], components: Array, delta: float):
+	for entity in entities:
+		var a = entity.get_component(C_TestC)
+		a.value += 1
+		print("TestASystem: ", a.value)

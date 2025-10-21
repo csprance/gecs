@@ -1,5 +1,5 @@
 ## Simple test system for performance benchmarking
-# test overriding process_all()
+# test batch processing
 class_name ProcessTestSystem_A
 extends System
 
@@ -8,19 +8,19 @@ var process_count: int = 0
 
 func _init(_process_empty: bool = false):
 	process_empty = _process_empty
-	
+
 
 func query():
-	return q.with_all([C_TestA])
+	return ECS.world.query.with_all([C_TestA])
 
 
-# override process_all function for batch processing
-func process_all(entities: Array, delta: float):
+# Unified process function for batch processing
+func process(entities: Array[Entity], components: Array, delta: float):
 	process_count += 1
-	var components = ECS.get_components(entities, C_TestA)
+	var c_test_a_components = ECS.get_components(entities, C_TestA)
 	for i in range(entities.size()):
 		# Simulate some light processing
-		var component = components[i]
+		var component = c_test_a_components[i]
 		if component:
 			# Access component data (simulates typical system work)
 			var _data = component.serialize()

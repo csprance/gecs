@@ -5,8 +5,9 @@ func deps():
 	return {Runs.After: [S_TestOrderE], Runs.Before: []}
 
 func query():
-	return q.with_all([C_TestOrderComponent])
+	return ECS.world.query.with_all([C_TestOrderComponent])
 
-func process(entity: Entity, delta: float):
-	var c = entity.get_component(C_TestOrderComponent)
-	c.execution_log.append("G")
+func process(entities: Array[Entity], components: Array, delta: float):
+	for entity in entities:
+		var c = entity.get_component(C_TestOrderComponent)
+		c.execution_log.append("G")

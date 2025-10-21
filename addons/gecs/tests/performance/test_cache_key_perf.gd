@@ -154,7 +154,7 @@ func test_cache_invalidation_impact(scale: int, test_parameters := [[100], [1000
 	var with_invalidation_ms = PerfHelpers.time_it(func():
 		for i in 100:
 			var entities = world.query.with_all([C_TestA, C_TestB]).execute()
-			world._query_result_cache.clear() # Force cache miss on next query
+			world._query_archetype_cache.clear() # Force cache miss on next query
 	)
 
 	# Time queries without invalidation (all cache hits after first)
