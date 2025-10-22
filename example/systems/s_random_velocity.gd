@@ -4,11 +4,10 @@ extends System
 @export var time_between_updates: float = 0.1 # Time in seconds between updates
 
 func query() -> QueryBuilder:
-	return ECS.world.query.with_all([C_Velocity, C_Timer]).enabled().iterate([C_Velocity, C_Timer])
+	return q.with_all([C_Velocity, C_Timer]).enabled().iterate([C_Velocity, C_Timer])
 
 
-## OPTIMIZED: Archetype mode for cache-friendly performance
-func process_batch(entities: Array[Entity], components: Array, delta: float) -> void:
+func process(entities: Array[Entity], components: Array, delta: float) -> void:
 	var velocities = components[0] # C_Velocity (first in iterate)
 	var timers = components[1] # C_Timer (second in iterate)
 

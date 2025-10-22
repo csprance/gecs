@@ -2,11 +2,10 @@ class_name LifetimeSystem
 extends System
 
 func query() -> QueryBuilder:
-	return ECS.world.query.with_all([C_Lifetime]).iterate([C_Lifetime])
+	return q.with_all([C_Lifetime]).iterate([C_Lifetime])
 
 
-## OPTIMIZED: Archetype mode for cache-friendly performance
-func process_batch(entities: Array[Entity], components: Array, delta: float) -> void:
+func process(entities: Array[Entity], components: Array, delta: float) -> void:
 	var lifetimes = components[0] # C_Lifetime (first in iterate)
 
 	# Iterate backwards to safely remove entities
