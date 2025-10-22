@@ -96,8 +96,11 @@ var _pool_size_limit: int = 10
 ## Track cache hits for performance monitoring
 var _cache_hits: int = 0
 var _cache_misses: int = 0
+## Track cache invalidations for debugging
+var _cache_invalidation_count: int = 0
+var _cache_invalidation_reasons: Dictionary = {} # reason -> count
 ## Global cache: resource_path -> Script (loaded once, reused forever)
-var _component_script_cache: Dictionary = {}  # String -> Script
+var _component_script_cache: Dictionary = {} # String -> Script
 
 #endregion Public Variables
 
@@ -226,10 +229,6 @@ func add_entity(entity: Entity, components = null, add_to_tree = true) -> void:
 	# This will trigger component_added signals which move the entity to the right archetype
 	if not Engine.is_editor_hint():
 		entity._initialize(components if components else [])
-
-	# Invalidate query caches since a new entity is added
-	# (Queries like query.all() would return different results)
-	cache_invalidated.emit()
 
 	entity_added.emit(entity)
 	
@@ -398,7 +397,7 @@ func add_system(system: System, topo_sort: bool = false) -> void:
 		systems_by_group[system.group] = []
 	systems_by_group[system.group].push_back(system)
 	system_added.emit(system)
-	system._internal_setup()  # Determines execution method and calls user setup()
+	system._internal_setup() # Determines execution method and calls user setup()
 	if topo_sort:
 		ArrayExtensions.topological_sort(systems_by_group)
 	assert(GECSEditorDebuggerMessages.system_added(system) if ECS.debug else true, '')
@@ -525,8 +524,7 @@ func _on_entity_component_added(entity: Entity, component: Resource) -> void:
 
 		# Only invalidate cache if a NEW archetype was created
 		if new_archetype.size() == 1:
-			_query_archetype_cache.clear()
-			cache_invalidated.emit()
+			_invalidate_cache("add_component_new_archetype")
 
 	# Emit Signal
 	component_added.emit(entity, component)
@@ -579,8 +577,7 @@ func _on_entity_component_removed(entity, component: Resource) -> void:
 
 		# Only invalidate cache if a NEW archetype was created
 		if new_archetype.size() == 1:
-			_query_archetype_cache.clear()
-			cache_invalidated.emit()
+			_invalidate_cache("add_component_new_archetype")
 
 	# We remove components immediately so this was called on the entity all we do is pass signal along
 	# Emit Signal
@@ -606,9 +603,6 @@ func _on_entity_relationship_added(entity: Entity, relationship: Relationship) -
 			reverse_relationship_index[rev_key] = []
 		reverse_relationship_index[rev_key].append(relationship.target)
 
-	# Invalidate QueryBuilder caches since relationship queries may be affected
-	cache_invalidated.emit()
-
 	# Emit Signal
 	relationship_added.emit(entity, relationship)
 	assert(GECSEditorDebuggerMessages.entity_relationship_added(entity, relationship) if ECS.debug else true, '')
@@ -624,9 +618,6 @@ func _on_entity_relationship_removed(entity: Entity, relationship: Relationship)
 		var rev_key = "reverse_" + key
 		if reverse_relationship_index.has(rev_key):
 			reverse_relationship_index[rev_key].erase(relationship.target)
-
-	# Invalidate QueryBuilder caches since relationship queries may be affected
-	cache_invalidated.emit()
 
 	# Emit Signal
 	relationship_removed.emit(entity, relationship)
@@ -795,7 +786,7 @@ func _query(all_components = [], any_components = [], exclude_components = [], e
 			# OPTIMIZATION: Filter by enabled state BEFORE checking component match
 			# This makes .enabled() queries skip entire archetypes instead of checking each entity
 			if enabled_filter != null and archetype.enabled_filter != enabled_filter:
-				continue  # Skip archetypes with wrong enabled state
+				continue # Skip archetypes with wrong enabled state
 
 			if archetype.matches_query(_all, _any, _exclude):
 				matching_archetypes.append(archetype)
@@ -896,7 +887,9 @@ func get_cache_stats() -> Dictionary:
 		"cache_misses": _cache_misses,
 		"hit_rate": hit_rate,
 		"cached_queries": _query_archetype_cache.size(),
-		"total_archetypes": archetypes.size()
+		"total_archetypes": archetypes.size(),
+		"invalidation_count": _cache_invalidation_count,
+		"invalidation_reasons": _cache_invalidation_reasons.duplicate()
 	}
 
 
@@ -904,6 +897,22 @@ func get_cache_stats() -> Dictionary:
 func reset_cache_stats() -> void:
 	_cache_hits = 0
 	_cache_misses = 0
+	_cache_invalidation_count = 0
+	_cache_invalidation_reasons.clear()
+
+
+## Internal helper to track cache invalidations (debug mode only)
+func _invalidate_cache(reason: String) -> void:
+	_query_archetype_cache.clear()
+	cache_invalidated.emit()
+
+	# Track invalidation stats (compiled out in release builds)
+	assert((func():
+		if ECS.debug:
+			_cache_invalidation_count += 1
+			_cache_invalidation_reasons[reason] = _cache_invalidation_reasons.get(reason, 0) + 1
+		return true
+	).call())
 
 
 ## Return a QueryBuilder instance to the pool for reuse
@@ -944,7 +953,6 @@ func _generate_query_cache_key(all_components: Array, any_components: Array, exc
 	# - No custom lambda sorting (3 sort_custom() calls eliminated)
 	# - Single sort() on plain integers (much faster than sorting objects with lambdas)
 	# - Godot's built-in array.hash() is highly optimized
-
 	# Collect instance IDs into a single array with domain markers
 	var ids: Array[int] = []
 	ids.resize(all_components.size() + any_components.size() + exclude_components.size() + 3)
@@ -953,19 +961,19 @@ func _generate_query_cache_key(all_components: Array, any_components: Array, exc
 
 	# Use domain markers to distinguish component types (all/any/exclude)
 	# This ensures [A,B] with_all != [A,B] with_any
-	ids[idx] = 1  # Domain marker for "all"
+	ids[idx] = 1 # Domain marker for "all"
 	idx += 1
 	for comp in all_components:
 		ids[idx] = comp.get_instance_id()
 		idx += 1
 
-	ids[idx] = 2  # Domain marker for "any"
+	ids[idx] = 2 # Domain marker for "any"
 	idx += 1
 	for comp in any_components:
 		ids[idx] = comp.get_instance_id()
 		idx += 1
 
-	ids[idx] = 3  # Domain marker for "exclude"
+	ids[idx] = 3 # Domain marker for "exclude"
 	idx += 1
 	for comp in exclude_components:
 		ids[idx] = comp.get_instance_id()
@@ -985,7 +993,7 @@ func _generate_query_cache_key(all_components: Array, any_components: Array, exc
 func _calculate_entity_signature(entity: Entity, enabled_filter_value: Variant = null) -> int:
 	# Get component resource paths
 	var comp_paths = entity.components.keys()
-	comp_paths.sort()  # Sort paths for consistent ordering
+	comp_paths.sort() # Sort paths for consistent ordering
 
 	# Convert paths to Script objects using cached scripts (load once, reuse forever)
 	var comp_scripts = []
@@ -1021,7 +1029,7 @@ func _get_or_create_archetype(signature: int, component_types: Array, enabled_fi
 
 		# ARCHETYPE OPTIMIZATION: Only invalidate cache when NEW archetype is created
 		# This is rare compared to entities moving between existing archetypes
-		_query_archetype_cache.clear()
+		_invalidate_cache("new_archetype_created")
 
 	return archetypes[signature]
 
