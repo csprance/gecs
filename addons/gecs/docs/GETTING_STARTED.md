@@ -103,19 +103,21 @@ func query():
     # Find all entities that have both transform and velocity
     return q.with_all([C_Transform, C_Velocity])
 
-func process(entity: Entity, delta: float):
-    var c_trs = entity.get_component(C_Transform) as C_Transform
-    var c_velocity = entity.get_component(C_Velocity) as C_Velocity
-    
-    # Move the entity based on its velocity
-    c_trs.position += c_velocity.velocity * delta
-    
-    # Update the actual entity position in the scene
-    entity.global_position = c_trs.position
-    
-    # Bounce off screen edges (simple example)
-    if c_trs.position.x > 10 or c_trs.position.x < -10:
-        c_velocity.velocity.x *= -1
+func process(entities: Array[Entity], components: Array, delta: float):
+    # Process each entity in the array
+    for entity in entities:
+        var c_trs = entity.get_component(C_Transform) as C_Transform
+        var c_velocity = entity.get_component(C_Velocity) as C_Velocity
+
+        # Move the entity based on its velocity
+        c_trs.position += c_velocity.velocity * delta
+
+        # Update the actual entity position in the scene
+        entity.global_position = c_trs.position
+
+        # Bounce off screen edges (simple example)
+        if c_trs.position.x > 10 or c_trs.position.x < -10:
+            c_velocity.velocity.x *= -1
 ```
 
 > 💡 **System Logic**: Query finds entities with required components, process() runs the movement logic on each entity every frame.

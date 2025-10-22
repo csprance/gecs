@@ -299,17 +299,18 @@ Identifier 'ComponentName' not found in current scope
 2. **Expensive Queries Rebuilt Every Frame**:
 
    ```gdscript
-   # ❌ Problem - Rebuilding queries
-   func process_all(delta: float):
-       var entities = ECS.world.query.with_all([C_ComponentA]).execute()
+   # ❌ Problem - Rebuilding queries in process
+   func process(entities: Array[Entity], components: Array, delta: float):
+       var custom_entities = ECS.world.query.with_all([C_ComponentA]).execute()
 
-   # ✅ Solution - Cache queries
-   var _cached_query: Query
-   func _ready():
-       _cached_query = ECS.world.query.with_all([C_ComponentA]).build()
+   # ✅ Solution - Use the system's query() method (automatically cached)
+   func query():
+       return q.with_all([C_ComponentA])  # Automatically cached by GECS
 
-   func process_all(delta: float):
-       var entities = _cached_query.execute()
+   func process(entities: Array[Entity], components: Array, delta: float):
+       # Just process the entities passed in - already filtered by query
+       for entity in entities:
+           # Process entity...
    ```
 
 ## 🔧 Integration Issues

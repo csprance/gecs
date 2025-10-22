@@ -82,8 +82,8 @@ ECS.world.add_entity(player)
 
 # System queries
 func query(): return q.with_all([C_Health, C_Position])
-func process(entity: Entity, delta: float): # Process single entity
-func process_all(entities: Array, delta: float): # Batch processing
+func process(entities: Array[Entity], components: Array, delta: float): # Unified signature
+# Use .iterate([Components]) for batch component array access
 
 # Relationships
 entity.add_relationship(Relationship.new(C_Likes.new(), target_entity))

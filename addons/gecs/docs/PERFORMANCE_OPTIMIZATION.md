@@ -105,15 +105,17 @@ class_name MovementSystem extends System
 func query():
     return q.with_all([C_Position, C_Velocity]).with_none([C_Frozen])
 
-func process(entity: Entity, delta: float):
-    var pos = entity.get_component(C_Position)
-    var vel = entity.get_component(C_Velocity)
-    pos.value += vel.value * delta
+func process(entities: Array[Entity], components: Array, delta: float):
+    # Process each entity
+    for entity in entities:
+        var pos = entity.get_component(C_Position)
+        var vel = entity.get_component(C_Velocity)
+        pos.value += vel.value * delta
 ```
 
 ```gdscript
 # ❌ Avoid - Manual query building in process methods
-func process_all(entities: Array, delta: float):
+func process(entities: Array[Entity], components: Array, delta: float):
     # Don't do this - bypasses automatic query optimization
     var custom_entities = ECS.world.query.with_all([C_Position]).execute()
     # Process custom_entities...
@@ -144,13 +146,14 @@ func query():
     return q.with_all([C_Position])
     # Matches almost everything in the game!
 
-func process(entity: Entity, delta: float):
-    # Now we need expensive type checking
-    if entity.has_component(C_Player):
-        # Handle player...
-    elif entity.has_component(C_Enemy):
-        # Handle enemy...
-    # This defeats the purpose of ECS!
+func process(entities: Array[Entity], components: Array, delta: float):
+    # Now we need expensive type checking in a loop
+    for entity in entities:
+        if entity.has_component(C_Player):
+            # Handle player...
+        elif entity.has_component(C_Enemy):
+            # Handle enemy...
+        # This defeats the purpose of ECS!
 ```
 
 ### 4. Smart Use of with_any Queries
@@ -320,18 +323,19 @@ Return early when no processing is needed:
 ```gdscript
 class_name HealthRegenerationSystem extends System
 
-func process(entity: Entity, delta: float):
-    var health = entity.get_component(C_Health)
+func process(entities: Array[Entity], components: Array, delta: float):
+    for entity in entities:
+        var health = entity.get_component(C_Health)
 
-    # Early exits for common cases
-    if health.current >= health.maximum:
-        return  # Already at full health
+        # Early exits for common cases
+        if health.current >= health.maximum:
+            continue  # Already at full health
 
-    if health.regeneration_rate <= 0:
-        return  # No regeneration configured
+        if health.regeneration_rate <= 0:
+            continue  # No regeneration configured
 
-    # Only do expensive work when needed
-    health.current = min(health.current + health.regeneration_rate * delta, health.maximum)
+        # Only do expensive work when needed
+        health.current = min(health.current + health.regeneration_rate * delta, health.maximum)
 ```
 
 ### Batch Entity Operations
