@@ -201,16 +201,12 @@ func _handle(delta: float) -> void:
 
 	# DEBUG: Track execution time (compiled out in production, disabled via ECS.debug in perf tests)
 	var start_time_usec := 0
-	assert((func():
-		if not ECS.debug:
-			return true
+	if ECS.debug:
 		start_time_usec = Time.get_ticks_usec()
 		lastRunData = {
 			"system_name": get_script().resource_path.get_file().get_basename(),
 			"frame_delta": delta,
 		}
-		return true
-	).call())
 
 	# Check if using subsystems or main query
 	var subs = sub_systems()
@@ -220,14 +216,10 @@ func _handle(delta: float) -> void:
 		_run_process(delta)
 
 	# DEBUG: Record execution time (compiled out in production, disabled via ECS.debug in perf tests)
-	assert((func():
-		if not ECS.debug:
-			return true
+	if ECS.debug:
 		var end_time_usec = Time.get_ticks_usec()
 		var execution_time_ms = (end_time_usec - start_time_usec) / 1000.0
 		lastRunData["execution_time_ms"] = execution_time_ms
-		return true
-	).call())
 
 
 ## Execution path for subsystems
@@ -264,12 +256,11 @@ func _run_subsystems(delta: float) -> void:
 			# Call with archetype data
 			subsystem_callable.call(archetype.entities, components, delta)
 
-		assert(_update_debug_data(func(): return {
-			subsystem_index: {
+		if ECS.debug:
+			lastRunData[subsystem_index] = {
 				"subsystem_index": subsystem_index,
 				"entity_count": total_entity_count
 			}
-		}), 'Debug data')
 		subsystem_index += 1
 
 
@@ -300,10 +291,9 @@ func _run_process(delta: float) -> void:
 			total_entity_count += arch.entities.size()
 
 	# DEBUG: Track entity count (compiled out in production)
-	assert(_update_debug_data(func(): return {
-		"entity_count": total_entity_count,
-		"archetype_count": matching_archetypes.size()
-	}))
+	if ECS.debug:
+		lastRunData["entity_count"] = total_entity_count
+		lastRunData["archetype_count"] = matching_archetypes.size()
 
 	# If no entities and we don't process when empty, exit early
 	if not has_entities and not process_empty:
@@ -331,11 +321,14 @@ func _run_process(delta: float) -> void:
 
 		# Use parallel processing if enabled and we have enough entities
 		if parallel_processing and arch_entities.size() >= parallel_threshold:
-			assert(_update_debug_data(func(): return {"parallel": true, "threshold": parallel_threshold}))
+			if ECS.debug:
+				lastRunData["parallel"] = true
+				lastRunData["threshold"] = parallel_threshold
 			_process_parallel(arch_entities, components, delta)
 		else:
 			# Call user's process() callback with this archetype's data
-			assert(_update_debug_data(func(): return {"parallel": false}))
+			if ECS.debug:
+				lastRunData["parallel"] = false
 			process(arch_entities, components, delta)
 
 

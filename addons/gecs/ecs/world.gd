@@ -148,7 +148,8 @@ func initialize():
 	add_entities(_entities)
 	_worldLogger.debug("_initialize Added Entities from Scene Tree: ", _entities)
 
-	assert(GECSEditorDebuggerMessages.world_init(self) if ECS.debug else true, '')
+	if ECS.debug:
+		assert(GECSEditorDebuggerMessages.world_init(self), '')
 
 
 #endregion Built-in Virtual Methods
@@ -162,7 +163,8 @@ func process(delta: float, group: String = "") -> void:
 		for system in systems_by_group[group]:
 			if system.active:
 				system._handle(delta)
-	assert(GECSEditorDebuggerMessages.process_world(delta, group) if ECS.debug else true, '')
+	if ECS.debug:
+		assert(GECSEditorDebuggerMessages.process_world(delta, group), '')
 
 
 ## Updates the pause behavior for all systems based on the provided paused state.
@@ -236,7 +238,8 @@ func add_entity(entity: Entity, components = null, add_to_tree = true) -> void:
 	for processor in ECS.entity_preprocessors:
 		processor.call(entity)
 
-	assert(GECSEditorDebuggerMessages.entity_added(entity) if ECS.debug else true, '')
+	if ECS.debug:
+		assert(GECSEditorDebuggerMessages.entity_added(entity), '')
 
 
 ## Adds multiple entities to the world.[br]
@@ -284,7 +287,8 @@ func remove_entity(entity) -> void:
 	entity.on_destroy()
 	entity.queue_free()
 
-	assert(GECSEditorDebuggerMessages.entity_removed(entity) if ECS.debug else true, '')
+	if ECS.debug:
+		assert(GECSEditorDebuggerMessages.entity_removed(entity), '')
 
 
 ## Removes an Array of [Entity] from the world.[br]
@@ -314,7 +318,8 @@ func disable_entity(entity) -> Entity:
 	entity.on_disable()
 	entity.set_process(false)
 	entity.set_physics_process(false)
-	assert(GECSEditorDebuggerMessages.entity_disabled(entity) if ECS.debug else true, '')
+	if ECS.debug:
+		assert(GECSEditorDebuggerMessages.entity_disabled(entity), '')
 	return entity
 
 
@@ -359,7 +364,8 @@ func enable_entity(entity: Entity, components = null) -> void:
 	entity.set_process(true)
 	entity.set_physics_process(true)
 	entity.on_enable()
-	assert(GECSEditorDebuggerMessages.entity_enabled(entity) if ECS.debug else true, '')
+	if ECS.debug:
+		assert(GECSEditorDebuggerMessages.entity_enabled(entity), '')
 
 
 ## Find an entity by its persistent ID
@@ -400,7 +406,8 @@ func add_system(system: System, topo_sort: bool = false) -> void:
 	system._internal_setup() # Determines execution method and calls user setup()
 	if topo_sort:
 		ArrayExtensions.topological_sort(systems_by_group)
-	assert(GECSEditorDebuggerMessages.system_added(system) if ECS.debug else true, '')
+	if ECS.debug:
+		assert(GECSEditorDebuggerMessages.system_added(system), '')
 
 
 ## Adds multiple systems to the world.
@@ -431,7 +438,8 @@ func remove_system(system, topo_sort: bool = false) -> void:
 	system.queue_free()
 	if topo_sort:
 		ArrayExtensions.topological_sort(systems_by_group)
-	assert(GECSEditorDebuggerMessages.system_removed(system) if ECS.debug else true, '')
+	if ECS.debug:
+		assert(GECSEditorDebuggerMessages.system_removed(system), '')
 
 
 ## Removes an Array of [System] from the world.[br]
@@ -539,7 +547,8 @@ func _on_entity_component_added(entity: Entity, component: Resource) -> void:
 		# and notify observers
 		entity.component_property_changed.connect(_on_entity_component_property_change)
 
-	assert(GECSEditorDebuggerMessages.entity_component_added(entity, component) if ECS.debug else true, '')
+	if ECS.debug:
+		assert(GECSEditorDebuggerMessages.entity_component_added(entity, component), '')
 
 
 ## Called when a component property changes through signals called on the components and connected to.[br]
@@ -560,9 +569,10 @@ func _on_entity_component_property_change(
 	_handle_observer_component_changed(entity, component, property_name, new_value, old_value)
 	# ARCHETYPE: No cache invalidation - property changes don't affect archetype membership
 	# Send the message to the debugger if we're in debug
-	assert(GECSEditorDebuggerMessages.entity_component_property_changed(
-		entity, component, property_name, old_value, new_value
-	) if ECS.debug else true, '')
+	if ECS.debug:
+		assert(GECSEditorDebuggerMessages.entity_component_property_changed(
+			entity, component, property_name, old_value, new_value
+		), '')
 
 
 ## [signal Entity.component_removed] Callback when a component is removed from an entity.[br]
@@ -586,7 +596,8 @@ func _on_entity_component_removed(entity, component: Resource) -> void:
 	# Handle observers for component removed
 	_handle_observer_component_removed(entity, component)
 
-	assert(GECSEditorDebuggerMessages.entity_component_removed(entity, component) if ECS.debug else true, '')
+	if ECS.debug:
+		assert(GECSEditorDebuggerMessages.entity_component_removed(entity, component), '')
 	
 
 ## (Optional) Update index when a relationship is added.
@@ -605,7 +616,8 @@ func _on_entity_relationship_added(entity: Entity, relationship: Relationship) -
 
 	# Emit Signal
 	relationship_added.emit(entity, relationship)
-	assert(GECSEditorDebuggerMessages.entity_relationship_added(entity, relationship) if ECS.debug else true, '')
+	if ECS.debug:
+		assert(GECSEditorDebuggerMessages.entity_relationship_added(entity, relationship), '')
 
 
 ## (Optional) Update index when a relationship is removed.
@@ -621,7 +633,8 @@ func _on_entity_relationship_removed(entity: Entity, relationship: Relationship)
 
 	# Emit Signal
 	relationship_removed.emit(entity, relationship)
-	assert(GECSEditorDebuggerMessages.entity_relationship_removed(entity, relationship) if ECS.debug else true, '')
+	if ECS.debug:
+		assert(GECSEditorDebuggerMessages.entity_relationship_removed(entity, relationship), '')
 
 
 ## Adds a single [Observer] to the [World].
@@ -714,7 +727,11 @@ func _handle_observer_component_removed(entity: Entity, component: Resource) -> 
 	for reactive_system in observers:
 		# Get the component that this system is watching
 		var watch_component = reactive_system.watch()
-		if watch_component and watch_component.resource_path == component.resource_path:
+		if (
+			watch_component
+			and component and component.get_script()
+			and watch_component.resource_path == component.get_script().resource_path
+		):
 			# For removal, we don't check the query since the component is already removed
 			# Just notify the system
 			reactive_system.on_component_removed(entity, component)
@@ -906,13 +923,10 @@ func _invalidate_cache(reason: String) -> void:
 	_query_archetype_cache.clear()
 	cache_invalidated.emit()
 
-	# Track invalidation stats (compiled out in release builds)
-	assert((func():
-		if ECS.debug:
-			_cache_invalidation_count += 1
-			_cache_invalidation_reasons[reason] = _cache_invalidation_reasons.get(reason, 0) + 1
-		return true
-	).call())
+	# Track invalidation stats (debug mode only)
+	if ECS.debug:
+		_cache_invalidation_count += 1
+		_cache_invalidation_reasons[reason] = _cache_invalidation_reasons.get(reason, 0) + 1
 
 
 ## Return a QueryBuilder instance to the pool for reuse

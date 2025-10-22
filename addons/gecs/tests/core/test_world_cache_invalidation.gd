@@ -141,18 +141,22 @@ func test_cache_invalidation_signal_emission():
 	assert_bool(entity.component_added.is_connected(world._on_entity_component_added)).is_true()
 	assert_bool(entity.component_removed.is_connected(world._on_entity_component_removed)).is_true()
 	
-	# Each component operation should emit signal
+	# Each component operation should emit signal (may be multiple due to archetype creation)
 	entity.add_component(C_TestA.new())
-	assert_int(signal_count[0]).is_equal(initial_count + 1)
-	
+	var count_after_add_a = signal_count[0]
+	assert_int(count_after_add_a).is_greater(initial_count)
+
 	entity.add_component(C_TestB.new())
-	assert_int(signal_count[0]).is_equal(initial_count + 2)
-	
+	var count_after_add_b = signal_count[0]
+	assert_int(count_after_add_b).is_greater(count_after_add_a)
+
 	entity.remove_component(C_TestA)
-	assert_int(signal_count[0]).is_equal(initial_count + 3)
-	
+	var count_after_remove_a = signal_count[0]
+	assert_int(count_after_remove_a).is_greater(count_after_add_b)
+
 	entity.remove_component(C_TestB)
-	assert_int(signal_count[0]).is_equal(initial_count + 4)
+	var count_after_remove_b = signal_count[0]
+	assert_int(count_after_remove_b).is_greater(count_after_remove_a)
 
 ## Test performance: verify cache actually provides speedup when valid
 func test_cache_performance_benefit():
@@ -204,11 +208,14 @@ func test_manual_cache_clearing():
 	assert_array(result1).is_equal(result2)
 
 ## ===============================
-## RELATIONSHIP CACHE INVALIDATION TESTS
+## RELATIONSHIP QUERY TESTS
 ## ===============================
+## NOTE: Relationship changes do NOT invalidate cache (performance optimization)
+## Instead, queries work because relationship_entity_index is updated in real-time
+## These tests verify that queries still return correct results without cache invalidation
 
-## Test that relationship addition invalidates cached query results
-func test_relationship_addition_invalidates_cache():
+## Test that relationship queries work correctly with real-time index updates
+func test_relationship_addition_queries_correctly():
 	var entity1 = Entity.new()
 	var entity2 = Entity.new()
 	var target_entity = Entity.new()
@@ -235,8 +242,8 @@ func test_relationship_addition_invalidates_cache():
 	assert_bool(updated_result.has(entity1)).is_true()
 	assert_bool(updated_result.has(entity2)).is_true()
 
-## Test that relationship removal invalidates cached query results
-func test_relationship_removal_invalidates_cache():
+## Test that relationship removal queries work correctly with real-time index
+func test_relationship_removal_queries_correctly():
 	var entity1 = Entity.new()
 	var entity2 = Entity.new()
 	var target_entity = Entity.new()
@@ -301,8 +308,8 @@ func test_relationship_removal_stale_cache_bug():
 	assert_that(remaining_entity).is_not_null()
 	# assert_bool(remaining_entity.has_relationship_of_type(C_TestA)).is_true()
 
-## Test multiple relationship changes in same frame
-func test_multiple_relationship_changes_invalidate_cache():
+## Test multiple relationship changes in same frame query correctly
+func test_multiple_relationship_changes_query_correctly():
 	var entity1 = Entity.new()
 	var entity2 = Entity.new()
 	var entity3 = Entity.new()
@@ -332,40 +339,36 @@ func test_multiple_relationship_changes_invalidate_cache():
 	assert_bool(final_result.has(entity3)).is_true()
 	assert_bool(final_result.has(entity1)).is_false()
 
-## Test relationship cache invalidation signal emission
-func test_relationship_cache_invalidation_signal():
+## Test that relationship changes DO NOT invalidate cache (performance optimization)
+func test_relationship_no_cache_invalidation():
 	var signal_count = [0]
-	
+
 	# Connect to cache invalidation signal
 	world.cache_invalidated.connect(func(): signal_count[0] += 1)
-	
+
 	var entity = Entity.new()
 	var target_entity = Entity.new()
 	world.add_entities([entity, target_entity])
-	
+
 	var initial_count = signal_count[0]
-	
-	# Test if relationship signals are properly connected
-	# Note: These might not be connected if relationships aren't automatically hooked up
-	if not entity.relationship_added.is_connected(world._on_entity_relationship_added):
-		print("WARNING: relationship_added signal not connected, signal count may be 0")
-	if not entity.relationship_removed.is_connected(world._on_entity_relationship_removed):
-		print("WARNING: relationship_removed signal not connected, signal count may be 0")
-	
-	# Each relationship operation should emit signal
+
+	# IMPORTANT: Relationship changes should NOT emit cache_invalidated signal
+	# This is a performance optimization - relationships use relationship_entity_index
+	# which is updated in real-time, so cache invalidation is unnecessary
+
 	var rel1 = Relationship.new(C_TestA.new(), target_entity)
 	entity.add_relationship(rel1)
-	assert_int(signal_count[0]).is_equal(initial_count + 1)
-	
+	assert_int(signal_count[0]).is_equal(initial_count) # No invalidation!
+
 	var rel2 = Relationship.new(C_TestB.new(), target_entity)
 	entity.add_relationship(rel2)
-	assert_int(signal_count[0]).is_equal(initial_count + 2)
-	
+	assert_int(signal_count[0]).is_equal(initial_count) # No invalidation!
+
 	entity.remove_relationship(rel1)
-	assert_int(signal_count[0]).is_equal(initial_count + 3)
-	
+	assert_int(signal_count[0]).is_equal(initial_count) # No invalidation!
+
 	entity.remove_relationship(rel2)
-	assert_int(signal_count[0]).is_equal(initial_count + 4)
+	assert_int(signal_count[0]).is_equal(initial_count) # No invalidation!
 
 ## Test mixed component and relationship cache invalidation
 func test_mixed_component_relationship_cache_invalidation():

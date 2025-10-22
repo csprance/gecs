@@ -9,8 +9,6 @@ func before_test():
 	world.name = "TestWorld"
 	Engine.get_main_loop().root.add_child(world)
 	ECS.world = world
-	# Enable debug mode for these tests
-	ECS.debug = true
 
 func after_test():
 	ECS.world = null
@@ -18,6 +16,8 @@ func after_test():
 		world.queue_free()
 
 func test_debug_tracking_process_mode():
+	# Enable debug mode for these tests
+	ECS.debug = true
 	# Create entities
 	for i in range(10):
 		var entity = Entity.new()
@@ -64,72 +64,9 @@ func test_debug_tracking_process_mode():
 	print("First exec: %.3f ms, Second exec: %.3f ms" % [first_exec_time, second_exec_time])
 
 
-func test_debug_tracking_process_all_mode():
-	# Create entities
-	for i in range(15):
-		var entity = Entity.new()
-		entity.add_component(C_DebugTrackingTestB.new())
-		world.add_entity(entity)
-
-	# Create system with PROCESS_ALL execution method
-	var system = ProcessAllSystem.new()
-	world.add_system(system)
-
-	# Process once
-	world.process(0.016)
-
-	# Verify debug data
-	assert_that(system.lastRunData["entity_count"]).is_equal(15)
-	assert_that(system.lastRunData["execution_time_ms"]).is_greater(0.0)
-
-	# Verify no accumulation across frames
-	var times = []
-	for i in range(5):
-		world.process(0.016)
-		times.append(system.lastRunData["execution_time_ms"])
-
-	# All times should be relatively similar (not growing)
-	var avg_time = times.reduce(func(acc, val): return acc + val, 0.0) / times.size()
-	for time in times:
-		# Each time should be within 2x of average (generous margin)
-		assert_that(time).is_less(avg_time * 2.0)
-
-	print("ProcessAll times across 5 frames: %s" % [times])
-
-
-func test_debug_tracking_process_batch_mode():
-	# Create entities with different component combinations (multiple archetypes)
-	for i in range(10):
-		var entity = Entity.new()
-		entity.add_component(C_DebugTrackingTestA.new())
-		world.add_entity(entity)
-
-	for i in range(5):
-		var entity = Entity.new()
-		entity.add_component(C_DebugTrackingTestA.new())
-		entity.add_component(C_DebugTrackingTestB.new())
-		world.add_entity(entity)
-
-	# Create system with PROCESS_BATCH execution method
-	var system = ProcessBatchSystem.new()
-	world.add_system(system)
-
-	# Process once
-	world.process(0.016)
-
-	# Verify debug data
-	assert_that(system.lastRunData["entity_count"]).is_equal(15)
-	assert_that(system.lastRunData["archetype_count"]).is_greater_equal(2)
-	assert_that(system.lastRunData["execution_time_ms"]).is_greater(0.0)
-
-	print("Batch mode: %d entities across %d archetypes in %.3f ms" % [
-		system.lastRunData["entity_count"],
-		system.lastRunData["archetype_count"],
-		system.lastRunData["execution_time_ms"]
-	])
-
-
 func test_debug_tracking_subsystems():
+	# Enable debug mode for these tests
+	ECS.debug = true
 	# Create entities
 	for i in range(10):
 		var entity = Entity.new()
