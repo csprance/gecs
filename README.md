@@ -16,10 +16,11 @@ class_name MovementSystem extends System
 func query():
     return q.with_all([C_Velocity, C_Transform])
 
-func process(entity: Entity, delta: float):
-    var velocity = entity.get_component(C_Velocity)
-    var transform = entity.get_component(C_Transform)
-    transform.position += velocity.direction * delta
+func process(entities: Array[Entity], components: Array, delta: float):
+    for entity in entities:
+        var velocity = entity.get_component(C_Velocity)
+        var transform = entity.get_component(C_Transform)
+        transform.position += velocity.direction * delta
 ```
 
 ## ⚡ Quick Start
