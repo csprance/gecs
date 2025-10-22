@@ -11,16 +11,22 @@ player.add_component(C_Health.new(100))
 player.add_component(C_Velocity.new(Vector2(5, 0)))
 
 # Systems process entities with specific components
-class_name MovementSystem extends System
+class_name VelocitySystem extends System
 
-func query():
-    return q.with_all([C_Velocity, C_Transform])
+func query() -> QueryBuilder:
+	return q.with_all([C_Velocity, C_Transform]).iterate([C_Velocity, C_Transform])
 
-func process(entities: Array[Entity], components: Array, delta: float):
-    for entity in entities:
-        var velocity = entity.get_component(C_Velocity)
-        var transform = entity.get_component(C_Transform)
-        transform.position += velocity.direction * delta
+
+func process(entities: Array[Entity], components: Array, delta: float) -> void:
+	var velocities = components[0] # C_Velocity (first in iterate)
+	var transforms = components[1] # C_Transform (second in iterate)
+
+	# Process all velocity and transform components on entities that match query
+	for i in entities.size():
+		var velocity = velocities[i]
+		var transform = transforms[i]
+		transform.transform.global_position += velocity.velocity * delta
+
 ```
 
 ## ⚡ Quick Start
