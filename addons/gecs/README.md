@@ -92,6 +92,12 @@ var likers = ECS.world.query.with_relationship([Relationship.new(C_Likes.new(), 
 # Component queries
 var low_health = ECS.world.query.with_all([{C_Health: {"current": {"_lt": 20}}}]).execute()
 
+# Order Independence: with_all/with_any/with_node component order does not affect matching or caching.
+# The framework normalizes component sets internally so these yield identical results:
+# ECS.world.query.with_all([C_Health, C_Position])
+# ECS.world.query.with_all([C_Position, C_Health])
+# Cache keys and archetype matching are order-insensitive.
+
 # Serialization
 var data = ECS.serialize(ECS.world.query.with_all([C_Persistent]))
 ECS.save(data, "user://savegame.tres", true)  # Binary format

@@ -783,8 +783,8 @@ func _query(all_components = [], any_components = [], exclude_components = [], e
 			# Filter by enabled state
 			return entities.filter(func(e): return e.enabled == enabled_filter)
 
-	# OPTIMIZATION: Use pre-calculated cache key if provided (avoids FNV-1a hash recalculation)
-	var cache_key = precalculated_cache_key if precalculated_cache_key != -1 else _generate_query_cache_key(all_components, any_components, exclude_components)
+	# OPTIMIZATION: Use pre-calculated cache key if provided (avoids hash recalculation)
+	var cache_key = precalculated_cache_key if precalculated_cache_key != -1 else QueryCacheKey.build(all_components, any_components, exclude_components)
 
 	# Check if we have cached matching archetypes for this query
 	var matching_archetypes: Array[Archetype] = []
@@ -936,71 +936,6 @@ func _return_query_builder_to_pool(query_builder: QueryBuilder) -> void:
 		_query_builder_pool.append(query_builder)
 
 
-## Generate a cache key for query parameters
-##
-## Uses FNV-1a hash algorithm for excellent collision resistance and speed.
-## This is a non-commutative hash, so we sort component arrays first to ensure
-## queries with the same components produce identical cache keys regardless of order.
-##
-## Algorithm: FNV-1a (Fowler-Noll-Vo)
-## - Industry standard for hash tables (used by Python, Redis, etc.)
-## - Excellent avalanche properties (small input changes -> large hash changes)
-## - Very low collision rate even with millions of items
-## - Fast: single multiply and XOR per item
-##
-## The hash space is 2^64, providing excellent distribution for archetypes.
-## Collision probability with 10,000 archetypes: ~0.00000001%
-##
-## Time complexity: O(n log n) due to sorting, where n is total components
-## Space complexity: O(1) - in-place sorting
-##
-## References:
-## - FNV hash: http://www.isthe.com/chongo/tech/comp/fnv/
-## - Hash quality analysis: https://softwareengineering.stackexchange.com/q/49550
-func _generate_query_cache_key(all_components: Array, any_components: Array, exclude_components: Array) -> int:
-	# OPTIMIZED: Use sorted instance IDs directly with Godot's built-in array hash
-	# Instance IDs are unique and stable for script singletons, so we can combine them directly
-	# This avoids expensive array duplication, custom sorting, and manual FNV-1a hashing
-	#
-	# Performance: ~6x faster than FNV-1a approach
-	# - No array duplication (3 duplicate() calls eliminated)
-	# - No custom lambda sorting (3 sort_custom() calls eliminated)
-	# - Single sort() on plain integers (much faster than sorting objects with lambdas)
-	# - Godot's built-in array.hash() is highly optimized
-	# Collect instance IDs into a single array with domain markers
-	var ids: Array[int] = []
-	ids.resize(all_components.size() + any_components.size() + exclude_components.size() + 3)
-
-	var idx = 0
-
-	# Use domain markers to distinguish component types (all/any/exclude)
-	# This ensures [A,B] with_all != [A,B] with_any
-	ids[idx] = 1 # Domain marker for "all"
-	idx += 1
-	for comp in all_components:
-		ids[idx] = comp.get_instance_id()
-		idx += 1
-
-	ids[idx] = 2 # Domain marker for "any"
-	idx += 1
-	for comp in any_components:
-		ids[idx] = comp.get_instance_id()
-		idx += 1
-
-	ids[idx] = 3 # Domain marker for "exclude"
-	idx += 1
-	for comp in exclude_components:
-		ids[idx] = comp.get_instance_id()
-		idx += 1
-
-	# Sort once (in-place, no duplication needed)
-	# Sorting ensures query order doesn't matter: with_all([A,B]) == with_all([B,A])
-	ids.sort()
-
-	# Use Godot's built-in hash (fast and collision-resistant)
-	return ids.hash()
-
-
 ## Calculate archetype signature for an entity based on its components
 ## Uses the same hash function as queries for consistency
 ## An entity signature is just a query with all its components (no any/exclude)
@@ -1025,7 +960,7 @@ func _calculate_entity_signature(entity: Entity, enabled_filter_value: Variant =
 
 	# Use the SAME hash function as queries - entity is just "all components, no any/exclude"
 	# Add enabled state as a synthetic "component" for signature uniqueness
-	var signature = _generate_query_cache_key(comp_scripts, [], [])
+	var signature = QueryCacheKey.build(comp_scripts, [], [])
 
 	# Mix in enabled state (XOR with shifted enabled marker to avoid collisions)
 	signature ^= (enabled_marker << 31)

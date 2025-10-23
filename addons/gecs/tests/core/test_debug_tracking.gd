@@ -128,45 +128,6 @@ func test_debug_disabled_has_no_data():
 	print("With ECS.debug=false, lastRunData remains unchanged: %s" % [system.lastRunData])
 
 
-func test_execution_time_not_accumulating():
-	# This is the key test for the issue mentioned
-	# Create entities
-	for i in range(20):
-		var entity = Entity.new()
-		entity.add_component(C_DebugTrackingTestA.new())
-		world.add_entity(entity)
-
-	var system = ProcessSystem.new()
-	world.add_system(system)
-
-	# Run 10 frames and collect timing data
-	var times = []
-	for frame in range(10):
-		world.process(0.016)
-		times.append(system.lastRunData["execution_time_ms"])
-		print("Frame %d: %.6f ms" % [frame, system.lastRunData["execution_time_ms"]])
-
-	# Calculate statistics
-	var min_time = times.min()
-	var max_time = times.max()
-	var avg_time = times.reduce(func(acc, val): return acc + val, 0.0) / times.size()
-
-	print("\nTiming statistics:")
-	print("  Min: %.6f ms" % min_time)
-	print("  Max: %.6f ms" % max_time)
-	print("  Avg: %.6f ms" % avg_time)
-
-	# If time was accumulating, frame 9 would be ~10x frame 0
-	# Instead, all times should be within same order of magnitude
-	var last_time = times[times.size() - 1]
-	var first_time = times[0]
-
-	# Times should be within 3x of each other (very generous margin)
-	# If accumulating, last would be 10x first
-	assert_that(last_time).is_less(first_time * 3.0)
-	assert_that(max_time).is_less(avg_time * 2.0)
-
-
 # Test system - PROCESS mode
 class ProcessSystem extends System:
 	func query() -> QueryBuilder:

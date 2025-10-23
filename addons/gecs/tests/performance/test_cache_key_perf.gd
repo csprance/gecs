@@ -41,7 +41,7 @@ func test_cache_key_generation(num_components: int, test_parameters := [[1], [5]
 	# Time generating cache keys 10000 times
 	var time_ms = PerfHelpers.time_it(func():
 		for i in 10000:
-			var key = world._generate_query_cache_key(all_components, any_components, exclude_components)
+			var key = QueryCacheKey.build(all_components, any_components, exclude_components)
 	)
 
 	PerfHelpers.record_result("cache_key_generation", num_components, time_ms)

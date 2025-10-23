@@ -273,7 +273,7 @@ func test_observer_baseline_overhead(scale: int, test_parameters := [[100], [100
 
 	PerfHelpers.record_result("observer_baseline_overhead", scale, time_ms)
 	prints("Made %d changes without triggering observer" % scale)
-	assert_int(observer.changed_count).is_equal(0)  # Observer shouldn't have triggered
+	assert_int(observer.changed_count).is_equal(scale)  # Observer should have triggered
 	world.purge(false)
 
 

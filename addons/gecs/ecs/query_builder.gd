@@ -555,7 +555,7 @@ func get_cache_key() -> int:
 	if not _cache_key_valid:
 		# Calculate using World's hash function
 		if _world:
-			_cache_key = _world._generate_query_cache_key(
+			_cache_key = QueryCacheKey.build(
 				_all_components,
 				_any_components,
 				_exclude_components
