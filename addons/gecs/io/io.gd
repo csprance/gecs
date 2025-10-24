@@ -119,6 +119,31 @@ static func deserialize(gecs_filepath: String) -> Array[Entity]:
 		push_error("GECS deserialize: File not found: " + gecs_filepath)
 		return []
 
+## Deserialize [GecsData] into a list of [Entity](s).[br]
+## This can be used so you can serialize entities to GECS Data and then Deserailize that [GecsSData] later
+static func deserialize_gecs_data(gecs_data: GecsData) -> Array[Entity]:
+	var entities: Array[Entity] = []
+	var id_to_entity: Dictionary = {} # id -> Entity
+
+	# Pass 1: Create all entities and build ID mapping
+	for entity_data in gecs_data.entities:
+		var entity = _deserialize_entity(entity_data)
+		entities.append(entity)
+		id_to_entity[entity.id] = entity
+
+	# Pass 2: Restore relationships using ID mapping
+	for i in entities.size():
+		var entity = entities[i]
+		var entity_data = gecs_data.entities[i]
+
+		# Restore relationships
+		for rel_data in entity_data.relationships:
+			var relationship = rel_data.to_relationship(id_to_entity)
+			if relationship != null:
+				entity.add_relationship(relationship)
+			# Note: Invalid relationships are skipped with warning logged in to_relationship()
+	
+	return entities
 
 ## Helper function to resolve the effective configuration for an entity
 ## Priority: provided_config > entity.serialize_config > world.default_serialize_config > fallback
@@ -163,28 +188,8 @@ static func _load_from_path(file_path: String) -> Array[Entity]:
 		return []
 	
 	print("GECS _load_from_path: Loaded GecsData with ", gecs_data.entities.size(), " entities")
-	var entities: Array[Entity] = []
-	var id_to_entity: Dictionary = {} # id -> Entity
-
-	# Pass 1: Create all entities and build ID mapping
-	for entity_data in gecs_data.entities:
-		var entity = _deserialize_entity(entity_data)
-		entities.append(entity)
-		id_to_entity[entity.id] = entity
-
-	# Pass 2: Restore relationships using ID mapping
-	for i in entities.size():
-		var entity = entities[i]
-		var entity_data = gecs_data.entities[i]
-
-		# Restore relationships
-		for rel_data in entity_data.relationships:
-			var relationship = rel_data.to_relationship(id_to_entity)
-			if relationship != null:
-				entity.add_relationship(relationship)
-			# Note: Invalid relationships are skipped with warning logged in to_relationship()
 	
-	return entities
+	return deserialize_gecs_data(gecs_data)
 
 
 ## Helper function to deserialize a single entity with its components and uuid
