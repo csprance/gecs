@@ -1,0 +1,28 @@
+[project]
+name = "gecs-perf-viewer"
+version = "0.1.0"
+description = "GECS performance JSONL results explorer"
+authors = [{name = "GECS Maintainers"}]
+readme = "README.md"
+requires-python = ">=3.11"
+license = {text = "MIT"}
+keywords = ["gecs", "ecs", "performance", "godot"]
+
+# Minimal dependencies; keep optional for lightweight install.
+dependencies = [
+  "pandas>=2.0",
+  "plotly>=5.15"
+]
+
+[project.scripts]
+perf-viewer = "perf_viewer.cli:main"
+
+[tool.uv]
+package = true
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[tool.perf_viewer]
+# future config for multi-test overlay etc.
