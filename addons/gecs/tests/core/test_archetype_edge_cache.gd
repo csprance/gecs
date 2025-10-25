@@ -11,12 +11,6 @@ extends GdUnitTestSuite
 ## 3. Entity B gets same component -> uses cached edge to archetype X
 ## 4. BUG: archetype X not in world.archetypes, so queries can't find Entity B
 
-# Components for testing
-class TestComponentA extends Component:
-	pass
-
-class TestComponentB extends Component:
-	pass
 
 var runner: GdUnitSceneRunner
 var world: World
@@ -37,15 +31,15 @@ func after_test():
 func test_archetype_reregistered_after_edge_cache_retrieval():
 	# ARRANGE: Create two entities with same initial components
 	var entity1 = Entity.new()
-	entity1.add_component(TestComponentA.new())
+	entity1.add_component(C_TestA.new())
 	world.add_entities([entity1])
 
 	var entity2 = Entity.new()
-	entity2.add_component(TestComponentA.new())
+	entity2.add_component(C_TestA.new())
 	world.add_entities([entity2])
 
 	# ACT 1: Add ComponentB to entity1 (creates new archetype + edge cache)
-	var comp_b1 = TestComponentB.new()
+	var comp_b1 = C_TestB.new()
 	entity1.add_component(comp_b1)
 
 	# Get the archetype signature for A+B combination
@@ -64,14 +58,14 @@ func test_archetype_reregistered_after_edge_cache_retrieval():
 	# ACT 3: Add ComponentB to entity2 (should use edge cache)
 	# This is where the bug would occur - archetype retrieved from cache
 	# but not re-registered with world
-	var comp_b2 = TestComponentB.new()
+	var comp_b2 = C_TestB.new()
 	entity2.add_component(comp_b2)
 
 	# ASSERT: Archetype should be back in world.archetypes
 	assert_bool(world.archetypes.has(signature_with_b)).is_true()
 
 	# ASSERT: Query should find entity2
-	var query = QueryBuilder.new(world).with_all([TestComponentA, TestComponentB])
+	var query = QueryBuilder.new(world).with_all([C_TestA, C_TestB])
 	var results = query.execute()
 	assert_int(results.size()).is_equal(1)
 	assert_object(results[0]).is_same(entity2)
@@ -80,32 +74,31 @@ func test_archetype_reregistered_after_edge_cache_retrieval():
 ## Test that queries find entities in edge-cached archetypes
 func test_query_finds_entities_in_edge_cached_archetype():
 	# This reproduces the exact projectile bug scenario
-
 	# ARRANGE: Create 3 projectiles
 	var projectile1 = Entity.new()
-	projectile1.add_component(TestComponentA.new())  # Simulates C_Projectile
+	projectile1.add_component(C_TestA.new()) # Simulates C_Projectile
 	world.add_entities([projectile1])
 
 	var projectile2 = Entity.new()
-	projectile2.add_component(TestComponentA.new())
+	projectile2.add_component(C_TestA.new())
 	world.add_entities([projectile2])
 
 	var projectile3 = Entity.new()
-	projectile3.add_component(TestComponentA.new())
+	projectile3.add_component(C_TestA.new())
 	world.add_entities([projectile3])
 
 	# ACT 1: First projectile collides (adds ComponentB = C_Collision)
-	projectile1.add_component(TestComponentB.new())
+	projectile1.add_component(C_TestB.new())
 
 	# Verify query finds it
-	var collision_query = QueryBuilder.new(world).with_all([TestComponentA, TestComponentB])
+	var collision_query = QueryBuilder.new(world).with_all([C_TestA, C_TestB])
 	assert_int(collision_query.execute().size()).is_equal(1)
 
 	# ACT 2: First projectile processed and removed (empties collision archetype)
 	world.remove_entity(projectile1)
 
 	# ACT 3: Second projectile collides (edge cache used)
-	projectile2.add_component(TestComponentB.new())
+	projectile2.add_component(C_TestB.new())
 
 	# ASSERT: Query should find second projectile (BUG: it wouldn't before fix)
 	var results = collision_query.execute()
@@ -113,7 +106,7 @@ func test_query_finds_entities_in_edge_cached_archetype():
 	assert_object(results[0]).is_same(projectile2)
 
 	# ACT 4: Third projectile also collides while second still exists
-	projectile3.add_component(TestComponentB.new())
+	projectile3.add_component(C_TestB.new())
 
 	# ASSERT: Query should find both projectiles
 	results = collision_query.execute()
@@ -123,21 +116,20 @@ func test_query_finds_entities_in_edge_cached_archetype():
 ## Test rapid add/remove cycles don't lose archetypes
 func test_rapid_archetype_cycling():
 	# Tests the exact pattern: create -> empty -> reuse via cache
-
 	var entities = []
 	for i in range(5):
 		var e = Entity.new()
-		e.add_component(TestComponentA.new())
+		e.add_component(C_TestA.new())
 		world.add_entities([e])
 		entities.append(e)
 
 	# Cycle through adding/removing ComponentB
 	for cycle in range(3):
 		# Add ComponentB to first entity (creates/reuses archetype)
-		entities[0].add_component(TestComponentB.new())
+		entities[0].add_component(C_TestB.new())
 
 		# Query should find it
-		var query = QueryBuilder.new(world).with_all([TestComponentA, TestComponentB])
+		var query = QueryBuilder.new(world).with_all([C_TestA, C_TestB])
 		var results = query.execute()
 		assert_int(results.size()).is_equal(1)
 
@@ -146,10 +138,10 @@ func test_rapid_archetype_cycling():
 
 		# Create new entity for next cycle
 		entities[0] = Entity.new()
-		entities[0].add_component(TestComponentA.new())
+		entities[0].add_component(C_TestA.new())
 		world.add_entities([entities[0]])
 
 	# Final cycle - should still work
-	entities[0].add_component(TestComponentB.new())
-	var final_query = QueryBuilder.new(world).with_all([TestComponentA, TestComponentB])
+	entities[0].add_component(C_TestB.new())
+	var final_query = QueryBuilder.new(world).with_all([C_TestA, C_TestB])
 	assert_int(final_query.execute().size()).is_equal(1)
