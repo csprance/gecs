@@ -69,7 +69,13 @@ var paused := false
 
 ## Logger for system debugging and tracing
 var systemLogger = GECSLogger.new().domain("System")
-## Data for debugger and profiling
+## Data for debugger and profiling - you can add ANY arbitrary data here when ECS.debug is enabled
+## All keys and values will automatically appear in the GECS debugger tab
+## Example:
+##   if ECS.debug:
+##       lastRunData["my_counter"] = 123
+##       lastRunData["player_stats"] = {"health": 100, "mana": 50}
+##       lastRunData["events"] = ["event1", "event2"]
 var lastRunData := {}
 
 ## Reference to the world this system belongs to (set by World.add_system)
@@ -80,10 +86,6 @@ var q: QueryBuilder:
 		return _world.query if _world else ECS.world.query
 ## Cached query to avoid recreating it every frame (lazily initialized)
 var _query_cache: QueryBuilder = null
-## Cached subsystems to avoid recreating them every frame (lazily initialized)
-var _subsystems_cache: Array = []
-## Cached component resource paths from iterate() for batch mode (lazily initialized)
-var _component_paths: Array[String] = []
 
 #endregion Public Variables
 
@@ -211,9 +213,24 @@ func _handle(delta: float) -> void:
 	# Check if using subsystems or main query
 	var subs = sub_systems()
 	if not subs.is_empty():
-		_run_subsystems(delta)
+		# Subsystems are PURE syntactic sugar - they work EXACTLY like regular systems
+		# Each subsystem processes per-archetype, just like a regular system would
+		var subsystem_index := 0
+		for subsystem_tuple in subs:
+			var subsystem_query := subsystem_tuple[0] as QueryBuilder
+			var subsystem_callable := subsystem_tuple[1] as Callable
+
+			# Execute this subsystem EXACTLY like a regular system
+			_execute_system_query(subsystem_query, subsystem_callable, delta, subsystem_index)
+
+			subsystem_index += 1
 	else:
-		_run_process(delta)
+		# Lazy initialize query cache for main system
+		if not _query_cache:
+			_query_cache = query()
+
+		# Execute main system - identical execution to subsystems
+		_execute_system_query(_query_cache, process, delta, -1)
 
 	# DEBUG: Record execution time (compiled out in production, disabled via ECS.debug in perf tests)
 	if ECS.debug:
@@ -222,65 +239,27 @@ func _handle(delta: float) -> void:
 		lastRunData["execution_time_ms"] = execution_time_ms
 
 
-## Execution path for subsystems
-func _run_subsystems(delta: float) -> void:
-	# Lazy initialize subsystems cache
-	if _subsystems_cache.is_empty():
-		_subsystems_cache = sub_systems()
+## UNIFIED execution function for both main systems and subsystems
+## This ensures consistent behavior and entity processing logic
+## Subsystems and main systems execute IDENTICALLY - no special behavior
+## [param query_builder] The query to execute
+## [param callable] The function to call with matched entities
+## [param delta] Time delta
+## [param subsystem_index] Index for debug tracking (-1 for main system)
+func _execute_system_query(query_builder: QueryBuilder, callable: Callable, delta: float, subsystem_index: int) -> void:
+	# Lazy initialize component paths from iterate() for this query
+	var component_paths: Array[String] = []
+	var iterate_comps = query_builder._iterate_components
 
-	# Execute each subsystem
-	var subsystem_index := 0
-	for subsystem_tuple in _subsystems_cache:
-		var subsystem_query := subsystem_tuple[0] as QueryBuilder
-		var subsystem_callable := subsystem_tuple[1] as Callable
-
-		# Get matching archetypes and process them
-		var matching_archetypes = subsystem_query.archetypes()
-		var iterate_comps = subsystem_query._iterate_components
-		var total_entity_count := 0
-
-		# Process each archetype separately for cache locality
-		for archetype in matching_archetypes:
-			if archetype.entities.is_empty():
-				continue
-
-			total_entity_count += archetype.entities.size()
-
-			var components = []
-			# Gather component columns if iterate() was called
-			if not iterate_comps.is_empty():
-				for comp_type in iterate_comps:
-					var comp_path = comp_type.resource_path if comp_type is Script else comp_type.get_script().resource_path
-					components.append(archetype.get_column(comp_path))
-
-			# Call with archetype data
-			subsystem_callable.call(archetype.entities, components, delta)
-
-		if ECS.debug:
-			lastRunData[subsystem_index] = {
-				"subsystem_index": subsystem_index,
-				"entity_count": total_entity_count
-			}
-		subsystem_index += 1
-
-
-## Unified execution path for main system query
-func _run_process(delta: float) -> void:
-	# Lazy initialize query cache
-	if not _query_cache:
-		_query_cache = query()
-
-	# Lazy initialize component paths from iterate()
-	if _component_paths.is_empty():
-		var iterate_comps = _query_cache._iterate_components
-		# Cache component resource paths in iteration order (if iterate() was called)
+	# Cache component resource paths in iteration order (if iterate() was called)
+	if not iterate_comps.is_empty():
 		for comp_type in iterate_comps:
 			var comp_path = comp_type.resource_path if comp_type is Script else comp_type.get_script().resource_path
-			_component_paths.append(comp_path)
+			component_paths.append(comp_path)
 
-	# Get matching archetypes directly (zero-copy, cache-friendly)
-	var matching_archetypes = _query_cache.archetypes()
-	var iterate_comps = _query_cache._iterate_components
+	# IMPORTANT: Query archetypes FRESH each time to see changes from previous subsystems
+	# Cache invalidation (in world.gd) ensures we see current archetype state after component changes
+	var matching_archetypes = query_builder.archetypes()
 	var has_entities = false
 	var total_entity_count := 0
 
@@ -292,8 +271,17 @@ func _run_process(delta: float) -> void:
 
 	# DEBUG: Track entity count (compiled out in production)
 	if ECS.debug:
-		lastRunData["entity_count"] = total_entity_count
-		lastRunData["archetype_count"] = matching_archetypes.size()
+		if subsystem_index >= 0:
+			# Subsystem tracking
+			lastRunData[subsystem_index] = {
+				"subsystem_index": subsystem_index,
+				"entity_count": total_entity_count,
+				"archetype_count": matching_archetypes.size()
+			}
+		else:
+			# Main system tracking
+			lastRunData["entity_count"] = total_entity_count
+			lastRunData["archetype_count"] = matching_archetypes.size()
 
 	# If no entities and we don't process when empty, exit early
 	if not has_entities and not process_empty:
@@ -301,35 +289,58 @@ func _run_process(delta: float) -> void:
 
 	# If no entities but process_empty is true, call once with empty data
 	if not has_entities and process_empty:
-		process([], [], delta)
+		callable.call([], [], delta)
 		return
+
+	# IMPORTANT: Snapshot entities before processing to prevent double-processing
+	# If we process per-archetype and entities move archetypes during processing,
+	# they could be processed twice. By taking a snapshot of entity IDs first,
+	# we ensure each entity is processed exactly once even if it changes archetypes.
+	var processed_entity_ids: Dictionary = {}  # entity_id -> true
 
 	# Iterate each archetype separately for cache locality
 	for arch in matching_archetypes:
-		var arch_entities = arch.entities
+		var arch_entities = arch.entities.duplicate()  # Snapshot to prevent modification during iteration
 
 		# Skip empty archetypes (we only call with actual entities)
 		if arch_entities.is_empty():
 			continue
 
+		# Filter out already-processed entities (prevents double-processing when archetypes change)
+		var unprocessed_entities: Array[Entity] = []
+		for entity in arch_entities:
+			var entity_id = entity.get_instance_id()
+			if not processed_entity_ids.has(entity_id):
+				unprocessed_entities.append(entity)
+				processed_entity_ids[entity_id] = true
+
+		# Skip if all entities in this archetype were already processed
+		if unprocessed_entities.is_empty():
+			continue
+
 		var components = []
 
 		# Gather component columns if iterate() was called
+		# NOTE: We need to rebuild component arrays for only the unprocessed entities
 		if not iterate_comps.is_empty():
-			for comp_path in _component_paths:
-				components.append(arch.get_column(comp_path))
+			for comp_path in component_paths:
+				var comp_array = []
+				for entity in unprocessed_entities:
+					comp_array.append(entity.components[comp_path])
+				components.append(comp_array)
 
 		# Use parallel processing if enabled and we have enough entities
-		if parallel_processing and arch_entities.size() >= parallel_threshold:
+		# NOTE: Only main system (subsystem_index == -1) uses parallel processing setting
+		if subsystem_index == -1 and parallel_processing and unprocessed_entities.size() >= parallel_threshold:
 			if ECS.debug:
 				lastRunData["parallel"] = true
 				lastRunData["threshold"] = parallel_threshold
-			_process_parallel(arch_entities, components, delta)
+			_process_parallel(unprocessed_entities, components, delta)
 		else:
-			# Call user's process() callback with this archetype's data
-			if ECS.debug:
+			# Call the callable with this archetype's data
+			if ECS.debug and subsystem_index == -1:
 				lastRunData["parallel"] = false
-			process(arch_entities, components, delta)
+			callable.call(unprocessed_entities, components, delta)
 
 
 ## Debug helper - updates lastRunData (compiled out in production)

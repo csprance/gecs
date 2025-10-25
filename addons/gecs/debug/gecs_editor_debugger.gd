@@ -10,6 +10,8 @@ var debugger_tab = (
 )
 ## The debugger messages that will be sent to the editor debugger
 var Msg = GECSEditorDebuggerMessages.Msg
+## Reference to editor interface for selecting nodes
+var editor_interface: EditorInterface = null
 
 
 func _has_capture(capture):
@@ -30,6 +32,13 @@ func _capture(message: String, data: Array, session_id: int) -> bool:
 		var system_name = data[1]
 		var elapsed_time = data[2]
 		debugger_tab.system_metric(system, system_name, elapsed_time)
+		return true
+	elif message == Msg.SYSTEM_LAST_RUN_DATA:
+		# data: [system_id, system_name, last_run_data]
+		var system_id = data[0]
+		var system_name = data[1]
+		var last_run_data = data[2]
+		debugger_tab.system_last_run_data(system_id, system_name, last_run_data)
 		return true
 	elif message == Msg.SET_WORLD:
 		if data.size() == 0:
@@ -96,8 +105,12 @@ func _capture(message: String, data: Array, session_id: int) -> bool:
 
 func _setup_session(session_id):
 	# Add a new tab in the debugger session UI containing a label.
-	debugger_tab.name = "GECS"  # Will be used as the tab title.
+	debugger_tab.name = "GECS" # Will be used as the tab title.
 	session = get_session(session_id)
+	# Pass session reference to the tab for sending messages
+	debugger_tab.set_debugger_session(session)
+	# Pass editor interface to the tab for selecting nodes
+	debugger_tab.set_editor_interface(editor_interface)
 	# Listens to the session started and stopped signals.
 	if not session.started.is_connected(_on_session_started):
 		session.started.connect(_on_session_started)
@@ -107,6 +120,7 @@ func _setup_session(session_id):
 
 func _on_session_started():
 	print("GECS Debug Session started")
+	debugger_tab.clear_all_data()
 	debugger_tab.active = true
 
 func _on_session_stopped():
