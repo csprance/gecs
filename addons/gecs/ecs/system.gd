@@ -68,7 +68,7 @@ enum Runs {
 var paused := false
 
 ## Logger for system debugging and tracing
-var systemLogger = GECSLogger.new().domain("System")
+var systemLogger := GECSLogger.new().domain("System")
 ## Data for debugger and profiling
 var lastRunData := {}
 
@@ -81,7 +81,7 @@ var q: QueryBuilder:
 ## Cached query to avoid recreating it every frame (lazily initialized)
 var _query_cache: QueryBuilder = null
 ## Cached subsystems to avoid recreating them every frame (lazily initialized)
-var _subsystems_cache: Array = []
+var _subsystems_cache: Array[Array] = []
 ## Cached component resource paths from iterate() for batch mode (lazily initialized)
 var _component_paths: Array[String] = []
 
@@ -144,7 +144,7 @@ func setup():
 ## [param delta] The time elapsed since the last frame[br][br]
 ## [b]Simple approach:[/b] Loop through entities and use get_component()[br]
 ## [b]Fast approach:[/b] Use iterate() in query and access component arrays directly
-func process(entities: Array[Entity], components: Array, delta: float) -> void:
+func process(entities: Array[Entity], components: Array[Array], delta: float) -> void:
 	pass # Override in subclasses - base implementation does nothing
 
 #endregion Public Methods
@@ -160,26 +160,26 @@ func _internal_setup():
 
 ## Process entities in parallel using WorkerThreadPool
 ## Splits entities into batches and processes them concurrently
-func _process_parallel(entities: Array[Entity], components: Array, delta: float) -> void:
+func _process_parallel(entities: Array[Entity], components: Array[Array], delta: float) -> void:
 	if entities.is_empty():
 		return
 
 	# Use OS thread count as fallback since WorkerThreadPool.get_thread_count() doesn't exist
-	var worker_count = OS.get_processor_count()
-	var batch_size = max(1, entities.size() / worker_count)
-	var tasks = []
+	var worker_count := OS.get_processor_count()
+	var batch_size := maxi(1, entities.size() / worker_count)
+	var tasks: Array[int] = []
 
 	# Submit tasks for each batch
 	for batch_start in range(0, entities.size(), batch_size):
-		var batch_end = min(batch_start + batch_size, entities.size())
+		var batch_end := mini(batch_start + batch_size, entities.size())
 
 		# Slice entities and components for this batch
-		var batch_entities = entities.slice(batch_start, batch_end)
-		var batch_components = []
+		var batch_entities := entities.slice(batch_start, batch_end) as Array[Entity]
+		var batch_components: Array[Array] = []
 		for comp_array in components:
-			batch_components.append(comp_array.slice(batch_start, batch_end))
+			batch_components.append(comp_array.slice(batch_start, batch_end) as Array[Component])
 
-		var task_id = WorkerThreadPool.add_task(_process_batch_callable.bind(batch_entities, batch_components, delta))
+		var task_id := WorkerThreadPool.add_task(_process_batch_callable.bind(batch_entities, batch_components, delta))
 		tasks.append(task_id)
 
 	# Wait for all tasks to complete
@@ -209,7 +209,7 @@ func _handle(delta: float) -> void:
 		}
 
 	# Check if using subsystems or main query
-	var subs = sub_systems()
+	var subs := sub_systems()
 	if not subs.is_empty():
 		_run_subsystems(delta)
 	else:
@@ -217,8 +217,8 @@ func _handle(delta: float) -> void:
 
 	# DEBUG: Record execution time (compiled out in production, disabled via ECS.debug in perf tests)
 	if ECS.debug:
-		var end_time_usec = Time.get_ticks_usec()
-		var execution_time_ms = (end_time_usec - start_time_usec) / 1000.0
+		var end_time_usec := Time.get_ticks_usec()
+		var execution_time_ms := (end_time_usec - start_time_usec) / 1000.0
 		lastRunData["execution_time_ms"] = execution_time_ms
 
 
@@ -235,8 +235,8 @@ func _run_subsystems(delta: float) -> void:
 		var subsystem_callable := subsystem_tuple[1] as Callable
 
 		# Get matching archetypes and process them
-		var matching_archetypes = subsystem_query.archetypes()
-		var iterate_comps = subsystem_query._iterate_components
+		var matching_archetypes := subsystem_query.archetypes()
+		var iterate_comps := subsystem_query._iterate_components
 		var total_entity_count := 0
 
 		# Process each archetype separately for cache locality
@@ -246,11 +246,11 @@ func _run_subsystems(delta: float) -> void:
 
 			total_entity_count += archetype.entities.size()
 
-			var components = []
+			var components: Array[Array] = []
 			# Gather component columns if iterate() was called
 			if not iterate_comps.is_empty():
 				for comp_type in iterate_comps:
-					var comp_path = comp_type.resource_path if comp_type is Script else comp_type.get_script().resource_path
+					var comp_path: String = comp_type.resource_path if comp_type is Script else comp_type.get_script().resource_path
 					components.append(archetype.get_column(comp_path))
 
 			# Call with archetype data
@@ -272,16 +272,16 @@ func _run_process(delta: float) -> void:
 
 	# Lazy initialize component paths from iterate()
 	if _component_paths.is_empty():
-		var iterate_comps = _query_cache._iterate_components
+		var iterate_comps := _query_cache._iterate_components
 		# Cache component resource paths in iteration order (if iterate() was called)
 		for comp_type in iterate_comps:
-			var comp_path = comp_type.resource_path if comp_type is Script else comp_type.get_script().resource_path
+			var comp_path: String = comp_type.resource_path if comp_type is Script else comp_type.get_script().resource_path
 			_component_paths.append(comp_path)
 
 	# Get matching archetypes directly (zero-copy, cache-friendly)
-	var matching_archetypes = _query_cache.archetypes()
-	var iterate_comps = _query_cache._iterate_components
-	var has_entities = false
+	var matching_archetypes := _query_cache.archetypes()
+	var iterate_comps := _query_cache._iterate_components
+	var has_entities := false
 	var total_entity_count := 0
 
 	# Check if we have any entities at all
@@ -306,13 +306,13 @@ func _run_process(delta: float) -> void:
 
 	# Iterate each archetype separately for cache locality
 	for arch in matching_archetypes:
-		var arch_entities = arch.entities
+		var arch_entities := arch.entities
 
 		# Skip empty archetypes (we only call with actual entities)
 		if arch_entities.is_empty():
 			continue
 
-		var components = []
+		var components: Array[Array] = []
 
 		# Gather component columns if iterate() was called
 		if not iterate_comps.is_empty():
@@ -335,7 +335,7 @@ func _run_process(delta: float) -> void:
 ## Debug helper - updates lastRunData (compiled out in production)
 func _update_debug_data(callable: Callable = func(): return {}) -> bool:
 	if ECS.debug:
-		var data = callable.call()
+		var data := callable.call()
 		if data:
 			lastRunData.assign(data)
 	return true
