@@ -150,6 +150,9 @@ func initialize():
 
 	if ECS.debug:
 		assert(GECSEditorDebuggerMessages.world_init(self), '')
+		# Register debugger message handler for entity polling
+		if not Engine.is_editor_hint() and OS.has_feature("editor"):
+			EngineDebugger.register_message_capture("gecs", _handle_debugger_message)
 
 
 #endregion Built-in Virtual Methods
@@ -163,6 +166,8 @@ func process(delta: float, group: String = "") -> void:
 		for system in systems_by_group[group]:
 			if system.active:
 				system._handle(delta)
+				if ECS.debug:
+					assert(GECSEditorDebuggerMessages.system_last_run_data(system, system.lastRunData), '')
 	if ECS.debug:
 		assert(GECSEditorDebuggerMessages.process_world(delta, group), '')
 
@@ -530,9 +535,12 @@ func _on_entity_component_added(entity: Entity, component: Resource) -> void:
 		var comp_path = component.get_script().resource_path
 		var new_archetype = _move_entity_to_new_archetype_fast(entity, old_archetype, comp_path, true)
 
-		# Only invalidate cache if a NEW archetype was created
+		# IMPORTANT: Always invalidate cache when entities move archetypes
+		# This ensures subsystems see component changes in the same frame
 		if new_archetype.size() == 1:
 			_invalidate_cache("add_component_new_archetype")
+		else:
+			_invalidate_cache("add_component_archetype_move")
 
 	# Emit Signal
 	component_added.emit(entity, component)
@@ -585,9 +593,12 @@ func _on_entity_component_removed(entity, component: Resource) -> void:
 		var comp_path = component.resource_path
 		var new_archetype = _move_entity_to_new_archetype_fast(entity, old_archetype, comp_path, false)
 
-		# Only invalidate cache if a NEW archetype was created
+		# IMPORTANT: Always invalidate cache when entities move archetypes
+		# This ensures subsystems see component changes in the same frame
 		if new_archetype.size() == 1:
-			_invalidate_cache("add_component_new_archetype")
+			_invalidate_cache("remove_component_new_archetype")
+		else:
+			_invalidate_cache("remove_component_archetype_move")
 
 	# We remove components immediately so this was called on the entity all we do is pass signal along
 	# Emit Signal
@@ -1010,6 +1021,10 @@ func _remove_entity_from_archetype(entity: Entity) -> bool:
 	var removed = archetype.remove_entity(entity)
 	entity_to_archetype.erase(entity)
 
+	# IMPORTANT: Always invalidate cache when entity is removed
+	# This ensures queries don't return stale entity references
+	_invalidate_cache("remove_entity_from_archetype")
+
 	# Clean up empty archetypes (optional - can keep them for reuse)
 	if archetype.is_empty():
 		# Break circular references before removing
@@ -1034,6 +1049,12 @@ func _move_entity_to_new_archetype_fast(entity: Entity, old_archetype: Archetype
 	else:
 		# Check if we have a cached edge for this component removal
 		new_archetype = old_archetype.get_remove_edge(comp_path)
+
+	# BUG FIX: If archetype retrieved from edge cache was removed from world.archetypes
+	# when it became empty, re-add it so queries can find it
+	if new_archetype != null and not archetypes.has(new_archetype.signature):
+		archetypes[new_archetype.signature] = new_archetype
+		_worldLogger.trace("Re-added archetype from edge cache: ", new_archetype)
 
 	# If no cached edge, calculate signature and find/create archetype
 	if new_archetype == null:
@@ -1137,3 +1158,81 @@ func _move_entity_to_new_archetype(entity: Entity, old_archetype: Archetype) -> 
 
 
 #endregion Utility Methods
+
+#region Debugger Support
+
+## Handle messages from the editor debugger
+func _handle_debugger_message(message: String, data: Array) -> bool:
+	print("GECS World: _handle_debugger_message called with message: ", message, " data: ", data)
+	if message == "poll_entity":
+		# Editor requested a component poll for a specific entity
+		var entity_id = data[0]
+		_poll_entity_for_debugger(entity_id)
+		return true
+	elif message == "select_entity":
+		# Editor requested to select an entity in the scene tree
+		var entity_path = data[0]
+		print("GECS World: Received select_entity request for path: ", entity_path)
+		# Get the actual node to get its ObjectID
+		var node = get_node_or_null(entity_path)
+		if node:
+			var obj_id = node.get_instance_id()
+			var _class_name = node.get_class()
+			# The path needs to be an array of node names from root to target
+			var path_array = str(entity_path).split("/", false)
+			print("  Found node, sending inspect message")
+			print("    ObjectID: ", obj_id)
+			print("    Class: ", _class_name)
+
+			if GECSEditorDebuggerMessages.can_send_message():
+				# The scene:inspect_object format per Godot source code:
+				# [object_id (uint64), class_name (STRING), properties_array (ARRAY)]
+				# NO path_array! Just 3 elements total
+				# properties_array contains arrays of 6 elements each:
+				# [name (STRING), type (INT), hint (INT), hint_string (STRING), usage (INT), value (VARIANT)]
+
+				# Get actual properties from the node
+				var properties: Array = []
+				var prop_list = node.get_property_list()
+				# Add properties (limit to avoid huge payload)
+				for i in range(min(20, prop_list.size())):
+					var prop = prop_list[i]
+					var prop_name: String = prop.name
+					var prop_type: int = prop.type
+					var prop_hint: int = prop.get("hint", 0)
+					var prop_hint_string: String = prop.get("hint_string", "")
+					var prop_usage: int = prop.usage
+					var prop_value = node.get(prop_name)
+
+					var prop_info: Array = [prop_name, prop_type, prop_hint, prop_hint_string, prop_usage, prop_value]
+					properties.append(prop_info)
+
+				# Message format: [object_id, class_name, properties] - only 3 elements!
+				var msg_data: Array = [obj_id, _class_name, properties]
+				print("    Sending scene:inspect_object: [", obj_id, ", ", _class_name, ", ", properties.size(), " props]")
+				EngineDebugger.send_message("scene:inspect_object", msg_data)
+		else:
+			print("  ERROR: Could not find node at path: ", entity_path)
+		return true
+	return false
+
+## Poll a specific entity's components and send updates to the debugger
+func _poll_entity_for_debugger(entity_id: int) -> void:
+	# Find the entity by instance ID
+	var entity: Entity = null
+	for ent in entities:
+		if ent.get_instance_id() == entity_id:
+			entity = ent
+			break
+
+	if entity == null:
+		return
+
+	# Re-send all component data with fresh serialize() calls
+	for comp_path in entity.components.keys():
+		var comp = entity.components[comp_path]
+		if comp and comp is Resource:
+			# Send updated component data
+			GECSEditorDebuggerMessages.entity_component_added(entity, comp)
+
+#endregion Debugger Support

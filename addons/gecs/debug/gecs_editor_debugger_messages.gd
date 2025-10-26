@@ -4,6 +4,7 @@ class_name GECSEditorDebuggerMessages
 const Msg = {
 	"WORLD_INIT": "gecs:world_init",
 	"SYSTEM_METRIC": "gecs:system_metric",
+	"SYSTEM_LAST_RUN_DATA": "gecs:system_last_run_data",
 	"SET_WORLD": "gecs:set_world",
 	"PROCESS_WORLD": "gecs:process_world",
 	"EXIT_WORLD": "gecs:exit_world",
@@ -18,6 +19,8 @@ const Msg = {
 	"ENTITY_RELATIONSHIP_ADDED": "gecs:entity_relationship_added",
 	"ENTITY_RELATIONSHIP_REMOVED": "gecs:entity_relationship_removed",
 	"COMPONENT_PROPERTY_CHANGED": "gecs:component_property_changed",
+	"POLL_ENTITY": "gecs:poll_entity",
+	"SELECT_ENTITY": "gecs:select_entity",
 }
 
 
@@ -35,6 +38,19 @@ static func system_metric(system: System, time: float) -> bool:
 	if can_send_message():
 		EngineDebugger.send_message(
 			Msg.SYSTEM_METRIC, [system.get_instance_id(), system.name, time]
+		)
+	return true
+
+static func system_last_run_data(system: System, last_run_data: Dictionary) -> bool:
+	if can_send_message():
+		# Send trimmed data to avoid excessive payload; include execution time and entity count primarily
+		EngineDebugger.send_message(
+			Msg.SYSTEM_LAST_RUN_DATA,
+			[
+				system.get_instance_id(),
+				system.name,
+				last_run_data.duplicate() # duplicate so caller's dictionary isn't mutated
+			]
 		)
 	return true
 
