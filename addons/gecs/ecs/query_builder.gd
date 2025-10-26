@@ -274,6 +274,12 @@ func _internal_execute() -> Array:
 					group_set = group_set.intersect(Set.new(entities_in_this_group))
 
 			entities_in_group = group_set.to_array() if group_set else []
+		else:
+			# If no required groups but we have exclude_groups, start with ALL entities from component query
+			# This handles the case of "without_group" queries
+			entities_in_group = (
+				_world._query(_all_components, _any_components, _exclude_components, _enabled_filter, get_cache_key()) as Array[Entity]
+			)
 
 		# Filter out entities in excluded groups
 		if not _exclude_groups.is_empty():
@@ -558,7 +564,11 @@ func get_cache_key() -> int:
 			_cache_key = QueryCacheKey.build(
 				_all_components,
 				_any_components,
-				_exclude_components
+				_exclude_components,
+				_relationships,
+				_exclude_relationships,
+				_groups,
+				_exclude_groups
 			)
 			_cache_key_valid = true
 		else:

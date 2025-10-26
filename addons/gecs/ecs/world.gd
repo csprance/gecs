@@ -878,32 +878,100 @@ func group_entities_by_archetype(entities: Array) -> Dictionary:
 ##             # Process with cache-friendly column access
 ## [/codeblock]
 func get_matching_archetypes(query_builder: QueryBuilder) -> Array[Archetype]:
-	# Use the same cache mechanism as _query
+	# Extract ALL query parameters
 	var all_components = query_builder._all_components
 	var any_components = query_builder._any_components
 	var exclude_components = query_builder._exclude_components
+	var relationships = query_builder._relationships
+	var exclude_relationships = query_builder._exclude_relationships
+	var groups = query_builder._groups
+	var exclude_groups = query_builder._exclude_groups
 
+	# Get cache key (now includes relationships and groups)
 	var cache_key = query_builder.get_cache_key()
 
 	# Check cache first
 	if _query_archetype_cache.has(cache_key):
 		return _query_archetype_cache[cache_key]
 
-	# Convert Script objects to resource paths (same as _query does)
+	# Convert Script objects to resource paths (for component matching)
 	var map_resource_path = func(x): return x.resource_path
 	var _all := all_components.map(map_resource_path)
 	var _any := any_components.map(map_resource_path)
 	var _exclude := exclude_components.map(map_resource_path)
 
-	# Find matching archetypes
-	var matching: Array[Archetype] = []
+	# Find component-matching archetypes (first pass)
+	var component_matching: Array[Archetype] = []
 	for archetype in archetypes.values():
 		if archetype.matches_query(_all, _any, _exclude):
-			matching.append(archetype)
+			component_matching.append(archetype)
+
+	# If no relationship/group filters, return component matches
+	var has_relationship_filters = not relationships.is_empty() or not exclude_relationships.is_empty()
+	var has_group_filters = not groups.is_empty() or not exclude_groups.is_empty()
+
+	if not has_relationship_filters and not has_group_filters:
+		_query_archetype_cache[cache_key] = component_matching
+		return component_matching
+
+	# Second pass: Filter by relationships and groups
+	var fully_matching: Array[Archetype] = []
+
+	for archetype in component_matching:
+		# Check if archetype has ANY entities matching relationship/group filters
+		var has_matching_entity = false
+
+		for entity in archetype.entities:
+			# Check relationship filters
+			if has_relationship_filters:
+				var relationship_match = true
+
+				# Required relationships
+				for relationship in relationships:
+					if not entity.has_relationship(relationship):
+						relationship_match = false
+						break
+
+				# Excluded relationships
+				if relationship_match:
+					for ex_relationship in exclude_relationships:
+						if entity.has_relationship(ex_relationship):
+							relationship_match = false
+							break
+
+				if not relationship_match:
+					continue  # This entity doesn't match relationships
+
+			# Check group filters
+			if has_group_filters:
+				var group_match = true
+
+				# Required groups (must be in ALL specified groups)
+				for group_name in groups:
+					if not entity.is_in_group(group_name):
+						group_match = false
+						break
+
+				# Excluded groups (must NOT be in ANY excluded group)
+				if group_match:
+					for exclude_group_name in exclude_groups:
+						if entity.is_in_group(exclude_group_name):
+							group_match = false
+							break
+
+				if not group_match:
+					continue  # This entity doesn't match groups
+
+			# If we got here, entity matches all filters
+			has_matching_entity = true
+			break  # Found at least one, archetype qualifies
+
+		if has_matching_entity:
+			fully_matching.append(archetype)
 
 	# Cache and return
-	_query_archetype_cache[cache_key] = matching
-	return matching
+	_query_archetype_cache[cache_key] = fully_matching
+	return fully_matching
 
 
 ## Get performance statistics for cache usage

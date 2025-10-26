@@ -45,7 +45,15 @@
 class_name QueryCacheKey
 extends RefCounted
 
-static func build(all_components: Array, any_components: Array, exclude_components: Array) -> int:
+static func build(
+	all_components: Array,
+	any_components: Array,
+	exclude_components: Array,
+	relationships: Array = [],
+	exclude_relationships: Array = [],
+	groups: Array = [],
+	exclude_groups: Array = []
+) -> int:
 	# Collect & sort per-domain IDs (order-insensitive inside each domain)
 	var all_ids: Array[int] = []
 	for c in all_components: all_ids.append(c.get_instance_id())
@@ -57,10 +65,49 @@ static func build(all_components: Array, any_components: Array, exclude_componen
 	for c in exclude_components: ex_ids.append(c.get_instance_id())
 	ex_ids.sort()
 
+	# Collect & sort relationship IDs
+	var rel_ids: Array[int] = []
+	for rel in relationships:
+		# Hash both the relation component and target
+		rel_ids.append(rel.relation.get_instance_id() if rel.relation else 0)
+		if rel.target is Object:
+			rel_ids.append(rel.target.get_instance_id())
+		elif rel.target != null:
+			rel_ids.append(rel.target.hash())
+		else:
+			rel_ids.append(0) # null target
+	rel_ids.sort()
+
+	var ex_rel_ids: Array[int] = []
+	for rel in exclude_relationships:
+		ex_rel_ids.append(rel.relation.get_instance_id() if rel.relation else 0)
+		if rel.target is Object:
+			ex_rel_ids.append(rel.target.get_instance_id())
+		elif rel.target != null:
+			ex_rel_ids.append(rel.target.hash())
+		else:
+			ex_rel_ids.append(0)
+	ex_rel_ids.sort()
+
+	# Collect & sort group name hashes
+	var group_ids: Array[int] = []
+	for group_name in groups:
+		group_ids.append(group_name.hash())
+	group_ids.sort()
+
+	var ex_group_ids: Array[int] = []
+	for group_name in exclude_groups:
+		ex_group_ids.append(group_name.hash())
+	ex_group_ids.sort()
+
 	# Compute exact total length: (marker + count) per domain + IDs
 	var total = 1 + 1 + all_ids.size() # ALL marker + count + ids
 	total += 1 + 1 + any_ids.size() # ANY marker + count + ids
 	total += 1 + 1 + ex_ids.size() # NONE marker + count + ids
+	total += 1 + 1 + rel_ids.size() # RELATIONSHIPS marker + count + ids
+	total += 1 + 1 + ex_rel_ids.size() # EXCLUDE_RELATIONSHIPS marker + count + ids
+	total += 1 + 1 + group_ids.size() # GROUPS marker + count + ids
+	total += 1 + 1 + ex_group_ids.size() # EXCLUDE_GROUPS marker + count + ids
 
 	# Single allocation for final signature layout
 	var layout: Array[int] = []
@@ -84,6 +131,30 @@ static func build(all_components: Array, any_components: Array, exclude_componen
 	layout[i] = ex_ids.size(); i += 1 # Count
 	for id in ex_ids:
 		layout[i] = id; i += 1 # Sorted EXCLUDE component IDs
+
+	# --- Domain: RELATIONSHIPS ---
+	layout[i] = 4; i += 1 # Marker for RELATIONSHIPS domain
+	layout[i] = rel_ids.size(); i += 1 # Count
+	for id in rel_ids:
+		layout[i] = id; i += 1 # Sorted relationship IDs
+
+	# --- Domain: EXCLUDE_RELATIONSHIPS ---
+	layout[i] = 5; i += 1 # Marker for EXCLUDE_RELATIONSHIPS domain
+	layout[i] = ex_rel_ids.size(); i += 1 # Count
+	for id in ex_rel_ids:
+		layout[i] = id; i += 1 # Sorted exclude relationship IDs
+
+	# --- Domain: GROUPS ---
+	layout[i] = 6; i += 1 # Marker for GROUPS domain
+	layout[i] = group_ids.size(); i += 1 # Count
+	for id in group_ids:
+		layout[i] = id; i += 1 # Sorted group name hashes
+
+	# --- Domain: EXCLUDE_GROUPS ---
+	layout[i] = 7; i += 1 # Marker for EXCLUDE_GROUPS domain
+	layout[i] = ex_group_ids.size(); i += 1 # Count
+	for id in ex_group_ids:
+		layout[i] = id; i += 1 # Sorted exclude group name hashes
 
 	# Hash the structural layout -> 64-bit key
 	return layout.hash()

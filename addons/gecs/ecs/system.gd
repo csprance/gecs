@@ -298,6 +298,14 @@ func _execute_system_query(query_builder: QueryBuilder, callable: Callable, delt
 	# we ensure each entity is processed exactly once even if it changes archetypes.
 	var processed_entity_ids: Dictionary = {}  # entity_id -> true
 
+	# Get relationship and group filters from query
+	var relationships = query_builder._relationships
+	var exclude_relationships = query_builder._exclude_relationships
+	var groups = query_builder._groups
+	var exclude_groups = query_builder._exclude_groups
+	var has_relationship_filters = not relationships.is_empty() or not exclude_relationships.is_empty()
+	var has_group_filters = not groups.is_empty() or not exclude_groups.is_empty()
+
 	# Iterate each archetype separately for cache locality
 	for arch in matching_archetypes:
 		var arch_entities = arch.entities.duplicate()  # Snapshot to prevent modification during iteration
@@ -305,6 +313,44 @@ func _execute_system_query(query_builder: QueryBuilder, callable: Callable, delt
 		# Skip empty archetypes (we only call with actual entities)
 		if arch_entities.is_empty():
 			continue
+
+		# Filter entities by relationship/group criteria if needed
+		# NOTE: get_matching_archetypes() already filters archetypes to only those with matching entities,
+		# but we still need to filter individual entities within each archetype
+		if has_relationship_filters or has_group_filters:
+			var filtered_entities: Array[Entity] = []
+
+			for entity in arch_entities:
+				var matches = true
+
+				# Check relationships
+				if has_relationship_filters and matches:
+					for relationship in relationships:
+						if not entity.has_relationship(relationship):
+							matches = false
+							break
+					if matches:
+						for ex_relationship in exclude_relationships:
+							if entity.has_relationship(ex_relationship):
+								matches = false
+								break
+
+				# Check groups
+				if has_group_filters and matches:
+					for group_name in groups:
+						if not entity.is_in_group(group_name):
+							matches = false
+							break
+					if matches:
+						for exclude_group_name in exclude_groups:
+							if entity.is_in_group(exclude_group_name):
+								matches = false
+								break
+
+				if matches:
+					filtered_entities.append(entity)
+
+			arch_entities = filtered_entities
 
 		# Filter out already-processed entities (prevents double-processing when archetypes change)
 		var unprocessed_entities: Array[Entity] = []

@@ -890,3 +890,304 @@ func test_query_cache_with_component_queries():
 	var result3 = query.execute()
 	assert_bool(result3.has(target_entity)).is_false()
 	assert_int(result3.size()).is_equal(result2.size() - 1)
+
+
+# Tests for relationship querying bug where with_relationship and without_relationship return same results
+func test_with_relationship_vs_without_relationship_basic():
+	# Create entities with and without relationships
+	var entity_with_rel = Entity.new()
+	var entity_without_rel = Entity.new()
+	var target = Entity.new()
+
+	# Only entity_with_rel has a relationship
+	entity_with_rel.add_relationship(Relationship.new(C_TestA.new(), target))
+
+	world.add_entity(entity_with_rel)
+	world.add_entity(entity_without_rel)
+	world.add_entity(target)
+
+	# Test with_relationship - should only return entity_with_rel
+	var with_result = QueryBuilder.new(world).with_relationship([Relationship.new(C_TestA.new(), null)]).execute()
+	assert_array(with_result).has_size(1)
+	assert_bool(with_result.has(entity_with_rel)).is_true()
+	assert_bool(with_result.has(entity_without_rel)).is_false()
+
+	# Test without_relationship - should only return entity_without_rel (and target)
+	var without_result = QueryBuilder.new(world).without_relationship([Relationship.new(C_TestA.new(), null)]).execute()
+	assert_bool(without_result.has(entity_with_rel)).is_false()
+	assert_bool(without_result.has(entity_without_rel)).is_true()
+
+	# These should NOT be equal!
+	assert_bool(with_result.size() == without_result.size()).is_false()
+
+
+func test_with_relationship_null_target():
+	# Test the exact case from the bug report
+	var entity1 = Entity.new()
+	var entity2 = Entity.new()
+	var entity3 = Entity.new()
+	var target = Entity.new()
+
+	# Add relationship to only entity1 and entity2
+	entity1.add_relationship(Relationship.new(C_TestA.new(), target))
+	entity2.add_relationship(Relationship.new(C_TestA.new(), target))
+	# entity3 has NO relationships
+
+	world.add_entity(entity1)
+	world.add_entity(entity2)
+	world.add_entity(entity3)
+	world.add_entity(target)
+
+	# Query with null target (wildcard) should find entities with ANY target for this relationship
+	var result = QueryBuilder.new(world).with_relationship([Relationship.new(C_TestA.new(), null)]).execute()
+
+	# Should only find entity1 and entity2
+	assert_array(result).has_size(2)
+	assert_bool(result.has(entity1)).is_true()
+	assert_bool(result.has(entity2)).is_true()
+	assert_bool(result.has(entity3)).is_false()
+	assert_bool(result.has(target)).is_false()
+
+
+func test_without_relationship_null_target():
+	# Test without_relationship with null target
+	var entity1 = Entity.new()
+	var entity2 = Entity.new()
+	var entity3 = Entity.new()
+	var target = Entity.new()
+
+	# Add relationship to only entity1 and entity2
+	entity1.add_relationship(Relationship.new(C_TestA.new(), target))
+	entity2.add_relationship(Relationship.new(C_TestA.new(), target))
+	# entity3 has NO relationships
+
+	world.add_entity(entity1)
+	world.add_entity(entity2)
+	world.add_entity(entity3)
+	world.add_entity(target)
+
+	# Query WITHOUT this relationship should find only entity3 and target
+	var result = QueryBuilder.new(world).without_relationship([Relationship.new(C_TestA.new(), null)]).execute()
+
+	# Should NOT find entity1 or entity2
+	assert_bool(result.has(entity1)).is_false()
+	assert_bool(result.has(entity2)).is_false()
+	# Should find entity3 and target
+	assert_bool(result.has(entity3)).is_true()
+	assert_bool(result.has(target)).is_true()
+
+
+func test_with_relationship_wildcard_target():
+	# Test with ECS.wildcard explicitly
+	var entity1 = Entity.new()
+	var entity2 = Entity.new()
+	var entity3 = Entity.new()
+	var target = Entity.new()
+
+	entity1.add_relationship(Relationship.new(C_TestA.new(), target))
+	entity2.add_relationship(Relationship.new(C_TestA.new(), target))
+
+	world.add_entity(entity1)
+	world.add_entity(entity2)
+	world.add_entity(entity3)
+	world.add_entity(target)
+
+	# Use ECS.wildcard explicitly
+	var result = QueryBuilder.new(world).with_relationship([Relationship.new(C_TestA.new(), ECS.wildcard)]).execute()
+
+	assert_array(result).has_size(2)
+	assert_bool(result.has(entity1)).is_true()
+	assert_bool(result.has(entity2)).is_true()
+	assert_bool(result.has(entity3)).is_false()
+
+
+func test_with_relationship_specific_entity_target():
+	# Test with a specific entity as target
+	var entity1 = Entity.new()
+	var entity2 = Entity.new()
+	var entity3 = Entity.new()
+	var target_a = Entity.new()
+	var target_b = Entity.new()
+
+	entity1.add_relationship(Relationship.new(C_TestA.new(), target_a))
+	entity2.add_relationship(Relationship.new(C_TestA.new(), target_b))
+	# entity3 has no relationships
+
+	world.add_entity(entity1)
+	world.add_entity(entity2)
+	world.add_entity(entity3)
+	world.add_entity(target_a)
+	world.add_entity(target_b)
+
+	# Query for entities with relationship to target_a specifically
+	var result = QueryBuilder.new(world).with_relationship([Relationship.new(C_TestA.new(), target_a)]).execute()
+
+	assert_array(result).has_size(1)
+	assert_bool(result.has(entity1)).is_true()
+	assert_bool(result.has(entity2)).is_false()
+	assert_bool(result.has(entity3)).is_false()
+
+
+func test_with_relationship_entity_archetype_target():
+	# Test with entity archetype as target
+	var entity1 = Entity.new()
+	var entity2 = Entity.new()
+	var entity3 = Entity.new()
+	var target = Entity.new() # Generic Entity type
+
+	entity1.add_relationship(Relationship.new(C_TestA.new(), Entity))
+	entity2.add_relationship(Relationship.new(C_TestA.new(), target))
+	# entity3 has no relationships
+
+	world.add_entity(entity1)
+	world.add_entity(entity2)
+	world.add_entity(entity3)
+	world.add_entity(target)
+
+	# Query for entities with relationship to Entity archetype
+	var result = QueryBuilder.new(world).with_relationship([Relationship.new(C_TestA.new(), Entity)]).execute()
+
+	# Should find both entity1 and entity2 (entity2's target is an Entity instance)
+	assert_bool(result.has(entity1)).is_true()
+	assert_bool(result.has(entity2)).is_true()
+	assert_bool(result.has(entity3)).is_false()
+
+
+# Tests for with_group bug where nonexistent groups return all entities
+func test_with_group_basic():
+	# Create entities with and without groups
+	var entity_in_group = Entity.new()
+	var entity_not_in_group = Entity.new()
+
+	entity_in_group.add_to_group("TestGroup")
+	# entity_not_in_group is not in any group
+
+	world.add_entity(entity_in_group)
+	world.add_entity(entity_not_in_group)
+
+	# Query for entities in "TestGroup"
+	var result = QueryBuilder.new(world).with_group(["TestGroup"]).execute()
+
+	assert_array(result).has_size(1)
+	assert_bool(result.has(entity_in_group)).is_true()
+	assert_bool(result.has(entity_not_in_group)).is_false()
+
+
+func test_with_group_nonexistent_group():
+	# Test the exact bug: querying for a nonexistent group should return NO entities
+	var entity1 = Entity.new()
+	var entity2 = Entity.new()
+	var entity3 = Entity.new()
+
+	entity1.add_to_group("GroupA")
+	entity2.add_to_group("GroupB")
+	# entity3 has no groups
+
+	world.add_entity(entity1)
+	world.add_entity(entity2)
+	world.add_entity(entity3)
+
+	# Query for a group that DOES NOT EXIST
+	var result = QueryBuilder.new(world).with_group(["NonexistentGroup"]).execute()
+
+	# Should return ZERO entities, not all entities!
+	assert_array(result).has_size(0)
+	assert_bool(result.has(entity1)).is_false()
+	assert_bool(result.has(entity2)).is_false()
+	assert_bool(result.has(entity3)).is_false()
+
+
+func test_with_group_vs_without_group():
+	# Test that with_group and without_group return different results
+	var entity_in_group = Entity.new()
+	var entity_not_in_group = Entity.new()
+
+	entity_in_group.add_to_group("TestGroup")
+
+	world.add_entity(entity_in_group)
+	world.add_entity(entity_not_in_group)
+
+	# with_group should find only entity_in_group
+	var with_result = QueryBuilder.new(world).with_group(["TestGroup"]).execute()
+	assert_array(with_result).has_size(1)
+	assert_bool(with_result.has(entity_in_group)).is_true()
+
+	# without_group should find only entity_not_in_group
+	var without_result = QueryBuilder.new(world).without_group(["TestGroup"]).execute()
+	assert_array(without_result).has_size(1)
+	assert_bool(without_result.has(entity_not_in_group)).is_true()
+
+	# These should be DIFFERENT!
+	assert_bool(with_result.size() == without_result.size()).is_true() # Both have 1 entity
+	assert_bool(with_result.has(entity_in_group)).is_true()
+	assert_bool(without_result.has(entity_not_in_group)).is_true()
+	# But they should not contain the same entities
+	assert_bool(with_result.has(entity_not_in_group)).is_false()
+	assert_bool(without_result.has(entity_in_group)).is_false()
+
+
+func test_with_all_and_with_relationship_combination():
+	# Test combining component and relationship queries
+	var entity1 = Entity.new()
+	var entity2 = Entity.new()
+	var entity3 = Entity.new()
+	var target = Entity.new()
+
+	# entity1 has component A and relationship
+	entity1.add_component(C_TestA.new())
+	entity1.add_relationship(Relationship.new(C_TestB.new(), target))
+
+	# entity2 has only component A
+	entity2.add_component(C_TestA.new())
+
+	# entity3 has only relationship
+	entity3.add_relationship(Relationship.new(C_TestB.new(), target))
+
+	world.add_entity(entity1)
+	world.add_entity(entity2)
+	world.add_entity(entity3)
+	world.add_entity(target)
+
+	# Query for entities with both component A and the relationship
+	var result = (
+		QueryBuilder.new(world)
+		.with_all([C_TestA])
+		.with_relationship([Relationship.new(C_TestB.new(), null)])
+		.execute()
+	)
+
+	# Should only find entity1
+	assert_array(result).has_size(1)
+	assert_bool(result.has(entity1)).is_true()
+	assert_bool(result.has(entity2)).is_false()
+	assert_bool(result.has(entity3)).is_false()
+
+
+func test_with_all_and_with_group_combination():
+	# Test combining component and group queries
+	var entity1 = Entity.new()
+	var entity2 = Entity.new()
+	var entity3 = Entity.new()
+
+	# entity1 has component A and is in group
+	entity1.add_component(C_TestA.new())
+	entity1.add_to_group("TestGroup")
+
+	# entity2 has only component A
+	entity2.add_component(C_TestA.new())
+
+	# entity3 is only in group
+	entity3.add_to_group("TestGroup")
+
+	world.add_entity(entity1)
+	world.add_entity(entity2)
+	world.add_entity(entity3)
+
+	# Query for entities with both component A and in the group
+	var result = QueryBuilder.new(world).with_all([C_TestA]).with_group(["TestGroup"]).execute()
+
+	# Should only find entity1
+	assert_array(result).has_size(1)
+	assert_bool(result.has(entity1)).is_true()
+	assert_bool(result.has(entity2)).is_false()
+	assert_bool(result.has(entity3)).is_false()
