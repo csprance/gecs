@@ -503,7 +503,9 @@ func purge(should_free = true, keep := []) -> void:
 	_worldLogger.debug("Purging Observers", observers)
 	for observer in observers.duplicate():
 		remove_observer(observer)
-
+	
+	_invalidate_cache("purge")
+	
 	# remove itself
 	if should_free:
 		queue_free()
@@ -948,7 +950,7 @@ func get_matching_archetypes(query_builder: QueryBuilder) -> Array[Archetype]:
 							break
 
 				if not relationship_match:
-					continue  # This entity doesn't match relationships
+					continue # This entity doesn't match relationships
 
 			# Check group filters
 			if has_group_filters:
@@ -968,11 +970,11 @@ func get_matching_archetypes(query_builder: QueryBuilder) -> Array[Archetype]:
 							break
 
 				if not group_match:
-					continue  # This entity doesn't match groups
+					continue # This entity doesn't match groups
 
 			# If we got here, entity matches all filters
 			has_matching_entity = true
-			break  # Found at least one, archetype qualifies
+			break # Found at least one, archetype qualifies
 
 		if has_matching_entity:
 			fully_matching.append(archetype)
@@ -1266,7 +1268,6 @@ func _handle_debugger_message(message: String, data: Array) -> bool:
 				# NO path_array! Just 3 elements total
 				# properties_array contains arrays of 6 elements each:
 				# [name (STRING), type (INT), hint (INT), hint_string (STRING), usage (INT), value (VARIANT)]
-
 				# Get actual properties from the node
 				var properties: Array = []
 				var prop_list = node.get_property_list()

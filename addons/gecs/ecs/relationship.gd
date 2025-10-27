@@ -283,9 +283,8 @@ func _to_string() -> String:
 			# Component with query
 			parts.append(target.get_script().resource_path + str(target_query))
 		else:
-			# Type matching - use resource path only (NOT instance ID)
-			# This ensures queries like Relationship.new(C_TestB.new()) produce consistent cache keys
-			parts.append(target.get_script().resource_path)
+			# Type matching - use Script instance ID (consistent with query caching)
+			parts.append(target.get_script().resource_path + "#" + str(target.get_script().get_instance_id()))
 	elif target is Script:
 		# Archetype target
 		parts.append("Archetype:" + target.resource_path)
