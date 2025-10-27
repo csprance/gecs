@@ -625,6 +625,10 @@ func _on_entity_relationship_added(entity: Entity, relationship: Relationship) -
 			reverse_relationship_index[rev_key] = []
 		reverse_relationship_index[rev_key].append(relationship.target)
 
+	# IMPORTANT: Invalidate archetype cache when relationships change
+	# Queries with relationship filters need to see relationship changes in same frame
+	_invalidate_cache("relationship_added")
+
 	# Emit Signal
 	relationship_added.emit(entity, relationship)
 	if ECS.debug:
@@ -641,6 +645,10 @@ func _on_entity_relationship_removed(entity: Entity, relationship: Relationship)
 		var rev_key = "reverse_" + key
 		if reverse_relationship_index.has(rev_key):
 			reverse_relationship_index[rev_key].erase(relationship.target)
+
+	# IMPORTANT: Invalidate archetype cache when relationships change
+	# Queries with relationship filters need to see relationship changes in same frame
+	_invalidate_cache("relationship_removed")
 
 	# Emit Signal
 	relationship_removed.emit(entity, relationship)

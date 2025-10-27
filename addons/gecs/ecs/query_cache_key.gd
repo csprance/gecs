@@ -68,11 +68,25 @@ static func build(
 	# Collect & sort relationship IDs
 	var rel_ids: Array[int] = []
 	for rel in relationships:
-		# Hash both the relation component and target
-		rel_ids.append(rel.relation.get_instance_id() if rel.relation else 0)
-		if rel.target is Object:
+		# Use script resource path hash for type matching (not instance ID)
+		# This ensures Relationship.new(C_TestB.new()) produces consistent cache keys
+		if rel.relation:
+			rel_ids.append(rel.relation.get_script().resource_path.hash())
+		else:
+			rel_ids.append(0)
+
+		# Handle target - use type matching for Components/Entities
+		if rel.target is Component:
+			# Component target: use script path for type matching
+			rel_ids.append(rel.target.get_script().resource_path.hash())
+		elif rel.target is Entity:
+			# Entity target: use instance ID (entities are specific instances)
 			rel_ids.append(rel.target.get_instance_id())
+		elif rel.target is Script:
+			# Archetype target: use resource path
+			rel_ids.append(rel.target.resource_path.hash())
 		elif rel.target != null:
+			# Other types: use generic hash
 			rel_ids.append(rel.target.hash())
 		else:
 			rel_ids.append(0) # null target
@@ -80,9 +94,19 @@ static func build(
 
 	var ex_rel_ids: Array[int] = []
 	for rel in exclude_relationships:
-		ex_rel_ids.append(rel.relation.get_instance_id() if rel.relation else 0)
-		if rel.target is Object:
+		# Use script resource path hash for type matching (not instance ID)
+		if rel.relation:
+			ex_rel_ids.append(rel.relation.get_script().resource_path.hash())
+		else:
+			ex_rel_ids.append(0)
+
+		# Handle target - use type matching for Components/Entities
+		if rel.target is Component:
+			ex_rel_ids.append(rel.target.get_script().resource_path.hash())
+		elif rel.target is Entity:
 			ex_rel_ids.append(rel.target.get_instance_id())
+		elif rel.target is Script:
+			ex_rel_ids.append(rel.target.resource_path.hash())
 		elif rel.target != null:
 			ex_rel_ids.append(rel.target.hash())
 		else:

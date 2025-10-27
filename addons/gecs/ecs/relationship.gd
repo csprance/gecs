@@ -255,3 +255,41 @@ func valid() -> bool:
 	var source_valid = is_instance_valid(source)
 
 	return target_valid and source_valid
+
+
+## Provides a consistent string representation for cache keys and debugging.
+## Two relationships with the same relation type and target should produce identical strings.
+func _to_string() -> String:
+	var parts = []
+
+	# Format relation component
+	if relation == null:
+		parts.append("null")
+	elif not relation_query.is_empty():
+		# This is a query relationship - include the query criteria
+		parts.append(relation.get_script().resource_path + str(relation_query))
+	else:
+		# Standard relation - just the type
+		parts.append(relation.get_script().resource_path)
+
+	# Format target
+	if target == null:
+		parts.append("null")
+	elif target is Entity:
+		# Use instance_id for stability - entity ID may not be set yet
+		parts.append("Entity#" + str(target.get_instance_id()))
+	elif target is Component:
+		if not target_query.is_empty():
+			# Component with query
+			parts.append(target.get_script().resource_path + str(target_query))
+		else:
+			# Type matching - use resource path only (NOT instance ID)
+			# This ensures queries like Relationship.new(C_TestB.new()) produce consistent cache keys
+			parts.append(target.get_script().resource_path)
+	elif target is Script:
+		# Archetype target
+		parts.append("Archetype:" + target.resource_path)
+	else:
+		parts.append(str(target))
+
+	return "Relationship(" + parts[0] + " -> " + parts[1] + ")"
