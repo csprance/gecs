@@ -86,6 +86,10 @@ var q: QueryBuilder:
 		return _world.query if _world else ECS.world.query
 ## Cached query to avoid recreating it every frame (lazily initialized)
 var _query_cache: QueryBuilder = null
+## Cached component paths for iterate() fast path (6.0.0 style)
+var _component_paths: Array[String] = []
+## Cached subsystems array (6.0.0 style)
+var _subsystems_cache: Array = []
 
 #endregion Public Variables
 
@@ -197,11 +201,8 @@ func _process_batch_callable(entities: Array[Entity], components: Array, delta: 
 ## Called by World.process() each frame - main entry point for system execution
 ## [param delta] The time elapsed since the last frame
 func _handle(delta: float) -> void:
-	# Early exit: system is disabled or paused
 	if not active or paused:
 		return
-
-	# DEBUG: Track execution time (compiled out in production, disabled via ECS.debug in perf tests)
 	var start_time_usec := 0
 	if ECS.debug:
 		start_time_usec = Time.get_ticks_usec()
@@ -209,34 +210,14 @@ func _handle(delta: float) -> void:
 			"system_name": get_script().resource_path.get_file().get_basename(),
 			"frame_delta": delta,
 		}
-
-	# Check if using subsystems or main query
 	var subs = sub_systems()
 	if not subs.is_empty():
-		# Subsystems are PURE syntactic sugar - they work EXACTLY like regular systems
-		# Each subsystem processes per-archetype, just like a regular system would
-		var subsystem_index := 0
-		for subsystem_tuple in subs:
-			var subsystem_query := subsystem_tuple[0] as QueryBuilder
-			var subsystem_callable := subsystem_tuple[1] as Callable
-
-			# Execute this subsystem EXACTLY like a regular system
-			_execute_system_query(subsystem_query, subsystem_callable, delta, subsystem_index)
-
-			subsystem_index += 1
+		_run_subsystems(delta)
 	else:
-		# Lazy initialize query cache for main system
-		if not _query_cache:
-			_query_cache = query()
-
-		# Execute main system - identical execution to subsystems
-		_execute_system_query(_query_cache, process, delta, -1)
-
-	# DEBUG: Record execution time (compiled out in production, disabled via ECS.debug in perf tests)
+		_run_process(delta)
 	if ECS.debug:
 		var end_time_usec = Time.get_ticks_usec()
-		var execution_time_ms = (end_time_usec - start_time_usec) / 1000.0
-		lastRunData["execution_time_ms"] = execution_time_ms
+		lastRunData["execution_time_ms"] = (end_time_usec - start_time_usec) / 1000.0
 
 
 ## UNIFIED execution function for both main systems and subsystems
@@ -246,147 +227,210 @@ func _handle(delta: float) -> void:
 ## [param callable] The function to call with matched entities
 ## [param delta] Time delta
 ## [param subsystem_index] Index for debug tracking (-1 for main system)
-func _execute_system_query(query_builder: QueryBuilder, callable: Callable, delta: float, subsystem_index: int) -> void:
-	# Lazy initialize component paths from iterate() for this query
-	var component_paths: Array[String] = []
-	var iterate_comps = query_builder._iterate_components
+func _run_subsystems(delta: float) -> void:
+	if _subsystems_cache.is_empty():
+		_subsystems_cache = sub_systems()
+	var subsystem_index := 0
+	for subsystem_tuple in _subsystems_cache:
+		var subsystem_query := subsystem_tuple[0] as QueryBuilder
+		var subsystem_callable := subsystem_tuple[1] as Callable
+		var uses_non_structural := _query_has_non_structural_filters(subsystem_query)
+		var iterate_comps = subsystem_query._iterate_components
+		if uses_non_structural:
+			# Gather ALL structural entities first then filter once (avoid per-archetype filtering churn)
+			var all_entities: Array[Entity] = []
+			for arch in subsystem_query.archetypes():
+				if not arch.entities.is_empty():
+					all_entities.append_array(arch.entities) # no snapshot to allow mid-frame changes visible to later subsystems
+			var filtered = _filter_entities_global(subsystem_query, all_entities)
+			if filtered.is_empty():
+				if ECS.debug:
+					lastRunData[subsystem_index] = {"subsystem_index": subsystem_index, "entity_count": 0, "fallback_execute": true}
+				subsystem_index += 1
+				continue
+			var components := []
+			if not iterate_comps.is_empty():
+				for comp_type in iterate_comps:
+					components.append(_build_component_column_from_entities(filtered, comp_type))
+			subsystem_callable.call(filtered, components, delta)
+			if ECS.debug:
+				lastRunData[subsystem_index] = {"subsystem_index": subsystem_index, "entity_count": filtered.size(), "fallback_execute": true}
+		else:
+			# Structural fast path archetype iteration
+			var total_entity_count := 0
+			for archetype in subsystem_query.archetypes():
+				if archetype.entities.is_empty():
+					continue
+				# Snapshot to avoid losing entities during add/remove component archetype moves mid-iteration
+				var arch_entities = archetype.entities.duplicate()
+				total_entity_count += arch_entities.size()
+				var components = []
+				if not iterate_comps.is_empty():
+					for comp_type in iterate_comps:
+						var comp_path = comp_type.resource_path if comp_type is Script else comp_type.get_script().resource_path
+						components.append(archetype.get_column(comp_path))
+				subsystem_callable.call(arch_entities, components, delta)
+			if ECS.debug:
+				lastRunData[subsystem_index] = {"subsystem_index": subsystem_index, "entity_count": total_entity_count, "fallback_execute": false}
+		subsystem_index += 1
 
-	# Cache component resource paths in iteration order (if iterate() was called)
-	if not iterate_comps.is_empty():
+func _run_process(delta: float) -> void:
+	if not _query_cache:
+		_query_cache = query()
+	if _component_paths.is_empty():
+		var iterate_comps = _query_cache._iterate_components
 		for comp_type in iterate_comps:
 			var comp_path = comp_type.resource_path if comp_type is Script else comp_type.get_script().resource_path
-			component_paths.append(comp_path)
-
-	# IMPORTANT: Query archetypes FRESH each time to see changes from previous subsystems
-	# Cache invalidation (in world.gd) ensures we see current archetype state after component changes
-	var matching_archetypes = query_builder.archetypes()
+			_component_paths.append(comp_path)
+	var uses_non_structural := _query_has_non_structural_filters(_query_cache)
+	var iterate_comps = _query_cache._iterate_components
+	if uses_non_structural:
+		# Gather all entities across structural archetypes and then filter once
+		var all_entities: Array[Entity] = []
+		for arch in _query_cache.archetypes():
+			if not arch.entities.is_empty():
+				all_entities.append_array(arch.entities)
+		if all_entities.is_empty():
+			if process_empty:
+				process([], [], delta)
+			return
+		var filtered = _filter_entities_global(_query_cache, all_entities)
+		if filtered.is_empty():
+			if process_empty:
+				process([], [], delta)
+			return
+		var components := []
+		if not iterate_comps.is_empty():
+			for comp_type in iterate_comps:
+				components.append(_build_component_column_from_entities(filtered, comp_type))
+		if parallel_processing and filtered.size() >= parallel_threshold:
+			_process_parallel(filtered, components, delta)
+		else:
+			process(filtered, components, delta)
+		if ECS.debug:
+			lastRunData["entity_count"] = filtered.size()
+			lastRunData["archetype_count"] = _query_cache.archetypes().size()
+			lastRunData["fallback_execute"] = true
+			lastRunData["parallel"] = parallel_processing and filtered.size() >= parallel_threshold
+		return
+	# Structural fast path
+	var matching_archetypes = _query_cache.archetypes()
 	var has_entities = false
 	var total_entity_count := 0
-
-	# Check if we have any entities at all
 	for arch in matching_archetypes:
 		if not arch.entities.is_empty():
 			has_entities = true
 			total_entity_count += arch.entities.size()
-
-	# DEBUG: Track entity count (compiled out in production)
 	if ECS.debug:
-		if subsystem_index >= 0:
-			# Subsystem tracking
-			lastRunData[subsystem_index] = {
-				"subsystem_index": subsystem_index,
-				"entity_count": total_entity_count,
-				"archetype_count": matching_archetypes.size()
-			}
-		else:
-			# Main system tracking
-			lastRunData["entity_count"] = total_entity_count
-			lastRunData["archetype_count"] = matching_archetypes.size()
-
-	# If no entities and we don't process when empty, exit early
+		lastRunData["entity_count"] = total_entity_count
+		lastRunData["archetype_count"] = matching_archetypes.size()
+		lastRunData["fallback_execute"] = false
 	if not has_entities and not process_empty:
 		return
-
-	# If no entities but process_empty is true, call once with empty data
 	if not has_entities and process_empty:
-		callable.call([], [], delta)
+		process([], [], delta)
 		return
-
-	# IMPORTANT: Snapshot entities before processing to prevent double-processing
-	# If we process per-archetype and entities move archetypes during processing,
-	# they could be processed twice. By taking a snapshot of entity IDs first,
-	# we ensure each entity is processed exactly once even if it changes archetypes.
-	var processed_entity_ids: Dictionary = {}  # entity_id -> true
-
-	# Get relationship and group filters from query
-	var relationships = query_builder._relationships
-	var exclude_relationships = query_builder._exclude_relationships
-	var groups = query_builder._groups
-	var exclude_groups = query_builder._exclude_groups
-	var has_relationship_filters = not relationships.is_empty() or not exclude_relationships.is_empty()
-	var has_group_filters = not groups.is_empty() or not exclude_groups.is_empty()
-
-	# Iterate each archetype separately for cache locality
 	for arch in matching_archetypes:
-		var arch_entities = arch.entities.duplicate()  # Snapshot to prevent modification during iteration
-
-		# Skip empty archetypes (we only call with actual entities)
+		var arch_entities = arch.entities
 		if arch_entities.is_empty():
 			continue
-
-		# Filter entities by relationship/group criteria if needed
-		# NOTE: get_matching_archetypes() already filters archetypes to only those with matching entities,
-		# but we still need to filter individual entities within each archetype
-		if has_relationship_filters or has_group_filters:
-			var filtered_entities: Array[Entity] = []
-
-			for entity in arch_entities:
-				var matches = true
-
-				# Check relationships
-				if has_relationship_filters and matches:
-					for relationship in relationships:
-						if not entity.has_relationship(relationship):
-							matches = false
-							break
-					if matches:
-						for ex_relationship in exclude_relationships:
-							if entity.has_relationship(ex_relationship):
-								matches = false
-								break
-
-				# Check groups
-				if has_group_filters and matches:
-					for group_name in groups:
-						if not entity.is_in_group(group_name):
-							matches = false
-							break
-					if matches:
-						for exclude_group_name in exclude_groups:
-							if entity.is_in_group(exclude_group_name):
-								matches = false
-								break
-
-				if matches:
-					filtered_entities.append(entity)
-
-			arch_entities = filtered_entities
-
-		# Filter out already-processed entities (prevents double-processing when archetypes change)
-		var unprocessed_entities: Array[Entity] = []
-		for entity in arch_entities:
-			var entity_id = entity.get_instance_id()
-			if not processed_entity_ids.has(entity_id):
-				unprocessed_entities.append(entity)
-				processed_entity_ids[entity_id] = true
-
-		# Skip if all entities in this archetype were already processed
-		if unprocessed_entities.is_empty():
-			continue
-
+		# Snapshot structural entities to avoid mutation skipping during component add/remove
+		var snapshot_entities = arch_entities.duplicate()
 		var components = []
-
-		# Gather component columns if iterate() was called
-		# NOTE: We need to rebuild component arrays for only the unprocessed entities
 		if not iterate_comps.is_empty():
-			for comp_path in component_paths:
-				var comp_array = []
-				for entity in unprocessed_entities:
-					comp_array.append(entity.components[comp_path])
-				components.append(comp_array)
-
-		# Use parallel processing if enabled and we have enough entities
-		# NOTE: Only main system (subsystem_index == -1) uses parallel processing setting
-		if subsystem_index == -1 and parallel_processing and unprocessed_entities.size() >= parallel_threshold:
+			for comp_path in _component_paths:
+				components.append(arch.get_column(comp_path))
+		if parallel_processing and snapshot_entities.size() >= parallel_threshold:
 			if ECS.debug:
 				lastRunData["parallel"] = true
 				lastRunData["threshold"] = parallel_threshold
-			_process_parallel(unprocessed_entities, components, delta)
+			_process_parallel(snapshot_entities, components, delta)
 		else:
-			# Call the callable with this archetype's data
-			if ECS.debug and subsystem_index == -1:
+			if ECS.debug:
 				lastRunData["parallel"] = false
-			callable.call(unprocessed_entities, components, delta)
+			process(snapshot_entities, components, delta)
+
+## Determine if a query includes non-structural filters requiring execute() fallback
+func _query_has_non_structural_filters(qb: QueryBuilder) -> bool:
+	if not qb._relationships.is_empty():
+		return true
+	if not qb._exclude_relationships.is_empty():
+		return true
+	if not qb._groups.is_empty():
+		return true
+	if not qb._exclude_groups.is_empty():
+		return true
+	# Component property queries (ensure actual queries, not placeholders)
+	if not qb._all_components_queries.is_empty():
+		for query in qb._all_components_queries:
+			if not query.is_empty():
+				return true
+	if not qb._any_components_queries.is_empty():
+		for query in qb._any_components_queries:
+			if not query.is_empty():
+				return true
+	return false
+
+## Build component arrays for iterate() when falling back to execute() result (no archetype columns)
+func _build_component_column_from_entities(entities: Array[Entity], comp_type) -> Array:
+	var out := []
+	for e in entities:
+		if e == null:
+			out.append(null)
+			continue
+		var comp = e.get_component(comp_type)
+		out.append(comp)
+	return out
+
+## Filter entities in an archetype for non-structural query criteria (relationships/groups/property queries)
+## Filter a flat entity array for non-structural criteria
+func _filter_entities_global(qb: QueryBuilder, entities: Array[Entity]) -> Array[Entity]:
+	var result: Array[Entity] = []
+	for e in entities:
+		if e == null:
+			continue
+		var include := true
+		for rel in qb._relationships:
+			if not e.has_relationship(rel):
+				include = false; break
+		if include:
+			for ex_rel in qb._exclude_relationships:
+				if e.has_relationship(ex_rel):
+					include = false; break
+		if include and not qb._groups.is_empty():
+			for g in qb._groups:
+				if not e.is_in_group(g):
+					include = false; break
+		if include and not qb._exclude_groups.is_empty():
+			for g in qb._exclude_groups:
+				if e.is_in_group(g):
+					include = false; break
+		if include and not qb._all_components_queries.is_empty():
+			for i in range(qb._all_components.size()):
+				if i >= qb._all_components_queries.size():
+					break
+				var comp_type = qb._all_components[i]
+				var query = qb._all_components_queries[i]
+				if not query.is_empty():
+					var comp = e.get_component(comp_type)
+					if comp == null or not ComponentQueryMatcher.matches_query(comp, query):
+						include = false; break
+		if include and not qb._any_components_queries.is_empty():
+			var any_match := qb._any_components_queries.is_empty()
+			for i in range(qb._any_components.size()):
+				if i >= qb._any_components_queries.size():
+					break
+				var comp_type = qb._any_components[i]
+				var query = qb._any_components_queries[i]
+				if not query.is_empty():
+					var comp = e.get_component(comp_type)
+					if comp and ComponentQueryMatcher.matches_query(comp, query):
+						any_match = true; break
+			if not any_match and not qb._any_components.is_empty():
+				include = false
+		if include:
+			result.append(e)
+	return result
 
 
 ## Debug helper - updates lastRunData (compiled out in production)

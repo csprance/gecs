@@ -101,6 +101,47 @@ var _cache_invalidation_count: int = 0
 var _cache_invalidation_reasons: Dictionary = {} # reason -> count
 ## Global cache: resource_path -> Script (loaded once, reused forever)
 var _component_script_cache: Dictionary = {} # String -> Script
+## Frame + accumulated performance metrics (debug-only)
+var _perf_metrics := {
+	"frame": {}, # Per-frame aggregated timings
+	"accum": {} # Long-lived totals (cleared manually)
+}
+
+## Internal perf helper (debug only)
+func perf_mark(key: String, duration_usec: int, extra: Dictionary = {}) -> void:
+	if not ECS.debug:
+		return
+	# Aggregate per frame
+	var entry = _perf_metrics.frame.get(key, {"count": 0, "time_usec": 0})
+	entry.count += 1
+	entry.time_usec += duration_usec
+	for k in extra.keys():
+		# Attach/overwrite ancillary data (last value wins)
+		entry[k] = extra[k]
+	_perf_metrics.frame[key] = entry
+	# Accumulate lifetime totals
+	var accum_entry = _perf_metrics.accum.get(key, {"count": 0, "time_usec": 0})
+	accum_entry.count += 1
+	accum_entry.time_usec += duration_usec
+	_perf_metrics.accum[key] = accum_entry
+
+## Reset per-frame metrics (called at world.process start)
+func perf_reset_frame() -> void:
+	if ECS.debug:
+		_perf_metrics.frame.clear()
+
+## Get a copy of current frame metrics
+func perf_get_frame_metrics() -> Dictionary:
+	return _perf_metrics.frame.duplicate(true)
+
+## Get a copy of accumulated metrics
+func perf_get_accum_metrics() -> Dictionary:
+	return _perf_metrics.accum.duplicate(true)
+
+## Reset accumulated metrics
+func perf_reset_accum() -> void:
+	if ECS.debug:
+		_perf_metrics.accum.clear()
 
 #endregion Public Variables
 
@@ -162,6 +203,8 @@ func initialize():
 ## [param delta] The time elapsed since the last frame.
 ## [param group] The string for the group we should run. If empty runs all systems in default "" group.
 func process(delta: float, group: String = "") -> void:
+	# PERF: Reset frame metrics at start of processing step
+	perf_reset_frame()
 	if systems_by_group.has(group):
 		for system in systems_by_group[group]:
 			if system.active:
@@ -531,32 +574,20 @@ func purge(should_free = true, keep := []) -> void:
 ## [param entity] The entity that had a component added.[br]
 ## [param component] The resource path of the added component.
 func _on_entity_component_added(entity: Entity, component: Resource) -> void:
-	# ARCHETYPE: Move entity synchronously - queries need correct archetype immediately
+	# ARCHETYPE: Move entity; only invalidate if new archetype CREATED
 	if entity_to_archetype.has(entity):
 		var old_archetype = entity_to_archetype[entity]
 		var comp_path = component.get_script().resource_path
+		var before_count = archetypes.size()
 		var new_archetype = _move_entity_to_new_archetype_fast(entity, old_archetype, comp_path, true)
-
-		# IMPORTANT: Always invalidate cache when entities move archetypes
-		# This ensures subsystems see component changes in the same frame
-		if new_archetype.size() == 1:
-			_invalidate_cache("add_component_new_archetype")
-		else:
-			_invalidate_cache("add_component_archetype_move")
+		if archetypes.size() > before_count:
+			_invalidate_cache("new_archetype_created_component_add")
 
 	# Emit Signal
 	component_added.emit(entity, component)
-
-	# Handle observers for component added
 	_handle_observer_component_added(entity, component)
-
-	# Watch for propety changes to the component
 	if not entity.component_property_changed.is_connected(_on_entity_component_property_change):
-		# Connect to the component's property changed signal
-		# This allows us to track changes to properties on the component
-		# and notify observers
 		entity.component_property_changed.connect(_on_entity_component_property_change)
-
 	if ECS.debug:
 		assert(GECSEditorDebuggerMessages.entity_component_added(entity, component), '')
 
@@ -589,26 +620,16 @@ func _on_entity_component_property_change(
 ## [param entity] The entity that had a component removed.[br]
 ## [param component] The resource path of the removed component.
 func _on_entity_component_removed(entity, component: Resource) -> void:
-	# ARCHETYPE: Move entity synchronously - queries need correct archetype immediately
 	if entity_to_archetype.has(entity):
 		var old_archetype = entity_to_archetype[entity]
 		var comp_path = component.resource_path
+		var before_count = archetypes.size()
 		var new_archetype = _move_entity_to_new_archetype_fast(entity, old_archetype, comp_path, false)
+		if archetypes.size() > before_count:
+			_invalidate_cache("new_archetype_created_component_remove")
 
-		# IMPORTANT: Always invalidate cache when entities move archetypes
-		# This ensures subsystems see component changes in the same frame
-		if new_archetype.size() == 1:
-			_invalidate_cache("remove_component_new_archetype")
-		else:
-			_invalidate_cache("remove_component_archetype_move")
-
-	# We remove components immediately so this was called on the entity all we do is pass signal along
-	# Emit Signal
 	component_removed.emit(entity, component)
-
-	# Handle observers for component removed
 	_handle_observer_component_removed(entity, component)
-
 	if ECS.debug:
 		assert(GECSEditorDebuggerMessages.entity_component_removed(entity, component), '')
 	
@@ -627,9 +648,11 @@ func _on_entity_relationship_added(entity: Entity, relationship: Relationship) -
 			reverse_relationship_index[rev_key] = []
 		reverse_relationship_index[rev_key].append(relationship.target)
 
-	# IMPORTANT: Invalidate archetype cache when relationships change
-	# Queries with relationship filters need to see relationship changes in same frame
-	_invalidate_cache("relationship_added")
+	# PERFORMANCE: Do NOT invalidate archetype cache on relationship changes
+	# Relationships do not alter archetype membership (structural component sets)
+	# QueryBuilder.execute() performs relationship filtering on entity results.
+	# Systems use archetypes() + per-entity filtering, so invalidation here only
+	# increases cache churn without improving correctness.
 
 	# Emit Signal
 	relationship_added.emit(entity, relationship)
@@ -648,9 +671,7 @@ func _on_entity_relationship_removed(entity: Entity, relationship: Relationship)
 		if reverse_relationship_index.has(rev_key):
 			reverse_relationship_index[rev_key].erase(relationship.target)
 
-	# IMPORTANT: Invalidate archetype cache when relationships change
-	# Queries with relationship filters need to see relationship changes in same frame
-	_invalidate_cache("relationship_removed")
+	# PERFORMANCE: No cache invalidation (see comment in _on_entity_relationship_added)
 
 	# Emit Signal
 	relationship_removed.emit(entity, relationship)
@@ -796,24 +817,42 @@ func _handle_observer_component_changed(
 #region Utility Methods
 
 func _query(all_components = [], any_components = [], exclude_components = [], enabled_filter = null, precalculated_cache_key: int = -1) -> Array:
+	var _perf_start_total := 0
+	if ECS.debug:
+		_perf_start_total = Time.get_ticks_usec()
 	# Early return if no components specified - return all entities
 	if all_components.is_empty() and any_components.is_empty() and exclude_components.is_empty():
 		if enabled_filter == null:
+			if ECS.debug:
+				perf_mark("query_all_entities", Time.get_ticks_usec() - _perf_start_total, {"returned": entities.size()})
 			return entities
 		else:
 			# Filter by enabled state
-			return entities.filter(func(e): return e.enabled == enabled_filter)
+			var filtered = entities.filter(func(e): return e.enabled == enabled_filter)
+			if ECS.debug:
+				perf_mark("query_all_entities_filtered", Time.get_ticks_usec() - _perf_start_total, {"returned": filtered.size(), "enabled_filter": enabled_filter})
+			return filtered
 
 	# OPTIMIZATION: Use pre-calculated cache key if provided (avoids hash recalculation)
+	var _perf_start_cache_key := 0
+	if ECS.debug:
+		_perf_start_cache_key = Time.get_ticks_usec()
 	var cache_key = precalculated_cache_key if precalculated_cache_key != -1 else QueryCacheKey.build(all_components, any_components, exclude_components)
+	if ECS.debug:
+		perf_mark("query_cache_key", Time.get_ticks_usec() - _perf_start_cache_key)
 
 	# Check if we have cached matching archetypes for this query
 	var matching_archetypes: Array[Archetype] = []
 	if _query_archetype_cache.has(cache_key):
 		_cache_hits += 1
 		matching_archetypes = _query_archetype_cache[cache_key]
+		if ECS.debug:
+			perf_mark("query_cache_hit", 0, {"archetypes": matching_archetypes.size()})
 	else:
 		_cache_misses += 1
+		var _perf_start_scan := 0
+		if ECS.debug:
+			_perf_start_scan = Time.get_ticks_usec()
 		# Find all archetypes that match this query
 		var map_resource_path = func(x): return x.resource_path
 		var _all := all_components.map(map_resource_path)
@@ -821,27 +860,33 @@ func _query(all_components = [], any_components = [], exclude_components = [], e
 		var _exclude := exclude_components.map(map_resource_path)
 
 		for archetype in archetypes.values():
-			# OPTIMIZATION: Filter by enabled state BEFORE checking component match
-			# This makes .enabled() queries skip entire archetypes instead of checking each entity
 			if enabled_filter != null and archetype.enabled_filter != enabled_filter:
-				continue # Skip archetypes with wrong enabled state
-
+				continue
 			if archetype.matches_query(_all, _any, _exclude):
 				matching_archetypes.append(archetype)
-
 		# Cache the matching archetypes (not the entity arrays!)
 		_query_archetype_cache[cache_key] = matching_archetypes
+		if ECS.debug:
+			perf_mark("query_archetype_scan", Time.get_ticks_usec() - _perf_start_scan, {"archetypes": matching_archetypes.size()})
 
 	# OPTIMIZATION: If there's only ONE matching archetype with no filtering, return it directly
 	# This avoids array allocation and copying for the common case
 	if matching_archetypes.size() == 1 and enabled_filter == null:
+		if ECS.debug:
+			perf_mark("query_single_archetype", Time.get_ticks_usec() - _perf_start_total, {"entities": matching_archetypes[0].entities.size()})
 		return matching_archetypes[0].entities
 
 	# Collect entities from all matching archetypes
 	# OPTIMIZATION: No need to filter by enabled state - archetypes are already filtered!
+	var _perf_start_flatten := 0
+	if ECS.debug:
+		_perf_start_flatten = Time.get_ticks_usec()
 	var result: Array[Entity] = []
 	for archetype in matching_archetypes:
 		result.append_array(archetype.entities)
+	if ECS.debug:
+		perf_mark("query_flatten", Time.get_ticks_usec() - _perf_start_flatten, {"returned": result.size(), "archetypes": matching_archetypes.size()})
+		perf_mark("query_total", Time.get_ticks_usec() - _perf_start_total, {"returned": result.size()})
 
 	return result
 
@@ -888,100 +933,43 @@ func group_entities_by_archetype(entities: Array) -> Dictionary:
 ##             # Process with cache-friendly column access
 ## [/codeblock]
 func get_matching_archetypes(query_builder: QueryBuilder) -> Array[Archetype]:
-	# Extract ALL query parameters
+	var _perf_start := 0
+	if ECS.debug:
+		_perf_start = Time.get_ticks_usec()
+	# PERFORMANCE: Archetype matching is based ONLY on structural components.
+	# Relationship/group filters are evaluated per-entity in System execution.
+	# This avoids double-scanning entities (World + System) and reduces cache churn.
 	var all_components = query_builder._all_components
 	var any_components = query_builder._any_components
 	var exclude_components = query_builder._exclude_components
-	var relationships = query_builder._relationships
-	var exclude_relationships = query_builder._exclude_relationships
-	var groups = query_builder._groups
-	var exclude_groups = query_builder._exclude_groups
 
-	# Get cache key (now includes relationships and groups)
-	var cache_key = query_builder.get_cache_key()
+	# Use a COMPONENT-ONLY cache key (ignore relationships/groups)
+	var cache_key = QueryCacheKey.build(all_components, any_components, exclude_components)
 
-	# Check cache first
 	if _query_archetype_cache.has(cache_key):
+		if ECS.debug:
+			perf_mark("archetypes_cache_hit", Time.get_ticks_usec() - _perf_start)
 		return _query_archetype_cache[cache_key]
 
-	# Convert Script objects to resource paths (for component matching)
 	var map_resource_path = func(x): return x.resource_path
 	var _all := all_components.map(map_resource_path)
 	var _any := any_components.map(map_resource_path)
 	var _exclude := exclude_components.map(map_resource_path)
 
-	# Find component-matching archetypes (first pass)
-	var component_matching: Array[Archetype] = []
+	var matching: Array[Archetype] = []
+	var _perf_scan_start := 0
+	if ECS.debug:
+		_perf_scan_start = Time.get_ticks_usec()
 	for archetype in archetypes.values():
 		if archetype.matches_query(_all, _any, _exclude):
-			component_matching.append(archetype)
+			matching.append(archetype)
+	if ECS.debug:
+		perf_mark("archetypes_scan", Time.get_ticks_usec() - _perf_scan_start, {"archetypes": matching.size()})
 
-	# If no relationship/group filters, return component matches
-	var has_relationship_filters = not relationships.is_empty() or not exclude_relationships.is_empty()
-	var has_group_filters = not groups.is_empty() or not exclude_groups.is_empty()
-
-	if not has_relationship_filters and not has_group_filters:
-		_query_archetype_cache[cache_key] = component_matching
-		return component_matching
-
-	# Second pass: Filter by relationships and groups
-	var fully_matching: Array[Archetype] = []
-
-	for archetype in component_matching:
-		# Check if archetype has ANY entities matching relationship/group filters
-		var has_matching_entity = false
-
-		for entity in archetype.entities:
-			# Check relationship filters
-			if has_relationship_filters:
-				var relationship_match = true
-
-				# Required relationships
-				for relationship in relationships:
-					if not entity.has_relationship(relationship):
-						relationship_match = false
-						break
-
-				# Excluded relationships
-				if relationship_match:
-					for ex_relationship in exclude_relationships:
-						if entity.has_relationship(ex_relationship):
-							relationship_match = false
-							break
-
-				if not relationship_match:
-					continue # This entity doesn't match relationships
-
-			# Check group filters
-			if has_group_filters:
-				var group_match = true
-
-				# Required groups (must be in ALL specified groups)
-				for group_name in groups:
-					if not entity.is_in_group(group_name):
-						group_match = false
-						break
-
-				# Excluded groups (must NOT be in ANY excluded group)
-				if group_match:
-					for exclude_group_name in exclude_groups:
-						if entity.is_in_group(exclude_group_name):
-							group_match = false
-							break
-
-				if not group_match:
-					continue # This entity doesn't match groups
-
-			# If we got here, entity matches all filters
-			has_matching_entity = true
-			break # Found at least one, archetype qualifies
-
-		if has_matching_entity:
-			fully_matching.append(archetype)
-
-	# Cache and return
-	_query_archetype_cache[cache_key] = fully_matching
-	return fully_matching
+	_query_archetype_cache[cache_key] = matching
+	if ECS.debug:
+		perf_mark("archetypes_total", Time.get_ticks_usec() - _perf_start, {"archetypes": matching.size()})
+	return matching
 
 
 ## Get performance statistics for cache usage

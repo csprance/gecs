@@ -28,8 +28,7 @@ var _any_components: Array = []
 # Components that an entity must not have.
 var _exclude_components: Array = []
 # Relationships that entities must have
-var _relationships: Array = []
-# Relationships that entities must not have
+var _relationships: Array = [] # (Retained for entity-level filtering only; NOT part of cache key)
 var _exclude_relationships: Array = []
 # Components queries that an entity must match
 var _all_components_queries: Array = []
@@ -125,13 +124,7 @@ func with_none(components: Array = []) -> QueryBuilder:
 func with_relationship(relationships: Array = []) -> QueryBuilder:
 	_relationships = relationships
 	_cache_valid = false
-	_cache_key_valid = false
-
-	# Connect to relationship signals for cache invalidation (only if not already connected)
-	if _world and not _world.relationship_added.is_connected(_on_relationship_changed):
-		_world.relationship_added.connect(_on_relationship_changed)
-		_world.relationship_removed.connect(_on_relationship_changed)
-
+	# Cache key unaffected by relationships (structural only)
 	return self
 
 
@@ -141,13 +134,6 @@ func with_relationship(relationships: Array = []) -> QueryBuilder:
 func without_relationship(relationships: Array = []) -> QueryBuilder:
 	_exclude_relationships = relationships
 	_cache_valid = false
-	_cache_key_valid = false
-
-	# Connect to relationship signals for cache invalidation (only if not already connected)
-	if _world and not _world.relationship_added.is_connected(_on_relationship_changed):
-		_world.relationship_added.connect(_on_relationship_changed)
-		_world.relationship_removed.connect(_on_relationship_changed)
-
 	return self
 
 
@@ -157,13 +143,8 @@ func with_reverse_relationship(relationships: Array = []) -> QueryBuilder:
 		if rel.relation != null:
 			var rev_key = "reverse_" + rel.relation.get_script().resource_path
 			if _world.reverse_relationship_index.has(rev_key):
-				# Connect to relationship signals (only if not already connected)
-				if _world and not _world.relationship_added.is_connected(_on_relationship_changed):
-					_world.relationship_added.connect(_on_relationship_changed)
-					_world.relationship_removed.connect(_on_relationship_changed)
 				return self.with_all(_world.reverse_relationship_index[rev_key])
 	_cache_valid = false
-	_cache_key_valid = false
 	return self
 
 
@@ -229,22 +210,30 @@ func execute_one() -> Entity:
 ## Executes the constructed query and retrieves matching entities.[br]
 ## [param returns] -  An [Array] of [Entity] that match the query criteria.
 func execute() -> Array:
-	var result
-	if _cache_valid:
-		result = _cached_result
-	else:
-		result = _internal_execute()
-		_cached_result = result
-		_cache_valid = true
+	# For relationship or group filters we need fresh filtering every call (no stale cached filtered result)
+	var uses_relationship_filters := (not _relationships.is_empty() or not _exclude_relationships.is_empty())
+	var uses_group_filters := (not _groups.is_empty() or not _exclude_groups.is_empty())
 
-	# Apply component queries on the cached result
-	# Only filter if there are actual property queries (not just empty {} placeholders)
+	var structural_result: Array
+	if _cache_valid and not uses_relationship_filters and not uses_group_filters:
+		# Safe to reuse full cached result only for purely structural component queries
+		structural_result = _cached_result
+	else:
+		# Recompute base structural/group result (without relationship filtering caching)
+		structural_result = _internal_execute()
+		# Only cache if no dynamic relationship/group filters are present
+		if not uses_relationship_filters and not uses_group_filters:
+			_cached_result = structural_result
+			_cache_valid = true
+		else:
+			_cache_valid = false # force recompute next call
+
+	var result = structural_result
+	# Apply component property queries (post structural)
 	if not _all_components_queries.is_empty() and _has_actual_queries(_all_components_queries):
 		result = _filter_entities_by_queries(result, _all_components, _all_components_queries, true)
 	if not _any_components_queries.is_empty() and _has_actual_queries(_any_components_queries):
-		result = _filter_entities_by_queries(
-			result, _any_components, _any_components_queries, false
-		)
+		result = _filter_entities_by_queries(result, _any_components, _any_components_queries, false)
 
 	return result
 
@@ -438,8 +427,6 @@ func combine(other: QueryBuilder) -> QueryBuilder:
 	_any_components += other._any_components
 	_any_components_queries += other._any_components_queries
 	_exclude_components += other._exclude_components
-	# If you have exclude component queries, include them as well
-	# _exclude_components_queries += other._exclude_components_queries
 	_relationships += other._relationships
 	_exclude_relationships += other._exclude_relationships
 	_groups += other._groups
@@ -550,26 +537,18 @@ func invalidate_cache():
 
 
 ## Called when a relationship is added or removed (only for queries using relationships)
+## Relationship changes do NOT affect structural cache key; queries only re-filter at execute time
 func _on_relationship_changed(_entity: Entity, _relationship: Relationship):
-	# Invalidate our cached results since relationship data changed
-	_cache_valid = false
+	_cache_valid = false # only result cache
 
 
 ## Get the cached query hash key, calculating it only once
 ## OPTIMIZATION: Avoids recalculating FNV-1a hash every frame in hot path queries
 func get_cache_key() -> int:
+	# Structural cache key excludes relationships/groups (matches 6.0.0 behavior)
 	if not _cache_key_valid:
-		# Calculate using World's hash function
 		if _world:
-			_cache_key = QueryCacheKey.build(
-				_all_components,
-				_any_components,
-				_exclude_components,
-				_relationships,
-				_exclude_relationships,
-				_groups,
-				_exclude_groups
-			)
+			_cache_key = QueryCacheKey.build(_all_components, _any_components, _exclude_components)
 			_cache_key_valid = true
 		else:
 			return -1

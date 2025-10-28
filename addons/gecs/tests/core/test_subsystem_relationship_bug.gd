@@ -18,11 +18,6 @@ func before():
 	world = runner.get_property("world")
 	ECS.world = world
 
-	# Create and add our test system with subsystems
-	test_system = TestSubsystemRelationships.new()
-	test_system.test_suite = self
-	world.add_system(test_system)
-
 func after_test():
 	subsystem1_found.clear()
 	subsystem2_found.clear()
@@ -55,6 +50,11 @@ class TestSubsystemRelationships extends System:
 func test_subsystem_with_existing_relationship_blocks_new_relationship_query():
 	# Exact scenario: Player has C_HasActiveItem, walks into area getting C_CanInteractWith
 	# Subsystem queries for C_CanInteractWith but doesn't find player!
+	
+	# Create and add our test system with subsystems
+	test_system = TestSubsystemRelationships.new()
+	test_system.test_suite = self
+	world.add_system(test_system)
 
 	var target = Entity.new()
 	target.name = "interactable"
@@ -101,7 +101,10 @@ func test_subsystem_with_existing_relationship_blocks_new_relationship_query():
 func test_subsystem_without_existing_relationship_works():
 	# Control test: Same scenario but WITHOUT the C_HasActiveItem first
 	# This should work fine
-
+		# Create and add our test system with subsystems
+	test_system = TestSubsystemRelationships.new()
+	test_system.test_suite = self
+	world.add_system(test_system)
 	var target = Entity.new()
 	target.name = "interactable"
 	world.add_entity(target)
