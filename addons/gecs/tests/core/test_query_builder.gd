@@ -1191,3 +1191,59 @@ func test_with_all_and_with_group_combination():
 	assert_bool(result.has(entity1)).is_true()
 	assert_bool(result.has(entity2)).is_false()
 	assert_bool(result.has(entity3)).is_false()
+
+
+func test_with_any_filters_instead_of_broadening():
+	# This test documents current semantics of with_any(): it REQUIRES at least one of the listed
+	# components to be present (logical OR constraint) in addition to with_all()/relationships,
+	# instead of broadening the result set. Users sometimes expect with_any() to behave like
+	# "optionally include these components" (i.e. a union of baseline results plus entities that
+	# have the optional components). That is NOT the implemented behavior.
+	#
+	# Setup:
+	#  - Two entities (e1, e2) both have C_TestA (acting like C_Health) and a damage relationship
+	#  - Only e2 has C_TestC (acting like C_Breakable)
+	# Baseline query (with_all + relationship) returns BOTH entities.
+	# Adding with_any([C_TestC]) returns ONLY e2 (entities must now also have at least one of the any-list)
+	# If no entity had C_TestC then result would become empty
+	var e1 = Entity.new()
+	var e2 = Entity.new()
+	var target = Entity.new() # Relationship target entity
+
+	# Components analogous to C_Health and C_Breakable
+	e1.add_component(C_TestA.new())
+	e2.add_component(C_TestA.new())
+	e2.add_component(C_TestC.new()) # Only e2 is "breakable"
+
+	# Relationship marker analogous to R_Damaged_Any (using C_TestB as marker)
+	e1.add_relationship(Relationship.new(C_TestB.new(), target))
+	e2.add_relationship(Relationship.new(C_TestB.new(), target))
+
+	world.add_entity(e1)
+	world.add_entity(e2)
+	world.add_entity(target)
+
+	# Baseline query: both entities match (have C_TestA + damage relationship)
+	var baseline = (
+		QueryBuilder
+		.new(world)
+		.with_all([C_TestA])
+		.with_relationship([Relationship.new(C_TestB.new(), null)])
+		.execute()
+	) as Array[Entity]
+	assert_int(baseline.size()).is_equal(2)
+	assert_bool(baseline.has(e1)).is_true()
+	assert_bool(baseline.has(e2)).is_true()
+
+	# Adding with_any([C_TestC]) NARROWS results to just e2 (must have at least one any-component)
+	var narrowed = (
+		QueryBuilder
+		.new(world)
+		.with_all([C_TestA])
+		.with_relationship([Relationship.new(C_TestB.new(), null)])
+		.with_any([C_TestC])
+		.execute()
+	) as Array[Entity]
+	assert_int(narrowed.size()).is_equal(1)
+	assert_bool(narrowed.has(e2)).is_true()
+	assert_bool(narrowed.has(e1)).is_false()

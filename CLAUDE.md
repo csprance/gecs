@@ -45,10 +45,12 @@ ECS.process(delta)
 ### Running Tests with GdUnit4
 
 The project uses gdUnit4 for testing. Tests are located in `addons/gecs/tests/`.
+No test should be created anywhere else other than `addons/gecs/tests/`
 
 #### Prerequisites
 
 **Windows:**
+
 ```cmd
 # Set environment variable (one-time setup)
 setx GODOT_BIN "D:\path\to\Godot.exe"
@@ -58,6 +60,7 @@ REG ADD HKCU\CONSOLE /f /v VirtualTerminalLevel /t REG_DWORD /d 1
 ```
 
 **Mac/Linux:**
+
 ```bash
 # Set environment variable (add to ~/.bashrc or ~/.zshrc)
 export GODOT_BIN="/Applications/Godot.app/Contents/MacOS/Godot"
@@ -155,6 +158,7 @@ addons/gdUnit4/runtest.sh -a "res://addons/gecs/tests/performance/test_entity_pe
 ```
 
 **Performance Results:**
+
 - Each test writes to `reports/perf/{test_name}.jsonl`
 - One JSON per line format for easy parsing
 - Track performance over time by test name and scale
@@ -175,6 +179,7 @@ GECS uses an automated release workflow that creates clean distribution branches
 **To create a new release:**
 
 1. **Tag the release** (use semantic versioning):
+
    ```bash
    git tag v1.0.0
    git push origin v1.0.0
@@ -185,11 +190,13 @@ GECS uses an automated release workflow that creates clean distribution branches
    - `godot-asset-library-v1.0.0` - For Godot Asset Library submissions (proper `addons/gecs/` structure)
 
 **Both branches contain:**
+
 - Clean addon code (no test directories)
 - README.md and LICENSE files
 - Production-ready GECS framework
 
 **For users:**
+
 ```bash
 # Submodule installation
 git submodule add -b release-v1.0.0 https://github.com/your-repo/gecs.git gecs
@@ -254,6 +261,7 @@ The project provides script templates in `script_templates/Node/` for:
 GECS supports entity relationships for hierarchical queries with two matching modes:
 
 ### Type Matching (Default)
+
 ```gdscript
 # Add relationship
 entity.add_relationship(Relationship.new(C_ChildOf.new(), parent_entity))
@@ -266,6 +274,7 @@ entity.has_relationship(Relationship.new(C_Damage.new(), target))
 ```
 
 ### Component Query Matching
+
 ```gdscript
 # Query relationships by property criteria
 var high_damage = q.with_relationship([
@@ -282,6 +291,7 @@ var strong_buffs = q.with_relationship([
 ```
 
 ### Limited Removal (NEW in v5.1+)
+
 ```gdscript
 # Remove specific number of relationships
 entity.remove_relationship(Relationship.new(C_Damage.new(), null), 1)  # Remove 1 damage
