@@ -1,0 +1,60 @@
+services:
+  influxdb:
+    image: influxdb:2.7
+    container_name: gecs-influxdb
+    ports:
+      - "8086:8086"
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=admin
+      - DOCKER_INFLUXDB_INIT_PASSWORD=gecsperformance
+      - DOCKER_INFLUXDB_INIT_ORG=gecs
+      - DOCKER_INFLUXDB_INIT_BUCKET=performance
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=gecs-performance-token-12345
+    volumes:
+      - influxdb-data:/var/lib/influxdb2
+      - ../../reports/perf:/data/perf:ro
+    networks:
+      - gecs-monitoring
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: gecs-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./provisioning:/etc/grafana/provisioning
+    depends_on:
+      - influxdb
+    networks:
+      - gecs-monitoring
+
+  # Data loader service to import JSONL files into InfluxDB
+  data-loader:
+    image: python:3.11-slim
+    container_name: gecs-data-loader
+    volumes:
+      - ../../reports/perf:/data/perf:ro
+      - .:/scripts
+    environment:
+      - INFLUXDB_URL=http://influxdb:8086
+      - INFLUXDB_TOKEN=gecs-performance-token-12345
+      - INFLUXDB_ORG=gecs
+      - INFLUXDB_BUCKET=performance
+    working_dir: /scripts
+    command: ["python", "load_jsonl_to_influx.py"]
+    depends_on:
+      - influxdb
+    networks:
+      - gecs-monitoring
+
+volumes:
+  influxdb-data:
+  grafana-data:
+
+networks:
+  gecs-monitoring:
+    driver: bridge

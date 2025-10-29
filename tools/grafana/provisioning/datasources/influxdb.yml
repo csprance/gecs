@@ -1,0 +1,16 @@
+apiVersion: 1
+
+datasources:
+  - name: InfluxDB-GECS
+    type: influxdb
+    access: proxy
+    url: http://influxdb:8086
+    uid: InfluxDB-GECS
+    jsonData:
+      version: Flux
+      organization: gecs
+      defaultBucket: performance
+      tlsSkipVerify: true
+    secureJsonData:
+      token: gecs-performance-token-12345
+    isDefault: true
