@@ -276,9 +276,16 @@ func remove_relationship(relationship: Relationship, limit: int = -1) -> void:
 
 	var to_remove = []
 	var removed_count = 0
+	
+	var pattern_remove = true
+	for rel in relationships:
+		if rel == relationship:
+			to_remove.append(rel)
+			pattern_remove = false
+			break
 
 	for rel in relationships:
-		if rel.matches(relationship):
+		if pattern_remove and rel.matches(relationship):
 			to_remove.append(rel)
 			removed_count += 1
 			# If limit is positive and we've reached it, stop collecting

@@ -977,6 +977,27 @@ func test_component_target_relationship_by_component_query():
 	var rel_love_attack = e_bob.get_relationship(Relationship.new({C_TestA: {}}, C_TestC.new()))
 	assert_int(rel_love_attack.relation.value).is_equal(10)
 
+
+func test_remove_specific_relationship():
+	e_bob = Person.new()
+	world.add_entity(e_bob)
+	
+	e_bob.add_relationship(Relationship.new(C_Likes.new(1), e_alice))
+	e_bob.add_relationship(Relationship.new(C_Likes.new(2), e_alice))
+	e_bob.add_relationship(Relationship.new(C_Likes.new(1), e_alice))
+	
+	var all_rels = e_bob.get_relationships(Relationship.new({C_Likes:{}}, null))
+	assert_array(all_rels).has_size(3)
+	
+	assert_int(all_rels[1].relation.value).is_equal(2)
+	e_bob.remove_relationship(all_rels[1])
+	
+	var like1_rels = e_bob.get_relationships(Relationship.new({C_Likes:{}}, null))
+	assert_array(like1_rels).has_size(2)
+	assert_int(like1_rels[0].relation.value).is_equal(1)
+	assert_int(like1_rels[1].relation.value).is_equal(1)
+	
+	
 # # FIXME: This is not working
 # func test_reverse_relationships_a():
 
