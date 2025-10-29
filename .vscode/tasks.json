@@ -3,19 +3,56 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "Perf Viewer: Generate Report & Open",
+      "label": "Grafana: Start Monitoring Stack",
       "type": "shell",
-      "command": "uv sync && uv run perf-viewer --dir ../../reports/perf --out ../../perf_report.html && start ../../perf_report.html",
-      "options": { "cwd": "${workspaceFolder}/tools/perf_viewer" },
+      "command": "docker-compose up -d",
+      "options": { "cwd": "${workspaceFolder}/tools/grafana" },
       "problemMatcher": [],
       "group": { "kind": "build", "isDefault": false },
       "presentation": { "reveal": "always", "panel": "shared" }
     },
     {
-      "label": "Perf Viewer: Module Run & Open",
+      "label": "Grafana: Stop Monitoring Stack",
       "type": "shell",
-      "command": "uv sync && uv run python -m perf_viewer.cli --dir ../../reports/perf --out ../../perf_report.html && start ../../perf_report.html",
-      "options": { "cwd": "${workspaceFolder}/tools/perf_viewer" },
+      "command": "docker-compose down",
+      "options": { "cwd": "${workspaceFolder}/tools/grafana" },
+      "problemMatcher": [],
+      "group": { "kind": "build", "isDefault": false },
+      "presentation": { "reveal": "always", "panel": "shared" }
+    },
+    {
+      "label": "Grafana: Restart Data Loader",
+      "type": "shell",
+      "command": "docker-compose restart data-loader",
+      "options": { "cwd": "${workspaceFolder}/tools/grafana" },
+      "problemMatcher": [],
+      "group": { "kind": "build", "isDefault": false },
+      "presentation": { "reveal": "always", "panel": "shared" }
+    },
+    {
+      "label": "Grafana: View Logs",
+      "type": "shell",
+      "command": "docker-compose logs -f",
+      "options": { "cwd": "${workspaceFolder}/tools/grafana" },
+      "problemMatcher": [],
+      "group": { "kind": "build", "isDefault": false },
+      "presentation": { "reveal": "always", "panel": "shared" },
+      "isBackground": true
+    },
+    {
+      "label": "Grafana: Open Dashboard",
+      "type": "shell",
+      "command": "start http://localhost:3000",
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": [],
+      "group": { "kind": "build", "isDefault": false },
+      "presentation": { "reveal": "silent", "panel": "shared" }
+    },
+    {
+      "label": "Grafana: Reload JSONL Data",
+      "type": "shell",
+      "command": "docker-compose run --rm data-loader python load_jsonl_to_influx.py",
+      "options": { "cwd": "${workspaceFolder}/tools/grafana" },
       "problemMatcher": [],
       "group": { "kind": "build", "isDefault": false },
       "presentation": { "reveal": "always", "panel": "shared" }
