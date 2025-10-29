@@ -45,15 +45,16 @@ var entities: Array[Entity] = []
 ## Enables O(1) entity removal using swap-remove technique
 var entity_to_index: Dictionary = {} # Entity -> int
 
+## OPTIMIZATION: Bitset for enabled/disabled state instead of archetype splitting
+## Uses PackedInt64Array where each bit represents whether entity at that index is enabled
+## Reduces archetype count by 2x and enables O(1) enabled/disabled filtering
+var enabled_bitset: PackedInt64Array = []
+
 ## OPTIMIZATION: Structure of Arrays (SoA) column storage for cache-friendly iteration
 ## Maps component_path -> Array of component instances
 ## Enables Flecs-style direct array iteration without dictionary lookups
 ## Example: columns["res://c_velocity.gd"] = [vel1, vel2, vel3, ...]
 var columns: Dictionary = {} # String (component_path) -> Array of components
-
-## Is this archetype for enabled entities only? (null = mixed, true = enabled, false = disabled)
-## Used to optimize queries with enabled/disabled filters
-var enabled_filter: Variant = null
 
 ## Archetype edges for fast component add/remove (future optimization)
 ## Maps: component_path -> Archetype (the archetype you get by adding/removing that component)
@@ -62,11 +63,10 @@ var remove_edges: Dictionary = {} # String -> Archetype
 
 
 ## Initialize archetype with signature and component types
-func _init(p_signature: int, p_component_types: Array, p_enabled_filter: Variant = null):
+func _init(p_signature: int, p_component_types: Array):
 	signature = p_signature
 	component_types = p_component_types.duplicate()
 	component_types.sort() # Ensure sorted for consistent matching
-	enabled_filter = p_enabled_filter
 
 	# Initialize column arrays for each component type
 	for comp_type in component_types:
@@ -80,6 +80,10 @@ func add_entity(entity: Entity) -> void:
 	var index = entities.size()
 	entities.append(entity)
 	entity_to_index[entity] = index
+
+	# OPTIMIZATION: Update enabled bitset
+	_ensure_bitset_capacity(index + 1)
+	_set_enabled_bit(index, entity.enabled)
 
 	# OPTIMIZATION: Populate column arrays from entity.components
 	for comp_path in component_types:
@@ -110,6 +114,10 @@ func remove_entity(entity: Entity) -> bool:
 		# OPTIMIZATION: Swap in column arrays too (maintain same ordering)
 		for comp_path in component_types:
 			columns[comp_path][index] = columns[comp_path][last_index]
+		
+		# OPTIMIZATION: Swap enabled bit
+		var last_enabled = _get_enabled_bit(last_index)
+		_set_enabled_bit(index, last_enabled)
 
 	# Remove last element from entities
 	entities.pop_back()
@@ -118,6 +126,9 @@ func remove_entity(entity: Entity) -> bool:
 	# OPTIMIZATION: Remove last element from all columns
 	for comp_path in component_types:
 		columns[comp_path].pop_back()
+
+	# OPTIMIZATION: Update bitset size (no need to clear the bit, just reduce logical size)
+	# The bit will be overwritten when a new entity is added
 
 	return true
 
@@ -145,6 +156,9 @@ func clear() -> void:
 	# OPTIMIZATION: Clear column arrays
 	for comp_path in component_types:
 		columns[comp_path].clear()
+		
+	# OPTIMIZATION: Clear bitset
+	enabled_bitset.clear()
 
 
 ## Check if this archetype matches a query with all/any/exclude components
@@ -228,3 +242,57 @@ func get_remove_edge(component_path: String) -> Archetype:
 ## [/codeblock]
 func get_column(component_path: String) -> Array:
 	return columns.get(component_path, [])
+
+
+## OPTIMIZATION: Get entities filtered by enabled state using bitset
+## [param enabled_only] If true, return only enabled entities; if false, only disabled
+## [returns] Array of entities matching the enabled state
+func get_entities_by_enabled_state(enabled_only: bool) -> Array[Entity]:
+	var result: Array[Entity] = []
+	for i in range(entities.size()):
+		if _get_enabled_bit(i) == enabled_only:
+			result.append(entities[i])
+	return result
+
+
+## OPTIMIZATION: Update entity enabled state in bitset
+## [param entity] The entity to update
+## [param enabled] The new enabled state
+func update_entity_enabled_state(entity: Entity, enabled: bool) -> void:
+	if entity_to_index.has(entity):
+		var index = entity_to_index[entity]
+		_set_enabled_bit(index, enabled)
+
+
+## OPTIMIZATION: Ensure bitset has enough capacity for the given number of entities
+func _ensure_bitset_capacity(required_size: int) -> void:
+	var required_int64s = (required_size + 63) / 64 # Round up to nearest 64-bit boundary
+	while enabled_bitset.size() < required_int64s:
+		enabled_bitset.append(0)
+
+
+## OPTIMIZATION: Set enabled bit for entity at index
+func _set_enabled_bit(index: int, enabled: bool) -> void:
+	var int64_index = index / 64
+	var bit_index = index % 64
+	
+	_ensure_bitset_capacity(index + 1)
+	
+	if enabled:
+		enabled_bitset[int64_index] |= (1 << bit_index)
+	else:
+		enabled_bitset[int64_index] &= ~(1 << bit_index)
+
+
+## OPTIMIZATION: Get enabled bit for entity at index
+func _get_enabled_bit(index: int) -> bool:
+	if index >= entities.size():
+		return false
+		
+	var int64_index = index / 64
+	var bit_index = index % 64
+	
+	if int64_index >= enabled_bitset.size():
+		return false
+		
+	return (enabled_bitset[int64_index] & (1 << bit_index)) != 0

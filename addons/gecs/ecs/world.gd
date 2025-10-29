@@ -827,8 +827,10 @@ func _query(all_components = [], any_components = [], exclude_components = [], e
 				perf_mark("query_all_entities", Time.get_ticks_usec() - _perf_start_total, {"returned": entities.size()})
 			return entities
 		else:
-			# Filter by enabled state
-			var filtered = entities.filter(func(e): return e.enabled == enabled_filter)
+			# OPTIMIZATION: Use bitset filtering from all archetypes instead of entity.enabled check
+			var filtered: Array[Entity] = []
+			for archetype in archetypes.values():
+				filtered.append_array(archetype.get_entities_by_enabled_state(enabled_filter))
 			if ECS.debug:
 				perf_mark("query_all_entities_filtered", Time.get_ticks_usec() - _perf_start_total, {"returned": filtered.size(), "enabled_filter": enabled_filter})
 			return filtered
@@ -860,8 +862,6 @@ func _query(all_components = [], any_components = [], exclude_components = [], e
 		var _exclude := exclude_components.map(map_resource_path)
 
 		for archetype in archetypes.values():
-			if enabled_filter != null and archetype.enabled_filter != enabled_filter:
-				continue
 			if archetype.matches_query(_all, _any, _exclude):
 				matching_archetypes.append(archetype)
 		# Cache the matching archetypes (not the entity arrays!)
@@ -876,14 +876,18 @@ func _query(all_components = [], any_components = [], exclude_components = [], e
 			perf_mark("query_single_archetype", Time.get_ticks_usec() - _perf_start_total, {"entities": matching_archetypes[0].entities.size()})
 		return matching_archetypes[0].entities
 
-	# Collect entities from all matching archetypes
-	# OPTIMIZATION: No need to filter by enabled state - archetypes are already filtered!
+	# Collect entities from all matching archetypes with enabled filtering if needed
 	var _perf_start_flatten := 0
 	if ECS.debug:
 		_perf_start_flatten = Time.get_ticks_usec()
 	var result: Array[Entity] = []
 	for archetype in matching_archetypes:
-		result.append_array(archetype.entities)
+		if enabled_filter == null:
+			# No filtering - add all entities
+			result.append_array(archetype.entities)
+		else:
+			# OPTIMIZATION: Use bitset filtering instead of per-entity enabled check
+			result.append_array(archetype.get_entities_by_enabled_state(enabled_filter))
 	if ECS.debug:
 		perf_mark("query_flatten", Time.get_ticks_usec() - _perf_start_flatten, {"returned": result.size(), "archetypes": matching_archetypes.size()})
 		perf_mark("query_total", Time.get_ticks_usec() - _perf_start_total, {"returned": result.size()})
@@ -1016,7 +1020,7 @@ func _return_query_builder_to_pool(query_builder: QueryBuilder) -> void:
 ## Calculate archetype signature for an entity based on its components
 ## Uses the same hash function as queries for consistency
 ## An entity signature is just a query with all its components (no any/exclude)
-func _calculate_entity_signature(entity: Entity, enabled_filter_value: Variant = null) -> int:
+func _calculate_entity_signature(entity: Entity) -> int:
 	# Get component resource paths
 	var comp_paths = entity.components.keys()
 	comp_paths.sort() # Sort paths for consistent ordering
@@ -1031,25 +1035,18 @@ func _calculate_entity_signature(entity: Entity, enabled_filter_value: Variant =
 			_component_script_cache[comp_path] = component.get_script()
 		comp_scripts.append(_component_script_cache[comp_path])
 
-	# OPTIMIZATION: Include entity.enabled in signature so enabled/disabled entities
-	# go to separate archetypes. This makes .enabled() queries O(1) instead of O(n).
-	var enabled_marker = 1 if entity.enabled else 0
-
 	# Use the SAME hash function as queries - entity is just "all components, no any/exclude"
-	# Add enabled state as a synthetic "component" for signature uniqueness
+	# OPTIMIZATION: Removed enabled_marker from signature - now handled by bitset in archetype
 	var signature = QueryCacheKey.build(comp_scripts, [], [])
-
-	# Mix in enabled state (XOR with shifted enabled marker to avoid collisions)
-	signature ^= (enabled_marker << 31)
 
 	return signature
 
 
 ## Get or create an archetype for the given signature and component types
-func _get_or_create_archetype(signature: int, component_types: Array, enabled_filter_value: Variant = null) -> Archetype:
+func _get_or_create_archetype(signature: int, component_types: Array) -> Archetype:
 	var is_new = not archetypes.has(signature)
 	if is_new:
-		var archetype = Archetype.new(signature, component_types, enabled_filter_value)
+		var archetype = Archetype.new(signature, component_types)
 		archetypes[signature] = archetype
 		_worldLogger.trace("Created new archetype: ", archetype)
 
@@ -1062,14 +1059,14 @@ func _get_or_create_archetype(signature: int, component_types: Array, enabled_fi
 
 ## Add entity to appropriate archetype (parallel system)
 func _add_entity_to_archetype(entity: Entity) -> void:
-	# Calculate signature based on entity's components AND enabled state
+	# Calculate signature based on entity's components (enabled state now handled by bitset)
 	var signature = _calculate_entity_signature(entity)
 
 	# Get component type paths for this entity
 	var comp_types = entity.components.keys()
 
-	# Get or create archetype (with enabled filter value)
-	var archetype = _get_or_create_archetype(signature, comp_types, entity.enabled)
+	# Get or create archetype (no longer needs enabled filter value)
+	var archetype = _get_or_create_archetype(signature, comp_types)
 
 	# Add entity to archetype
 	archetype.add_entity(entity)

@@ -386,24 +386,10 @@ func _on_enabled_changed(old_value: bool, new_value: bool) -> void:
 	if not ECS.world or not ECS.world.entity_to_archetype.has(self):
 		return
 
-	# Move entity to new archetype (enabled/disabled archetypes are separate)
-	var old_archetype = ECS.world.entity_to_archetype[self]
-	var new_signature = ECS.world._calculate_entity_signature(self)
-	var comp_types = components.keys()
-	var new_archetype = ECS.world._get_or_create_archetype(new_signature, comp_types, new_value)
-
-	# Remove from old archetype
-	old_archetype.remove_entity(self)
-
-	# Add to new archetype
-	new_archetype.add_entity(self)
-	ECS.world.entity_to_archetype[self] = new_archetype
-
-	# Clean up empty old archetype
-	if old_archetype.is_empty():
-		old_archetype.add_edges.clear()
-		old_archetype.remove_edges.clear()
-		ECS.world.archetypes.erase(old_archetype.signature)
+	# OPTIMIZATION: Update bitset instead of moving between archetypes
+	# This eliminates the need for separate enabled/disabled archetypes
+	var archetype = ECS.world.entity_to_archetype[self]
+	archetype.update_entity_enabled_state(self, new_value)
 
 	# Invalidate query cache since archetypes changed
 	ECS.world.cache_invalidated.emit()
