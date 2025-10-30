@@ -282,13 +282,14 @@ func remove_relationship(relationship: Relationship, limit: int = -1) -> void:
 		to_remove.append(relationship)
 		pattern_remove = false
 
-	for rel in relationships:
-		if pattern_remove and rel.matches(relationship):
-			to_remove.append(rel)
-			removed_count += 1
-			# If limit is positive and we've reached it, stop collecting
-			if limit > 0 and removed_count >= limit:
-				break
+	if pattern_remove:
+		for rel in relationships:
+			if rel.matches(relationship):
+				to_remove.append(rel)
+				removed_count += 1
+				# If limit is positive and we've reached it, stop collecting
+				if limit > 0 and removed_count >= limit:
+					break
 
 	for rel in to_remove:
 		relationships.erase(rel)
