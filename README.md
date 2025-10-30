@@ -33,13 +33,13 @@ func query() -> QueryBuilder:
 
 # Systems implement process to handle selected entities
 func process(entities: Array[Entity], components: Array, delta: float) -> void:
-    var velocities = components[0] # C_Velocity (first in iterate)
-    var transforms = components[1] # C_Transform (second in iterate)
+    var c_velocities = components[0] # C_Velocity (first in iterate)
+    var c_transforms = components[1] # C_Transform (second in iterate)
 
     # Process all velocity and transform components on entities that match query
     for i in entities.size():
-        var velocity = velocities[i]
-        var transform = transforms[i]
+        var c_velocity := velocities[i] as C_Velocity
+        var c_transform := transforms[i] as C_Transform
         transform.transform.global_position += velocity.velocity * delta
 
 # Add systems to the world
