@@ -6,27 +6,47 @@ Build scalable, maintainable games with clean separation of data and logic. GECS
 
 ```gdscript
 # Create entities with components
-var player = Entity.new()
-player.add_component(C_Health.new(100))
-player.add_component(C_Velocity.new(Vector2(5, 0)))
+var player1 = Entity.new()
+player1.add_component(C_Health.new(100))
+player1.add_component(C_Velocity.new(Vector2(5, 0)))
+
+var player2 = Entity.new()
+player2.add_component(C_Health.new(100))
+player2.add_component(C_Velocity.new(Vector2(-5, 0)))
+
+# Add entity to the world
+ECS.world.add_entities([player1, player2])
+
+# Add relationships to entities
+# Player 1 is an Ally to Player 2
+player1.add_relationship(Relationship.new(C_AllyTo.new(), player2))
+# Player 2 is a little suspicious of Player 1
+player2.add_relationship(Relationship.new(C_SuspiciousOf.new(), player1))
+
 
 # Systems process entities with specific components
 class_name VelocitySystem extends System
 
+# Systems define queries to select entities and iterate their components
 func query() -> QueryBuilder:
-	return q.with_all([C_Velocity, C_Transform]).iterate([C_Velocity, C_Transform])
+    return q.with_all([C_Velocity, C_Transform]).iterate([C_Velocity, C_Transform])
 
-
+# Systems implement process to handle selected entities
 func process(entities: Array[Entity], components: Array, delta: float) -> void:
-	var velocities = components[0] # C_Velocity (first in iterate)
-	var transforms = components[1] # C_Transform (second in iterate)
+    var velocities = components[0] # C_Velocity (first in iterate)
+    var transforms = components[1] # C_Transform (second in iterate)
 
-	# Process all velocity and transform components on entities that match query
-	for i in entities.size():
-		var velocity = velocities[i]
-		var transform = transforms[i]
-		transform.transform.global_position += velocity.velocity * delta
+    # Process all velocity and transform components on entities that match query
+    for i in entities.size():
+        var velocity = velocities[i]
+        var transform = transforms[i]
+        transform.transform.global_position += velocity.velocity * delta
 
+# Add systems to the world
+ECS.world.add_system(VelocitySystem.new())
+
+# Progress the world and call all systems
+ECS.world.process(delta)
 ```
 
 ## ⚡ Quick Start
