@@ -40,7 +40,7 @@ func process(entities: Array[Entity], components: Array, delta: float) -> void:
     for i in entities.size():
         var c_velocity := c_velocities[i] as C_Velocity
         var c_transform := c_transforms[i] as C_Transform
-        transform.transform.global_position += velocity.velocity * delta
+        c_transform.transform.global_position += c_velocity.velocity * delta
 
 # Add systems to the world
 ECS.world.add_system(VelocitySystem.new())
