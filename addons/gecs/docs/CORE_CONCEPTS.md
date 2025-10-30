@@ -333,8 +333,18 @@ extends System
 func sub_systems():
     return [
         # [query, callable] - all use same unified process signature
-        [ECS.world.query.with_all([C_Health, C_Damage]), damage_entities],
-        [ECS.world.query.with_all([C_Health]).with_none([C_Dead]).iterate([C_Health]), regenerate_health]
+        [
+            q
+            .with_all([C_Health, C_Damage]),
+            damage_entities
+        ],
+        [
+            q
+            .with_all([C_Health])
+            .with_none([C_Dead])
+            .iterate([C_Health]),
+            regenerate_health
+        ]
     ]
 
 func damage_entities(entities: Array[Entity], components: Array, delta: float):
@@ -406,6 +416,7 @@ ECS.world.query
     .with_relationship([r_attacking_player])    # Must have these relationships
     .without_relationship([r_fleeing])          # Must not have these relationships
     .with_reverse_relationship([r_parent_of])   # Must be target of these relationships
+    .iterate([C_Health])                        # Fetch these components and add to components array for quick iteration
 ```
 
 ### Query Methods
