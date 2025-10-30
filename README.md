@@ -23,6 +23,11 @@ player1.add_relationship(Relationship.new(C_AllyTo.new(), player2))
 # Player 2 is a little suspicious of Player 1
 player2.add_relationship(Relationship.new(C_SuspiciousOf.new(), player1))
 
+# Components define data only
+class_name C_Velocity extends Component
+
+@export var velocity := Vector3.ZERO
+
 
 # Systems process entities with specific components
 class_name VelocitySystem extends System
