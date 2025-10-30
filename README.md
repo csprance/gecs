@@ -4,6 +4,15 @@
 
 Build scalable, maintainable games with clean separation of data and logic. GECS integrates seamlessly with Godot's node system while providing powerful query-based entity filtering.
 
+## ✨ Key Features
+
+- 🎯 **Godot Integration** - Works with nodes, scenes, and editor
+- 🚀 **High Performance** - Optimized queries with automatic caching
+- 🔧 **Flexible Queries** - Find entities by components, relationships, or properties
+- 📦 **Editor Support** - Visual component editing and scene integration
+- 🎮 **Battle Tested** - Used in games being actively developed
+
+
 ```gdscript
 # Create entities with components
 var player1 = Entity.new()
@@ -60,13 +69,6 @@ ECS.world.process(delta)
 2. **Follow Guide**: [Get your first ECS project running in 5 minutes →](addons/gecs/docs/GETTING_STARTED.md)
 3. **Learn More**: [Understand core ECS concepts →](addons/gecs/docs/CORE_CONCEPTS.md)
 
-## ✨ Key Features
-
-- 🎯 **Godot Integration** - Works with nodes, scenes, and editor
-- 🚀 **High Performance** - Optimized queries with automatic caching
-- 🔧 **Flexible Queries** - Find entities by components, relationships, or properties
-- 📦 **Editor Support** - Visual component editing and scene integration
-- 🎮 **Battle Tested** - Used in games being actively developed
 
 ## 📚 Complete Documentation
 
