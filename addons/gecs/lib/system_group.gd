@@ -13,17 +13,19 @@ extends Node
 ## Put the [System]s in the group based on the [member Node.name] of the [SystemGroup]
 @export var auto_group := true
 
+
 ## called when the node enters the scene tree for the first time.
 func _enter_tree() -> void:
 	# Connect signals
 	if not child_entered_tree.is_connected(_on_child_entered_tree):
 		child_entered_tree.connect(_on_child_entered_tree)
-	
+
 	# Set the group for all child systems
 	if auto_group:
 		for child in get_children():
 			if child is System:
 				child.group = name
+
 
 ## Anytime  a child enters the tree, set its group if it's a System
 func _on_child_entered_tree(node: Node) -> void:

@@ -22,6 +22,7 @@ extends Resource
 ## The resource path of the target script (used when target_type is "Script")
 @export var target_script_path: String = ""
 
+
 ## Constructor to create relationship data from a Relationship instance
 func _init(
 	_relation_data: Component = null,
@@ -39,11 +40,11 @@ func _init(
 ## Creates GecsRelationshipData from a Relationship instance
 static func from_relationship(relationship: Relationship) -> GecsRelationshipData:
 	var data = GecsRelationshipData.new()
-	
+
 	# Store relation component (duplicate to avoid reference issues)
 	if relationship.relation:
 		data.relation_data = relationship.relation.duplicate(true)
-	
+
 	# Determine target type and store appropriate data
 	if relationship.target == null:
 		data.target_type = "null"
@@ -59,17 +60,18 @@ static func from_relationship(relationship: Relationship) -> GecsRelationshipDat
 	else:
 		push_warning("GecsRelationshipData: Unknown target type: " + str(type_string(typeof(relationship.target))))
 		data.target_type = "unknown"
-	
+
 	return data
+
 
 ## Recreates a Relationship from this data (requires entity mapping for Entity targets)
 func to_relationship(entity_mapping: Dictionary = {}) -> Relationship:
 	var relationship = Relationship.new()
-	
+
 	# Restore relation component
 	if relation_data:
 		relationship.relation = relation_data.duplicate(true)
-	
+
 	# Restore target based on type
 	match target_type:
 		"null":
@@ -89,5 +91,5 @@ func to_relationship(entity_mapping: Dictionary = {}) -> Relationship:
 		_:
 			push_warning("GecsRelationshipData: Unknown target type during deserialization: " + target_type)
 			return null
-	
+
 	return relationship

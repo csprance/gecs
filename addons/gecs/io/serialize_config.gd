@@ -24,7 +24,7 @@ func should_include_component(component: Component) -> bool:
 func merge_with(other: GECSSerializeConfig) -> GECSSerializeConfig:
 	if other == null:
 		return self
-	
+
 	var merged = GECSSerializeConfig.new()
 	merged.include_all_components = other.include_all_components
 	merged.components = other.components.duplicate()

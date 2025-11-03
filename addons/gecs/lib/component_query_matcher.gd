@@ -20,10 +20,10 @@
 ##     var component = C_Health.new(75)
 ##     var query = {"health": {"_gte": 50, "_lte": 100}}
 ##     var matches = ComponentQueryMatcher.matches_query(component, query)
-##     
+##
 ##     # Custom functions
 ##     var func_query = {"level": {"func": func(level): return level >= 40}}
-##     
+##
 ##     # Array membership
 ##     var type_query = {"type": {"_in": ["fire", "ice"]}}
 ## [/codeblock]

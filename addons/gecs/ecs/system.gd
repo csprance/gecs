@@ -93,6 +93,7 @@ var _subsystems_cache: Array = []
 
 #endregion Public Variables
 
+
 #region Public Methods
 ## Override this method to define the [System]s that this system depends on.[br]
 ## If not overridden the system will run based on the order of the systems in the [World][br]
@@ -163,6 +164,7 @@ func process(entities: Array[Entity], components: Array, delta: float) -> void:
 func _internal_setup():
 	# Call user setup
 	setup()
+
 
 ## Process entities in parallel using WorkerThreadPool
 ## Splits entities into batches and processes them concurrently
@@ -274,6 +276,7 @@ func _run_subsystems(delta: float) -> void:
 				lastRunData[subsystem_index] = {"subsystem_index": subsystem_index, "entity_count": total_entity_count, "fallback_execute": false}
 		subsystem_index += 1
 
+
 func _run_process(delta: float) -> void:
 	if not _query_cache:
 		_query_cache = query()
@@ -309,7 +312,8 @@ func _run_process(delta: float) -> void:
 			process(filtered, components, delta)
 		if ECS.debug:
 			lastRunData["entity_count"] = filtered.size()
-			lastRunData["archetype_count"] = _query_cache.archetypes().size()
+			lastRunData["archetype_count"
+				] = _query_cache.archetypes().size()
 			lastRunData["fallback_execute"] = true
 			lastRunData["parallel"] = parallel_processing and filtered.size() >= parallel_threshold
 		return
@@ -350,6 +354,7 @@ func _run_process(delta: float) -> void:
 				lastRunData["parallel"] = false
 			process(snapshot_entities, components, delta)
 
+
 ## Determine if a query includes non-structural filters requiring execute() fallback
 func _query_has_non_structural_filters(qb: QueryBuilder) -> bool:
 	if not qb._relationships.is_empty():
@@ -371,6 +376,7 @@ func _query_has_non_structural_filters(qb: QueryBuilder) -> bool:
 				return true
 	return false
 
+
 ## Build component arrays for iterate() when falling back to execute() result (no archetype columns)
 func _build_component_column_from_entities(entities: Array[Entity], comp_type) -> Array:
 	var out := []
@@ -381,6 +387,7 @@ func _build_component_column_from_entities(entities: Array[Entity], comp_type) -
 		var comp = e.get_component(comp_type)
 		out.append(comp)
 	return out
+
 
 ## Filter entities in an archetype for non-structural query criteria (relationships/groups/property queries)
 ## Filter a flat entity array for non-structural criteria

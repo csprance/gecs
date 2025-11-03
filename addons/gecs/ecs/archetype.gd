@@ -88,7 +88,8 @@ func add_entity(entity: Entity) -> void:
 	# OPTIMIZATION: Populate column arrays from entity.components
 	for comp_path in component_types:
 		if entity.components.has(comp_path):
-			columns[comp_path].append(entity.components[comp_path])
+			(columns[comp_path]
+				.append(entity.components[comp_path]))
 		else:
 			# Entity doesn't have this component yet (might be mid-initialization)
 			# Push null placeholder, will be fixed when component is added
@@ -114,7 +115,7 @@ func remove_entity(entity: Entity) -> bool:
 		# OPTIMIZATION: Swap in column arrays too (maintain same ordering)
 		for comp_path in component_types:
 			columns[comp_path][index] = columns[comp_path][last_index]
-		
+
 		# OPTIMIZATION: Swap enabled bit
 		var last_enabled = _get_enabled_bit(last_index)
 		_set_enabled_bit(index, last_enabled)
@@ -156,7 +157,7 @@ func clear() -> void:
 	# OPTIMIZATION: Clear column arrays
 	for comp_path in component_types:
 		columns[comp_path].clear()
-		
+
 	# OPTIMIZATION: Clear bitset
 	enabled_bitset.clear()
 
@@ -275,9 +276,9 @@ func _ensure_bitset_capacity(required_size: int) -> void:
 func _set_enabled_bit(index: int, enabled: bool) -> void:
 	var int64_index = index / 64
 	var bit_index = index % 64
-	
+
 	_ensure_bitset_capacity(index + 1)
-	
+
 	if enabled:
 		enabled_bitset[int64_index] |= (1 << bit_index)
 	else:
@@ -288,11 +289,11 @@ func _set_enabled_bit(index: int, enabled: bool) -> void:
 func _get_enabled_bit(index: int) -> bool:
 	if index >= entities.size():
 		return false
-		
+
 	var int64_index = index / 64
 	var bit_index = index % 64
-	
+
 	if int64_index >= enabled_bitset.size():
 		return false
-		
+
 	return (enabled_bitset[int64_index] & (1 << bit_index)) != 0

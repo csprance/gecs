@@ -1,5 +1,5 @@
 ## Set is Mathematical set data structure for collections of unique values.[br]
-## 
+##
 ## Built on Dictionary for O(1) membership testing. Used throughout GECS for
 ## entity filtering and component indexing.
 ##
@@ -10,7 +10,7 @@
 ##     var numbers = Set.new([1, 2, 3, 4, 5])
 ##     numbers.add(6)
 ##     print(numbers.has(3))  # true
-##     
+##
 ##     var set_a = Set.new([1, 2, 3, 4])
 ##     var set_b = Set.new([3, 4, 5, 6])
 ##     var intersection = set_a.intersect(set_b)  # [3, 4]
@@ -21,6 +21,7 @@ extends RefCounted
 ## Internal storage using Dictionary keys for O(1) average-case operations.
 ## Values in the dictionary are always [code]true[/code] and ignored.
 var _data: Dictionary = {}
+
 
 ## Initializes a new Set from Array, Dictionary keys, or another Set.
 ## [param data]: Optional initial data. Duplicates are automatically removed.
@@ -41,6 +42,7 @@ func _init(data = null) -> void:
 
 #region Basic Set Operations
 
+
 ## Adds a value to the set. Has no effect if the value is already present.
 ## [param value]: The value to add to the set. Can be any hashable type.
 ##
@@ -53,6 +55,7 @@ func _init(data = null) -> void:
 func add(value) -> void:
 	_data[value] = true
 
+
 ## Removes a value from the set. Has no effect if the value is not present.
 ## [param value]: The value to remove from the set
 ##
@@ -64,6 +67,7 @@ func add(value) -> void:
 ## [/codeblock]
 func erase(value) -> void:
 	_data.erase(value)
+
 
 ## Tests whether a value exists in the set.
 ## [param value]: The value to test for membership
@@ -78,6 +82,7 @@ func erase(value) -> void:
 func has(value) -> bool:
 	return _data.has(value)
 
+
 ## Removes all elements from the set, making it empty.
 ## [b]Time Complexity:[/b] O(1)
 ## [codeblock]
@@ -87,6 +92,7 @@ func has(value) -> bool:
 ## [/codeblock]
 func clear() -> void:
 	_data.clear()
+
 
 ## Returns the number of elements in the set.
 ## [return]: Integer count of unique elements in the set
@@ -98,6 +104,7 @@ func clear() -> void:
 ## [/codeblock]
 func size() -> int:
 	return _data.size()
+
 
 ## Tests whether the set contains no elements.
 ## [return]: [code]true[/code] if the set is empty, [code]false[/code] otherwise
@@ -111,6 +118,7 @@ func size() -> int:
 ## [/codeblock]
 func is_empty() -> bool:
 	return _data.is_empty()
+
 
 ## Returns all elements in the set as an Array.
 ## The order of elements is not guaranteed and may vary between calls.
@@ -127,6 +135,7 @@ func values() -> Array:
 #endregion
 
 #region Set Algebra Operations
+
 
 ## Returns the union of this set with another set (A ∪ B).
 ## Creates a new set containing all elements that exist in either set.
@@ -146,6 +155,7 @@ func union(other: Set) -> Set:
 		result._data[key] = true
 	return result
 
+
 ## Returns the intersection of this set with another set (A ∩ B).
 ## Creates a new set containing only elements that exist in both sets.
 ## Automatically optimizes by iterating over the smaller set.
@@ -161,13 +171,14 @@ func union(other: Set) -> Set:
 func intersect(other: Set) -> Set:
 	# Optimization: iterate over smaller set for better performance
 	if other.size() < _data.size():
-		return other.intersect(self)
-		
+		return other.intersect(self )
+
 	var result = Set.new()
 	for key in _data.keys():
 		if other._data.has(key):
 			result._data[key] = true
 	return result
+
 
 ## Returns the difference of this set minus another set (A - B).
 ## Creates a new set containing elements in this set but not in the other.
@@ -186,6 +197,7 @@ func difference(other: Set) -> Set:
 		if not other._data.has(key):
 			result._data[key] = true
 	return result
+
 
 ## Returns the symmetric difference of this set with another set (A ⊕ B).
 ## Creates a new set containing elements in either set, but not in both.
@@ -215,6 +227,7 @@ func symmetric_difference(other: Set) -> Set:
 
 #region Set Relationship Testing
 
+
 ## Tests whether this set is a subset of another set (A ⊆ B).
 ## Returns [code]true[/code] if every element in this set also exists in the other set.
 ## [param other]: The potential superset to test against
@@ -233,6 +246,7 @@ func is_subset(other: Set) -> bool:
 			return false
 	return true
 
+
 ## Tests whether this set is a superset of another set (A ⊇ B).
 ## Returns [code]true[/code] if this set contains every element from the other set.
 ## [param other]: The potential subset to test
@@ -245,7 +259,8 @@ func is_subset(other: Set) -> bool:
 ##     print(large_set.is_superset(small_set))  # true
 ## [/codeblock]
 func is_superset(other: Set) -> bool:
-	return other.is_subset(self)
+	return other.is_subset(self )
+
 
 ## Tests whether this set contains exactly the same elements as another set (A = B).
 ## Two sets are equal if they have the same size and this set is a subset of the other.
@@ -270,6 +285,7 @@ func is_equal(other) -> bool:
 
 #region Utility Methods
 
+
 ## Creates a shallow copy of this set.
 ## The returned set is independent - modifications to either set won't affect the other.
 ## However, if the set contains reference types, the references are shared.
@@ -287,6 +303,7 @@ func duplicate() -> Set:
 	var result = Set.new()
 	result._data = _data.duplicate()
 	return result
+
 
 ## Converts the set to an Array containing all elements.
 ## This is an alias for [method values] provided for API consistency.

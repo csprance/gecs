@@ -74,7 +74,7 @@ var query: QueryBuilder:
 	get:
 		var q: QueryBuilder
 		if _query_builder_pool.is_empty():
-			q = QueryBuilder.new(self)
+			q = QueryBuilder.new(self )
 			if not cache_invalidated.is_connected(q.invalidate_cache):
 				cache_invalidated.connect(q.invalidate_cache)
 		else:
@@ -109,6 +109,7 @@ var _perf_metrics := {
 	"accum": {} # Long-lived totals (cleared manually)
 }
 
+
 ## Internal perf helper (debug only)
 func perf_mark(key: String, duration_usec: int, extra: Dictionary = {}) -> void:
 	if not ECS.debug:
@@ -127,18 +128,22 @@ func perf_mark(key: String, duration_usec: int, extra: Dictionary = {}) -> void:
 	accum_entry.time_usec += duration_usec
 	_perf_metrics.accum[key] = accum_entry
 
+
 ## Reset per-frame metrics (called at world.process start)
 func perf_reset_frame() -> void:
 	if ECS.debug:
 		_perf_metrics.frame.clear()
 
+
 ## Get a copy of current frame metrics
 func perf_get_frame_metrics() -> Dictionary:
 	return _perf_metrics.frame.duplicate(true)
 
+
 ## Get a copy of accumulated metrics
 func perf_get_accum_metrics() -> Dictionary:
 	return _perf_metrics.accum.duplicate(true)
+
 
 ## Reset accumulated metrics
 func perf_reset_accum() -> void:
@@ -146,6 +151,7 @@ func perf_reset_accum() -> void:
 		_perf_metrics.accum.clear()
 
 #endregion Public Variables
+
 
 #region Built-in Virtual Methods
 ## Called when the World node is ready.
@@ -167,7 +173,7 @@ func initialize():
 	# Initialize default serialize config if not set
 	if default_serialize_config == null:
 		default_serialize_config = GECSSerializeConfig.new()
-	
+
 	# if no entities/systems root node is set create them and use them. This keeps things tidy for debugging
 	entity_nodes_root = (
 		_make_nodes_root("Entities").get_path() if not entity_nodes_root else entity_nodes_root
@@ -192,13 +198,13 @@ func initialize():
 	_worldLogger.debug("_initialize Added Entities from Scene Tree: ", _entities)
 
 	if ECS.debug:
-		assert(GECSEditorDebuggerMessages.world_init(self), '')
+		assert(GECSEditorDebuggerMessages.world_init(self ), '')
 		# Register debugger message handler for entity polling
 		if not Engine.is_editor_hint() and OS.has_feature("editor"):
 			EngineDebugger.register_message_capture("gecs", _handle_debugger_message)
 
-
 #endregion Built-in Virtual Methods
+
 
 #region Public Methods
 ## Called every frame by the [method _ECS.process] to process [System]s.
@@ -241,17 +247,17 @@ func add_entity(entity: Entity, components = null, add_to_tree = true) -> void:
 	# Check for ID collision - if entity with same ID exists, replace it
 	var entity_id = GECSIO.uuid() if not entity.id else entity.id
 	entity.id = entity_id # update entity with it's new id
-	
+
 	if entity_id in entity_id_registry:
 		var existing_entity = entity_id_registry[entity_id]
 		_worldLogger.debug("ID collision detected, replacing entity: ", existing_entity.name, " with: ", entity.name)
 		remove_entity(existing_entity)
-	
+
 	# Register this entity's ID
 	entity_id_registry[entity_id] = entity
 
 	# ID will auto-generate in _enter_tree if empty, or via property getter on first access
-	
+
 	# Update index
 	_worldLogger.debug("add_entity Adding Entity to World: ", entity)
 
@@ -264,12 +270,12 @@ func add_entity(entity: Entity, components = null, add_to_tree = true) -> void:
 		entity.relationship_added.connect(_on_entity_relationship_added)
 	if not entity.relationship_removed.is_connected(_on_entity_relationship_removed):
 		entity.relationship_removed.connect(_on_entity_relationship_removed)
-	
+
 	#  Add the entity to the tree if it's not already there after hooking up the signals
 	# This ensures that any _ready methods on the entity or its components are called after setup
 	if add_to_tree and not entity.is_inside_tree():
 		get_node(entity_nodes_root).add_child(entity)
-	
+
 	# add entity to our list
 	entities.append(entity)
 
@@ -283,7 +289,7 @@ func add_entity(entity: Entity, components = null, add_to_tree = true) -> void:
 		entity._initialize(components if components else [])
 
 	entity_added.emit(entity)
-	
+
 	# All the entities are ready so we should run the pre-processors now
 	for processor in ECS.entity_preprocessors:
 		processor.call(entity)
@@ -302,18 +308,18 @@ func add_entities(_entities: Array, components = null):
 	# Temporarily disable cache invalidation during batch, then invalidate once at the end
 	var original_invalidate = _should_invalidate_cache
 	_should_invalidate_cache = false
-	
+
 	var new_archetypes_created = false
 	var initial_archetype_count = archetypes.size()
-	
+
 	# Process all entities
 	for _entity in _entities:
 		add_entity(_entity, components)
-	
+
 	# Check if any new archetypes were created
 	if archetypes.size() > initial_archetype_count:
 		new_archetypes_created = true
-	
+
 	# Re-enable cache invalidation and invalidate once if needed
 	_should_invalidate_cache = original_invalidate
 	if new_archetypes_created:
@@ -326,7 +332,7 @@ func add_entities(_entities: Array, components = null):
 ##      [codeblock]world.remove_entity(player_entity)[/codeblock]
 func remove_entity(entity) -> void:
 	entity = entity as Entity
-	
+
 	for processor in ECS.entity_postprocessors:
 		processor.call(entity)
 	entity_removed.emit(entity)
@@ -342,7 +348,7 @@ func remove_entity(entity) -> void:
 		entity.relationship_added.disconnect(_on_entity_relationship_added)
 	if entity.relationship_removed.is_connected(_on_entity_relationship_removed):
 		entity.relationship_removed.disconnect(_on_entity_relationship_removed)
-	
+
 	# Remove from ID registry
 	var entity_id = entity.id
 	if entity_id != "" and entity_id in entity_id_registry and entity_id_registry[entity_id] == entity:
@@ -368,18 +374,18 @@ func remove_entities(_entities: Array) -> void:
 	# Temporarily disable cache invalidation during batch, then invalidate once at the end
 	var original_invalidate = _should_invalidate_cache
 	_should_invalidate_cache = false
-	
+
 	var archetypes_removed = false
 	var initial_archetype_count = archetypes.size()
-	
+
 	# Process all entities
 	for _entity in _entities:
 		remove_entity(_entity)
-	
+
 	# Check if any archetypes were removed (when they became empty)
 	if archetypes.size() < initial_archetype_count:
 		archetypes_removed = true
-	
+
 	# Re-enable cache invalidation and invalidate once if needed
 	_should_invalidate_cache = original_invalidate
 	if archetypes_removed:
@@ -417,6 +423,7 @@ func disable_entity(entity) -> Entity:
 func disable_entities(_entities: Array) -> void:
 	for _entity in _entities:
 		disable_entity(_entity)
+
 
 ## Enables a single [Entity] to the world.[br]
 ## [param entity] The [Entity] to enable.[br]
@@ -466,7 +473,6 @@ func get_entity_by_id(id: String) -> Entity:
 ## [return] true if an entity with this ID exists, false otherwise
 func has_entity_with_id(id: String) -> bool:
 	return id in entity_id_registry
-
 
 #region Systems
 
@@ -584,13 +590,12 @@ func purge(should_free = true, keep := []) -> void:
 	_worldLogger.debug("Purging Observers", observers)
 	for observer in observers.duplicate():
 		remove_observer(observer)
-	
+
 	_invalidate_cache("purge")
-	
+
 	# remove itself
 	if should_free:
 		queue_free()
-
 
 ## Executes a query to retrieve entities based on component criteria.[br]
 ## [param all_components] [Component]s that [Entity]s must have all of.[br]
@@ -670,7 +675,7 @@ func _on_entity_component_removed(entity, component: Resource) -> void:
 	_handle_observer_component_removed(entity, component)
 	if ECS.debug:
 		assert(GECSEditorDebuggerMessages.entity_component_removed(entity, component), '')
-	
+
 
 ## (Optional) Update index when a relationship is added.
 func _on_entity_relationship_added(entity: Entity, relationship: Relationship) -> void:
@@ -730,7 +735,7 @@ func add_observer(_observer: Observer) -> void:
 	observers.append(_observer)
 
 	# Initialize the query builder for the observer
-	_observer.q = QueryBuilder.new(self)
+	_observer.q = QueryBuilder.new(self )
 
 	# Verify the system has a valid watch component
 	_observer.watch() # Just call to validate it returns a component
@@ -853,6 +858,7 @@ func _handle_observer_component_changed(
 #endregion Public Methods
 
 #region Utility Methods
+
 
 func _query(all_components = [], any_components = [], exclude_components = [], enabled_filter = null, precalculated_cache_key: int = -1) -> Array:
 	var _perf_start_total := 0
@@ -1042,7 +1048,7 @@ func _invalidate_cache(reason: String) -> void:
 	# OPTIMIZATION: Skip invalidation during batch operations
 	if not _should_invalidate_cache:
 		return
-		
+
 	_query_archetype_cache.clear()
 	cache_invalidated.emit()
 
@@ -1259,10 +1265,10 @@ func _move_entity_to_new_archetype(entity: Entity, old_archetype: Archetype) -> 
 		old_archetype.remove_edges.clear()
 		archetypes.erase(old_archetype.signature)
 
-
 #endregion Utility Methods
 
 #region Debugger Support
+
 
 ## Handle messages from the editor debugger
 func _handle_debugger_message(message: String, data: Array) -> bool:
@@ -1331,6 +1337,7 @@ func _handle_debugger_message(message: String, data: Array) -> bool:
 			print("  ERROR: Could not find node at path: ", entity_path)
 		return true
 	return false
+
 
 ## Poll a specific entity's components and send updates to the debugger
 func _poll_entity_for_debugger(entity_id: int) -> void:

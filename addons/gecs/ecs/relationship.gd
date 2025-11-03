@@ -32,16 +32,16 @@
 ##     # Create a damage type hierarchy using components as targets
 ##     var fire_damage = C_FireDamage.new(50)
 ##     var poison_damage = C_PoisonDamage.new(25)
-##     
+##
 ##     # Entity has different types of damage
 ##     entity.add_relationship(Relationship.new(C_Damaged.new(), fire_damage))
 ##     entity.add_relationship(Relationship.new(C_Damaged.new(), poison_damage))
-##     
+##
 ##     # Query for entities with any damage type (wildcard)
 ##     var damaged_entities = ECS.world.query.with_relationship([
 ##         Relationship.new(C_Damaged.new(), null)
 ##     ]).execute()
-##     
+##
 ##     # Query for entities with fire damage amount >= 50 using component query
 ##     var fire_damaged = ECS.world.query.with_relationship([
 ##         Relationship.new(C_Damaged.new(), {C_FireDamage: {'amount': {"_gte": 50}}})
