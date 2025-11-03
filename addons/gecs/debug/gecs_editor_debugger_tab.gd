@@ -196,7 +196,12 @@ func _on_system_tree_item_mouse_selected(position: Vector2, mouse_button_index: 
 		return
 
 	var selected = system_tree.get_selected()
-	if not selected or not selected.has_meta("system_id"):
+	if not selected:
+		return
+
+	# Check if has system_id metadata with safe default
+	var system_id = selected.get_meta("system_id", null)
+	if system_id == null:
 		return
 
 	# Only toggle if clicking on a top-level system item (not child details)
@@ -209,11 +214,14 @@ func _on_system_tree_item_mouse_selected(position: Vector2, mouse_button_index: 
 
 func _toggle_system_active():
 	var selected = system_tree.get_selected()
-	if not selected or not selected.has_meta("system_id"):
+	if not selected:
 		push_warning("GECS Debug: No system selected")
 		return
 
-	var system_id = selected.get_meta("system_id")
+	var system_id = selected.get_meta("system_id", null)
+	if system_id == null:
+		push_warning("GECS Debug: No system selected")
+		return
 	var systems_data = ecs_data.get("systems", {})
 	var system_data = systems_data.get(system_id, {})
 	var current_active = system_data.get("active", true)
@@ -428,7 +436,7 @@ func entity_removed(ent: int, path: NodePath) -> void:
 		var root = entities_tree.get_root()
 		var child = root.get_first_child()
 		while child:
-			if child.get_meta("entity_id") == ent:
+			if child.get_meta("entity_id", null) == ent:
 				root.remove_child(child)
 				break
 			child = child.get_next()
@@ -443,7 +451,7 @@ func entity_disabled(ent: int, path: NodePath) -> void:
 	if entities_tree and entities_tree.get_root():
 		var child = entities_tree.get_root().get_first_child()
 		while child:
-			if child.get_meta("entity_id") == ent:
+			if child.get_meta("entity_id", null) == ent:
 				child.set_text(0, child.get_text(0) + " (disabled)")
 				break
 			child = child.get_next()
@@ -456,7 +464,7 @@ func entity_enabled(ent: int, path: NodePath) -> void:
 	if entities_tree and entities_tree.get_root():
 		var child = entities_tree.get_root().get_first_child()
 		while child:
-			if child.get_meta("entity_id") == ent:
+			if child.get_meta("entity_id", null) == ent:
 				# Remove any (disabled) suffix
 				var txt = child.get_text(0)
 				if txt.ends_with(" (disabled)"):
@@ -521,7 +529,7 @@ func system_last_run_data(system_id: int, system_name: String, last_run_data: Di
 		var existing: TreeItem = null
 		var child = root.get_first_child()
 		while child != null:
-			if child.get_meta("system_id") == system_id:
+			if child.get_meta("system_id", null) == system_id:
 				existing = child
 				break
 			child = child.get_next()
@@ -590,7 +598,7 @@ func entity_component_added(ent: int, comp: int, comp_path: String, data: Dictio
 			var entity_item: TreeItem = null
 			var child = root.get_first_child()
 			while child:
-				if child.get_meta("entity_id") == ent:
+				if child.get_meta("entity_id", null) == ent:
 					entity_item = child
 					break
 				child = child.get_next()
@@ -599,7 +607,7 @@ func entity_component_added(ent: int, comp: int, comp_path: String, data: Dictio
 				var existing_comp_item: TreeItem = null
 				var comp_child = entity_item.get_first_child()
 				while comp_child:
-					if comp_child.get_meta("component_id") == comp:
+					if comp_child.has_meta("component_id") and comp_child.get_meta("component_id") == comp:
 						existing_comp_item = comp_child
 						break
 					comp_child = comp_child.get_next()
@@ -643,14 +651,14 @@ func entity_component_removed(ent: int, comp: int):
 		var entity_item: TreeItem = null
 		var child = entities_tree.get_root().get_first_child()
 		while child:
-			if child.get_meta("entity_id") == ent:
+			if child.get_meta("entity_id", null) == ent:
 				entity_item = child
 				break
 			child = child.get_next()
 		if entity_item:
 			var comp_child = entity_item.get_first_child()
 			while comp_child:
-				if comp_child.get_meta("component_id") == comp:
+				if comp_child.has_meta("component_id") and comp_child.get_meta("component_id") == comp:
 					entity_item.remove_child(comp_child)
 					break
 				comp_child = comp_child.get_next()
@@ -671,18 +679,18 @@ func entity_component_property_changed(
 		var entity_item: TreeItem = null
 		var child = entities_tree.get_root().get_first_child()
 		while child:
-			if child.get_meta("entity_id") == ent:
+			if child.get_meta("entity_id", null) == ent:
 				entity_item = child
 				break
 			child = child.get_next()
 		if entity_item:
 			var comp_child = entity_item.get_first_child()
 			while comp_child:
-				if comp_child.get_meta("component_id") == comp:
+				if comp_child.has_meta("component_id") and comp_child.get_meta("component_id") == comp:
 					var prop_row = comp_child.get_first_child()
 					var updated := false
 					while prop_row:
-						if prop_row.get_meta("property_name") == property_name:
+						if prop_row.has_meta("property_name") and prop_row.get_meta("property_name") == property_name:
 							prop_row.set_text(0, property_name + ": " + str(new_value))
 							updated = true
 							break
@@ -751,7 +759,7 @@ func entity_relationship_added(ent: int, rel: int, rel_data: Dictionary):
 			var entity_item: TreeItem = null
 			var child = root.get_first_child()
 			while child:
-				if child.get_meta("entity_id") == ent:
+				if child.get_meta("entity_id", null) == ent:
 					entity_item = child
 					break
 				child = child.get_next()
@@ -761,7 +769,7 @@ func entity_relationship_added(ent: int, rel: int, rel_data: Dictionary):
 				var existing_rel_item: TreeItem = null
 				var rel_child = entity_item.get_first_child()
 				while rel_child:
-					if rel_child.get_meta("relationship_id", -1) == rel:
+					if rel_child.has_meta("relationship_id") and rel_child.get_meta("relationship_id") == rel:
 						existing_rel_item = rel_child
 						break
 					rel_child = rel_child.get_next()
@@ -835,7 +843,7 @@ func entity_relationship_removed(ent: int, rel: int):
 		var entity_item: TreeItem = null
 		var child = entities_tree.get_root().get_first_child()
 		while child:
-			if child.get_meta("entity_id") == ent:
+			if child.get_meta("entity_id", null) == ent:
 				entity_item = child
 				break
 			child = child.get_next()
@@ -843,7 +851,7 @@ func entity_relationship_removed(ent: int, rel: int):
 		if entity_item:
 			var rel_child = entity_item.get_first_child()
 			while rel_child:
-				if rel_child.get_meta("relationship_id", -1) == rel:
+				if rel_child.has_meta("relationship_id") and rel_child.get_meta("relationship_id") == rel:
 					entity_item.remove_child(rel_child)
 					break
 				rel_child = rel_child.get_next()
