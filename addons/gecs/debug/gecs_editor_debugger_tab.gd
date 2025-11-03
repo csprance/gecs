@@ -26,15 +26,28 @@ var _debugger_session: EditorDebuggerSession = null
 @onready var systems_status_bar: TextEdit = %SystemsStatusBar
 @onready var debug_mode_overlay: Panel = %DebugModeOverlay
 
+# Sorting state
+var _system_sort_column: int = -1  # -1 means no sorting
+var _system_sort_ascending: bool = true
+
 
 func _ready() -> void:
 	_update_debug_mode_overlay()
 	if system_tree:
-		# Two columns: name and active status
-		system_tree.columns = 2
-		system_tree.set_column_expand(0, true)
-		system_tree.set_column_expand(1, false)
-		system_tree.set_column_custom_minimum_width(1, 100)
+		# Three columns: name, execution time, and active status
+		system_tree.columns = 3
+		system_tree.set_column_expand(0, true)  # Name column expands
+		system_tree.set_column_expand(1, false)  # Execution time column fixed
+		system_tree.set_column_expand(2, false)  # Status column fixed
+		system_tree.set_column_custom_minimum_width(1, 100)  # Execution time: 100px
+		system_tree.set_column_custom_minimum_width(2, 100)  # Status: 100px
+
+		# Set column titles (clickable for sorting)
+		system_tree.set_column_title(0, "Name")
+		system_tree.set_column_title(1, "Time (ms)")
+		system_tree.set_column_title(2, "Status")
+		system_tree.set_column_titles_visible(true)
+
 		# Create root item
 		if system_tree.get_root() == null:
 			system_tree.create_item()
@@ -61,6 +74,9 @@ func _ready() -> void:
 	# Connect to system tree for clicking (single click to toggle)
 	if system_tree and not system_tree.item_mouse_selected.is_connected(_on_system_tree_item_mouse_selected):
 		system_tree.item_mouse_selected.connect(_on_system_tree_item_mouse_selected)
+	# Connect to system tree for column clicking (for sorting)
+	if system_tree and not system_tree.column_title_clicked.is_connected(_on_system_tree_column_clicked):
+		system_tree.column_title_clicked.connect(_on_system_tree_column_clicked)
 
 
 func _process(delta: float) -> void:
@@ -208,7 +224,7 @@ func _on_system_tree_item_mouse_selected(position: Vector2, mouse_button_index: 
 	if selected.get_parent() == system_tree.get_root():
 		# Get the column that was clicked
 		var column = system_tree.get_column_at_position(position)
-		if column == 1: # Status column
+		if column == 2: # Status column (now column 2)
 			_toggle_system_active()
 
 
@@ -238,18 +254,109 @@ func _toggle_system_active():
 
 
 func _update_system_active_display(system_item: TreeItem, is_active: bool):
-	# Update the visual display of the system in column 1 as a button
+	# Update the visual display of the system in column 2 as a button
 	if is_active:
-		system_item.set_text(1, "ACTIVE")
-		system_item.set_custom_color(1, Color(0.5, 1.0, 0.5)) # Green text
+		system_item.set_text(2, "ACTIVE")
+		system_item.set_custom_color(2, Color(0.5, 1.0, 0.5)) # Green text
 	else:
-		system_item.set_text(1, "INACTIVE")
-		system_item.set_custom_color(1, Color(1.0, 0.3, 0.3)) # Red text
+		system_item.set_text(2, "INACTIVE")
+		system_item.set_custom_color(2, Color(1.0, 0.3, 0.3)) # Red text
 
 	# Make the status column a clickable button
-	system_item.set_cell_mode(1, TreeItem.CELL_MODE_STRING)
-	system_item.set_selectable(1, true)
-	system_item.set_editable(1, false)
+	system_item.set_cell_mode(2, TreeItem.CELL_MODE_STRING)
+	system_item.set_selectable(2, true)
+	system_item.set_editable(2, false)
+
+
+func _on_system_tree_column_clicked(column: int, mouse_button_index: int):
+	# Only sort on left click
+	if mouse_button_index != MOUSE_BUTTON_LEFT:
+		return
+
+	# Toggle sort direction if clicking same column, otherwise reset to ascending
+	if _system_sort_column == column:
+		_system_sort_ascending = not _system_sort_ascending
+	else:
+		_system_sort_column = column
+		_system_sort_ascending = true
+
+	# Update column title indicators
+	_update_system_column_indicators()
+
+	# Sort the tree
+	_sort_system_tree()
+
+
+func _update_system_column_indicators():
+	# Clear all column indicators first
+	for i in range(3):
+		var title = ""
+		match i:
+			0: title = "Name"
+			1: title = "Time (ms)"
+			2: title = "Status"
+
+		# Add arrow indicator if this is the sort column
+		if i == _system_sort_column:
+			if _system_sort_ascending:
+				title += " ▲"
+			else:
+				title += " ▼"
+
+		system_tree.set_column_title(i, title)
+
+
+func _sort_system_tree():
+	if not system_tree or _system_sort_column == -1:
+		return
+
+	var root = system_tree.get_root()
+	if not root:
+		return
+
+	# Collect all system items with their data
+	var systems: Array = []
+	var child = root.get_first_child()
+	while child:
+		var system_data = {
+			"item": child,
+			"name": child.get_text(0),
+			"time": 0.0,
+			"status": child.get_text(2),
+			"system_id": child.get_meta("system_id", null)
+		}
+
+		# Get execution time from text (remove " ms" suffix if present)
+		var time_text = child.get_text(1)
+		if time_text:
+			system_data["time"] = float(time_text.replace(" ms", ""))
+
+		systems.append(system_data)
+		child = child.get_next()
+
+	# Sort based on column
+	match _system_sort_column:
+		0: # Name
+			if _system_sort_ascending:
+				systems.sort_custom(func(a, b): return a["name"].nocasecmp_to(b["name"]) < 0)
+			else:
+				systems.sort_custom(func(a, b): return a["name"].nocasecmp_to(b["name"]) > 0)
+		1: # Time
+			if _system_sort_ascending:
+				systems.sort_custom(func(a, b): return a["time"] < b["time"])
+			else:
+				systems.sort_custom(func(a, b): return a["time"] > b["time"])
+		2: # Status
+			if _system_sort_ascending:
+				systems.sort_custom(func(a, b): return a["status"] < b["status"])
+			else:
+				systems.sort_custom(func(a, b): return a["status"] > b["status"])
+
+	# Rebuild tree in sorted order
+	for system_data in systems:
+		var item = system_data["item"]
+		root.remove_child(item)
+		root.add_child(item)
 
 
 # --- Utilities ---
@@ -539,7 +646,10 @@ func system_last_run_data(system_id: int, system_name: String, last_run_data: Di
 			existing.collapsed = true # Start collapsed
 		# Set main system name
 		existing.set_text(0, system_name)
-		# Set active status in column 1
+		# Set execution time in column 1
+		var exec_ms = last_run_data.get("execution_time_ms", 0.0)
+		existing.set_text(1, String.num(exec_ms, 3) + " ms")
+		# Set active status in column 2
 		var is_active = sys_entry.get("active", true)
 		_update_system_active_display(existing, is_active)
 		# Clear previous children to avoid stale data
@@ -573,6 +683,10 @@ func system_last_run_data(system_id: int, system_name: String, last_run_data: Di
 				sub_row.set_text(0, "subsystem[" + str(key) + "] entity_count: " + str(sub.get("entity_count", 0)))
 		# Optionally store raw json in metadata for tooltip or future expansion
 		existing.set_meta("last_run_data", last_run_data.duplicate())
+
+	# Re-sort if we have an active sort column
+	if _system_sort_column != -1:
+		_sort_system_tree()
 
 	# Update status bar with latest system data
 	_update_systems_status_bar()
