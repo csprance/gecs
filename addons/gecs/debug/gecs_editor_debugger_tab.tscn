@@ -13,6 +13,47 @@ size_flags_horizontal = 3
 size_flags_vertical = 3
 script = ExtResource("1_8dl00")
 
+[node name="DebugModeOverlay" type="Panel" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="CenterContainer" type="CenterContainer" parent="DebugModeOverlay"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="DebugModeOverlay/CenterContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="DebugModeOverlay/CenterContainer/VBoxContainer"]
+layout_mode = 2
+theme_type_variation = &"HeaderLarge"
+text = "Debug Mode Disabled"
+horizontal_alignment = 1
+
+[node name="Message" type="Label" parent="DebugModeOverlay/CenterContainer/VBoxContainer"]
+layout_mode = 2
+text = "Enable Debug Mode in Project Settings to show Debug Data"
+horizontal_alignment = 1
+
+[node name="HSpacer" type="Control" parent="DebugModeOverlay/CenterContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 10)
+layout_mode = 2
+
+[node name="Instructions" type="Label" parent="DebugModeOverlay/CenterContainer/VBoxContainer"]
+layout_mode = 2
+text = "Project Settings > General > GECS > Settings > Debug Mode"
+horizontal_alignment = 1
+
 [node name="HSplit" type="HSplitContainer" parent="."]
 process_mode = 3
 layout_mode = 1

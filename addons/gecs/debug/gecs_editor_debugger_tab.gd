@@ -24,9 +24,11 @@ var _debugger_session: EditorDebuggerSession = null
 @onready var entities_tree: Tree = %EntitiesTree
 @onready var entity_status_bar: TextEdit = %EntityStatusBar
 @onready var systems_status_bar: TextEdit = %SystemsStatusBar
+@onready var debug_mode_overlay: Panel = %DebugModeOverlay
 
 
 func _ready() -> void:
+	_update_debug_mode_overlay()
 	if system_tree:
 		# Two columns: name and active status
 		system_tree.columns = 2
@@ -64,6 +66,17 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	# No periodic polling; rely on debugger messages only
 	pass
+
+
+func _update_debug_mode_overlay() -> void:
+	if not debug_mode_overlay:
+		return
+
+	# Check if debug mode is enabled in project settings
+	var debug_enabled = ProjectSettings.get_setting(GecsSettings.SETTINGS_DEBUG_MODE, false)
+
+	# Show overlay if debug mode is disabled, hide if enabled
+	debug_mode_overlay.visible = not debug_enabled
 
 
 # --- External setters expected by debugger plugin (no-op implementations) ---
@@ -354,6 +367,8 @@ func world_init(world_id: int, world_path: NodePath):
 	var world_dict := get_or_create_dict(ecs_data, "world")
 	world_dict["id"] = world_id
 	world_dict["path"] = world_path
+	# Update debug mode overlay in case settings changed
+	_update_debug_mode_overlay()
 
 
 func set_world(world_id: int, world_path: NodePath):
