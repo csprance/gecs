@@ -95,3 +95,70 @@ func test_add_and_remove_component():
 
 	# Test memory leak
 	assert_int(entity._component_path_cache.size()).is_equal(0)
+
+
+func test_remove_components_with_scripts():
+	var entity = auto_free(TestB.new())
+	var comp1 = C_TestA.new()
+	var comp2 = C_TestB.new()
+	var comp3 = C_TestC.new()
+
+	# Add multiple components
+	entity.add_components([comp1, comp2, comp3])
+
+	# Verify all were added
+	assert_bool(entity.has_component(C_TestA)).is_true()
+	assert_bool(entity.has_component(C_TestB)).is_true()
+	assert_bool(entity.has_component(C_TestC)).is_true()
+
+	# Remove multiple components by Script class
+	entity.remove_components([C_TestA, C_TestB])
+
+	# Test that the components were removed
+	assert_bool(entity.has_component(C_TestA)).is_false()
+	assert_bool(entity.has_component(C_TestB)).is_false()
+	# Test that C_TestC is still there
+	assert_bool(entity.has_component(C_TestC)).is_true()
+
+
+func test_remove_components_with_instances():
+	var entity = auto_free(TestB.new())
+	var comp1 = C_TestA.new()
+	var comp2 = C_TestB.new()
+	var comp3 = C_TestC.new()
+
+	# Add multiple components
+	entity.add_components([comp1, comp2, comp3])
+
+	# Verify all were added
+	assert_bool(entity.has_component(C_TestA)).is_true()
+	assert_bool(entity.has_component(C_TestB)).is_true()
+	assert_bool(entity.has_component(C_TestC)).is_true()
+
+	# Remove multiple components by instance
+	entity.remove_components([comp1, comp2])
+
+	# Test that the components were removed
+	assert_bool(entity.has_component(C_TestA)).is_false()
+	assert_bool(entity.has_component(C_TestB)).is_false()
+	# Test that C_TestC is still there
+	assert_bool(entity.has_component(C_TestC)).is_true()
+
+
+func test_remove_components_mixed():
+	var entity = auto_free(TestB.new())
+	var comp1 = C_TestA.new()
+	var comp2 = C_TestB.new()
+	var comp3 = C_TestC.new()
+
+	# Add multiple components
+	entity.add_components([comp1, comp2, comp3])
+
+	# Remove with mixed Script and instance
+	entity.remove_components([C_TestA, comp2])
+
+	# Test that the components were removed
+	assert_bool(entity.has_component(C_TestA)).is_false()
+	assert_bool(entity.has_component(C_TestB)).is_false()
+	# Test that C_TestC is still there
+	assert_bool(entity.has_component(C_TestC)).is_true()

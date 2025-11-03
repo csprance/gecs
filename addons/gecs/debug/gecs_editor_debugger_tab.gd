@@ -27,8 +27,16 @@ var _debugger_session: EditorDebuggerSession = null
 @onready var debug_mode_overlay: Panel = %DebugModeOverlay
 
 # Sorting state
-var _system_sort_column: int = -1  # -1 means no sorting
+var _system_sort_column: int = -1 # -1 means no sorting
 var _system_sort_ascending: bool = true
+var _entity_sort_column: int = -1 # -1 means no sorting
+var _entity_sort_ascending: bool = true
+
+# Icon constants (using Unicode characters)
+const ICON_ENTITY = "📦" # Entity icon
+const ICON_COMPONENT = "🔧" # Component icon
+const ICON_FLAG = "🚩" # Flag component (no properties)
+const ICON_RELATIONSHIP = "🔗" # Relationship icon
 
 
 func _ready() -> void:
@@ -36,11 +44,11 @@ func _ready() -> void:
 	if system_tree:
 		# Three columns: name, execution time, and active status
 		system_tree.columns = 3
-		system_tree.set_column_expand(0, true)  # Name column expands
-		system_tree.set_column_expand(1, false)  # Execution time column fixed
-		system_tree.set_column_expand(2, false)  # Status column fixed
-		system_tree.set_column_custom_minimum_width(1, 100)  # Execution time: 100px
-		system_tree.set_column_custom_minimum_width(2, 100)  # Status: 100px
+		system_tree.set_column_expand(0, true) # Name column expands
+		system_tree.set_column_expand(1, false) # Execution time column fixed
+		system_tree.set_column_expand(2, false) # Status column fixed
+		system_tree.set_column_custom_minimum_width(1, 100) # Execution time: 100px
+		system_tree.set_column_custom_minimum_width(2, 100) # Status: 100px
 
 		# Set column titles (clickable for sorting)
 		system_tree.set_column_title(0, "Name")
@@ -52,7 +60,23 @@ func _ready() -> void:
 		if system_tree.get_root() == null:
 			system_tree.create_item()
 	if entities_tree:
-		entities_tree.columns = 1
+		# Four columns: name, components count, relationships count, nodes count
+		entities_tree.columns = 4
+		entities_tree.set_column_expand(0, true) # Name column expands
+		entities_tree.set_column_expand(1, false) # Components count fixed
+		entities_tree.set_column_expand(2, false) # Relationships count fixed
+		entities_tree.set_column_expand(3, false) # Nodes count fixed
+		entities_tree.set_column_custom_minimum_width(1, 80) # Components: 80px
+		entities_tree.set_column_custom_minimum_width(2, 80) # Relationships: 80px
+		entities_tree.set_column_custom_minimum_width(3, 80) # Nodes: 80px
+
+		# Set column titles
+		entities_tree.set_column_title(0, "Entity")
+		entities_tree.set_column_title(1, "Comps")
+		entities_tree.set_column_title(2, "Rels")
+		entities_tree.set_column_title(3, "Nodes")
+		entities_tree.set_column_titles_visible(true)
+
 		# Create root item
 		if entities_tree.get_root() == null:
 			entities_tree.create_item()
@@ -77,6 +101,9 @@ func _ready() -> void:
 	# Connect to system tree for column clicking (for sorting)
 	if system_tree and not system_tree.column_title_clicked.is_connected(_on_system_tree_column_clicked):
 		system_tree.column_title_clicked.connect(_on_system_tree_column_clicked)
+	# Connect to entities tree for column clicking (for sorting)
+	if entities_tree and not entities_tree.column_title_clicked.is_connected(_on_entities_tree_column_clicked):
+		entities_tree.column_title_clicked.connect(_on_entities_tree_column_clicked)
 
 
 func _process(delta: float) -> void:
@@ -95,14 +122,15 @@ func _update_debug_mode_overlay() -> void:
 	debug_mode_overlay.visible = not debug_enabled
 
 
-# --- External setters expected by debugger plugin (no-op implementations) ---
+# --- External setters expected by debugger plugin ---
 func set_debugger_session(_session):
 	# Store session reference for sending messages to game
 	_debugger_session = _session
 
 
 func set_editor_interface(_editor_interface):
-	# Placeholder if future selection/inspection features are added
+	# Store editor interface reference for future use (e.g., selecting nodes)
+	# Currently not used, but expected by the debugger plugin
 	pass
 
 
@@ -359,6 +387,112 @@ func _sort_system_tree():
 		root.add_child(item)
 
 
+func _on_entities_tree_column_clicked(column: int, mouse_button_index: int):
+	# Only sort on left click
+	if mouse_button_index != MOUSE_BUTTON_LEFT:
+		return
+
+	# Toggle sort direction if clicking same column, otherwise reset to ascending
+	if _entity_sort_column == column:
+		_entity_sort_ascending = not _entity_sort_ascending
+	else:
+		_entity_sort_column = column
+		_entity_sort_ascending = true
+
+	# Update column title indicators
+	_update_entity_column_indicators()
+
+	# Sort the tree
+	_sort_entity_tree()
+
+
+func _update_entity_column_indicators():
+	# Clear all column indicators first
+	for i in range(4):
+		var title = ""
+		match i:
+			0: title = "Entity"
+			1: title = "Comps"
+			2: title = "Rels"
+			3: title = "Nodes"
+
+		# Add arrow indicator if this is the sort column
+		if i == _entity_sort_column:
+			if _entity_sort_ascending:
+				title += " ▲"
+			else:
+				title += " ▼"
+
+		entities_tree.set_column_title(i, title)
+
+
+func _sort_entity_tree():
+	if not entities_tree or _entity_sort_column == -1:
+		return
+
+	var root = entities_tree.get_root()
+	if not root:
+		return
+
+	# Collect all entity items with their data
+	var entities: Array = []
+	var child = root.get_first_child()
+	while child:
+		var entity_data = {
+			"item": child,
+			"name": child.get_text(0),
+			"comps": 0,
+			"rels": 0,
+			"nodes": 0,
+			"entity_id": child.get_meta("entity_id", null)
+		}
+
+		# Get numeric counts from columns
+		var comps_text = child.get_text(1)
+		if comps_text:
+			entity_data["comps"] = int(comps_text)
+
+		var rels_text = child.get_text(2)
+		if rels_text:
+			entity_data["rels"] = int(rels_text)
+
+		var nodes_text = child.get_text(3)
+		if nodes_text:
+			entity_data["nodes"] = int(nodes_text)
+
+		entities.append(entity_data)
+		child = child.get_next()
+
+	# Sort based on column
+	match _entity_sort_column:
+		0: # Name
+			if _entity_sort_ascending:
+				entities.sort_custom(func(a, b): return a["name"].nocasecmp_to(b["name"]) < 0)
+			else:
+				entities.sort_custom(func(a, b): return a["name"].nocasecmp_to(b["name"]) > 0)
+		1: # Components
+			if _entity_sort_ascending:
+				entities.sort_custom(func(a, b): return a["comps"] < b["comps"])
+			else:
+				entities.sort_custom(func(a, b): return a["comps"] > b["comps"])
+		2: # Relationships
+			if _entity_sort_ascending:
+				entities.sort_custom(func(a, b): return a["rels"] < b["rels"])
+			else:
+				entities.sort_custom(func(a, b): return a["rels"] > b["rels"])
+		3: # Nodes
+			if _entity_sort_ascending:
+				entities.sort_custom(func(a, b): return a["nodes"] < b["nodes"])
+			else:
+				entities.sort_custom(func(a, b): return a["nodes"] > b["nodes"])
+
+	# Rebuild tree in sorted order
+	for entity_data in entities:
+		var item = entity_data["item"]
+		root.remove_child(item)
+		root.add_child(item)
+
+
 # --- Utilities ---
 func get_or_create_dict(dict: Dictionary, key, default_val = {}) -> Dictionary:
 	if not dict.has(key):
@@ -503,6 +637,44 @@ func exit_world():
 	ecs_data["exited"] = true
 
 
+func _update_entity_counts(entity_item: TreeItem, ent_id: int):
+	# Update the count columns for an entity
+	if not entity_item:
+		return
+
+	var entities = ecs_data.get("entities", {})
+	var entity_data = entities.get(ent_id, {})
+
+	# Count components
+	var components = entity_data.get("components", {})
+	entity_item.set_text(1, str(components.size()))
+
+	# Count relationships
+	var relationships = entity_data.get("relationships", {})
+	entity_item.set_text(2, str(relationships.size()))
+
+	# Count child nodes (entities tree doesn't track this from game data)
+	# We'll count the child TreeItems instead (components + relationships)
+	var child_count = 0
+	var child = entity_item.get_first_child()
+	while child:
+		# Count only component and relationship children, not property rows
+		if child.has_meta("component_id") or child.has_meta("relationship_id"):
+			child_count += 1
+		child = child.get_next()
+	entity_item.set_text(3, str(child_count))
+
+
+func _is_flag_component(component_data: Dictionary) -> bool:
+	# A flag component has no serializable properties
+	# Check if data is empty or only has the placeholder
+	if component_data.is_empty():
+		return true
+	if component_data.size() == 1 and component_data.has("<no_serialized_properties>"):
+		return true
+	return false
+
+
 func entity_added(ent: int, path: NodePath) -> void:
 	var entities := get_or_create_dict(ecs_data, "entities")
 	# Merge with any existing (temporary) entry that may already have buffered components/relationships
@@ -522,7 +694,13 @@ func entity_added(ent: int, path: NodePath) -> void:
 		if root == null:
 			root = entities_tree.create_item()
 		var item = entities_tree.create_item(root)
-		item.set_text(0, str(ent) + " : " + str(path))
+		# Column 0: Entity name with icon
+		item.set_text(0, ICON_ENTITY + " " + str(path).get_file())
+		item.set_tooltip_text(0, str(ent) + " : " + str(path))
+		# Columns 1-3: Counts (will be updated as components/relationships are added)
+		item.set_text(1, "0")
+		item.set_text(2, "0")
+		item.set_text(3, "0")
 		item.set_meta("entity_id", ent)
 		item.set_meta("path", path)
 		item.collapsed = true # Start collapsed
@@ -531,6 +709,12 @@ func entity_added(ent: int, path: NodePath) -> void:
 			for comp_info in _pending_components[ent]:
 				_attach_component_to_entity_item(item, ent, comp_info.comp_id, comp_info.comp_path, comp_info.data)
 			_pending_components.erase(ent)
+		# Update counts
+		_update_entity_counts(item, ent)
+
+	# Re-sort if we have an active sort column
+	if _entity_sort_column != -1:
+		_sort_entity_tree()
 
 	_update_entity_status_bar()
 
@@ -659,7 +843,6 @@ func system_last_run_data(system_id: int, system_name: String, last_run_data: Di
 			existing.remove_child(prev_child)
 			prev_child = next_child
 		# Create nested rows for key info
-		var exec_ms = last_run_data.get("execution_time_ms", 0.0)
 		var ent_count = last_run_data.get("entity_count", null)
 		var arch_count = last_run_data.get("archetype_count", null)
 		var parallel = last_run_data.get("parallel", false)
@@ -732,29 +915,42 @@ func entity_component_added(ent: int, comp: int, comp_path: String, data: Dictio
 						var nxt = prev.get_next()
 						existing_comp_item.remove_child(prev)
 						prev = nxt
-					# Update title/path in case script changed
-					existing_comp_item.set_text(0, comp_path)
+					# Update title/path with icon
+					var icon = ICON_FLAG if _is_flag_component(final_data) else ICON_COMPONENT
+					existing_comp_item.set_text(0, icon + " " + comp_path.get_file().get_basename())
+					existing_comp_item.set_tooltip_text(0, comp_path)
 					existing_comp_item.set_meta("component_path", comp_path)
 					_add_serialized_rows(existing_comp_item, final_data)
 				else:
 					_attach_component_to_entity_item(entity_item, ent, comp, comp_path, final_data)
+				# Update entity counts
+				_update_entity_counts(entity_item, ent)
 			else:
 				# Buffer component until entity_added arrives
 				if not _pending_components.has(ent):
 					_pending_components[ent] = []
 				_pending_components[ent].append({"comp_id": comp, "comp_path": comp_path, "data": final_data})
 
+	# Re-sort if we have an active sort column
+	if _entity_sort_column != -1:
+		_sort_entity_tree()
+
 	_update_entity_status_bar()
 
 
 func _attach_component_to_entity_item(entity_item: TreeItem, ent: int, comp: int, comp_path: String, final_data: Dictionary) -> void:
 	var comp_item = entities_tree.create_item(entity_item)
-	comp_item.set_text(0, comp_path)
+	# Use flag icon for components with no properties, otherwise use component icon
+	var icon = ICON_FLAG if _is_flag_component(final_data) else ICON_COMPONENT
+	comp_item.set_text(0, icon + " " + comp_path.get_file().get_basename())
+	comp_item.set_tooltip_text(0, comp_path)
 	comp_item.set_meta("component_id", comp)
 	comp_item.set_meta("component_path", comp_path)
 	comp_item.collapsed = true # Start collapsed
 	# Add property rows with recursive serialization
 	_add_serialized_rows(comp_item, final_data)
+	# Update entity counts
+	_update_entity_counts(entity_item, ent)
 
 
 func entity_component_removed(ent: int, comp: int):
@@ -776,6 +972,8 @@ func entity_component_removed(ent: int, comp: int):
 					entity_item.remove_child(comp_child)
 					break
 				comp_child = comp_child.get_next()
+			# Update entity counts
+			_update_entity_counts(entity_item, ent)
 
 	_update_entity_status_bar()
 
@@ -902,6 +1100,12 @@ func entity_relationship_added(ent: int, rel: int, rel_data: Dictionary):
 					rel_item.set_meta("relationship_id", rel)
 					rel_item.collapsed = true # Start collapsed
 					_update_relationship_item(rel_item, rel_data)
+				# Update entity counts
+				_update_entity_counts(entity_item, ent)
+
+	# Re-sort if we have an active sort column
+	if _entity_sort_column != -1:
+		_sort_entity_tree()
 
 	_update_entity_status_bar()
 
@@ -911,8 +1115,8 @@ func _update_relationship_item(rel_item: TreeItem, rel_data: Dictionary):
 	var relation_type = rel_data.get("relation_type", "Unknown")
 	var target_type = rel_data.get("target_type", "Unknown")
 
-	# Build the title based on target type
-	var title = "Relationship: " + relation_type + " -> "
+	# Build the title based on target type with relationship icon
+	var title = ICON_RELATIONSHIP + " " + relation_type + " -> "
 	if target_type == "Entity":
 		var target_data = rel_data.get("target_data", {})
 		title += "Entity " + str(target_data.get("path", "Unknown"))
@@ -969,6 +1173,8 @@ func entity_relationship_removed(ent: int, rel: int):
 					entity_item.remove_child(rel_child)
 					break
 				rel_child = rel_child.get_next()
+			# Update entity counts
+			_update_entity_counts(entity_item, ent)
 
 	_update_entity_status_bar()
 

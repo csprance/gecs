@@ -9,6 +9,7 @@ Build scalable, maintainable games with clean separation of data and logic. GECS
 - 🎯 **Godot Integration** - Works with nodes, scenes, and editor
 - 🚀 **High Performance** - Optimized queries with automatic caching
 - 🔧 **Flexible Queries** - Find entities by components, relationships, or properties
+- 🔍 **Debug Viewer** - Real-time inspection and performance monitoring
 - 📦 **Editor Support** - Visual component editing and scene integration
 - 🎮 **Battle Tested** - Used in games being actively developed
 

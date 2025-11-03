@@ -28,6 +28,7 @@
 
 ### ⚡ Optimization & Advanced (As needed)
 
+- **[Debug Viewer](docs/DEBUG_VIEWER.md)** - Real-time debugging and performance monitoring
 - **[Performance Optimization](docs/PERFORMANCE_OPTIMIZATION.md)** - Make your games run fast and smooth
 - **[Troubleshooting](docs/TROUBLESHOOTING.md)** - Solve common issues quickly
 
@@ -56,11 +57,12 @@
 
 ### Optimization & Debugging
 
-| Topic           | Document                                                     | Description                   |
-| --------------- | ------------------------------------------------------------ | ----------------------------- |
-| **Performance** | [Performance Optimization](docs/PERFORMANCE_OPTIMIZATION.md) | Game performance optimization |
-| **Debugging**   | [Troubleshooting](docs/TROUBLESHOOTING.md)                   | Common problems and solutions |
-| **Testing**     | [Performance Testing](docs/PERFORMANCE_TESTING.md)           | Framework performance testing |
+| Topic              | Document                                                     | Description                         |
+| ------------------ | ------------------------------------------------------------ | ----------------------------------- |
+| **Debug Viewer**   | [Debug Viewer](docs/DEBUG_VIEWER.md)                         | Real-time debugging and inspection  |
+| **Performance**    | [Performance Optimization](docs/PERFORMANCE_OPTIMIZATION.md) | Game performance optimization       |
+| **Debugging**      | [Troubleshooting](docs/TROUBLESHOOTING.md)                   | Common problems and solutions       |
+| **Testing**        | [Performance Testing](docs/PERFORMANCE_TESTING.md)           | Framework performance testing       |
 
 ## 🎯 Quick References
 

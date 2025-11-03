@@ -1,3 +1,10 @@
 {
-  "godotTools.editorPath.godot4": "D:\\Godot\\Godot_v4.5-stable_win64\\Godot_v4.5-stable_win64.exe"
+  "godotTools.editorPath.godot4": "D:\\Godot\\Godot_v4.5-stable_win64\\Godot_v4.5-stable_win64.exe",
+  "godotTools.inlayHints.gdscript": true,
+  "workbench.colorCustomizations": {
+    "titleBar.activeBackground": "#475858",
+    "titleBar.activeForeground": "#e7e7e7",
+    "titleBar.inactiveBackground": "#3b4949",
+    "titleBar.inactiveForeground": "#e7e7e7"
+  }
 }
