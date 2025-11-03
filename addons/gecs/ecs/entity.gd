@@ -263,11 +263,12 @@ func remove_components(_components: Array):
 			continue
 		var comp_to_remove: Resource = null
 
-		# Handle both Resource instances and Scripts
-		if _component is Resource:
-			comp_to_remove = _component
-		elif _component is Script:
+		# Handle both Scripts and Resource instances
+		# NOTE: Check Script first since Script inherits from Resource
+		if _component is Script:
 			comp_to_remove = get_component(_component)
+		elif _component is Resource:
+			comp_to_remove = _component
 
 		if comp_to_remove:
 			var component_path = comp_to_remove.get_script().resource_path
