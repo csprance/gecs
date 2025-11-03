@@ -162,8 +162,55 @@ func _on_component_property_changed(
 ## [b]Example:[/b]
 ##     [codeblock]entity.add_components([TransformComponent, VelocityComponent])[/codeblock]
 func add_components(_components: Array):
+	# OPTIMIZATION: Batch component additions to avoid multiple archetype transitions
+	# Instead of moving archetype once per component, calculate the final archetype once
+	if _components.is_empty():
+		return
+		
+	# Add all components to local storage first (no signals yet)
+	var added_components = []
 	for component in _components:
-		add_component(component)
+		if component == null:
+			continue
+		var component_path = component.get_script().resource_path
+		if not components.has(component_path):
+			components[component_path] = component
+			added_components.append(component)
+	
+	# If no new components were actually added, return early
+	if added_components.is_empty():
+		return
+	
+	# OPTIMIZATION: Move to final archetype only once, after all components are added
+	if ECS.world and ECS.world.entity_to_archetype.has(self):
+		var old_archetype = ECS.world.entity_to_archetype[self]
+		var new_signature = ECS.world._calculate_entity_signature(self)
+		var comp_types = components.keys()
+		var new_archetype = ECS.world._get_or_create_archetype(new_signature, comp_types)
+		
+		# Only move if we actually need a different archetype
+		if old_archetype != new_archetype:
+			# Remove from old archetype
+			old_archetype.remove_entity(self)
+			# Add to new archetype
+			new_archetype.add_entity(self)
+			ECS.world.entity_to_archetype[self] = new_archetype
+			
+			# Clean up empty old archetype
+			if old_archetype.is_empty():
+				old_archetype.add_edges.clear()
+				old_archetype.remove_edges.clear()
+				ECS.world.archetypes.erase(old_archetype.signature)
+		else:
+			# Same archetype - just update the column data for new components
+			for component in added_components:
+				var comp_path = component.get_script().resource_path
+				var entity_index = old_archetype.entity_to_index[self]
+				old_archetype.columns[comp_path][entity_index] = component
+	
+	# Emit signals for all added components
+	for component in added_components:
+		component_added.emit(self, component)
 
 
 ## Removes a single component from the entity.[br]
@@ -202,8 +249,58 @@ func deferred_remove_component(component: Resource) -> void:
 ## [b]Example:[/b]
 ##     [codeblock]entity.remove_components([transform_component, velocity_component])[/codeblock]
 func remove_components(_components: Array):
+	# OPTIMIZATION: Batch component removals to avoid multiple archetype transitions
+	# Instead of moving archetype once per component, calculate the final archetype once
+	if _components.is_empty():
+		return
+	
+	# Remove all components from local storage first (no signals yet)
+	var removed_components = []
 	for _component in _components:
-		remove_component(_component)
+		if _component == null:
+			continue
+		var comp_to_remove: Resource = null
+		
+		# Handle both Resource instances and Scripts
+		if _component is Resource:
+			comp_to_remove = _component
+		elif _component is Script:
+			comp_to_remove = get_component(_component)
+		
+		if comp_to_remove:
+			var component_path = comp_to_remove.get_script().resource_path
+			if components.has(component_path):
+				components.erase(component_path)
+				removed_components.append(comp_to_remove)
+	
+	# If no components were actually removed, return early
+	if removed_components.is_empty():
+		return
+	
+	# OPTIMIZATION: Move to final archetype only once, after all components are removed
+	if ECS.world and ECS.world.entity_to_archetype.has(self):
+		var old_archetype = ECS.world.entity_to_archetype[self]
+		var new_signature = ECS.world._calculate_entity_signature(self)
+		var comp_types = components.keys()
+		var new_archetype = ECS.world._get_or_create_archetype(new_signature, comp_types)
+		
+		# Only move if we actually need a different archetype
+		if old_archetype != new_archetype:
+			# Remove from old archetype
+			old_archetype.remove_entity(self)
+			# Add to new archetype
+			new_archetype.add_entity(self)
+			ECS.world.entity_to_archetype[self] = new_archetype
+			
+			# Clean up empty old archetype
+			if old_archetype.is_empty():
+				old_archetype.add_edges.clear()
+				old_archetype.remove_edges.clear()
+				ECS.world.archetypes.erase(old_archetype.signature)
+	
+	# Emit signals for all removed components
+	for component in removed_components:
+		component_removed.emit(self, component)
 
 
 ##  Removes all components from the entity.[br]

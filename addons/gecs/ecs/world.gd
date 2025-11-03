@@ -101,6 +101,8 @@ var _cache_invalidation_count: int = 0
 var _cache_invalidation_reasons: Dictionary = {} # reason -> count
 ## Global cache: resource_path -> Script (loaded once, reused forever)
 var _component_script_cache: Dictionary = {} # String -> Script
+## OPTIMIZATION: Flag to control cache invalidation during batch operations
+var _should_invalidate_cache: bool = true
 ## Frame + accumulated performance metrics (debug-only)
 var _perf_metrics := {
 	"frame": {}, # Per-frame aggregated timings
@@ -296,8 +298,26 @@ func add_entity(entity: Entity, components = null, add_to_tree = true) -> void:
 ## [b]Example:[/b]
 ##      [codeblock]world.add_entities([player_entity, enemy_entity], [component_a])[/codeblock]
 func add_entities(_entities: Array, components = null):
+	# OPTIMIZATION: Batch processing to reduce cache invalidations
+	# Temporarily disable cache invalidation during batch, then invalidate once at the end
+	var original_invalidate = _should_invalidate_cache
+	_should_invalidate_cache = false
+	
+	var new_archetypes_created = false
+	var initial_archetype_count = archetypes.size()
+	
+	# Process all entities
 	for _entity in _entities:
 		add_entity(_entity, components)
+	
+	# Check if any new archetypes were created
+	if archetypes.size() > initial_archetype_count:
+		new_archetypes_created = true
+	
+	# Re-enable cache invalidation and invalidate once if needed
+	_should_invalidate_cache = original_invalidate
+	if new_archetypes_created:
+		_invalidate_cache("batch_add_entities")
 
 
 ## Removes an [Entity] from the world.[br]
@@ -344,8 +364,26 @@ func remove_entity(entity) -> void:
 ## [b]Example:[/b]
 ##      [codeblock]world.remove_entities([player_entity, other_entity])[/codeblock]
 func remove_entities(_entities: Array) -> void:
+	# OPTIMIZATION: Batch processing to reduce cache invalidations
+	# Temporarily disable cache invalidation during batch, then invalidate once at the end
+	var original_invalidate = _should_invalidate_cache
+	_should_invalidate_cache = false
+	
+	var archetypes_removed = false
+	var initial_archetype_count = archetypes.size()
+	
+	# Process all entities
 	for _entity in _entities:
 		remove_entity(_entity)
+	
+	# Check if any archetypes were removed (when they became empty)
+	if archetypes.size() < initial_archetype_count:
+		archetypes_removed = true
+	
+	# Re-enable cache invalidation and invalidate once if needed
+	_should_invalidate_cache = original_invalidate
+	if archetypes_removed:
+		_invalidate_cache("batch_remove_entities")
 
 
 ## Disable an [Entity] from the world. Disabled entities don't run process or physics,[br]
@@ -1001,6 +1039,10 @@ func reset_cache_stats() -> void:
 
 ## Internal helper to track cache invalidations (debug mode only)
 func _invalidate_cache(reason: String) -> void:
+	# OPTIMIZATION: Skip invalidation during batch operations
+	if not _should_invalidate_cache:
+		return
+		
 	_query_archetype_cache.clear()
 	cache_invalidated.emit()
 
@@ -1084,10 +1126,6 @@ func _remove_entity_from_archetype(entity: Entity) -> bool:
 	var removed = archetype.remove_entity(entity)
 	entity_to_archetype.erase(entity)
 
-	# IMPORTANT: Always invalidate cache when entity is removed
-	# This ensures queries don't return stale entity references
-	_invalidate_cache("remove_entity_from_archetype")
-
 	# Clean up empty archetypes (optional - can keep them for reuse)
 	if archetype.is_empty():
 		# Break circular references before removing
@@ -1095,6 +1133,8 @@ func _remove_entity_from_archetype(entity: Entity) -> bool:
 		archetype.remove_edges.clear()
 		archetypes.erase(archetype.signature)
 		_worldLogger.trace("Removed empty archetype: ", archetype)
+		# OPTIMIZATION: Only invalidate when archetype is actually removed from world
+		_invalidate_cache("empty_archetype_removed")
 
 	return removed
 
