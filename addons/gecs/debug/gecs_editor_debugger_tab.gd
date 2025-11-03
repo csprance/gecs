@@ -7,8 +7,9 @@ extends Control
 @onready var systems_filter_line_edit: LineEdit = %SystemsQueryLineEdit
 @onready var collapse_all_btn: Button = %CollapseAllBtn
 @onready var expand_all_btn: Button = %ExpandAllBtn
+@onready var systems_collapse_all_btn: Button = %SystemsCollapseAllBtn
+@onready var systems_expand_all_btn: Button = %SystemsExpandAllBtn
 @onready var pop_out_btn: Button = %PopOutBtn
-@onready var toggle_system_active_btn: Button = %ToggleSystemActiveBtn
 
 var ecs_data: Dictionary = {}
 var default_system := {"path": "", "active": true, "metrics": {}, "group": ""}
@@ -21,20 +22,17 @@ var _debugger_session: EditorDebuggerSession = null
 
 @onready var system_tree: Tree = %SystemsTree
 @onready var entities_tree: Tree = %EntitiesTree
+@onready var entity_status_bar: TextEdit = %EntityStatusBar
+@onready var systems_status_bar: TextEdit = %SystemsStatusBar
 
 
 func _ready() -> void:
 	if system_tree:
 		# Two columns: name and active status
 		system_tree.columns = 2
-		system_tree.set_column_title(0, "System")
-		system_tree.set_column_title(1, "Status")
-		system_tree.set_column_titles_visible(true)
 		system_tree.set_column_expand(0, true)
 		system_tree.set_column_expand(1, false)
 		system_tree.set_column_custom_minimum_width(1, 100)
-		# Enable editing for status column (for click detection)
-		system_tree.set_column_title_alignment(1, HORIZONTAL_ALIGNMENT_CENTER)
 		# Create root item
 		if system_tree.get_root() == null:
 			system_tree.create_item()
@@ -52,13 +50,12 @@ func _ready() -> void:
 		collapse_all_btn.pressed.connect(_on_collapse_all_pressed)
 	if expand_all_btn and not expand_all_btn.pressed.is_connected(_on_expand_all_pressed):
 		expand_all_btn.pressed.connect(_on_expand_all_pressed)
+	if systems_collapse_all_btn and not systems_collapse_all_btn.pressed.is_connected(_on_systems_collapse_all_pressed):
+		systems_collapse_all_btn.pressed.connect(_on_systems_collapse_all_pressed)
+	if systems_expand_all_btn and not systems_expand_all_btn.pressed.is_connected(_on_systems_expand_all_pressed):
+		systems_expand_all_btn.pressed.connect(_on_systems_expand_all_pressed)
 	if pop_out_btn and not pop_out_btn.pressed.is_connected(_on_pop_out_pressed):
 		pop_out_btn.pressed.connect(_on_pop_out_pressed)
-	if toggle_system_active_btn and not toggle_system_active_btn.pressed.is_connected(_on_toggle_system_active_pressed):
-		toggle_system_active_btn.pressed.connect(_on_toggle_system_active_pressed)
-	# Connect to system tree for selection tracking
-	if system_tree and not system_tree.item_selected.is_connected(_on_system_tree_item_selected):
-		system_tree.item_selected.connect(_on_system_tree_item_selected)
 	# Connect to system tree for clicking (single click to toggle)
 	if system_tree and not system_tree.item_mouse_selected.is_connected(_on_system_tree_item_mouse_selected):
 		system_tree.item_mouse_selected.connect(_on_system_tree_item_mouse_selected)
@@ -68,14 +65,17 @@ func _process(delta: float) -> void:
 	# No periodic polling; rely on debugger messages only
 	pass
 
+
 # --- External setters expected by debugger plugin (no-op implementations) ---
 func set_debugger_session(_session):
 	# Store session reference for sending messages to game
 	_debugger_session = _session
 
+
 func set_editor_interface(_editor_interface):
 	# Placeholder if future selection/inspection features are added
 	pass
+
 
 # Send a message from editor to the running game
 func send_to_game(message: String, data: Array = []) -> bool:
@@ -84,6 +84,7 @@ func send_to_game(message: String, data: Array = []) -> bool:
 		return false
 	_debugger_session.send_message(message, data)
 	return true
+
 
 func clear_all_data():
 	ecs_data.clear()
@@ -101,19 +102,36 @@ func clear_all_data():
 		# Recreate root
 		entities_tree.create_item()
 
+	# Reset status bars
+	_update_entity_status_bar()
+	_update_systems_status_bar()
+
+
 # ---- Filters & Refresh Helpers ----
 func _on_entities_filter_changed(new_text: String):
 	_refresh_entity_tree_filter()
 
+
 func _on_systems_filter_changed(new_text: String):
 	_refresh_system_tree_filter()
+
 
 # ---- Button Handlers ----
 func _on_collapse_all_pressed():
 	collapse_all_entities()
 
+
 func _on_expand_all_pressed():
 	expand_all_entities()
+
+
+func _on_systems_collapse_all_pressed():
+	collapse_all_systems()
+
+
+func _on_systems_expand_all_pressed():
+	expand_all_systems()
+
 
 func _on_pop_out_pressed():
 	if _popup_window != null:
@@ -144,6 +162,7 @@ func _on_pop_out_pressed():
 	# Update the button text
 	pop_out_btn.text = "Pop In"
 
+
 func _on_popup_window_closed():
 	if _popup_window != null:
 		# Move content back to main tab
@@ -157,9 +176,6 @@ func _on_popup_window_closed():
 		_popup_window = null
 		pop_out_btn.text = "Pop Out"
 
-func _on_system_tree_item_selected():
-	# Update toggle button state when a system is selected
-	_update_toggle_system_active_button()
 
 func _on_system_tree_item_mouse_selected(position: Vector2, mouse_button_index: int):
 	# When user clicks on a system tree item, check if clicking on status column to toggle
@@ -174,10 +190,11 @@ func _on_system_tree_item_mouse_selected(position: Vector2, mouse_button_index: 
 	if selected.get_parent() == system_tree.get_root():
 		# Get the column that was clicked
 		var column = system_tree.get_column_at_position(position)
-		if column == 1:  # Status column
-			_on_toggle_system_active_pressed()
+		if column == 1: # Status column
+			_toggle_system_active()
 
-func _on_toggle_system_active_pressed():
+
+func _toggle_system_active():
 	var selected = system_tree.get_selected()
 	if not selected or not selected.has_meta("system_id"):
 		push_warning("GECS Debug: No system selected")
@@ -198,29 +215,6 @@ func _on_toggle_system_active_pressed():
 	system_data["active"] = new_active
 	_update_system_active_display(selected, new_active)
 
-func _update_toggle_system_active_button():
-	if not toggle_system_active_btn:
-		return
-
-	var selected = system_tree.get_selected()
-	if not selected or not selected.has_meta("system_id"):
-		toggle_system_active_btn.disabled = true
-		toggle_system_active_btn.text = "Toggle Active"
-		toggle_system_active_btn.modulate = Color.WHITE
-		return
-
-	var system_id = selected.get_meta("system_id")
-	var systems_data = ecs_data.get("systems", {})
-	var system_data = systems_data.get(system_id, {})
-	var is_active = system_data.get("active", true)
-
-	toggle_system_active_btn.disabled = false
-	if is_active:
-		toggle_system_active_btn.text = "ACTIVE"
-		toggle_system_active_btn.modulate = Color(0.5, 1.0, 0.5) # Green tint
-	else:
-		toggle_system_active_btn.text = "NOT ACTIVE"
-		toggle_system_active_btn.modulate = Color(1.0, 0.3, 0.3) # Red tint
 
 func _update_system_active_display(system_item: TreeItem, is_active: bool):
 	# Update the visual display of the system in column 1 as a button
@@ -236,14 +230,13 @@ func _update_system_active_display(system_item: TreeItem, is_active: bool):
 	system_item.set_selectable(1, true)
 	system_item.set_editable(1, false)
 
-	# Update the button state
-	_update_toggle_system_active_button()
 
 # --- Utilities ---
 func get_or_create_dict(dict: Dictionary, key, default_val = {}) -> Dictionary:
 	if not dict.has(key):
 		dict[key] = default_val
 	return dict[key]
+
 
 func collapse_all_entities():
 	if not entities_tree:
@@ -253,8 +246,9 @@ func collapse_all_entities():
 		return
 	var item = root.get_first_child()
 	while item:
-		item.collapsed = true
+		_collapse_item_recursive(item)
 		item = item.get_next()
+
 
 func expand_all_entities():
 	if not entities_tree:
@@ -264,8 +258,53 @@ func expand_all_entities():
 		return
 	var item = root.get_first_child()
 	while item:
-		item.collapsed = false
+		_expand_item_recursive(item)
 		item = item.get_next()
+
+
+func collapse_all_systems():
+	if not system_tree:
+		return
+	var root = system_tree.get_root()
+	if root == null:
+		return
+	var item = root.get_first_child()
+	while item:
+		_collapse_item_recursive(item)
+		item = item.get_next()
+
+
+func expand_all_systems():
+	if not system_tree:
+		return
+	var root = system_tree.get_root()
+	if root == null:
+		return
+	var item = root.get_first_child()
+	while item:
+		_expand_item_recursive(item)
+		item = item.get_next()
+
+
+func _collapse_item_recursive(item: TreeItem):
+	if item == null:
+		return
+	item.collapsed = true
+	var child = item.get_first_child()
+	while child:
+		_collapse_item_recursive(child)
+		child = child.get_next()
+
+
+func _expand_item_recursive(item: TreeItem):
+	if item == null:
+		return
+	item.collapsed = false
+	var child = item.get_first_child()
+	while child:
+		_expand_item_recursive(child)
+		child = child.get_next()
+
 
 # ---- Filters ----
 func _refresh_system_tree_filter():
@@ -280,6 +319,7 @@ func _refresh_system_tree_filter():
 		var name = item.get_text(0).to_lower()
 		item.visible = filter == "" or name.find(filter) != -1
 		item = item.get_next()
+
 
 func _refresh_entity_tree_filter():
 	if not entities_tree:
@@ -308,17 +348,20 @@ func _refresh_entity_tree_filter():
 		item.visible = matches
 		item = item.get_next()
 
+
 func world_init(world_id: int, world_path: NodePath):
 	# Initialize world tracking
 	var world_dict := get_or_create_dict(ecs_data, "world")
 	world_dict["id"] = world_id
 	world_dict["path"] = world_path
 
+
 func set_world(world_id: int, world_path: NodePath):
 	# Set or update current world
 	var world_dict := get_or_create_dict(ecs_data, "world")
 	world_dict["id"] = world_id
 	world_dict["path"] = world_path
+
 
 func process_world(delta: float, group_name: String):
 	var world_dict := get_or_create_dict(ecs_data, "world")
@@ -359,6 +402,8 @@ func entity_added(ent: int, path: NodePath) -> void:
 				_attach_component_to_entity_item(item, ent, comp_info.comp_id, comp_info.comp_path, comp_info.data)
 			_pending_components.erase(ent)
 
+	_update_entity_status_bar()
+
 
 func entity_removed(ent: int, path: NodePath) -> void:
 	var entities := get_or_create_dict(ecs_data, "entities")
@@ -372,6 +417,8 @@ func entity_removed(ent: int, path: NodePath) -> void:
 				root.remove_child(child)
 				break
 			child = child.get_next()
+
+	_update_entity_status_bar()
 
 
 func entity_disabled(ent: int, path: NodePath) -> void:
@@ -414,10 +461,14 @@ func system_added(
 	systems_data[sys]["active"] = active
 	systems_data[sys]["paused"] = paused
 
+	_update_systems_status_bar()
+
 
 func system_removed(sys: int, path: NodePath) -> void:
 	var systems_data := get_or_create_dict(ecs_data, "systems")
 	systems_data.erase(sys)
+
+	_update_systems_status_bar()
 
 
 func system_metric(system: int, system_name: String, time: float):
@@ -438,6 +489,9 @@ func system_metric(system: int, system_name: String, time: float):
 	)
 	sys_metrics["last_time"] = time
 	ecs_data["systems"][system]["metrics"] = sys_metrics
+
+	_update_systems_status_bar()
+
 
 func system_last_run_data(system_id: int, system_name: String, last_run_data: Dictionary):
 	var systems_data := get_or_create_dict(ecs_data, "systems")
@@ -497,6 +551,9 @@ func system_last_run_data(system_id: int, system_name: String, last_run_data: Di
 		# Optionally store raw json in metadata for tooltip or future expansion
 		existing.set_meta("last_run_data", last_run_data.duplicate())
 
+	# Update status bar with latest system data
+	_update_systems_status_bar()
+
 
 func entity_component_added(ent: int, comp: int, comp_path: String, data: Dictionary):
 	var entities := get_or_create_dict(ecs_data, "entities")
@@ -550,6 +607,9 @@ func entity_component_added(ent: int, comp: int, comp_path: String, data: Dictio
 					_pending_components[ent] = []
 				_pending_components[ent].append({"comp_id": comp, "comp_path": comp_path, "data": final_data})
 
+	_update_entity_status_bar()
+
+
 func _attach_component_to_entity_item(entity_item: TreeItem, ent: int, comp: int, comp_path: String, final_data: Dictionary) -> void:
 	var comp_item = entities_tree.create_item(entity_item)
 	comp_item.set_text(0, comp_path)
@@ -579,6 +639,8 @@ func entity_component_removed(ent: int, comp: int):
 					entity_item.remove_child(comp_child)
 					break
 				comp_child = comp_child.get_next()
+
+	_update_entity_status_bar()
 
 
 func entity_component_property_changed(
@@ -619,6 +681,7 @@ func entity_component_property_changed(
 					break
 				comp_child = comp_child.get_next()
 
+
 # ---- Recursive Serialization Rendering ----
 func _add_serialized_rows(parent_item: TreeItem, data: Dictionary):
 	for key in data.keys():
@@ -631,6 +694,7 @@ func _add_serialized_rows(parent_item: TreeItem, data: Dictionary):
 		elif value is Array:
 			_add_array_rows(row, value)
 
+
 func _add_array_rows(parent_item: TreeItem, arr: Array):
 	for i in range(arr.size()):
 		var value = arr[i]
@@ -641,6 +705,7 @@ func _add_array_rows(parent_item: TreeItem, arr: Array):
 			_add_serialized_rows(row, value)
 		elif value is Array:
 			_add_array_rows(row, value)
+
 
 func _value_to_string(v):
 	match typeof(v):
@@ -700,6 +765,9 @@ func entity_relationship_added(ent: int, rel: int, rel_data: Dictionary):
 					rel_item.set_meta("relationship_id", rel)
 					rel_item.collapsed = true # Start collapsed
 					_update_relationship_item(rel_item, rel_data)
+
+	_update_entity_status_bar()
+
 
 func _update_relationship_item(rel_item: TreeItem, rel_data: Dictionary):
 	# Format the relationship display
@@ -764,3 +832,83 @@ func entity_relationship_removed(ent: int, rel: int):
 					entity_item.remove_child(rel_child)
 					break
 				rel_child = rel_child.get_next()
+
+	_update_entity_status_bar()
+
+
+# ---- Status Bar Updates ----
+
+
+## Update the entity status bar with current counts
+func _update_entity_status_bar():
+	if not entity_status_bar:
+		return
+
+	var entities = ecs_data.get("entities", {})
+	var entity_count = entities.size()
+
+	# Count total components across all entities
+	var total_components = 0
+	for entity_data in entities.values():
+		var components = entity_data.get("components", {})
+		total_components += components.size()
+
+	# Count total relationships across all entities
+	var total_relationships = 0
+	for entity_data in entities.values():
+		var relationships = entity_data.get("relationships", {})
+		total_relationships += relationships.size()
+
+	entity_status_bar.text = "Entities: %d | Components: %d | Relationships: %d" % [
+		entity_count,
+		total_components,
+		total_relationships
+	]
+
+
+## Update the systems status bar with execution metrics
+func _update_systems_status_bar():
+	if not systems_status_bar:
+		return
+
+	var systems_data = ecs_data.get("systems", {})
+	var system_count = systems_data.size()
+
+	# Calculate total execution time and find most expensive system
+	var total_time_ms = 0.0
+	var most_expensive_name = ""
+	var most_expensive_time = 0.0
+
+	for system_id in systems_data.keys():
+		var system_data = systems_data[system_id]
+		# Get execution time from last_run_data if available (more accurate than last_time)
+		var last_run_data = system_data.get("last_run_data", {})
+		var exec_time_ms = last_run_data.get("execution_time_ms", 0.0)
+
+		total_time_ms += exec_time_ms
+
+		if exec_time_ms > most_expensive_time:
+			most_expensive_time = exec_time_ms
+			# Try to get a readable system name from last_run_data first, then path
+			var system_name = last_run_data.get("system_name", "")
+			if not system_name:
+				var path = system_data.get("path", "")
+				if path:
+					system_name = str(path).get_file().get_basename()
+				else:
+					system_name = "System_%d" % system_id
+			most_expensive_name = system_name
+
+	# Format the status bar text
+	if most_expensive_name:
+		systems_status_bar.text = "Systems: %d | Total ms: %.1fms | Most Expensive: %s (%.1fms)" % [
+			system_count,
+			total_time_ms,
+			most_expensive_name,
+			most_expensive_time
+		]
+	else:
+		systems_status_bar.text = "Systems: %d | Total ms: %.1fms" % [
+			system_count,
+			total_time_ms
+		]

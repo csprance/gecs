@@ -65,6 +65,17 @@ size_flags_vertical = 3
 allow_rmb_select = true
 hide_root = true
 
+[node name="HBoxContainerEntitiesStatus" type="HBoxContainer" parent="HSplit/HSplitContainer/EntitiesVBox"]
+custom_minimum_size = Vector2(0, 33)
+layout_mode = 2
+
+[node name="EntityStatusBar" type="TextEdit" parent="HSplit/HSplitContainer/EntitiesVBox/HBoxContainerEntitiesStatus"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Entities: 0 | Components: 0 | Relationships: 0"
+editable = false
+
 [node name="SystemsVBox" type="VBoxContainer" parent="HSplit/HSplitContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
@@ -89,12 +100,6 @@ unique_name_in_owner = true
 layout_mode = 2
 text = "Expand All"
 
-[node name="ToggleSystemActiveBtn" type="Button" parent="HSplit/HSplitContainer/SystemsVBox/HBoxContainer"]
-unique_name_in_owner = true
-layout_mode = 2
-tooltip_text = "Toggle the selected system's active state"
-text = "Toggle Active"
-
 [node name="PopOutBtn" type="Button" parent="HSplit/HSplitContainer/SystemsVBox/HBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
@@ -105,6 +110,16 @@ unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
 columns = 2
-column_titles_visible = true
 hide_root = true
 select_mode = 2
+
+[node name="HBoxContainerSystemsStatus" type="HBoxContainer" parent="HSplit/HSplitContainer/SystemsVBox"]
+custom_minimum_size = Vector2(0, 33)
+layout_mode = 2
+
+[node name="SystemsStatusBar" type="TextEdit" parent="HSplit/HSplitContainer/SystemsVBox/HBoxContainerSystemsStatus"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Systems: 0 |  Total ms: 0.0ms | Most Expensive: (0.0ms)"
+editable = false

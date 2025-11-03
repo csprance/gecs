@@ -116,10 +116,12 @@ func _setup_session(session_id):
 		session.stopped.connect(_on_session_stopped)
 	session.add_session_tab(debugger_tab)
 
+
 func _on_session_started():
 	print("GECS Debug Session started")
 	debugger_tab.clear_all_data()
 	debugger_tab.active = true
+
 
 func _on_session_stopped():
 	print("GECS Debug Session stopped")

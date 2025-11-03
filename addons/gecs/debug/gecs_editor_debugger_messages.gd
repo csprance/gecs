@@ -31,7 +31,7 @@ static func can_send_message() -> bool:
 
 static func world_init(world: World) -> bool:
 	if can_send_message():
-		EngineDebugger.send_message(Msg.WORLD_INIT,[world.get_instance_id(),
+		EngineDebugger.send_message(Msg.WORLD_INIT, [world.get_instance_id(),
 				 world.get_path()
 			])
 	return true
@@ -39,7 +39,7 @@ static func world_init(world: World) -> bool:
 static func system_metric(system: System, time: float) -> bool:
 	if can_send_message():
 		EngineDebugger.send_message(
-			Msg.SYSTEM_METRIC,[system.get_instance_id(),
+			Msg.SYSTEM_METRIC, [system.get_instance_id(),
 					 system.name,
 					 time
 				]
@@ -62,11 +62,12 @@ static func system_last_run_data(system: System, last_run_data: Dictionary) -> b
 static func set_world(world: World) -> bool:
 	if can_send_message():
 		EngineDebugger.send_message(
-			Msg.SET_WORLD,[world.get_instance_id(),
+			Msg.SET_WORLD,
+			[world.get_instance_id(),
 					 world.get_path()
-				] if world else[
 				]
-		)
+			if world else []
+	)
 	return true
 
 static func process_world(delta: float, group_name: String) -> bool:
@@ -155,7 +156,7 @@ static func entity_component_added(ent: Entity, comp: Resource) -> bool:
 static func entity_component_removed(ent: Entity, comp: Resource) -> bool:
 	if can_send_message():
 		EngineDebugger.send_message(
-			Msg.ENTITY_COMPONENT_REMOVED,[ent.get_instance_id(),
+			Msg.ENTITY_COMPONENT_REMOVED, [ent.get_instance_id(),
 					 comp.get_instance_id()
 				]
 		)
@@ -219,7 +220,7 @@ static func entity_relationship_added(ent: Entity, rel: Relationship) -> bool:
 static func entity_relationship_removed(ent: Entity, rel: Relationship) -> bool:
 	if can_send_message():
 		EngineDebugger.send_message(
-			Msg.ENTITY_RELATIONSHIP_REMOVED,[ent.get_instance_id(),
+			Msg.ENTITY_RELATIONSHIP_REMOVED, [ent.get_instance_id(),
 					 rel.get_instance_id()
 				]
 		)
