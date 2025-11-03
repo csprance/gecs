@@ -54,6 +54,7 @@ text = "Expand All"
 
 [node name="QueryBuilderCheckBox" type="CheckBox" parent="HSplit/HSplitContainer/EntitiesVBox/HBoxContainer"]
 unique_name_in_owner = true
+visible = false
 layout_mode = 2
 text = "QueryBuilder"
 
@@ -88,9 +89,22 @@ unique_name_in_owner = true
 layout_mode = 2
 text = "Expand All"
 
+[node name="ToggleSystemActiveBtn" type="Button" parent="HSplit/HSplitContainer/SystemsVBox/HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+tooltip_text = "Toggle the selected system's active state"
+text = "Toggle Active"
+
+[node name="PopOutBtn" type="Button" parent="HSplit/HSplitContainer/SystemsVBox/HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Pop Out"
+
 [node name="SystemsTree" type="Tree" parent="HSplit/HSplitContainer/SystemsVBox"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
+columns = 2
+column_titles_visible = true
 hide_root = true
 select_mode = 2

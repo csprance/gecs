@@ -31,13 +31,18 @@ static func can_send_message() -> bool:
 
 static func world_init(world: World) -> bool:
 	if can_send_message():
-		EngineDebugger.send_message(Msg.WORLD_INIT, [world.get_instance_id(), world.get_path()])
+		EngineDebugger.send_message(Msg.WORLD_INIT,[world.get_instance_id(),
+				 world.get_path()
+			])
 	return true
 
 static func system_metric(system: System, time: float) -> bool:
 	if can_send_message():
 		EngineDebugger.send_message(
-			Msg.SYSTEM_METRIC, [system.get_instance_id(), system.name, time]
+			Msg.SYSTEM_METRIC,[system.get_instance_id(),
+					 system.name,
+					 time
+				]
 		)
 	return true
 
@@ -57,7 +62,10 @@ static func system_last_run_data(system: System, last_run_data: Dictionary) -> b
 static func set_world(world: World) -> bool:
 	if can_send_message():
 		EngineDebugger.send_message(
-			Msg.SET_WORLD, [world.get_instance_id(), world.get_path()] if world else []
+			Msg.SET_WORLD,[world.get_instance_id(),
+					 world.get_path()
+				] if world else[
+				]
 		)
 	return true
 
@@ -118,7 +126,13 @@ static func _get_type_name_for_debugger(obj) -> String:
 	if obj is Resource or obj is Node:
 		var script = obj.get_script()
 		if script:
-			return script.get_class()
+			# Try to get class_name first
+			var type_name = script.get_class()
+			if type_name and type_name != "GDScript":
+				return type_name
+			# Otherwise use the resource path (e.g., "res://components/C_Health.gd")
+			if script.resource_path:
+				return script.resource_path # Returns "C_Health"
 		return obj.get_class()
 	elif obj is Object:
 		return obj.get_class()
@@ -141,7 +155,9 @@ static func entity_component_added(ent: Entity, comp: Resource) -> bool:
 static func entity_component_removed(ent: Entity, comp: Resource) -> bool:
 	if can_send_message():
 		EngineDebugger.send_message(
-			Msg.ENTITY_COMPONENT_REMOVED, [ent.get_instance_id(), comp.get_instance_id()]
+			Msg.ENTITY_COMPONENT_REMOVED,[ent.get_instance_id(),
+					 comp.get_instance_id()
+				]
 		)
 	return true
 
@@ -151,20 +167,60 @@ static func entity_component_property_changed(
 	if can_send_message():
 		EngineDebugger.send_message(
 			Msg.COMPONENT_PROPERTY_CHANGED,
-			[ent.get_instance_id(), comp.get_instance_id(), property_name, old_value, new_value]
+			[ent.get_instance_id(),
+					 comp.get_instance_id(),
+					 property_name,
+					 old_value,
+					 new_value
+				]
 		)
 	return true
 
 static func entity_relationship_added(ent: Entity, rel: Relationship) -> bool:
 	if can_send_message():
+		# Serialize relationship data for debugger display
+		var rel_data = {
+			"relation_type": _get_type_name_for_debugger(rel.relation) if rel.relation else "null",
+			"relation_data": rel.relation.serialize() if rel.relation else {},
+			"target_type": "",
+			"target_data": {}
+		}
+
+		# Format target based on type
+		if rel.target == null:
+			rel_data["target_type"] = "null"
+		elif rel.target is Entity:
+			rel_data["target_type"] = "Entity"
+			rel_data["target_data"] = {
+				"id": rel.target.get_instance_id(),
+				"path": str(rel.target.get_path())
+			}
+		elif rel.target is Component:
+			rel_data["target_type"] = "Component"
+			rel_data["target_data"] = {
+				"type": _get_type_name_for_debugger(rel.target),
+				"data": rel.target.serialize()
+			}
+		elif rel.target is Script:
+			rel_data["target_type"] = "Archetype"
+			rel_data["target_data"] = {
+				"script_path": rel.target.resource_path
+			}
+
 		EngineDebugger.send_message(
-			Msg.ENTITY_RELATIONSHIP_ADDED, [ent.get_instance_id(), rel.get_instance_id()]
+			Msg.ENTITY_RELATIONSHIP_ADDED,
+			[ent.get_instance_id(),
+					 rel.get_instance_id(),
+					 rel_data
+				]
 		)
 	return true
 
 static func entity_relationship_removed(ent: Entity, rel: Relationship) -> bool:
 	if can_send_message():
 		EngineDebugger.send_message(
-			Msg.ENTITY_RELATIONSHIP_REMOVED, [ent.get_instance_id(), rel.get_instance_id()]
+			Msg.ENTITY_RELATIONSHIP_REMOVED,[ent.get_instance_id(),
+					 rel.get_instance_id()
+				]
 		)
 	return true

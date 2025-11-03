@@ -4,12 +4,10 @@ extends EditorDebuggerPlugin
 ## The Debugger session for the current game
 var session: EditorDebuggerSession
 ## The tab that will be added to the debugger window
-var debugger_tab = (
-	preload("res://addons/gecs/debug/gecs_editor_debugger_tab.tscn").instantiate()
-	as GECSEditorDebuggerTab
-)
+var debugger_tab: GECSEditorDebuggerTab = preload("res://addons/gecs/debug/gecs_editor_debugger_tab.tscn").instantiate()
+
 ## The debugger messages that will be sent to the editor debugger
-var Msg = GECSEditorDebuggerMessages.Msg
+var Msg := GECSEditorDebuggerMessages.Msg
 ## Reference to editor interface for selecting nodes
 var editor_interface: EditorInterface = null
 
@@ -89,8 +87,8 @@ func _capture(message: String, data: Array, session_id: int) -> bool:
 		debugger_tab.entity_component_removed(data[0], data[1])
 		return true
 	elif message == Msg.ENTITY_RELATIONSHIP_ADDED:
-		# data: [Entity, Relationship]
-		debugger_tab.entity_relationship_added(data[0], data[1])
+		# data: [ent_id, rel_id, rel_data]
+		debugger_tab.entity_relationship_added(data[0], data[1], data[2])
 		return true
 	elif message == Msg.ENTITY_RELATIONSHIP_REMOVED:
 		# data: [Entity, Relationship]

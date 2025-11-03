@@ -1266,8 +1266,22 @@ func _move_entity_to_new_archetype(entity: Entity, old_archetype: Archetype) -> 
 
 ## Handle messages from the editor debugger
 func _handle_debugger_message(message: String, data: Array) -> bool:
-	print("GECS World: _handle_debugger_message called with message: ", message, " data: ", data)
-	if message == "poll_entity":
+	if message == "set_system_active":
+		# Editor requested to toggle a system's active state
+		var system_id = data[0]
+		var new_active = data[1]
+
+		# Find the system by instance ID
+		for sys in systems:
+			if sys.get_instance_id() == system_id:
+				sys.active = new_active
+
+				# Send confirmation back to editor
+				GECSEditorDebuggerMessages.system_added(sys)
+				return true
+
+		return false
+	elif message == "poll_entity":
 		# Editor requested a component poll for a specific entity
 		var entity_id = data[0]
 		_poll_entity_for_debugger(entity_id)
