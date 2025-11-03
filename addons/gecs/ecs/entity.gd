@@ -144,6 +144,7 @@ func add_component(component: Resource) -> void:
 
 	_component_path_cache[component] = resource_path
 	components[resource_path] = component
+	component.parent = self
 	if not component.property_changed.is_connected(_on_component_property_changed):
 		component.property_changed.connect(_on_component_property_changed)
 	## Adding components happens through a signal

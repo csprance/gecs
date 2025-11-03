@@ -30,8 +30,10 @@ class_name Component
 extends Resource
 
 ## Emitted when a property of this component changes. This is slightly different from the property_changed signal
-signal property_changed(component, property_name, old_value, new_value)
+signal property_changed(component: Resource, property_name: String, old_value: Variant, new_value: Variant)
 
+## Reference to the parent entity that owns this component
+var parent: Entity
 
 ## Used to serialize the component to a dictionary with only the export variables
 ## This is used for the debugger to send the data to the editor
