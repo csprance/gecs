@@ -72,14 +72,9 @@ var entity_to_archetype: Dictionary = {} # Entity -> Archetype
 ## so that all queries are invalidated anytime we emit cache_invalidated.
 var query: QueryBuilder:
 	get:
-		var q: QueryBuilder
-		if _query_builder_pool.is_empty():
-			q = QueryBuilder.new(self )
-			if not cache_invalidated.is_connected(q.invalidate_cache):
-				cache_invalidated.connect(q.invalidate_cache)
-		else:
-			q = _query_builder_pool.pop_back()
-			q.clear()
+		var q: QueryBuilder = QueryBuilder.new(self)
+		if not cache_invalidated.is_connected(q.invalidate_cache):
+			cache_invalidated.connect(q.invalidate_cache)
 		return q
 ## Index for relationships to entities (Optional for optimization)
 var relationship_entity_index: Dictionary = {}
@@ -90,9 +85,6 @@ var _worldLogger = GECSLogger.new().domain("World")
 ## Cache for commonly used query results - stores matching archetypes, not entities
 ## This dramatically reduces cache invalidation since archetypes are stable
 var _query_archetype_cache: Dictionary = {} # query_sig -> Array[Archetype]
-## Pool of QueryBuilder instances to reduce creation overhead
-var _query_builder_pool: Array[QueryBuilder] = []
-var _pool_size_limit: int = 10
 ## Track cache hits for performance monitoring
 var _cache_hits: int = 0
 var _cache_misses: int = 0
@@ -1056,13 +1048,6 @@ func _invalidate_cache(reason: String) -> void:
 	if ECS.debug:
 		_cache_invalidation_count += 1
 		_cache_invalidation_reasons[reason] = _cache_invalidation_reasons.get(reason, 0) + 1
-
-
-## Return a QueryBuilder instance to the pool for reuse
-func _return_query_builder_to_pool(query_builder: QueryBuilder) -> void:
-	if _query_builder_pool.size() < _pool_size_limit:
-		query_builder.clear()
-		_query_builder_pool.append(query_builder)
 
 
 ## Calculate archetype signature for an entity based on its components

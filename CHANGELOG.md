@@ -1,5 +1,10 @@
 # GECS Changelog
 
+## [Unreleased]
+
+### Removed
+- Removed the unused QueryBuilder pooling infrastructure; `World.query` now always creates a fresh builder while retaining cache invalidation wiring for clarity and predictable lifecycle management.
+
 ## [5.0.0] - 2025-10-15 - Major ECS Overhaul & Performance Awesomeness (Some Small Breaking Changes)
 
 **GECS v5.0.0 is a major release with massive performance improvements, API simplification, and relationship system overhaul.**
