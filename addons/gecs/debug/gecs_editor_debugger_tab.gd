@@ -32,28 +32,48 @@ var _system_sort_ascending: bool = true
 var _entity_sort_column: int = -1 # -1 means no sorting
 var _entity_sort_ascending: bool = true
 
+# Pinned items
+var _pinned_entities: Dictionary = {} # entity_id -> bool
+var _pinned_systems: Dictionary = {} # system_id -> bool
+
 # Icon constants (using Unicode characters)
 const ICON_ENTITY = "📦" # Entity icon
 const ICON_COMPONENT = "🔧" # Component icon
 const ICON_FLAG = "🚩" # Flag component (no properties)
 const ICON_RELATIONSHIP = "🔗" # Relationship icon
+const ICON_PIN = "📌" # Pinned item icon
 
 
 func _ready() -> void:
 	_update_debug_mode_overlay()
 	if system_tree:
-		# Three columns: name, execution time, and active status
-		system_tree.columns = 3
+		# Five columns: name, group, execution time, status, and order
+		system_tree.columns = 5
 		system_tree.set_column_expand(0, true) # Name column expands
-		system_tree.set_column_expand(1, false) # Execution time column fixed
-		system_tree.set_column_expand(2, false) # Status column fixed
-		system_tree.set_column_custom_minimum_width(1, 100) # Execution time: 100px
-		system_tree.set_column_custom_minimum_width(2, 100) # Status: 100px
+		system_tree.set_column_expand(1, false) # Group column resizable
+		system_tree.set_column_expand(2, false) # Execution time column resizable
+		system_tree.set_column_expand(3, false) # Status column resizable
+		system_tree.set_column_expand(4, false) # Order column resizable
+
+		# Set column widths
+		system_tree.set_column_custom_minimum_width(1, 100) # Group: 100px min
+		system_tree.set_column_custom_minimum_width(2, 100) # Execution time: 100px min
+		system_tree.set_column_custom_minimum_width(3, 100) # Status: 100px min
+		system_tree.set_column_custom_minimum_width(4, 60) # Order: 60px min
+
+		# Enable column resizing (clip content allows manual resizing)
+		system_tree.set_column_clip_content(0, true)
+		system_tree.set_column_clip_content(1, true)
+		system_tree.set_column_clip_content(2, true)
+		system_tree.set_column_clip_content(3, true)
+		system_tree.set_column_clip_content(4, true)
 
 		# Set column titles (clickable for sorting)
 		system_tree.set_column_title(0, "Name")
-		system_tree.set_column_title(1, "Time (ms)")
-		system_tree.set_column_title(2, "Status")
+		system_tree.set_column_title(1, "Group")
+		system_tree.set_column_title(2, "Time (ms)")
+		system_tree.set_column_title(3, "Status")
+		system_tree.set_column_title(4, "Order")
 		system_tree.set_column_titles_visible(true)
 
 		# Create root item
@@ -63,12 +83,20 @@ func _ready() -> void:
 		# Four columns: name, components count, relationships count, nodes count
 		entities_tree.columns = 4
 		entities_tree.set_column_expand(0, true) # Name column expands
-		entities_tree.set_column_expand(1, false) # Components count fixed
-		entities_tree.set_column_expand(2, false) # Relationships count fixed
-		entities_tree.set_column_expand(3, false) # Nodes count fixed
-		entities_tree.set_column_custom_minimum_width(1, 80) # Components: 80px
-		entities_tree.set_column_custom_minimum_width(2, 80) # Relationships: 80px
-		entities_tree.set_column_custom_minimum_width(3, 80) # Nodes: 80px
+		entities_tree.set_column_expand(1, false) # Components count resizable
+		entities_tree.set_column_expand(2, false) # Relationships count resizable
+		entities_tree.set_column_expand(3, false) # Nodes count resizable
+
+		# Set column widths
+		entities_tree.set_column_custom_minimum_width(1, 80) # Components: 80px min
+		entities_tree.set_column_custom_minimum_width(2, 80) # Relationships: 80px min
+		entities_tree.set_column_custom_minimum_width(3, 80) # Nodes: 80px min
+
+		# Enable column resizing (clip content allows manual resizing)
+		entities_tree.set_column_clip_content(0, true)
+		entities_tree.set_column_clip_content(1, true)
+		entities_tree.set_column_clip_content(2, true)
+		entities_tree.set_column_clip_content(3, true)
 
 		# Set column titles
 		entities_tree.set_column_title(0, "Entity")
@@ -104,6 +132,12 @@ func _ready() -> void:
 	# Connect to entities tree for column clicking (for sorting)
 	if entities_tree and not entities_tree.column_title_clicked.is_connected(_on_entities_tree_column_clicked):
 		entities_tree.column_title_clicked.connect(_on_entities_tree_column_clicked)
+	# Connect to entities tree for right-click context menu
+	if entities_tree and not entities_tree.item_mouse_selected.is_connected(_on_entities_tree_item_mouse_selected):
+		entities_tree.item_mouse_selected.connect(_on_entities_tree_item_mouse_selected)
+	# Connect to system tree for right-click context menu
+	if system_tree and not system_tree.button_clicked.is_connected(_on_system_tree_button_clicked):
+		system_tree.button_clicked.connect(_on_system_tree_button_clicked)
 
 
 func _process(delta: float) -> void:
@@ -235,10 +269,7 @@ func _on_popup_window_closed():
 
 
 func _on_system_tree_item_mouse_selected(position: Vector2, mouse_button_index: int):
-	# When user clicks on a system tree item, check if clicking on status column to toggle
-	if mouse_button_index != MOUSE_BUTTON_LEFT:
-		return
-
+	# When user clicks on a system tree item, check if clicking on status column to toggle or right-click for menu
 	var selected = system_tree.get_selected()
 	if not selected:
 		return
@@ -248,12 +279,147 @@ func _on_system_tree_item_mouse_selected(position: Vector2, mouse_button_index: 
 	if system_id == null:
 		return
 
-	# Only toggle if clicking on a top-level system item (not child details)
+	# Only process top-level system items (not child details)
 	if selected.get_parent() == system_tree.get_root():
-		# Get the column that was clicked
-		var column = system_tree.get_column_at_position(position)
-		if column == 2: # Status column (now column 2)
-			_toggle_system_active()
+		if mouse_button_index == MOUSE_BUTTON_LEFT:
+			# Get the column that was clicked
+			var column = system_tree.get_column_at_position(position)
+			if column == 3: # Status column (now column 3)
+				_toggle_system_active()
+		elif mouse_button_index == MOUSE_BUTTON_RIGHT:
+			_show_system_context_menu(selected, position)
+
+
+func _on_system_tree_button_clicked(item: TreeItem, column: int, id: int, mouse_button_index: int):
+	# Handle button clicks in tree (currently unused, but keeping for future)
+	pass
+
+
+func _on_entities_tree_item_mouse_selected(position: Vector2, mouse_button_index: int):
+	# Handle right-click on entity tree items
+	if mouse_button_index != MOUSE_BUTTON_RIGHT:
+		return
+
+	var selected = entities_tree.get_selected()
+	if not selected:
+		return
+
+	# Check if has entity_id metadata (top-level entity item)
+	var entity_id = selected.get_meta("entity_id", null)
+	if entity_id == null:
+		return
+
+	# Only show context menu for top-level entity items
+	if selected.get_parent() == entities_tree.get_root():
+		_show_entity_context_menu(selected, position)
+
+
+func _show_entity_context_menu(item: TreeItem, position: Vector2):
+	var entity_id = item.get_meta("entity_id", null)
+	if entity_id == null:
+		return
+
+	var popup = PopupMenu.new()
+	add_child(popup)
+
+	var is_pinned = _pinned_entities.get(entity_id, false)
+	if is_pinned:
+		popup.add_item("Unpin Entity", 0)
+	else:
+		popup.add_item("Pin Entity", 0)
+
+	# Position the popup at the mouse position (use get_screen_position for proper screen coords)
+	var screen_pos = entities_tree.get_screen_position() + position
+	popup.position = screen_pos
+	popup.popup()
+
+	# Connect the selection signal
+	popup.id_pressed.connect(func(id):
+		if id == 0:
+			_toggle_entity_pin(entity_id, item)
+		popup.queue_free()
+	)
+
+	# Clean up when popup closes
+	popup.popup_hide.connect(func():
+		if is_instance_valid(popup):
+			popup.queue_free()
+	)
+
+
+func _show_system_context_menu(item: TreeItem, position: Vector2):
+	var system_id = item.get_meta("system_id", null)
+	if system_id == null:
+		return
+
+	var popup = PopupMenu.new()
+	add_child(popup)
+
+	var is_pinned = _pinned_systems.get(system_id, false)
+	if is_pinned:
+		popup.add_item("Unpin System", 0)
+	else:
+		popup.add_item("Pin System", 0)
+
+	# Position the popup at the mouse position (use get_screen_position for proper screen coords)
+	var screen_pos = system_tree.get_screen_position() + position
+	popup.position = screen_pos
+	popup.popup()
+
+	# Connect the selection signal
+	popup.id_pressed.connect(func(id):
+		if id == 0:
+			_toggle_system_pin(system_id, item)
+		popup.queue_free()
+	)
+
+	# Clean up when popup closes
+	popup.popup_hide.connect(func():
+		if is_instance_valid(popup):
+			popup.queue_free()
+	)
+
+
+func _toggle_entity_pin(entity_id: int, item: TreeItem):
+	var is_pinned = _pinned_entities.get(entity_id, false)
+	_pinned_entities[entity_id] = not is_pinned
+	_update_entity_pin_display(item, not is_pinned)
+	# Re-sort to move pinned items to top
+	if _entity_sort_column != -1 or not is_pinned:
+		_sort_entity_tree()
+
+
+func _toggle_system_pin(system_id: int, item: TreeItem):
+	var is_pinned = _pinned_systems.get(system_id, false)
+	_pinned_systems[system_id] = not is_pinned
+	_update_system_pin_display(item, not is_pinned)
+	# Re-sort to move pinned items to top
+	if _system_sort_column != -1 or not is_pinned:
+		_sort_system_tree()
+
+
+func _update_entity_pin_display(item: TreeItem, is_pinned: bool):
+	var current_text = item.get_text(0)
+	# Remove existing pin icon if present
+	if current_text.begins_with(ICON_PIN + " "):
+		current_text = current_text.substr(2)
+
+	if is_pinned:
+		item.set_text(0, ICON_PIN + " " + current_text)
+	else:
+		item.set_text(0, current_text)
+
+
+func _update_system_pin_display(item: TreeItem, is_pinned: bool):
+	var current_text = item.get_text(0) # Name is in column 0 now
+	# Remove existing pin icon if present
+	if current_text.begins_with(ICON_PIN + " "):
+		current_text = current_text.substr(2)
+
+	if is_pinned:
+		item.set_text(0, ICON_PIN + " " + current_text)
+	else:
+		item.set_text(0, current_text)
 
 
 func _toggle_system_active():
@@ -282,18 +448,18 @@ func _toggle_system_active():
 
 
 func _update_system_active_display(system_item: TreeItem, is_active: bool):
-	# Update the visual display of the system in column 2 as a button
+	# Update the visual display of the system in column 3 as a button
 	if is_active:
-		system_item.set_text(2, "ACTIVE")
-		system_item.set_custom_color(2, Color(0.5, 1.0, 0.5)) # Green text
+		system_item.set_text(3, "ACTIVE")
+		system_item.set_custom_color(3, Color(0.5, 1.0, 0.5)) # Green text
 	else:
-		system_item.set_text(2, "INACTIVE")
-		system_item.set_custom_color(2, Color(1.0, 0.3, 0.3)) # Red text
+		system_item.set_text(3, "INACTIVE")
+		system_item.set_custom_color(3, Color(1.0, 0.3, 0.3)) # Red text
 
 	# Make the status column a clickable button
-	system_item.set_cell_mode(2, TreeItem.CELL_MODE_STRING)
-	system_item.set_selectable(2, true)
-	system_item.set_editable(2, false)
+	system_item.set_cell_mode(3, TreeItem.CELL_MODE_STRING)
+	system_item.set_selectable(3, true)
+	system_item.set_editable(3, false)
 
 
 func _on_system_tree_column_clicked(column: int, mouse_button_index: int):
@@ -301,10 +467,17 @@ func _on_system_tree_column_clicked(column: int, mouse_button_index: int):
 	if mouse_button_index != MOUSE_BUTTON_LEFT:
 		return
 
-	# Toggle sort direction if clicking same column, otherwise reset to ascending
+	# Cycle through: None -> Asc -> Desc -> None
 	if _system_sort_column == column:
-		_system_sort_ascending = not _system_sort_ascending
+		if _system_sort_ascending:
+			# Currently ascending, switch to descending
+			_system_sort_ascending = false
+		else:
+			# Currently descending, remove sorting
+			_system_sort_column = -1
+			_system_sort_ascending = true
 	else:
+		# New column, start with ascending
 		_system_sort_column = column
 		_system_sort_ascending = true
 
@@ -317,12 +490,14 @@ func _on_system_tree_column_clicked(column: int, mouse_button_index: int):
 
 func _update_system_column_indicators():
 	# Clear all column indicators first
-	for i in range(3):
+	for i in range(5):
 		var title = ""
 		match i:
 			0: title = "Name"
-			1: title = "Time (ms)"
-			2: title = "Status"
+			1: title = "Group"
+			2: title = "Time (ms)"
+			3: title = "Status"
+			4: title = "Order"
 
 		# Add arrow indicator if this is the sort column
 		if i == _system_sort_column:
@@ -335,7 +510,7 @@ func _update_system_column_indicators():
 
 
 func _sort_system_tree():
-	if not system_tree or _system_sort_column == -1:
+	if not system_tree:
 		return
 
 	var root = system_tree.get_root()
@@ -344,43 +519,66 @@ func _sort_system_tree():
 
 	# Collect all system items with their data
 	var systems: Array = []
+	var pinned_systems: Array = []
 	var child = root.get_first_child()
 	while child:
+		var system_id = child.get_meta("system_id", null)
 		var system_data = {
 			"item": child,
 			"name": child.get_text(0),
+			"group": child.get_text(1),
 			"time": 0.0,
-			"status": child.get_text(2),
-			"system_id": child.get_meta("system_id", null)
+			"status": child.get_text(3),
+			"order": int(child.get_text(4)) if child.get_text(4).is_valid_int() else 0,
+			"system_id": system_id,
+			"is_pinned": _pinned_systems.get(system_id, false)
 		}
 
 		# Get execution time from text (remove " ms" suffix if present)
-		var time_text = child.get_text(1)
+		var time_text = child.get_text(2)
 		if time_text:
 			system_data["time"] = float(time_text.replace(" ms", ""))
 
-		systems.append(system_data)
+		if system_data["is_pinned"]:
+			pinned_systems.append(system_data)
+		else:
+			systems.append(system_data)
 		child = child.get_next()
 
-	# Sort based on column
-	match _system_sort_column:
-		0: # Name
-			if _system_sort_ascending:
-				systems.sort_custom(func(a, b): return a["name"].nocasecmp_to(b["name"]) < 0)
-			else:
-				systems.sort_custom(func(a, b): return a["name"].nocasecmp_to(b["name"]) > 0)
-		1: # Time
-			if _system_sort_ascending:
-				systems.sort_custom(func(a, b): return a["time"] < b["time"])
-			else:
-				systems.sort_custom(func(a, b): return a["time"] > b["time"])
-		2: # Status
-			if _system_sort_ascending:
-				systems.sort_custom(func(a, b): return a["status"] < b["status"])
-			else:
-				systems.sort_custom(func(a, b): return a["status"] > b["status"])
+	# Sort based on column (if sorting is active)
+	if _system_sort_column != -1:
+		match _system_sort_column:
+			0: # Name
+				if _system_sort_ascending:
+					systems.sort_custom(func(a, b): return a["name"].nocasecmp_to(b["name"]) < 0)
+				else:
+					systems.sort_custom(func(a, b): return a["name"].nocasecmp_to(b["name"]) > 0)
+			1: # Group
+				if _system_sort_ascending:
+					systems.sort_custom(func(a, b): return a["group"].nocasecmp_to(b["group"]) < 0)
+				else:
+					systems.sort_custom(func(a, b): return a["group"].nocasecmp_to(b["group"]) > 0)
+			2: # Time
+				if _system_sort_ascending:
+					systems.sort_custom(func(a, b): return a["time"] < b["time"])
+				else:
+					systems.sort_custom(func(a, b): return a["time"] > b["time"])
+			3: # Status
+				if _system_sort_ascending:
+					systems.sort_custom(func(a, b): return a["status"] < b["status"])
+				else:
+					systems.sort_custom(func(a, b): return a["status"] > b["status"])
+			4: # Order
+				if _system_sort_ascending:
+					systems.sort_custom(func(a, b): return a["order"] < b["order"])
+				else:
+					systems.sort_custom(func(a, b): return a["order"] > b["order"])
 
-	# Rebuild tree in sorted order
+	# Rebuild tree: pinned items first, then sorted items
+	for system_data in pinned_systems:
+		var item = system_data["item"]
+		root.remove_child(item)
+		root.add_child(item)
 	for system_data in systems:
 		var item = system_data["item"]
 		root.remove_child(item)
@@ -392,10 +590,17 @@ func _on_entities_tree_column_clicked(column: int, mouse_button_index: int):
 	if mouse_button_index != MOUSE_BUTTON_LEFT:
 		return
 
-	# Toggle sort direction if clicking same column, otherwise reset to ascending
+	# Cycle through: None -> Asc -> Desc -> None
 	if _entity_sort_column == column:
-		_entity_sort_ascending = not _entity_sort_ascending
+		if _entity_sort_ascending:
+			# Currently ascending, switch to descending
+			_entity_sort_ascending = false
+		else:
+			# Currently descending, remove sorting
+			_entity_sort_column = -1
+			_entity_sort_ascending = true
 	else:
+		# New column, start with ascending
 		_entity_sort_column = column
 		_entity_sort_ascending = true
 
@@ -427,7 +632,7 @@ func _update_entity_column_indicators():
 
 
 func _sort_entity_tree():
-	if not entities_tree or _entity_sort_column == -1:
+	if not entities_tree:
 		return
 
 	var root = entities_tree.get_root()
@@ -436,15 +641,18 @@ func _sort_entity_tree():
 
 	# Collect all entity items with their data
 	var entities: Array = []
+	var pinned_entities: Array = []
 	var child = root.get_first_child()
 	while child:
+		var entity_id = child.get_meta("entity_id", null)
 		var entity_data = {
 			"item": child,
 			"name": child.get_text(0),
 			"comps": 0,
 			"rels": 0,
 			"nodes": 0,
-			"entity_id": child.get_meta("entity_id", null)
+			"entity_id": entity_id,
+			"is_pinned": _pinned_entities.get(entity_id, false)
 		}
 
 		# Get numeric counts from columns
@@ -460,33 +668,41 @@ func _sort_entity_tree():
 		if nodes_text:
 			entity_data["nodes"] = int(nodes_text)
 
-		entities.append(entity_data)
+		if entity_data["is_pinned"]:
+			pinned_entities.append(entity_data)
+		else:
+			entities.append(entity_data)
 		child = child.get_next()
 
-	# Sort based on column
-	match _entity_sort_column:
-		0: # Name
-			if _entity_sort_ascending:
-				entities.sort_custom(func(a, b): return a["name"].nocasecmp_to(b["name"]) < 0)
-			else:
-				entities.sort_custom(func(a, b): return a["name"].nocasecmp_to(b["name"]) > 0)
-		1: # Components
-			if _entity_sort_ascending:
-				entities.sort_custom(func(a, b): return a["comps"] < b["comps"])
-			else:
-				entities.sort_custom(func(a, b): return a["comps"] > b["comps"])
-		2: # Relationships
-			if _entity_sort_ascending:
-				entities.sort_custom(func(a, b): return a["rels"] < b["rels"])
-			else:
-				entities.sort_custom(func(a, b): return a["rels"] > b["rels"])
-		3: # Nodes
-			if _entity_sort_ascending:
-				entities.sort_custom(func(a, b): return a["nodes"] < b["nodes"])
-			else:
-				entities.sort_custom(func(a, b): return a["nodes"] > b["nodes"])
+	# Sort based on column (if sorting is active)
+	if _entity_sort_column != -1:
+		match _entity_sort_column:
+			0: # Name
+				if _entity_sort_ascending:
+					entities.sort_custom(func(a, b): return a["name"].nocasecmp_to(b["name"]) < 0)
+				else:
+					entities.sort_custom(func(a, b): return a["name"].nocasecmp_to(b["name"]) > 0)
+			1: # Components
+				if _entity_sort_ascending:
+					entities.sort_custom(func(a, b): return a["comps"] < b["comps"])
+				else:
+					entities.sort_custom(func(a, b): return a["comps"] > b["comps"])
+			2: # Relationships
+				if _entity_sort_ascending:
+					entities.sort_custom(func(a, b): return a["rels"] < b["rels"])
+				else:
+					entities.sort_custom(func(a, b): return a["rels"] > b["rels"])
+			3: # Nodes
+				if _entity_sort_ascending:
+					entities.sort_custom(func(a, b): return a["nodes"] < b["nodes"])
+				else:
+					entities.sort_custom(func(a, b): return a["nodes"] > b["nodes"])
 
-	# Rebuild tree in sorted order
+	# Rebuild tree: pinned items first, then sorted items
+	for entity_data in pinned_entities:
+		var item = entity_data["item"]
+		root.remove_child(item)
+		root.add_child(item)
 	for entity_data in entities:
 		var item = entity_data["item"]
 		root.remove_child(item)
@@ -694,8 +910,11 @@ func entity_added(ent: int, path: NodePath) -> void:
 		if root == null:
 			root = entities_tree.create_item()
 		var item = entities_tree.create_item(root)
-		# Column 0: Entity name with icon
-		item.set_text(0, ICON_ENTITY + " " + str(path).get_file())
+		# Column 0: Entity name with icon (and pin icon if pinned)
+		var display_name = ICON_ENTITY + " " + str(path).get_file()
+		if _pinned_entities.get(ent, false):
+			display_name = ICON_PIN + " " + display_name
+		item.set_text(0, display_name)
 		item.set_tooltip_text(0, str(ent) + " : " + str(path))
 		# Columns 1-3: Counts (will be updated as components/relationships are added)
 		item.set_text(1, "0")
@@ -731,6 +950,9 @@ func entity_removed(ent: int, path: NodePath) -> void:
 				root.remove_child(child)
 				break
 			child = child.get_next()
+
+	# Clean up pinned state
+	_pinned_entities.erase(ent)
 
 	_update_entity_status_bar()
 
@@ -782,6 +1004,9 @@ func system_removed(sys: int, path: NodePath) -> void:
 	var systems_data := get_or_create_dict(ecs_data, "systems")
 	systems_data.erase(sys)
 
+	# Clean up pinned state
+	_pinned_systems.erase(sys)
+
 	_update_systems_status_bar()
 
 
@@ -828,14 +1053,33 @@ func system_last_run_data(system_id: int, system_name: String, last_run_data: Di
 			existing = system_tree.create_item(root)
 			existing.set_meta("system_id", system_id)
 			existing.collapsed = true # Start collapsed
-		# Set main system name
-		existing.set_text(0, system_name)
-		# Set execution time in column 1
+
+		# Set main system name in column 0
+		var display_name = system_name
+		# Check if this system is pinned and update display
+		if _pinned_systems.get(system_id, false):
+			if not display_name.begins_with(ICON_PIN + " "):
+				display_name = ICON_PIN + " " + display_name
+		existing.set_text(0, display_name)
+
+		# Set group in column 1
+		var group = sys_entry.get("group", "")
+		existing.set_text(1, group)
+
+		# Set execution time in column 2
 		var exec_ms = last_run_data.get("execution_time_ms", 0.0)
-		existing.set_text(1, String.num(exec_ms, 3) + " ms")
-		# Set active status in column 2
+		existing.set_text(2, String.num(exec_ms, 3) + " ms")
+
+		# Set active status in column 3
 		var is_active = sys_entry.get("active", true)
 		_update_system_active_display(existing, is_active)
+
+		# Get execution order (index in systems array from last_run_data) - column 4
+		var execution_order = last_run_data.get("execution_order", -1)
+		if execution_order >= 0:
+			existing.set_text(4, str(execution_order))
+		else:
+			existing.set_text(4, "-")
 		# Clear previous children to avoid stale data
 		var prev_child = existing.get_first_child()
 		while prev_child:

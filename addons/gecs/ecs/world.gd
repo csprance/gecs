@@ -214,11 +214,15 @@ func process(delta: float, group: String = "") -> void:
 	# PERF: Reset frame metrics at start of processing step
 	perf_reset_frame()
 	if systems_by_group.has(group):
+		var system_index = 0
 		for system in systems_by_group[group]:
 			if system.active:
 				system._handle(delta)
 				if ECS.debug:
+					# Add execution order to last run data
+					system.lastRunData["execution_order"] = system_index
 					assert(GECSEditorDebuggerMessages.system_last_run_data(system, system.lastRunData), '')
+					system_index += 1
 	if ECS.debug:
 		assert(GECSEditorDebuggerMessages.process_world(delta, group), '')
 
