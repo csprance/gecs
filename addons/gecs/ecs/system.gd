@@ -90,6 +90,8 @@ var _query_cache: QueryBuilder = null
 var _component_paths: Array[String] = []
 ## Cached subsystems array (6.0.0 style)
 var _subsystems_cache: Array = []
+## Cached tick source (null = use frame delta)
+var _tick_source_cached: TickSource = null
 
 #endregion Public Variables
 
@@ -111,6 +113,25 @@ func deps() -> Dictionary[int, Array]:
 func query() -> QueryBuilder:
 	process_empty = true
 	return _world.query if _world else ECS.world.query
+
+
+## Override this method to specify a custom tick source for this system.[br]
+## Called once during system setup (cached like query()).[br]
+## If not overridden, the system uses frame delta (default behavior).[br][br]
+## [b]Example:[/b]
+## [codeblock]
+## # Register tick source in world setup
+## func _ready():
+##     ECS.world.create_interval_tick_source(1.0, 'spawner-tick')
+##
+## # Get tick source in system
+## class_name SpawnerSystem extends System
+##
+## func tick() -> TickSource:
+##     return ECS.world.get_tick_source('spawner-tick')
+## [/codeblock]
+func tick() -> TickSource:
+	return null  # Base implementation - use frame delta
 
 
 ## Override this method to define any sub-systems that should be processed by this system.[br]
@@ -162,6 +183,10 @@ func process(entities: Array[Entity], components: Array, delta: float) -> void:
 ## INTERNAL: Called by World.add_system() to initialize the system
 ## DO NOT CALL OR OVERRIDE - this is framework code
 func _internal_setup():
+	# Cache tick source if system defines one
+	if has_method("tick"):
+		_tick_source_cached = tick()
+
 	# Call user setup
 	setup()
 
