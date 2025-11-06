@@ -102,6 +102,8 @@ var _perf_metrics := {
 }
 ## Tick source registry - maps name -> TickSource
 var _tick_sources: Dictionary = {}
+## Frame counter to ensure tick sources are only updated once per frame
+var _tick_sources_last_frame: int = -1
 
 
 ## Internal perf helper (debug only)
@@ -208,8 +210,11 @@ func process(delta: float, group: String = "") -> void:
 	# PERF: Reset frame metrics at start of processing step
 	perf_reset_frame()
 
-	# Update all tick sources (only if any exist to avoid overhead)
-	if not _tick_sources.is_empty():
+	# Update all tick sources ONCE per frame (only if any exist to avoid overhead)
+	# This prevents double-updating when processing multiple groups in the same frame
+	var current_frame = Engine.get_process_frames()
+	if not _tick_sources.is_empty() and _tick_sources_last_frame != current_frame:
+		_tick_sources_last_frame = current_frame
 		for tick_source in _tick_sources.values():
 			tick_source.update(delta)
 

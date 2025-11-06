@@ -37,16 +37,18 @@ var tick_count: int = 0
 
 ## Update the tick source with frame delta
 ## Returns the fixed interval when it's time to tick, 0.0 otherwise
+## Handles lag spikes by processing all pending intervals in a single frame
 func update(delta: float) -> float:
 	accumulated_time += delta
 
-	if accumulated_time >= interval:
+	# Process all pending intervals (handles lag spikes and pauses)
+	var ticked := false
+	while accumulated_time >= interval:
 		tick_count += 1
 		accumulated_time -= interval
-		last_delta = interval  # Fixed interval
-	else:
-		last_delta = 0.0  # No tick this frame
+		ticked = true
 
+	last_delta = interval if ticked else 0.0
 	return last_delta
 
 

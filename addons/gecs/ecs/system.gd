@@ -183,9 +183,8 @@ func process(entities: Array[Entity], components: Array, delta: float) -> void:
 ## INTERNAL: Called by World.add_system() to initialize the system
 ## DO NOT CALL OR OVERRIDE - this is framework code
 func _internal_setup():
-	# Cache tick source if system defines one
-	if has_method("tick"):
-		_tick_source_cached = tick()
+	# Cache tick source - base returns null (fast path), overrides provide TickSource
+	_tick_source_cached = tick()
 
 	# Call user setup
 	setup()

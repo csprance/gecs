@@ -37,13 +37,14 @@ var tick_count: int = 0
 
 ## Update the tick source with frame delta
 ## Returns the accumulated time when it's time to tick, 0.0 otherwise
+## Carries forward extra time to prevent drift during lag spikes
 func update(delta: float) -> float:
 	accumulated_time += delta
 
 	if accumulated_time >= interval:
 		tick_count += 1
-		last_delta = accumulated_time  # Actual accumulated time
-		accumulated_time = 0.0
+		last_delta = accumulated_time  # Return full accumulated time
+		accumulated_time -= interval  # Carry forward extra time
 	else:
 		last_delta = 0.0  # No tick this frame
 
