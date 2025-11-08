@@ -1,0 +1,21 @@
+# Compiled binaries
+bin/
+*.so
+*.dll
+*.dylib
+*.framework
+
+# Build artifacts
+*.o
+*.obj
+*.os
+.scons_cache/
+.sconsign.dblite
+
+# godot-cpp (should be cloned by user)
+godot-cpp/
+
+# IDE files
+.vscode/
+.idea/
+*.sublime-*

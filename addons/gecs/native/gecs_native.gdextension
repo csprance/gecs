@@ -1,0 +1,11 @@
+[configuration]
+entry_symbol = "gecs_native_library_init"
+compatibility_minimum = 4.3
+
+[libraries]
+linux.debug.x86_64 = "res://addons/gecs/native/bin/libgecs_native.linux.template_debug.x86_64.so"
+linux.release.x86_64 = "res://addons/gecs/native/bin/libgecs_native.linux.template_release.x86_64.so"
+windows.debug.x86_64 = "res://addons/gecs/native/bin/libgecs_native.windows.template_debug.x86_64.dll"
+windows.release.x86_64 = "res://addons/gecs/native/bin/libgecs_native.windows.template_release.x86_64.dll"
+macos.debug = "res://addons/gecs/native/bin/libgecs_native.macos.template_debug.framework"
+macos.release = "res://addons/gecs/native/bin/libgecs_native.macos.template_release.framework"

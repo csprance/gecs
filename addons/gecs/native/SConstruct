@@ -1,0 +1,25 @@
+#!/usr/bin/env python
+import os
+import sys
+
+env = SConscript("godot-cpp/SConstruct")
+
+# Add our source files
+env.Append(CPPPATH=["src/"])
+sources = Glob("src/*.cpp")
+
+# Output library name
+if env["platform"] == "macos":
+    library = env.SharedLibrary(
+        "bin/libgecs_native.{}.{}.framework/libgecs_native.{}.{}".format(
+            env["platform"], env["target"], env["platform"], env["target"]
+        ),
+        source=sources,
+    )
+else:
+    library = env.SharedLibrary(
+        "bin/libgecs_native{}{}".format(env["suffix"], env["SHLIBSUFFIX"]),
+        source=sources,
+    )
+
+Default(library)
