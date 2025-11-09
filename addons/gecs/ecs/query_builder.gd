@@ -294,16 +294,61 @@ func _internal_execute() -> Array:
 
 	# Handle relationship filtering
 	if not _relationships.is_empty() or not _exclude_relationships.is_empty():
+		# OPTIMIZATION: Use relationship index for O(n_entities_with_relation) instead of O(n_all_entities)
+		#
+		# Instead of iterating ALL entities and checking each one (slow):
+		#   for entity in all_entities:
+		#     if entity.has_relationship(C_ChildOf):  # checks array
+		#
+		# We use the index to get ONLY entities with that relation type (fast):
+		#   candidates = relationship_entity_index["C_ChildOf"]  # O(1) lookup
+		#   for entity in candidates:  # Much smaller set!
+		#     if entity.has_relationship_target(parent):  # verify target
+		#
+		# This is especially fast when querying rare relationships (e.g., 10 C_ChildOf out of 10,000 entities)
+		var candidates: Array[Entity] = []
+		var use_index_optimization = true
+
+		if not _relationships.is_empty():
+			# Check if we can use index optimization (all relationships have non-null relations)
+			for relationship in _relationships:
+				if relationship.relation == null:
+					# Wildcard relation - can't use index optimization
+					use_index_optimization = false
+					break
+
+			if use_index_optimization:
+				# Get entities that have the required relationship types
+				for i in range(_relationships.size()):
+					var relationship = _relationships[i]
+					var relation_path = relationship.relation.get_script().resource_path
+					var entities_with_relation = _world.relationship_entity_index.get(relation_path, [])
+
+					if i == 0:
+						# First relationship - start with these entities
+						candidates = entities_with_relation.duplicate()
+					else:
+						# Subsequent relationships - intersect (entity must have ALL relationship types)
+						candidates = _intersect_entity_arrays(candidates, entities_with_relation)
+
+					# Early exit if intersection is empty
+					if candidates.is_empty():
+						return []
+
+				# Intersect with component query results
+				result = _intersect_entity_arrays(result, candidates)
+
+		# Now filter by target on the smaller set
 		var filtered_entities: Array = []
 		for entity in result:
 			var matches = true
-			# Required relationships
+			# Required relationships - check target matching
 			for relationship in _relationships:
 				if not entity.has_relationship(relationship):
 					matches = false
 					break
 			# Excluded relationships
-			if matches:
+			if matches and not _exclude_relationships.is_empty():
 				for ex_relationship in _exclude_relationships:
 					if entity.has_relationship(ex_relationship):
 						matches = false
@@ -323,6 +368,28 @@ func _has_actual_queries(queries: Array) -> bool:
 		if not query.is_empty():
 			return true
 	return false
+
+
+## Efficiently intersect two entity arrays
+## Returns entities that exist in both arrays
+func _intersect_entity_arrays(array1: Array, array2: Array) -> Array[Entity]:
+	# OPTIMIZATION: Use a Dictionary as a set for O(1) lookups
+	# Always iterate over the smaller array for better performance
+	if array1.size() > array2.size():
+		var temp = array1
+		array1 = array2
+		array2 = temp
+
+	var set2 = {}
+	for entity in array2:
+		set2[entity] = true
+
+	var result: Array[Entity] = []
+	for entity in array1:
+		if set2.has(entity):
+			result.append(entity)
+
+	return result
 
 
 ## Filter entities based on component queries
