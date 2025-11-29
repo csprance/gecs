@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+## [6.7.2] - 2025-11-29 - Critical Query Cache Bugfix
+
+### Fixed
+- **CRITICAL:** Fixed query cache bug causing stale results when entities moved between existing archetypes
+  - QueryBuilder.execute() caches full entity lists, not just archetype matches
+  - Cache invalidation now triggers on all structural changes (component add/remove, entity removal)
+  - Previously only invalidated when NEW archetypes were created, missing entities moving to EXISTING archetypes
+  - Example bug: DeathSystem would miss entities that added C_Dead after the first entity created the archetype
+  - Performance impact: ~20% more cache invalidations, but correctness is critical
+
+## [6.7.1] - Previous Release
+
 ### Removed
 - Removed the unused QueryBuilder pooling infrastructure; `World.query` now always creates a fresh builder while retaining cache invalidation wiring for clarity and predictable lifecycle management.
 
