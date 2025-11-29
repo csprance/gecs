@@ -371,21 +371,14 @@ func remove_entities(_entities: Array) -> void:
 	var original_invalidate = _should_invalidate_cache
 	_should_invalidate_cache = false
 
-	var archetypes_removed = false
-	var initial_archetype_count = archetypes.size()
-
 	# Process all entities
 	for _entity in _entities:
 		remove_entity(_entity)
 
-	# Check if any archetypes were removed (when they became empty)
-	if archetypes.size() < initial_archetype_count:
-		archetypes_removed = true
-
-	# Re-enable cache invalidation and invalidate once if needed
+	# Re-enable cache invalidation and always invalidate when entities are removed
+	# QueryBuilder caches execute() results, so any entity removal requires cache invalidation
 	_should_invalidate_cache = original_invalidate
-	if archetypes_removed:
-		_invalidate_cache("batch_remove_entities")
+	_invalidate_cache("batch_remove_entities")
 
 
 ## Disable an [Entity] from the world. Disabled entities don't run process or physics,[br]
@@ -613,14 +606,13 @@ func purge(should_free = true, keep := []) -> void:
 ## [param entity] The entity that had a component added.[br]
 ## [param component] The resource path of the added component.
 func _on_entity_component_added(entity: Entity, component: Resource) -> void:
-	# ARCHETYPE: Move entity; only invalidate if new archetype CREATED
+	# ARCHETYPE: Move entity to new archetype
 	if entity_to_archetype.has(entity):
 		var old_archetype = entity_to_archetype[entity]
 		var comp_path = component.get_script().resource_path
-		var before_count = archetypes.size()
 		var new_archetype = _move_entity_to_new_archetype_fast(entity, old_archetype, comp_path, true)
-		if archetypes.size() > before_count:
-			_invalidate_cache("new_archetype_created_component_add")
+		# Must invalidate: QueryBuilder caches execute() results, not just archetype matches
+		_invalidate_cache("entity_component_added")
 
 	# Emit Signal
 	component_added.emit(entity, component)
@@ -662,10 +654,9 @@ func _on_entity_component_removed(entity, component: Resource) -> void:
 	if entity_to_archetype.has(entity):
 		var old_archetype = entity_to_archetype[entity]
 		var comp_path = component.resource_path
-		var before_count = archetypes.size()
 		var new_archetype = _move_entity_to_new_archetype_fast(entity, old_archetype, comp_path, false)
-		if archetypes.size() > before_count:
-			_invalidate_cache("new_archetype_created_component_remove")
+		# Must invalidate: QueryBuilder caches execute() results, not just archetype matches
+		_invalidate_cache("entity_component_removed")
 
 	component_removed.emit(entity, component)
 	_handle_observer_component_removed(entity, component)
