@@ -69,7 +69,7 @@ func test_system_processes_entities_with_required_components():
 	assert_int(entity_d.get_component(C_TestD).points).is_equal(0)
 
 
-# FIXME: This test is failing system groups are not being set correctly (or they're being overidden somewhere)
+# NOTE: System groups are now preserved correctly when systems are added to the world
 func test_system_group_processes_entities_with_required_components():
 	# Create entities with the required components
 	var entity_a = TestA.new()
