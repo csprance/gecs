@@ -333,7 +333,10 @@ func remove_entity(entity) -> void:
 		processor.call(entity)
 	entity_removed.emit(entity)
 	_worldLogger.debug("remove_entity Removing Entity: ", entity)
-	entities.erase(entity) # FIXME: This doesn't always work for some reason?
+	# BUGFIX: Use find() to locate entity by reference, then remove by index for reliability
+	var entity_index = entities.find(entity)
+	if entity_index != -1:
+		entities.remove_at(entity_index)
 
 	# Only disconnect signals if they're actually connected
 	if entity.component_added.is_connected(_on_entity_component_added):
@@ -473,8 +476,22 @@ func has_entity_with_id(id: String) -> bool:
 ## [b]Example:[/b]
 ##      [codeblock]world.add_system(movement_system)[/codeblock]
 func add_system(system: System, topo_sort: bool = false) -> void:
+	# BUGFIX: Preserve @export variables before add_child() as Godot resets them
+	var saved_group = system.group
+	var saved_process_empty = system.process_empty
+	var saved_active = system.active
+	var saved_parallel_processing = system.parallel_processing
+	var saved_parallel_threshold = system.parallel_threshold
+	
 	if not system.is_inside_tree():
 		get_node(system_nodes_root).add_child(system)
+		# Restore @export variables after add_child()
+		system.group = saved_group
+		system.process_empty = saved_process_empty
+		system.active = saved_active
+		system.parallel_processing = saved_parallel_processing
+		system.parallel_threshold = saved_parallel_threshold
+	
 	_worldLogger.trace("add_system Adding System: ", system)
 
 	# Give the system a reference to this world
