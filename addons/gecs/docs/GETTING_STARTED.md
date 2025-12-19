@@ -20,9 +20,27 @@ This guide will walk you through creating a simple player entity with health and
 
 > 💡 **Quick Check**: If you see errors, make sure `ECS` appears in `Project > Project Settings > AutoLoad`
 
-## 🎮 Step 2: Your First Entity (1 minute)
+## 🎮 Step 2: Your First Entity (2 minutes)
 
-Create a new scene and script for your player entity:
+Entities in GECS extend Godot's `Node` class and must be created as **scenes** (prefabs) to work with Godot's scene tree.
+
+> ⚠️ **Important**: Since `Entity` extends `Node` (not `Node3D` or `Node2D`), you need to create a scene with the appropriate node type as the root to access spatial properties like position, rotation, etc.
+
+### Create the Entity Scene
+
+1. **Create a new scene** in Godot:
+   - Click `Scene > New Scene` or press `Ctrl+N`
+   - Select **"Node3D"** as the root node type (for 3D games) or **"Node2D"** (for 2D games)
+   - Rename the root node to `Player`
+
+2. **Attach the entity script**:
+   - With the root node selected, click the "Attach Script" button (📄+ icon)
+   - Save as `e_player.gd`
+
+3. **Save the scene**:
+   - Save as `e_player.tscn` in your scenes folder
+
+### Create the Entity Script
 
 **File: `e_player.gd`**
 
@@ -38,7 +56,7 @@ func on_ready():
         c_trs.position = self.global_position
 ```
 
-> 💡 **What's happening?** Entities are containers for components. We're creating a player entity that will sync its transform with the component system.
+> 💡 **What's happening?** Entities are containers for components. By creating a `Node3D` scene with the `Player` (Entity) script attached, we can access spatial properties like `global_position`. The entity syncs its scene position with the ECS transform component.
 
 ## 📦 Step 3: Your First Components (1 minute)
 
@@ -126,6 +144,12 @@ func process(entities: Array[Entity], components: Array, delta: float):
 
 Now let's put it all together in a main scene:
 
+### Create Main Scene
+
+1. **Create a new scene** with a `Node` as the root
+2. **Add a World node** as a child (Add Child Node > search for "World")
+3. **Attach this script** to the root node:
+
 **File: `main.gd`**
 
 ```gdscript
@@ -136,17 +160,21 @@ extends Node
 
 func _ready():
     ECS.world = world
-    
-    # Create a moving player entity
-    var e_player = Player.new()
+
+    # Load and instantiate the player entity scene
+    var player_scene = preload("res://e_player.tscn")  # Adjust path as needed
+    var e_player = player_scene.instantiate() as Player
+
+    # Add components to the entity
     e_player.add_components([
         C_Health.new(100),
         C_Transform.new(),
         C_Velocity.new(Vector3(2, 0, 0))  # Move right at 2 units/second
     ])
+
     add_child(e_player)  # Add to scene tree
     ECS.world.add_entity(e_player)  # Add to ECS world
-    
+
     # Create the movement system
     var movement_system = MovementSystem.new()
     ECS.world.add_system(movement_system)
@@ -158,6 +186,8 @@ func _process(delta):
 ```
 
 **Run your project!** 🎉 You now have a working ECS setup where the player entity moves across the screen and bounces off the edges! The MovementSystem updates entity positions based on their velocity components.
+
+> 💡 **Scene-based entities**: Notice we load and instantiate the `e_player.tscn` scene instead of calling `Player.new()`. This is required because entities need to be part of Godot's scene tree to access spatial properties.
 
 ## 🎯 What You Just Built
 
@@ -256,6 +286,13 @@ Try adding these to your moving player:
 - Verify components are added to the entity via `define_components()` or Inspector
 - Make sure the system is added to the world
 - Ensure transform synchronization is called in entity's `on_ready()`
+
+### Can't access position/rotation properties?
+
+- ⚠️ **Entity extends Node, not Node3D**: You must create a scene with `Node3D` (3D) or `Node2D` (2D) as the root node type
+- Attach your entity script (that extends `Entity`) to the Node3D/Node2D root
+- **Don't use** `Entity.new()` or `Player.new()` - always instantiate from a scene file
+- See Step 2 for the correct scene creation workflow
 
 ### Errors in console?
 
