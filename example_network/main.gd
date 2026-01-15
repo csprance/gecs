@@ -90,7 +90,7 @@ func _on_join_pressed() -> void:
 
 func _on_disconnect_pressed() -> void:
 	_cleanup_network()
-	_update_ui_connected(false)
+	_update_ui_disconnected()
 	status_label.text = "Disconnected"
 
 
@@ -192,7 +192,9 @@ func _cleanup_network() -> void:
 	# Reset multiplayer
 	multiplayer.multiplayer_peer = null
 
-	# Clear network sync (will be recreated on next connection)
+	# PROPERLY remove NetworkSync (triggers _exit_tree which disconnects signals)
+	if _network_sync:
+		_network_sync.queue_free()
 	_network_sync = null
 	_network_middleware = null
 
