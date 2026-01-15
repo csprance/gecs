@@ -14,10 +14,19 @@ func _init(p_network_sync: NetworkSync) -> void:
 	network_sync.entity_spawned.connect(_on_entity_spawned)
 	# Connect to local_player_spawned signal - fired when local player is spawned
 	network_sync.local_player_spawned.connect(_on_entity_spawned)
+	# Connect to world.entity_added for HOST-spawned entities (projectiles, etc.)
+	# Use call_deferred so component values are set before we apply visuals
+	ECS.world.entity_added.connect(_on_entity_added_deferred)
 
 
 func _on_entity_spawned(entity: Entity) -> void:
 	apply_visuals(entity)
+
+
+func _on_entity_added_deferred(entity: Entity) -> void:
+	# Defer so component values are set (they're assigned after add_entity)
+	# Use callable to capture entity reference
+	(func(): apply_visuals(entity)).call_deferred()
 
 
 ## Apply visual properties based on entity components.
