@@ -44,6 +44,7 @@ script = ExtResource("3_sysgroup")
 
 [node name="ShootingSystem" type="Node" parent="World/Systems/gameplay"]
 script = ExtResource("6_shooting")
+group = &"gameplay"
 
 [node name="physics" type="Node" parent="World/Systems"]
 script = ExtResource("3_sysgroup")

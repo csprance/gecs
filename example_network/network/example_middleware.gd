@@ -10,8 +10,10 @@ var network_sync: NetworkSync
 
 func _init(p_network_sync: NetworkSync) -> void:
 	network_sync = p_network_sync
-	# Connect to entity_spawned signal - fired after spawn RPC is received
+	# Connect to entity_spawned signal - fired after spawn RPC is received (for remote entities)
 	network_sync.entity_spawned.connect(_on_entity_spawned)
+	# Connect to local_player_spawned signal - fired when local player is spawned
+	network_sync.local_player_spawned.connect(_on_entity_spawned)
 
 
 func _on_entity_spawned(entity: Entity) -> void:
