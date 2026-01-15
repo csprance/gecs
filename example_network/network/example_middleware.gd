@@ -66,12 +66,8 @@ func _apply_player_visual(entity: Entity) -> void:
 	if not visual:
 		return
 
-	# Determine if this is the local player
-	var mp = entity.get_tree().get_multiplayer()
-	var local_peer_id = mp.get_unique_id() if mp.has_multiplayer_peer() else 1
-	var is_local = net_id.peer_id == local_peer_id
-
-	# Apply color: Blue for local, Red for remote
+	# Apply color based on peer role: Red for host (peer 1), Blue for clients (peer 2+)
+	var is_host = net_id.peer_id == 1
 	var material = StandardMaterial3D.new()
-	material.albedo_color = Color.CORNFLOWER_BLUE if is_local else Color.INDIAN_RED
+	material.albedo_color = Color.INDIAN_RED if is_host else Color.CORNFLOWER_BLUE
 	visual.material = material

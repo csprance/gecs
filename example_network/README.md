@@ -114,6 +114,6 @@ func _apply_position(entity: Entity):
 
 ## Visual Indicators
 
-- **Blue player**: Local (controlled by you)
-- **Red player**: Remote (controlled by another peer)
+- **Red player**: Host (peer_id 1)
+- **Blue player**: Client (peer_id 2+)
 - **Projectile colors**: Match the shooting player's color scheme
