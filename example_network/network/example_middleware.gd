@@ -60,26 +60,26 @@ func _apply_player_visual(entity: Entity) -> void:
 	if not entity.has_component(C_PlayerInput):
 		return
 
-	var net_id = entity.get_component(C_NetworkIdentity)
-	if not net_id:
+	var player_num = entity.get_component(C_PlayerNumber)
+	if not player_num:
 		return
 
 	var visual = entity.get_node_or_null("Visual") as CSGBox3D
 	if not visual:
 		return
 
-	# Apply color based on peer_id (max 4 players)
+	# Apply color based on player_number (join order: 1-4)
 	# 1=Blue, 2=Red, 3=Green, 4=Yellow
-	var color := _get_player_color(net_id.peer_id)
+	var color := _get_player_color(player_num.player_number)
 	var material = StandardMaterial3D.new()
 	material.albedo_color = color
 	visual.material = material
 
 
-func _get_player_color(peer_id: int) -> Color:
-	match peer_id:
+func _get_player_color(player_number: int) -> Color:
+	match player_number:
 		1: return Color.CORNFLOWER_BLUE
 		2: return Color.INDIAN_RED
 		3: return Color.MEDIUM_SEA_GREEN
 		4: return Color.GOLD
-		_: return Color.WHITE  # Fallback for unexpected peer_ids
+		_: return Color.WHITE  # Fallback for unexpected player numbers

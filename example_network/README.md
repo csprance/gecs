@@ -114,10 +114,13 @@ func _apply_position(entity: Entity):
 
 ## Visual Indicators
 
-Players are assigned fixed colors based on join order (max 4 players):
-1. **Blue**: Host (peer_id 1)
-2. **Red**: First client (peer_id 2)
-3. **Green**: Second client (peer_id 3)
-4. **Yellow**: Third client (peer_id 4)
+Players are assigned fixed colors based on join order (max 4 players). Each player gets a sequential player number (1-4) independent of their peer_id:
+
+1. **Blue**: Player 1 (Host)
+2. **Red**: Player 2 (First to join)
+3. **Green**: Player 3 (Second to join)
+4. **Yellow**: Player 4 (Third to join)
 
 Projectile colors match the shooting player's color.
+
+**Note**: Peer IDs in ENet are random large numbers (except server which is always 1). The `C_PlayerNumber` component tracks join order separately to enable predictable color assignment.

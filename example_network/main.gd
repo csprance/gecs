@@ -9,6 +9,7 @@ var _network_sync: NetworkSync
 var _network_middleware: ExampleMiddleware
 var _is_connected: bool = false
 var _spawned_peer_ids: Dictionary = {}  # peer_id -> entity_id
+var _next_player_number: int = 1  # Track join order (1-4) for color assignment
 
 @onready var world: World = $World
 @onready var entities: Node = $World/Entities
@@ -185,6 +186,9 @@ func _cleanup_network() -> void:
 			entity.queue_free()
 	_spawned_peer_ids.clear()
 
+	# Reset player number counter
+	_next_player_number = 1
+
 	# Reset multiplayer
 	multiplayer.multiplayer_peer = null
 
@@ -207,7 +211,11 @@ func _spawn_player_for_peer(peer_id: int) -> void:
 		print("[Main] Player already spawned for peer %d" % peer_id)
 		return
 
-	print("[Main] Spawning player for peer %d" % peer_id)
+	# Assign next player number (1-4) based on join order
+	var player_number = _next_player_number
+	_next_player_number += 1
+
+	print("[Main] Spawning player for peer %d (player #%d)" % [peer_id, player_number])
 
 	var PlayerScene: PackedScene = preload(PLAYER_SCENE_PATH)
 	var player = PlayerScene.instantiate() as Entity
@@ -219,11 +227,16 @@ func _spawn_player_for_peer(peer_id: int) -> void:
 	entities.add_child(player)
 
 	# Set spawn position (spread players out)
-	var spawn_offset = Vector3((peer_id % 4) * 2.0 - 3.0, 0, (peer_id / 4) * 2.0 - 1.0)
+	var spawn_offset = Vector3((player_number % 4) * 2.0 - 3.0, 0, (player_number / 4) * 2.0 - 1.0)
 	player.global_position = spawn_offset
 
 	# Add to ECS world - triggers NetworkSync broadcast
 	world.add_entity(player)
+
+	# CRITICAL: Set player number AFTER add_entity() so it syncs with spawn RPC
+	var player_num_comp = player.get_component(C_PlayerNumber) as C_PlayerNumber
+	if player_num_comp:
+		player_num_comp.player_number = player_number
 
 	# Track spawned peer
 	_spawned_peer_ids[peer_id] = player.id

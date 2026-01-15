@@ -24,6 +24,7 @@ func define_components() -> Array:
 	return [
 		C_NetVelocity.new(),
 		C_PlayerInput.new(),
+		C_PlayerNumber.new(),  # Join order number (1-4) for color assignment
 		# C_SyncEntity enables native MultiplayerSynchronizer for position/rotation
 		C_SyncEntity.new(true, true, false),  # sync_position=true, sync_rotation=true
 	]
