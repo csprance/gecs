@@ -1,0 +1,16 @@
+[gd_scene load_steps=3 format=3 uid="uid://bj67b0gd12w4i"]
+
+[ext_resource type="Script" path="res://example_network/entities/e_projectile.gd" id="1_projectile"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_projectile"]
+albedo_color = Color(1, 1, 1, 1)
+emission_enabled = true
+emission = Color(1, 1, 1, 1)
+emission_energy_multiplier = 0.5
+
+[node name="E_NetworkProjectile" type="Node3D"]
+script = ExtResource("1_projectile")
+
+[node name="Visual" type="CSGSphere3D" parent="."]
+radius = 0.2
+material = SubResource("StandardMaterial3D_projectile")
