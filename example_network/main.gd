@@ -60,7 +60,7 @@ func _process(delta: float) -> void:
 
 func _on_host_pressed() -> void:
 	var peer = ENetMultiplayerPeer.new()
-	var error = peer.create_server(DEFAULT_PORT, 4)
+	var error = peer.create_server(DEFAULT_PORT, 3)  # Max 3 clients + host = 4 players
 	if error != OK:
 		status_label.text = "Failed to host: %s" % error_string(error)
 		return

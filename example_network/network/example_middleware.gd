@@ -68,8 +68,18 @@ func _apply_player_visual(entity: Entity) -> void:
 	if not visual:
 		return
 
-	# Apply color based on peer role: Red for host (peer 1), Blue for clients (peer 2+)
-	var is_host = net_id.peer_id == 1
+	# Apply color based on peer_id (max 4 players)
+	# 1=Blue, 2=Red, 3=Green, 4=Yellow
+	var color := _get_player_color(net_id.peer_id)
 	var material = StandardMaterial3D.new()
-	material.albedo_color = Color.INDIAN_RED if is_host else Color.CORNFLOWER_BLUE
+	material.albedo_color = color
 	visual.material = material
+
+
+func _get_player_color(peer_id: int) -> Color:
+	match peer_id:
+		1: return Color.CORNFLOWER_BLUE
+		2: return Color.INDIAN_RED
+		3: return Color.MEDIUM_SEA_GREEN
+		4: return Color.GOLD
+		_: return Color.WHITE  # Fallback for unexpected peer_ids

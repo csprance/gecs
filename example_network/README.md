@@ -114,6 +114,10 @@ func _apply_position(entity: Entity):
 
 ## Visual Indicators
 
-- **Red player**: Host (peer_id 1)
-- **Blue player**: Client (peer_id 2+)
-- **Projectile colors**: Match the shooting player's color scheme
+Players are assigned fixed colors based on join order (max 4 players):
+1. **Blue**: Host (peer_id 1)
+2. **Red**: First client (peer_id 2)
+3. **Green**: Second client (peer_id 3)
+4. **Yellow**: Third client (peer_id 4)
+
+Projectile colors match the shooting player's color.

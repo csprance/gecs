@@ -83,10 +83,10 @@ func _spawn_projectile(shooter: Entity, direction: Vector3, peer_id: int) -> voi
 
 
 func _get_player_color(peer_id: int) -> Color:
-	# Simple color scheme based on peer_id
+	# Fixed color rotation: Blue, Red, Green, Yellow (max 4 players)
 	match peer_id:
-		1: return Color.CORNFLOWER_BLUE  # Host
-		2: return Color.INDIAN_RED       # First client
-		3: return Color.MEDIUM_SEA_GREEN # Second client
-		4: return Color.GOLD             # Third client
+		1: return Color.CORNFLOWER_BLUE
+		2: return Color.INDIAN_RED
+		3: return Color.MEDIUM_SEA_GREEN
+		4: return Color.GOLD
 		_: return Color.WHITE
