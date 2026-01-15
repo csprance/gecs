@@ -17,7 +17,12 @@ func _init(p_network_sync: NetworkSync) -> void:
 
 
 func _on_entity_spawned(entity: Entity) -> void:
-	# Apply component data to entity node
+	apply_visuals(entity)
+
+
+## Apply visual properties based on entity components.
+## Called automatically for RPC-received entities, and manually for HOST-spawned entities.
+func apply_visuals(entity: Entity) -> void:
 	_apply_position(entity)
 	_apply_projectile_visual(entity)
 	_apply_player_visual(entity)

@@ -238,5 +238,9 @@ func _spawn_player_for_peer(peer_id: int) -> void:
 	if player_num_comp:
 		player_num_comp.player_number = player_number
 
+	# Apply visuals for HOST-spawned entities (signals don't fire for local spawns)
+	if _network_middleware:
+		_network_middleware.apply_visuals(player)
+
 	# Track spawned peer
 	_spawned_peer_ids[peer_id] = player.id
