@@ -136,12 +136,12 @@ func query() -> QueryBuilder:
 ##         health.regenerate(delta)
 ## [/codeblock]
 func sub_systems() -> Array[Array]:
-	return [] # Base returns empty - overridden systems return populated Array[Array]
+	return []  # Base returns empty - overridden systems return populated Array[Array]
 
 
 ## Runs once after the system has been added to the [World] to setup anything on the system one time[br]
 func setup():
-	pass # Override in subclasses if needed
+	pass  # Override in subclasses if needed
 
 
 ## The main processing function for the system.[br]
@@ -152,7 +152,8 @@ func setup():
 ## [b]Simple approach:[/b] Loop through entities and use get_component()[br]
 ## [b]Fast approach:[/b] Use iterate() in query and access component arrays directly
 func process(entities: Array[Entity], components: Array, delta: float) -> void:
-	pass # Override in subclasses - base implementation does nothing
+	pass  # Override in subclasses - base implementation does nothing
+
 
 #endregion Public Methods
 
@@ -187,7 +188,9 @@ func _process_parallel(entities: Array[Entity], components: Array, delta: float)
 		for comp_array in components:
 			batch_components.append(comp_array.slice(batch_start, batch_end))
 
-		var task_id = WorkerThreadPool.add_task(_process_batch_callable.bind(batch_entities, batch_components, delta))
+		var task_id = WorkerThreadPool.add_task(
+			_process_batch_callable.bind(batch_entities, batch_components, delta)
+		)
 		tasks.append(task_id)
 
 	# Wait for all tasks to complete
@@ -243,11 +246,15 @@ func _run_subsystems(delta: float) -> void:
 			var all_entities: Array[Entity] = []
 			for arch in subsystem_query.archetypes():
 				if not arch.entities.is_empty():
-					all_entities.append_array(arch.entities) # no snapshot to allow mid-frame changes visible to later subsystems
+					all_entities.append_array(arch.entities)  # no snapshot to allow mid-frame changes visible to later subsystems
 			var filtered = _filter_entities_global(subsystem_query, all_entities)
 			if filtered.is_empty():
 				if ECS.debug:
-					lastRunData[subsystem_index] = {"subsystem_index": subsystem_index, "entity_count": 0, "fallback_execute": true}
+					lastRunData[subsystem_index] = {
+						"subsystem_index": subsystem_index,
+						"entity_count": 0,
+						"fallback_execute": true
+					}
 				subsystem_index += 1
 				continue
 			var components := []
@@ -256,24 +263,50 @@ func _run_subsystems(delta: float) -> void:
 					components.append(_build_component_column_from_entities(filtered, comp_type))
 			subsystem_callable.call(filtered, components, delta)
 			if ECS.debug:
-				lastRunData[subsystem_index] = {"subsystem_index": subsystem_index, "entity_count": filtered.size(), "fallback_execute": true}
+				lastRunData[subsystem_index] = {
+					"subsystem_index": subsystem_index,
+					"entity_count": filtered.size(),
+					"fallback_execute": true
+				}
 		else:
 			# Structural fast path archetype iteration
 			var total_entity_count := 0
 			for archetype in subsystem_query.archetypes():
 				if archetype.entities.is_empty():
 					continue
+				# RACE CONDITION FIX: Record archetype version BEFORE snapshotting
+				var snapshot_version = archetype.version
 				# Snapshot to avoid losing entities during add/remove component archetype moves mid-iteration
 				var arch_entities = archetype.entities.duplicate()
 				total_entity_count += arch_entities.size()
 				var components = []
 				if not iterate_comps.is_empty():
+					# Snapshot component columns too - they get mutated by swap-remove when entities move archetypes
 					for comp_type in iterate_comps:
-						var comp_path = comp_type.resource_path if comp_type is Script else comp_type.get_script().resource_path
-						components.append(archetype.get_column(comp_path))
+						var comp_path = (
+							comp_type.resource_path
+							if comp_type is Script
+							else comp_type.get_script().resource_path
+						)
+						components.append(archetype.get_column(comp_path).duplicate())
+					# RACE CONDITION FIX: Detect ANY archetype mutation during snapshot window
+					# If version changed, entity/component arrays may be misaligned (even if same size)
+					if archetype.version != snapshot_version:
+						if ECS.debug:
+							push_warning(
+								(
+									"GECS: Archetype mutation detected during subsystem snapshot for %s - skipping iteration"
+									% name
+								)
+							)
+						continue
 				subsystem_callable.call(arch_entities, components, delta)
 			if ECS.debug:
-				lastRunData[subsystem_index] = {"subsystem_index": subsystem_index, "entity_count": total_entity_count, "fallback_execute": false}
+				lastRunData[subsystem_index] = {
+					"subsystem_index": subsystem_index,
+					"entity_count": total_entity_count,
+					"fallback_execute": false
+				}
 		subsystem_index += 1
 
 
@@ -283,7 +316,11 @@ func _run_process(delta: float) -> void:
 	if _component_paths.is_empty():
 		var iterate_comps = _query_cache._iterate_components
 		for comp_type in iterate_comps:
-			var comp_path = comp_type.resource_path if comp_type is Script else comp_type.get_script().resource_path
+			var comp_path = (
+				comp_type.resource_path
+				if comp_type is Script
+				else comp_type.get_script().resource_path
+			)
 			_component_paths.append(comp_path)
 	var uses_non_structural := _query_has_non_structural_filters(_query_cache)
 	var iterate_comps = _query_cache._iterate_components
@@ -312,8 +349,7 @@ func _run_process(delta: float) -> void:
 			process(filtered, components, delta)
 		if ECS.debug:
 			lastRunData["entity_count"] = filtered.size()
-			lastRunData["archetype_count"
-				] = _query_cache.archetypes().size()
+			lastRunData["archetype_count"] = _query_cache.archetypes().size()
 			lastRunData["fallback_execute"] = true
 			lastRunData["parallel"] = parallel_processing and filtered.size() >= parallel_threshold
 		return
@@ -338,12 +374,34 @@ func _run_process(delta: float) -> void:
 		var arch_entities = arch.entities
 		if arch_entities.is_empty():
 			continue
+		# RACE CONDITION FIX: Record archetype version BEFORE snapshotting
+		# If version changes during snapshot, arrays may be misaligned
+		var snapshot_version = arch.version
 		# Snapshot structural entities to avoid mutation skipping during component add/remove
 		var snapshot_entities = arch_entities.duplicate()
 		var components = []
 		if not iterate_comps.is_empty():
+			# Snapshot component columns too - they get mutated by swap-remove when entities move archetypes
 			for comp_path in _component_paths:
-				components.append(arch.get_column(comp_path))
+				components.append(arch.get_column(comp_path).duplicate())
+			# RACE CONDITION FIX: Detect ANY archetype mutation during snapshot window
+			# If version changed, entity/component arrays may be misaligned (even if same size)
+			# Skip this archetype - entity will be processed in its new archetype or next frame
+			if arch.version != snapshot_version:
+				if ECS.debug:
+					push_warning(
+						(
+							"GECS: Archetype mutation for %s (sig=%d, v%d->v%d, %d entities skipped)"
+							% [
+								name,
+								arch.signature,
+								snapshot_version,
+								arch.version,
+								snapshot_entities.size()
+							]
+						)
+					)
+				continue
 		if parallel_processing and snapshot_entities.size() >= parallel_threshold:
 			if ECS.debug:
 				lastRunData["parallel"] = true
@@ -399,19 +457,23 @@ func _filter_entities_global(qb: QueryBuilder, entities: Array[Entity]) -> Array
 		var include := true
 		for rel in qb._relationships:
 			if not e.has_relationship(rel):
-				include = false; break
+				include = false
+				break
 		if include:
 			for ex_rel in qb._exclude_relationships:
 				if e.has_relationship(ex_rel):
-					include = false; break
+					include = false
+					break
 		if include and not qb._groups.is_empty():
 			for g in qb._groups:
 				if not e.is_in_group(g):
-					include = false; break
+					include = false
+					break
 		if include and not qb._exclude_groups.is_empty():
 			for g in qb._exclude_groups:
 				if e.is_in_group(g):
-					include = false; break
+					include = false
+					break
 		if include and not qb._all_components_queries.is_empty():
 			for i in range(qb._all_components.size()):
 				if i >= qb._all_components_queries.size():
@@ -421,7 +483,8 @@ func _filter_entities_global(qb: QueryBuilder, entities: Array[Entity]) -> Array
 				if not query.is_empty():
 					var comp = e.get_component(comp_type)
 					if comp == null or not ComponentQueryMatcher.matches_query(comp, query):
-						include = false; break
+						include = false
+						break
 		if include and not qb._any_components_queries.is_empty():
 			var any_match := qb._any_components_queries.is_empty()
 			for i in range(qb._any_components.size()):
@@ -432,7 +495,8 @@ func _filter_entities_global(qb: QueryBuilder, entities: Array[Entity]) -> Array
 				if not query.is_empty():
 					var comp = e.get_component(comp_type)
 					if comp and ComponentQueryMatcher.matches_query(comp, query):
-						any_match = true; break
+						any_match = true
+						break
 			if not any_match and not qb._any_components.is_empty():
 				include = false
 		if include:
