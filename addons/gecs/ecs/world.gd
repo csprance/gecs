@@ -100,6 +100,10 @@ var _perf_metrics := {
 	"frame": {}, # Per-frame aggregated timings
 	"accum": {} # Long-lived totals (cleared manually)
 }
+## Tick source registry - maps name -> TickSource
+var _tick_sources: Dictionary = {}
+## Frame counter to ensure tick sources are only updated once per frame
+var _tick_sources_last_frame: int = -1
 
 
 ## Internal perf helper (debug only)
@@ -205,11 +209,29 @@ func initialize():
 func process(delta: float, group: String = "") -> void:
 	# PERF: Reset frame metrics at start of processing step
 	perf_reset_frame()
+
+	# Update all tick sources ONCE per frame (only if any exist to avoid overhead)
+	# This prevents double-updating when processing multiple groups in the same frame
+	var current_frame = Engine.get_process_frames()
+	if not _tick_sources.is_empty() and _tick_sources_last_frame != current_frame:
+		_tick_sources_last_frame = current_frame
+		for tick_source in _tick_sources.values():
+			tick_source.update(delta)
+
+	# Process systems
 	if systems_by_group.has(group):
 		var system_index = 0
 		for system in systems_by_group[group]:
 			if system.active:
-				system._handle(delta)
+				# Fast path: No tick source = pass through frame delta (zero overhead)
+				if system._tick_source_cached == null:
+					system._handle(delta)
+				else:
+					# Tick source path: check if we should run this frame
+					var system_delta = system._tick_source_cached.last_delta
+					if system_delta > 0.0:  # Only run if ticked
+						system._handle(system_delta)
+
 				if ECS.debug:
 					# Add execution order to last run data
 					system.lastRunData["execution_order"] = system_index
@@ -227,6 +249,78 @@ func update_pause_state(paused: bool) -> void:
 		for system in systems_by_group[group_key]:
 			# Check to see if the system is can process based on the process mode and paused state
 			system.paused = not system.can_process()
+
+
+#region Tick Sources
+
+## Register a tick source with a unique name.[br]
+## Asserts if name already exists to prevent accidental bugs.[br]
+## [param tick_source] The [TickSource] to register.[br]
+## [param name] The unique name for this tick source.[br]
+## [return] The registered tick source (for chaining).[br]
+## [b]Example:[/b]
+## [codeblock]
+## var my_tick = IntervalTickSource.new()
+## my_tick.interval = 1.0
+## ECS.world.register_tick_source(my_tick, "spawner-tick")
+## [/codeblock]
+func register_tick_source(tick_source: TickSource, name: String) -> TickSource:
+	assert(not _tick_sources.has(name), "TickSource '%s' already registered!" % name)
+	_tick_sources[name] = tick_source
+	return tick_source
+
+
+## Get existing tick source by name.[br]
+## Returns null if not found.[br]
+## [param name] The name of the tick source to get.[br]
+## [return] The [TickSource] or null if not found.[br]
+## [b]Example:[/b]
+## [codeblock]
+## class_name MySystem extends System
+##
+## func tick() -> TickSource:
+##     return ECS.world.get_tick_source('spawner-tick')
+## [/codeblock]
+func get_tick_source(name: String) -> TickSource:
+	return _tick_sources.get(name)
+
+
+## Convenience: Create and register an interval tick source.[br]
+## [param interval] The interval in seconds between ticks.[br]
+## [param name] The unique name for this tick source.[br]
+## [return] The created tick source.[br]
+## [b]Example:[/b]
+## [codeblock]
+## # In world setup (_ready, autoload, etc.)
+## ECS.world.create_interval_tick_source(1.0, 'spawner-tick')
+## [/codeblock]
+func create_interval_tick_source(interval: float, name: String) -> TickSource:
+	var ts = IntervalTickSource.new()
+	ts.interval = interval
+	return register_tick_source(ts, name)
+
+
+## Convenience: Create and register a rate filter tick source.[br]
+## [param rate] The number of source ticks to wait before ticking.[br]
+## [param source_name] The name of the source tick source.[br]
+## [param name] The unique name for this tick source.[br]
+## [return] The created tick source.[br]
+## [b]Example:[/b]
+## [codeblock]
+## # In world setup
+## ECS.world.create_interval_tick_source(1.0, 'second')
+## ECS.world.create_rate_filter(60, 'second', 'minute')  # Every 60 seconds
+## [/codeblock]
+func create_rate_filter(rate: int, source_name: String, name: String) -> TickSource:
+	var source = get_tick_source(source_name)
+	assert(source != null, "Source tick source '%s' not found!" % source_name)
+
+	var rf = RateFilterTickSource.new()
+	rf.rate = rate
+	rf.source = source
+	return register_tick_source(rf, name)
+
+#endregion Tick Sources
 
 
 ## Adds a single [Entity] to the world.[br]
