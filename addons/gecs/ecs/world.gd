@@ -61,12 +61,12 @@ var systems: Array[System]:
 			all_systems.append_array(systems_by_group[group])
 		return all_systems
 ## ID to [Entity] registry - Prevents duplicate IDs and enables fast ID lookups and singleton behavior
-var entity_id_registry: Dictionary = {} # String (id) -> Entity
+var entity_id_registry: Dictionary = {}  # String (id) -> Entity
 ## ARCHETYPE STORAGE - Entity storage by component signature for O(1) queries
 ## Maps archetype signature (FNV-1a hash) -> Archetype instance
-var archetypes: Dictionary = {} # int -> Archetype
+var archetypes: Dictionary = {}  # int -> Archetype
 ## Fast lookup: Entity -> its current Archetype
-var entity_to_archetype: Dictionary = {} # Entity -> Archetype
+var entity_to_archetype: Dictionary = {}  # Entity -> Archetype
 ## The [QueryBuilder] instance for this world used to build and execute queries.
 ## Anytime we request a query we want to connect the cache invalidated signal to the query
 ## so that all queries are invalidated anytime we emit cache_invalidated.
@@ -84,22 +84,19 @@ var reverse_relationship_index: Dictionary = {}
 var _worldLogger = GECSLogger.new().domain("World")
 ## Cache for commonly used query results - stores matching archetypes, not entities
 ## This dramatically reduces cache invalidation since archetypes are stable
-var _query_archetype_cache: Dictionary = {} # query_sig -> Array[Archetype]
+var _query_archetype_cache: Dictionary = {}  # query_sig -> Array[Archetype]
 ## Track cache hits for performance monitoring
 var _cache_hits: int = 0
 var _cache_misses: int = 0
 ## Track cache invalidations for debugging
 var _cache_invalidation_count: int = 0
-var _cache_invalidation_reasons: Dictionary = {} # reason -> count
+var _cache_invalidation_reasons: Dictionary = {}  # reason -> count
 ## Global cache: resource_path -> Script (loaded once, reused forever)
-var _component_script_cache: Dictionary = {} # String -> Script
+var _component_script_cache: Dictionary = {}  # String -> Script
 ## OPTIMIZATION: Flag to control cache invalidation during batch operations
 var _should_invalidate_cache: bool = true
 ## Frame + accumulated performance metrics (debug-only)
-var _perf_metrics := {
-	"frame": {}, # Per-frame aggregated timings
-	"accum": {} # Long-lived totals (cleared manually)
-}
+var _perf_metrics := {"frame": {}, "accum": {}}  # Per-frame aggregated timings  # Long-lived totals (cleared manually)
 
 
 ## Internal perf helper (debug only)
@@ -142,6 +139,7 @@ func perf_reset_accum() -> void:
 	if ECS.debug:
 		_perf_metrics.accum.clear()
 
+
 #endregion Public Variables
 
 
@@ -176,7 +174,7 @@ func initialize():
 
 	# Add systems from scene tree
 	var _systems = get_node(system_nodes_root).find_children("*", "System") as Array[System]
-	add_systems(_systems, true) # and sort them after they're added
+	add_systems(_systems, true)  # and sort them after they're added
 	_worldLogger.debug("_initialize Added Systems from Scene Tree and dep sorted: ", _systems)
 
 	# Add observers from scene tree
@@ -190,10 +188,11 @@ func initialize():
 	_worldLogger.debug("_initialize Added Entities from Scene Tree: ", _entities)
 
 	if ECS.debug:
-		assert(GECSEditorDebuggerMessages.world_init(self ), '')
+		assert(GECSEditorDebuggerMessages.world_init(self), "")
 		# Register debugger message handler for entity polling
 		if not Engine.is_editor_hint() and OS.has_feature("editor"):
 			EngineDebugger.register_message_capture("gecs", _handle_debugger_message)
+
 
 #endregion Built-in Virtual Methods
 
@@ -213,10 +212,13 @@ func process(delta: float, group: String = "") -> void:
 				if ECS.debug:
 					# Add execution order to last run data
 					system.lastRunData["execution_order"] = system_index
-					assert(GECSEditorDebuggerMessages.system_last_run_data(system, system.lastRunData), '')
+					assert(
+						GECSEditorDebuggerMessages.system_last_run_data(system, system.lastRunData),
+						""
+					)
 					system_index += 1
 	if ECS.debug:
-		assert(GECSEditorDebuggerMessages.process_world(delta, group), '')
+		assert(GECSEditorDebuggerMessages.process_world(delta, group), "")
 
 
 ## Updates the pause behavior for all systems based on the provided paused state.
@@ -242,11 +244,16 @@ func update_pause_state(paused: bool) -> void:
 func add_entity(entity: Entity, components = null, add_to_tree = true) -> void:
 	# Check for ID collision - if entity with same ID exists, replace it
 	var entity_id = GECSIO.uuid() if not entity.id else entity.id
-	entity.id = entity_id # update entity with it's new id
+	entity.id = entity_id  # update entity with it's new id
 
 	if entity_id in entity_id_registry:
 		var existing_entity = entity_id_registry[entity_id]
-		_worldLogger.debug("ID collision detected, replacing entity: ", existing_entity.name, " with: ", entity.name)
+		_worldLogger.debug(
+			"ID collision detected, replacing entity: ",
+			existing_entity.name,
+			" with: ",
+			entity.name
+		)
 		remove_entity(existing_entity)
 
 	# Register this entity's ID
@@ -291,7 +298,7 @@ func add_entity(entity: Entity, components = null, add_to_tree = true) -> void:
 		processor.call(entity)
 
 	if ECS.debug:
-		assert(GECSEditorDebuggerMessages.entity_added(entity), '')
+		assert(GECSEditorDebuggerMessages.entity_added(entity), "")
 
 
 ## Adds multiple entities to the world.[br]
@@ -333,7 +340,7 @@ func remove_entity(entity) -> void:
 		processor.call(entity)
 	entity_removed.emit(entity)
 	_worldLogger.debug("remove_entity Removing Entity: ", entity)
-	entities.erase(entity) # FIXME: This doesn't always work for some reason?
+	entities.erase(entity)  # FIXME: This doesn't always work for some reason?
 
 	# Only disconnect signals if they're actually connected
 	if entity.component_added.is_connected(_on_entity_component_added):
@@ -347,7 +354,11 @@ func remove_entity(entity) -> void:
 
 	# Remove from ID registry
 	var entity_id = entity.id
-	if entity_id != "" and entity_id in entity_id_registry and entity_id_registry[entity_id] == entity:
+	if (
+		entity_id != ""
+		and entity_id in entity_id_registry
+		and entity_id_registry[entity_id] == entity
+	):
 		entity_id_registry.erase(entity_id)
 
 	# ARCHETYPE: Remove entity from archetype system (parallel)
@@ -358,7 +369,7 @@ func remove_entity(entity) -> void:
 	entity.queue_free()
 
 	if ECS.debug:
-		assert(GECSEditorDebuggerMessages.entity_removed(entity), '')
+		assert(GECSEditorDebuggerMessages.entity_removed(entity), "")
 
 
 ## Removes an Array of [Entity] from the world.[br]
@@ -388,7 +399,7 @@ func remove_entities(_entities: Array) -> void:
 ##      [codeblock]world.disable_entity(player_entity)[/codeblock]
 func disable_entity(entity) -> Entity:
 	entity = entity as Entity
-	entity.enabled = false # This will trigger _on_entity_enabled_changed via setter
+	entity.enabled = false  # This will trigger _on_entity_enabled_changed via setter
 	entity_disabled.emit(entity)
 	_worldLogger.debug("disable_entity Disabling Entity: ", entity)
 
@@ -404,7 +415,7 @@ func disable_entity(entity) -> Entity:
 	entity.set_process(false)
 	entity.set_physics_process(false)
 	if ECS.debug:
-		assert(GECSEditorDebuggerMessages.entity_disabled(entity), '')
+		assert(GECSEditorDebuggerMessages.entity_disabled(entity), "")
 	return entity
 
 
@@ -431,7 +442,7 @@ func disable_entities(_entities: Array) -> void:
 func enable_entity(entity: Entity, components = null) -> void:
 	# Update index
 	_worldLogger.debug("enable_entity Enabling Entity to World: ", entity)
-	entity.enabled = true # This will trigger _on_entity_enabled_changed via setter
+	entity.enabled = true  # This will trigger _on_entity_enabled_changed via setter
 	entity_enabled.emit(entity)
 
 	# Connect to entity signals for components so we can track global component state
@@ -451,7 +462,7 @@ func enable_entity(entity: Entity, components = null) -> void:
 	entity.set_physics_process(true)
 	entity.on_enable()
 	if ECS.debug:
-		assert(GECSEditorDebuggerMessages.entity_enabled(entity), '')
+		assert(GECSEditorDebuggerMessages.entity_enabled(entity), "")
 
 
 ## Find an entity by its persistent ID
@@ -466,6 +477,7 @@ func get_entity_by_id(id: String) -> Entity:
 ## [return] true if an entity with this ID exists, false otherwise
 func has_entity_with_id(id: String) -> bool:
 	return id in entity_id_registry
+
 
 #region Systems
 
@@ -488,11 +500,11 @@ func add_system(system: System, topo_sort: bool = false) -> void:
 		systems_by_group[system.group] = []
 	systems_by_group[system.group].push_back(system)
 	system_added.emit(system)
-	system._internal_setup() # Determines execution method and calls user setup()
+	system._internal_setup()  # Determines execution method and calls user setup()
 	if topo_sort:
 		ArrayExtensions.topological_sort(systems_by_group)
 	if ECS.debug:
-		assert(GECSEditorDebuggerMessages.system_added(system), '')
+		assert(GECSEditorDebuggerMessages.system_added(system), "")
 
 
 ## Adds multiple systems to the world.
@@ -524,7 +536,7 @@ func remove_system(system, topo_sort: bool = false) -> void:
 	if topo_sort:
 		ArrayExtensions.topological_sort(systems_by_group)
 	if ECS.debug:
-		assert(GECSEditorDebuggerMessages.system_removed(system), '')
+		assert(GECSEditorDebuggerMessages.system_removed(system), "")
 
 
 ## Removes an Array of [System] from the world.[br]
@@ -590,6 +602,7 @@ func purge(should_free = true, keep := []) -> void:
 	if should_free:
 		queue_free()
 
+
 ## Executes a query to retrieve entities based on component criteria.[br]
 ## [param all_components] [Component]s that [Entity]s must have all of.[br]
 ## [param any_components] [Component]s that [Entity]s must have at least one of.[br]
@@ -614,7 +627,9 @@ func _on_entity_component_added(entity: Entity, component: Resource) -> void:
 	if entity_to_archetype.has(entity):
 		var old_archetype = entity_to_archetype[entity]
 		var comp_path = component.get_script().resource_path
-		var new_archetype = _move_entity_to_new_archetype_fast(entity, old_archetype, comp_path, true)
+		var new_archetype = _move_entity_to_new_archetype_fast(
+			entity, old_archetype, comp_path, true
+		)
 		# Must invalidate: QueryBuilder caches execute() results, not just archetype matches
 		_invalidate_cache("entity_component_added")
 
@@ -624,7 +639,7 @@ func _on_entity_component_added(entity: Entity, component: Resource) -> void:
 	if not entity.component_property_changed.is_connected(_on_entity_component_property_change):
 		entity.component_property_changed.connect(_on_entity_component_property_change)
 	if ECS.debug:
-		assert(GECSEditorDebuggerMessages.entity_component_added(entity, component), '')
+		assert(GECSEditorDebuggerMessages.entity_component_added(entity, component), "")
 
 
 ## Called when a component property changes through signals called on the components and connected to.[br]
@@ -646,9 +661,12 @@ func _on_entity_component_property_change(
 	# ARCHETYPE: No cache invalidation - property changes don't affect archetype membership
 	# Send the message to the debugger if we're in debug
 	if ECS.debug:
-		assert(GECSEditorDebuggerMessages.entity_component_property_changed(
-			entity, component, property_name, old_value, new_value
-		), '')
+		assert(
+			GECSEditorDebuggerMessages.entity_component_property_changed(
+				entity, component, property_name, old_value, new_value
+			),
+			""
+		)
 
 
 ## [signal Entity.component_removed] Callback when a component is removed from an entity.[br]
@@ -658,14 +676,16 @@ func _on_entity_component_removed(entity, component: Resource) -> void:
 	if entity_to_archetype.has(entity):
 		var old_archetype = entity_to_archetype[entity]
 		var comp_path = component.resource_path
-		var new_archetype = _move_entity_to_new_archetype_fast(entity, old_archetype, comp_path, false)
+		var new_archetype = _move_entity_to_new_archetype_fast(
+			entity, old_archetype, comp_path, false
+		)
 		# Must invalidate: QueryBuilder caches execute() results, not just archetype matches
 		_invalidate_cache("entity_component_removed")
 
 	component_removed.emit(entity, component)
 	_handle_observer_component_removed(entity, component)
 	if ECS.debug:
-		assert(GECSEditorDebuggerMessages.entity_component_removed(entity, component), '')
+		assert(GECSEditorDebuggerMessages.entity_component_removed(entity, component), "")
 
 
 ## (Optional) Update index when a relationship is added.
@@ -691,7 +711,7 @@ func _on_entity_relationship_added(entity: Entity, relationship: Relationship) -
 	# Emit Signal
 	relationship_added.emit(entity, relationship)
 	if ECS.debug:
-		assert(GECSEditorDebuggerMessages.entity_relationship_added(entity, relationship), '')
+		assert(GECSEditorDebuggerMessages.entity_relationship_added(entity, relationship), "")
 
 
 ## (Optional) Update index when a relationship is removed.
@@ -710,7 +730,7 @@ func _on_entity_relationship_removed(entity: Entity, relationship: Relationship)
 	# Emit Signal
 	relationship_removed.emit(entity, relationship)
 	if ECS.debug:
-		assert(GECSEditorDebuggerMessages.entity_relationship_removed(entity, relationship), '')
+		assert(GECSEditorDebuggerMessages.entity_relationship_removed(entity, relationship), "")
 
 
 ## Adds a single [Observer] to the [World].
@@ -719,17 +739,17 @@ func _on_entity_relationship_removed(entity: Entity, relationship: Relationship)
 ##      [codeblock]world.add_observer(health_change_system)[/codeblock]
 func add_observer(_observer: Observer) -> void:
 	# Verify the system has a valid watch component
-	_observer.watch() # Just call to validate it returns a component
+	_observer.watch()  # Just call to validate it returns a component
 	if not _observer.is_inside_tree():
 		get_node(system_nodes_root).add_child(_observer)
 	_worldLogger.trace("add_observer Adding Observer: ", _observer)
 	observers.append(_observer)
 
 	# Initialize the query builder for the observer
-	_observer.q = QueryBuilder.new(self )
+	_observer.q = QueryBuilder.new(self)
 
 	# Verify the system has a valid watch component
-	_observer.watch() # Just call to validate it returns a component
+	_observer.watch()  # Just call to validate it returns a component
 
 
 ## Adds multiple [Observer]s to the [World].
@@ -777,7 +797,8 @@ func _handle_observer_component_added(entity: Entity, component: Resource) -> vo
 		var watch_component = reactive_system.watch()
 		if (
 			watch_component
-			and component and component.get_script()
+			and component
+			and component.get_script()
 			and watch_component.resource_path == component.get_script().resource_path
 		):
 			# Check if the entity matches the system's query
@@ -805,7 +826,8 @@ func _handle_observer_component_removed(entity: Entity, component: Resource) -> 
 		var watch_component = reactive_system.watch()
 		if (
 			watch_component
-			and component and component.get_script()
+			and component
+			and component.get_script()
 			and watch_component.resource_path == component.get_script().resource_path
 		):
 			# For removal, we don't check the query since the component is already removed
@@ -822,7 +844,8 @@ func _handle_observer_component_changed(
 		var watch_component = reactive_system.watch()
 		if (
 			watch_component
-			and component and component.get_script()
+			and component
+			and component.get_script()
 			and watch_component.resource_path == component.get_script().resource_path
 		):
 			# Check if the entity matches the system's query
@@ -844,6 +867,7 @@ func _handle_observer_component_changed(
 					entity, component, property, new_value, old_value
 				)
 
+
 #endregion Signal Callbacks
 
 #endregion Public Methods
@@ -851,7 +875,13 @@ func _handle_observer_component_changed(
 #region Utility Methods
 
 
-func _query(all_components = [], any_components = [], exclude_components = [], enabled_filter = null, precalculated_cache_key: int = -1) -> Array:
+func _query(
+	all_components = [],
+	any_components = [],
+	exclude_components = [],
+	enabled_filter = null,
+	precalculated_cache_key: int = -1
+) -> Array:
 	var _perf_start_total := 0
 	if ECS.debug:
 		_perf_start_total = Time.get_ticks_usec()
@@ -859,7 +889,11 @@ func _query(all_components = [], any_components = [], exclude_components = [], e
 	if all_components.is_empty() and any_components.is_empty() and exclude_components.is_empty():
 		if enabled_filter == null:
 			if ECS.debug:
-				perf_mark("query_all_entities", Time.get_ticks_usec() - _perf_start_total, {"returned": entities.size()})
+				perf_mark(
+					"query_all_entities",
+					Time.get_ticks_usec() - _perf_start_total,
+					{"returned": entities.size()}
+				)
 			return entities
 		else:
 			# OPTIMIZATION: Use bitset filtering from all archetypes instead of entity.enabled check
@@ -867,14 +901,22 @@ func _query(all_components = [], any_components = [], exclude_components = [], e
 			for archetype in archetypes.values():
 				filtered.append_array(archetype.get_entities_by_enabled_state(enabled_filter))
 			if ECS.debug:
-				perf_mark("query_all_entities_filtered", Time.get_ticks_usec() - _perf_start_total, {"returned": filtered.size(), "enabled_filter": enabled_filter})
+				perf_mark(
+					"query_all_entities_filtered",
+					Time.get_ticks_usec() - _perf_start_total,
+					{"returned": filtered.size(), "enabled_filter": enabled_filter}
+				)
 			return filtered
 
 	# OPTIMIZATION: Use pre-calculated cache key if provided (avoids hash recalculation)
 	var _perf_start_cache_key := 0
 	if ECS.debug:
 		_perf_start_cache_key = Time.get_ticks_usec()
-	var cache_key = precalculated_cache_key if precalculated_cache_key != -1 else QueryCacheKey.build(all_components, any_components, exclude_components)
+	var cache_key = (
+		precalculated_cache_key
+		if precalculated_cache_key != -1
+		else QueryCacheKey.build(all_components, any_components, exclude_components)
+	)
 	if ECS.debug:
 		perf_mark("query_cache_key", Time.get_ticks_usec() - _perf_start_cache_key)
 
@@ -902,13 +944,21 @@ func _query(all_components = [], any_components = [], exclude_components = [], e
 		# Cache the matching archetypes (not the entity arrays!)
 		_query_archetype_cache[cache_key] = matching_archetypes
 		if ECS.debug:
-			perf_mark("query_archetype_scan", Time.get_ticks_usec() - _perf_start_scan, {"archetypes": matching_archetypes.size()})
+			perf_mark(
+				"query_archetype_scan",
+				Time.get_ticks_usec() - _perf_start_scan,
+				{"archetypes": matching_archetypes.size()}
+			)
 
 	# OPTIMIZATION: If there's only ONE matching archetype with no filtering, return it directly
 	# This avoids array allocation and copying for the common case
 	if matching_archetypes.size() == 1 and enabled_filter == null:
 		if ECS.debug:
-			perf_mark("query_single_archetype", Time.get_ticks_usec() - _perf_start_total, {"entities": matching_archetypes[0].entities.size()})
+			perf_mark(
+				"query_single_archetype",
+				Time.get_ticks_usec() - _perf_start_total,
+				{"entities": matching_archetypes[0].entities.size()}
+			)
 		return matching_archetypes[0].entities
 
 	# Collect entities from all matching archetypes with enabled filtering if needed
@@ -924,8 +974,14 @@ func _query(all_components = [], any_components = [], exclude_components = [], e
 			# OPTIMIZATION: Use bitset filtering instead of per-entity enabled check
 			result.append_array(archetype.get_entities_by_enabled_state(enabled_filter))
 	if ECS.debug:
-		perf_mark("query_flatten", Time.get_ticks_usec() - _perf_start_flatten, {"returned": result.size(), "archetypes": matching_archetypes.size()})
-		perf_mark("query_total", Time.get_ticks_usec() - _perf_start_total, {"returned": result.size()})
+		perf_mark(
+			"query_flatten",
+			Time.get_ticks_usec() - _perf_start_flatten,
+			{"returned": result.size(), "archetypes": matching_archetypes.size()}
+		)
+		perf_mark(
+			"query_total", Time.get_ticks_usec() - _perf_start_total, {"returned": result.size()}
+		)
 
 	return result
 
@@ -1003,11 +1059,17 @@ func get_matching_archetypes(query_builder: QueryBuilder) -> Array[Archetype]:
 		if archetype.matches_query(_all, _any, _exclude):
 			matching.append(archetype)
 	if ECS.debug:
-		perf_mark("archetypes_scan", Time.get_ticks_usec() - _perf_scan_start, {"archetypes": matching.size()})
+		perf_mark(
+			"archetypes_scan",
+			Time.get_ticks_usec() - _perf_scan_start,
+			{"archetypes": matching.size()}
+		)
 
 	_query_archetype_cache[cache_key] = matching
 	if ECS.debug:
-		perf_mark("archetypes_total", Time.get_ticks_usec() - _perf_start, {"archetypes": matching.size()})
+		perf_mark(
+			"archetypes_total", Time.get_ticks_usec() - _perf_start, {"archetypes": matching.size()}
+		)
 	return matching
 
 
@@ -1055,7 +1117,7 @@ func _invalidate_cache(reason: String) -> void:
 func _calculate_entity_signature(entity: Entity) -> int:
 	# Get component resource paths
 	var comp_paths = entity.components.keys()
-	comp_paths.sort() # Sort paths for consistent ordering
+	comp_paths.sort()  # Sort paths for consistent ordering
 
 	# Convert paths to Script objects using cached scripts (load once, reuse forever)
 	var comp_scripts = []
@@ -1132,7 +1194,9 @@ func _remove_entity_from_archetype(entity: Entity) -> bool:
 ## Fast path: Move entity when we already know which component was added/removed
 ## This avoids expensive set comparisons to find the difference
 ## Returns the new archetype the entity was moved to
-func _move_entity_to_new_archetype_fast(entity: Entity, old_archetype: Archetype, comp_path: String, is_add: bool) -> Archetype:
+func _move_entity_to_new_archetype_fast(
+	entity: Entity, old_archetype: Archetype, comp_path: String, is_add: bool
+) -> Archetype:
 	# Try to use archetype edge for O(1) transition
 	var new_archetype: Archetype = null
 
@@ -1143,11 +1207,26 @@ func _move_entity_to_new_archetype_fast(entity: Entity, old_archetype: Archetype
 		# Check if we have a cached edge for this component removal
 		new_archetype = old_archetype.get_remove_edge(comp_path)
 
-	# BUG FIX: If archetype retrieved from edge cache was removed from world.archetypes
-	# when it became empty, re-add it so queries can find it
-	if new_archetype != null and not archetypes.has(new_archetype.signature):
-		archetypes[new_archetype.signature] = new_archetype
-		_worldLogger.trace("Re-added archetype from edge cache: ", new_archetype)
+	# BUG FIX: Ensure we're using the canonical archetype from world.archetypes
+	# Edge cache can have stale archetype instances that were removed and recreated
+	if new_archetype != null:
+		if not archetypes.has(new_archetype.signature):
+			# Archetype was removed, re-add the cached one
+			archetypes[new_archetype.signature] = new_archetype
+			_worldLogger.trace("Re-added archetype from edge cache: ", new_archetype)
+		elif archetypes[new_archetype.signature] != new_archetype:
+			# CRITICAL FIX: Edge cache has stale archetype - use the canonical one
+			# This happens when: A removed, B created with same sig, edge cache still has A
+			_worldLogger.trace(
+				"Edge cache has stale archetype, using canonical: ",
+				archetypes[new_archetype.signature]
+			)
+			new_archetype = archetypes[new_archetype.signature]
+			# Update edge cache to point to canonical archetype
+			if is_add:
+				old_archetype.set_add_edge(comp_path, new_archetype)
+			else:
+				old_archetype.set_remove_edge(comp_path, new_archetype)
 
 	# If no cached edge, calculate signature and find/create archetype
 	if new_archetype == null:
@@ -1219,6 +1298,21 @@ func _move_entity_to_new_archetype(entity: Entity, old_archetype: Archetype) -> 
 		# Check if we have a cached edge for this component removal
 		new_archetype = old_archetype.get_remove_edge(removed_comp)
 
+	# BUG FIX: Ensure we're using the canonical archetype from world.archetypes
+	# Edge cache can have stale archetype instances that were removed and recreated
+	if new_archetype != null:
+		if not archetypes.has(new_archetype.signature):
+			# Archetype was removed, re-add the cached one
+			archetypes[new_archetype.signature] = new_archetype
+		elif archetypes[new_archetype.signature] != new_archetype:
+			# Edge cache has stale archetype - use the canonical one
+			new_archetype = archetypes[new_archetype.signature]
+			# Update edge cache to point to canonical archetype
+			if added_comp != "":
+				old_archetype.set_add_edge(added_comp, new_archetype)
+			elif removed_comp != "":
+				old_archetype.set_remove_edge(removed_comp, new_archetype)
+
 	# If no cached edge, calculate signature and find/create archetype
 	if new_archetype == null:
 		var new_signature = _calculate_entity_signature(entity)
@@ -1248,6 +1342,7 @@ func _move_entity_to_new_archetype(entity: Entity, old_archetype: Archetype) -> 
 		old_archetype.add_edges.clear()
 		old_archetype.remove_edges.clear()
 		archetypes.erase(old_archetype.signature)
+
 
 #endregion Utility Methods
 
@@ -1310,12 +1405,22 @@ func _handle_debugger_message(message: String, data: Array) -> bool:
 					var prop_usage: int = prop.usage
 					var prop_value = node.get(prop_name)
 
-					var prop_info: Array = [prop_name, prop_type, prop_hint, prop_hint_string, prop_usage, prop_value]
+					var prop_info: Array = [
+						prop_name, prop_type, prop_hint, prop_hint_string, prop_usage, prop_value
+					]
 					properties.append(prop_info)
 
 				# Message format: [object_id, class_name, properties] - only 3 elements!
 				var msg_data: Array = [obj_id, _class_name, properties]
-				print("    Sending scene:inspect_object: [", obj_id, ", ", _class_name, ", ", properties.size(), " props]")
+				print(
+					"    Sending scene:inspect_object: [",
+					obj_id,
+					", ",
+					_class_name,
+					", ",
+					properties.size(),
+					" props]"
+				)
 				EngineDebugger.send_message("scene:inspect_object", msg_data)
 		else:
 			print("  ERROR: Could not find node at path: ", entity_path)
