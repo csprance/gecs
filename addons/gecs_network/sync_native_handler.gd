@@ -381,7 +381,8 @@ func auto_setup_native_sync(entity: Entity) -> void:
 			var spawn_enabled = config.property_get_spawn(prop)
 			var sync_enabled = config.property_get_sync(prop)
 			var repl_mode = config.property_get_replication_mode(prop)
-			var mode_name = ["NEVER", "ALWAYS", "ON_CHANGE"][repl_mode]
+			var mode_names = ["NEVER", "ALWAYS", "ON_CHANGE"]
+			var mode_name = mode_names[repl_mode] if repl_mode < mode_names.size() else "UNKNOWN(%d)" % repl_mode
 			print(
 				(
 					"     [%d] %s (spawn=%s, sync=%s, mode=%s)"
@@ -554,8 +555,9 @@ func send_position_snapshot(peer_id: int) -> void:
 			var target = sync_comp.target_node
 			if "global_position" in target:
 				pos = target.global_position
-			# Get Rig rotation if available
-			var rig = target.get_node_or_null("Rig")
+			# Get rig rotation if available (uses configurable node name)
+			var rig_name = _ns.sync_config.animation_rig_node_name if _ns.sync_config and _ns.sync_config.animation_rig_node_name != "" else "Rig"
+			var rig = target.get_node_or_null(rig_name)
 			if rig and "rotation" in rig:
 				rot = rig.rotation
 
@@ -600,6 +602,7 @@ func handle_apply_position_snapshot(positions: Dictionary) -> void:
 			var target = sync_comp.target_node
 			if "global_position" in target:
 				target.global_position = pos
-			var rig = target.get_node_or_null("Rig")
+			var rig_name = _ns.sync_config.animation_rig_node_name if _ns.sync_config and _ns.sync_config.animation_rig_node_name != "" else "Rig"
+			var rig = target.get_node_or_null(rig_name)
 			if rig and "rotation" in rig:
 				rig.rotation = rot

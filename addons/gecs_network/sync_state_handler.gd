@@ -210,7 +210,11 @@ func serialize_entity_full(entity: Entity) -> Dictionary:
 	for comp_path in entity.components.keys():
 		var comp = entity.components[comp_path]
 		var script = comp.get_script()
+		if script == null:
+			continue
 		var comp_type = script.get_global_name()
+		if comp_type == "":
+			comp_type = script.resource_path.get_file().get_basename()
 
 		# Skip components that should be filtered
 		if _ns.sync_config and _ns.sync_config.should_skip(comp_type):

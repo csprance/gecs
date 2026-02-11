@@ -185,7 +185,13 @@ func queue_component_update(
 ) -> void:
 	var entity_id = entity.id
 	var script = component.get_script()
-	var comp_type = script.get_global_name() if script else component.get_class()
+	var comp_type: String
+	if script == null:
+		comp_type = component.get_class()
+	else:
+		comp_type = script.get_global_name()
+		if comp_type == "":
+			comp_type = script.resource_path.get_file().get_basename()
 
 	# Get priority for this component type
 	var priority = (
@@ -224,7 +230,13 @@ func queue_component_update(
 func queue_full_component_sync(entity: Entity, component: Resource) -> void:
 	var entity_id = entity.id
 	var script = component.get_script()
-	var comp_type = script.get_global_name() if script else component.get_class()
+	var comp_type: String
+	if script == null:
+		comp_type = component.get_class()
+	else:
+		comp_type = script.get_global_name()
+		if comp_type == "":
+			comp_type = script.resource_path.get_file().get_basename()
 	var data = component.serialize()
 
 	# Get priority for this component type
@@ -411,15 +423,22 @@ func handle_apply_sync_data(data: Dictionary) -> void:
 					)
 				continue
 
-			# SERVER RELAY: Queue received client data for broadcast to OTHER clients
+			# SERVER RELAY: Queue received client data for broadcast to all clients
 			# This ensures rotation-only updates (when stationary) get relayed
-			# The sending client will filter out their own entity when receiving
+			# The sending client filters out their own entity in the receive path
 			queue_relay_data(entity_id, data[entity_id])
 		else:
 			# Clients accept updates from server (peer 1) only
 			if sender_id != 1:
 				if _ns.debug_logging:
 					print("Rejected update from non-server peer %d" % sender_id)
+				continue
+
+			# Skip updates for entities we own (prevents stale relayed data from
+			# overwriting local predictions). Note: server-authoritative changes for
+			# locally-owned entities (e.g. health) are typically at MEDIUM priority
+			# and arrive in a separate batch from HIGH-priority relay data.
+			if net_id.is_local(_ns.net_adapter):
 				continue
 
 			# Server is authoritative for all game state (health, damage, etc.)

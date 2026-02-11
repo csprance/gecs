@@ -157,14 +157,7 @@ func handle_spawn_entity(data: Dictionary) -> void:
 	var entity: Entity
 
 	if scene_path != "":
-		# Validate scene path before loading (security: prevent arbitrary resource loading)
-		if not scene_path.begins_with("res://"):
-			push_warning("Invalid scene path (must start with res://): %s" % scene_path)
-			return
-		if not ResourceLoader.exists(scene_path):
-			push_warning("Scene path does not exist: %s" % scene_path)
-			return
-
+		# validate_entity_spawn already checks res:// prefix and ResourceLoader.exists
 		var scene = load(scene_path)
 		if scene:
 			entity = scene.instantiate()
@@ -444,6 +437,14 @@ func handle_add_component(
 	if _ns._find_component_by_type(entity, comp_type):
 		return
 
+	# Validate script path before loading (security: prevent arbitrary resource loading)
+	if not script_path.begins_with("res://"):
+		push_warning("[NetworkSync] Invalid script path (must start with res://): %s" % script_path)
+		return
+	if not ResourceLoader.exists(script_path):
+		push_warning("[NetworkSync] Script not found: %s" % script_path)
+		return
+
 	# Instantiate from script path
 	var script = load(script_path)
 	if not script:
@@ -565,6 +566,10 @@ func validate_entity_spawn(scene_path: String) -> bool:
 	# Empty scene path means Entity.new() - always allowed
 	if scene_path == "":
 		return true
+
+	if not scene_path.begins_with("res://"):
+		push_warning("[NetworkSync] Invalid scene path (must start with res://): %s" % scene_path)
+		return false
 
 	# Check if scene exists
 	if not ResourceLoader.exists(scene_path):
