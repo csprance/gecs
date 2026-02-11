@@ -328,8 +328,19 @@ func sync_server_time(delta: float) -> void:
 
 
 func send_time_ping() -> void:
-	var ping_id = randi()
+	_ns._ping_counter += 1
+	var ping_id = _ns._ping_counter
 	var send_time = Time.get_ticks_msec() / 1000.0
+
+	# Purge stale pings (no response within 3 ping intervals)
+	var stale_threshold = send_time - _ns._ping_interval * 3.0
+	var stale_ids: Array = []
+	for id in _ns._pending_pings:
+		if _ns._pending_pings[id] < stale_threshold:
+			stale_ids.append(id)
+	for id in stale_ids:
+		_ns._pending_pings.erase(id)
+
 	_ns._pending_pings[ping_id] = send_time
 	_ns._request_server_time.rpc_id(1, ping_id)
 

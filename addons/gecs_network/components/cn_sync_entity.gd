@@ -45,11 +45,12 @@ extends Component
 # ADVANCED OPTIONS
 # ============================================================================
 
+## Mirrors MultiplayerSynchronizer.VisibilityUpdateMode.
+## Component extends Resource (not Node), so we define a local enum.
+enum VisibilityMode { IDLE, PHYSICS, NONE }
+
 ## Visibility mode for the MultiplayerSynchronizer.
-## 0 = VISIBILITY_PROCESS_IDLE (check visibility every idle frame)
-## 1 = VISIBILITY_PROCESS_PHYSICS (check visibility every physics frame)
-## 2 = VISIBILITY_PROCESS_NONE (never check visibility)
-@export_range(0, 2) var visibility_mode: int = 0
+@export var visibility_mode: VisibilityMode = VisibilityMode.IDLE
 
 ## Minimum time between sync updates (0 = every network tick).
 ## Higher values reduce bandwidth but increase latency.
@@ -75,7 +76,9 @@ var target_node: Node = null
 
 
 func _init(
-	p_sync_position: bool = true, p_sync_rotation: bool = true, p_sync_velocity: bool = false
+	p_sync_position := sync_position,
+	p_sync_rotation := sync_rotation,
+	p_sync_velocity := sync_velocity,
 ) -> void:
 	sync_position = p_sync_position
 	sync_rotation = p_sync_rotation

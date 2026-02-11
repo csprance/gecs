@@ -329,8 +329,16 @@ func send_pending_updates_batched() -> void:
 ## Poll all SyncComponents for changes at a specific priority level.
 ## This triggers property_changed signals for any detected changes,
 ## which then get queued via on_component_property_changed().
+##
+## Uses _sync_entity_index (maintained by NetworkSync) to avoid iterating
+## all world entities and all their components every tick. Only entities
+## with CN_NetworkIdentity + at least one SyncComponent are in the index.
 func poll_sync_components_for_priority(priority: int) -> void:
-	for entity in _ns._world.entities:
+	for entry in _ns._sync_entity_index.values():
+		var entity: Entity = entry["entity"]
+		if not is_instance_valid(entity):
+			continue
+
 		var net_id = entity.get_component(CN_NetworkIdentity)
 		if not net_id:
 			continue
@@ -339,9 +347,9 @@ func poll_sync_components_for_priority(priority: int) -> void:
 		if not should_broadcast(entity, net_id):
 			continue
 
-		# Poll all SyncComponents on this entity
-		for comp in entity.components.values():
-			if comp is SyncComponent:
+		# Poll cached SyncComponents directly (no inner component scan)
+		for comp in entry["sync_comps"]:
+			if is_instance_valid(comp):
 				comp.check_changes_for_priority(priority)
 
 

@@ -21,9 +21,10 @@ extends Component
 
 # Priority string to SyncConfig.Priority enum mapping
 const PRIORITY_MAP = {
-	"HIGH": 1,      # SyncConfig.Priority.HIGH
-	"MEDIUM": 2,    # SyncConfig.Priority.MEDIUM
-	"LOW": 3,       # SyncConfig.Priority.LOW
+	"REALTIME": SyncConfig.Priority.REALTIME,
+	"HIGH": SyncConfig.Priority.HIGH,
+	"MEDIUM": SyncConfig.Priority.MEDIUM,
+	"LOW": SyncConfig.Priority.LOW,
 	"LOCAL": -1     # Special: never synced
 }
 
@@ -165,6 +166,8 @@ func _has_changed(old_value: Variant, new_value: Variant) -> bool:
 				old_value.basis.z.is_equal_approx(new_value.basis.z)
 			)
 		TYPE_QUATERNION:
+			return not old_value.is_equal_approx(new_value)
+		TYPE_COLOR:
 			return not old_value.is_equal_approx(new_value)
 
 	# Exact comparison for all other types (int, bool, String, etc.)

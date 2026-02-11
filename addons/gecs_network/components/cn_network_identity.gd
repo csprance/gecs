@@ -64,6 +64,14 @@ func is_player() -> bool:
 # ADAPTER-BASED METHODS (For addon compatibility)
 # ============================================================================
 
+## Shared default adapter to avoid allocation per call in hot loops.
+static var _default_adapter: NetAdapter = null
+
+static func _get_default_adapter() -> NetAdapter:
+	if _default_adapter == null:
+		_default_adapter = NetAdapter.new()
+	return _default_adapter
+
 
 ## Check if this entity is controlled by the local player.
 ## Returns true if this entity's peer_id matches the local peer.
@@ -71,7 +79,7 @@ func is_player() -> bool:
 ##                 (optional - creates default if null)
 func is_local(adapter: NetAdapter = null) -> bool:
 	if adapter == null:
-		adapter = NetAdapter.new()
+		adapter = _get_default_adapter()
 	return peer_id == adapter.get_my_peer_id()
 
 
@@ -81,7 +89,7 @@ func is_local(adapter: NetAdapter = null) -> bool:
 ##                 (optional - creates default if null)
 func has_authority(adapter: NetAdapter = null) -> bool:
 	if adapter == null:
-		adapter = NetAdapter.new()
+		adapter = _get_default_adapter()
 	# Server has authority over everything
 	if adapter.is_server():
 		return true

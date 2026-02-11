@@ -374,10 +374,10 @@ func auto_setup_native_sync(entity: Entity) -> void:
 			)
 		)
 		# Verify config properties were added correctly
-		var config_count = config.get_properties().size()
-		print("  -> config has %d properties" % config_count)
-		for i in config_count:
-			var prop = config.get_properties()[i]
+		var config_props = config.get_properties()
+		print("  -> config has %d properties" % config_props.size())
+		for i in config_props.size():
+			var prop = config_props[i]
 			var spawn_enabled = config.property_get_spawn(prop)
 			var sync_enabled = config.property_get_sync(prop)
 			var repl_mode = config.property_get_replication_mode(prop)

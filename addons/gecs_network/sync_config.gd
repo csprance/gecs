@@ -21,9 +21,17 @@ extends Resource
 # ENUMS
 # ============================================================================
 
-enum Priority { REALTIME, HIGH, MEDIUM, LOW }  ## Every frame (~60 FPS)  ## 20 FPS  ## 10 FPS  ## 1 FPS
+enum Priority {
+	REALTIME, ## Every frame (~60 FPS)
+	HIGH,     ## 20 FPS
+	MEDIUM,   ## 10 FPS
+	LOW       ## 1 FPS
+}
 
-enum Reliability { UNRELIABLE, RELIABLE }  ## Fast, may drop packets (position, velocity)  ## Guaranteed delivery (health, authority changes)
+enum Reliability {
+	UNRELIABLE, ## Fast, may drop packets (position, velocity)
+	RELIABLE    ## Guaranteed delivery (health, authority changes)
+}
 
 # ============================================================================
 # CONSTANTS

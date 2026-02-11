@@ -65,6 +65,7 @@ var _broadcast_pending: Dictionary = {}  # entity_id -> true (cleared after broa
 var _server_time_offset: float = 0.0  # local_time + offset = server_time
 var _ping_interval: float = 5.0  # Sync time every 5 seconds
 var _ping_timer: float = 0.0
+var _ping_counter: int = 0  # Monotonic counter for collision-free ping IDs
 var _pending_pings: Dictionary = {}  # ping_id -> send_time (for RTT calculation)
 var _time_sync_initialized: bool = false
 
@@ -76,6 +77,14 @@ var _game_session_id: int = 0
 
 # Reconciliation
 var _reconciliation_timer: float = 0.0
+
+# Component type name cache: entity instance_id -> { comp_type_name -> Component }
+var _comp_type_cache: Dictionary = {}
+
+# Index of entities with SyncComponents for efficient polling.
+# Maps entity instance_id -> { "entity": Entity, "sync_comps": Array[SyncComponent] }
+# Only includes entities with CN_NetworkIdentity that we have authority to broadcast.
+var _sync_entity_index: Dictionary = {}
 
 # Native sync diagnostic tracking
 var _sync_diagnostic_timer: float = 0.0
@@ -230,7 +239,10 @@ func reset_for_new_game() -> void:
 	# Reset time sync (will re-sync when new game starts)
 	_time_sync_initialized = false
 	_ping_timer = 0.0
+	_ping_counter = 0
 	_pending_pings.clear()
+	_comp_type_cache.clear()
+	_sync_entity_index.clear()
 
 	# Reset reconciliation timer
 	_reconciliation_timer = 0.0
@@ -502,6 +514,8 @@ func _on_entity_added(entity: Entity) -> void:
 
 func _on_entity_removed(entity: Entity) -> void:
 	_disconnect_entity_signals(entity)
+	_invalidate_comp_type_cache(entity)
+	_remove_from_sync_entity_index(entity)
 
 	# Clean up MultiplayerSynchronizer BEFORE entity is freed
 	# This prevents "Node not found" errors from stale sync data
@@ -545,10 +559,16 @@ func _on_entity_removed(entity: Entity) -> void:
 
 
 func _on_component_added(entity: Entity, component: Resource) -> void:
+	_invalidate_comp_type_cache(entity)
+	if component is SyncComponent or component is CN_NetworkIdentity:
+		_update_sync_entity_index(entity)
 	_property_handler.on_component_added(entity, component)
 
 
 func _on_component_removed(entity: Entity, component: Resource) -> void:
+	_invalidate_comp_type_cache(entity)
+	if component is SyncComponent or component is CN_NetworkIdentity:
+		_update_sync_entity_index(entity)
 	_property_handler.on_component_removed(entity, component)
 
 
@@ -603,6 +623,17 @@ func _deferred_log_sync_status() -> void:
 
 
 func _find_component_by_type(entity: Entity, comp_type: String) -> Component:
+	var eid = entity.get_instance_id()
+	var type_map: Dictionary = _comp_type_cache.get(eid, {})
+	if type_map.has(comp_type):
+		var cached = type_map[comp_type]
+		# Validate the cached component is still on this entity
+		if is_instance_valid(cached) and entity.components.has(cached.get_script().resource_path):
+			return cached
+		# Stale entry — rebuild below
+		type_map.erase(comp_type)
+
+	# Linear scan (cold path)
 	for comp_path in entity.components.keys():
 		var comp = entity.components[comp_path]
 		var script = comp.get_script()
@@ -612,9 +643,46 @@ func _find_component_by_type(entity: Entity, comp_type: String) -> Component:
 		# Fallback to filename if class_name not declared
 		if global_name == "":
 			global_name = script.resource_path.get_file().get_basename()
+		# Cache every component we visit for future lookups
+		type_map[global_name] = comp
 		if global_name == comp_type:
+			_comp_type_cache[eid] = type_map
 			return comp
+
+	_comp_type_cache[eid] = type_map
 	return null
+
+
+## Invalidate the component type cache for an entity.
+## Call when an entity's components change (add/remove).
+func _invalidate_comp_type_cache(entity: Entity) -> void:
+	_comp_type_cache.erase(entity.get_instance_id())
+
+
+## Rebuild the sync entity index entry for an entity.
+## Called when components are added/removed or authority changes.
+func _update_sync_entity_index(entity: Entity) -> void:
+	var eid = entity.get_instance_id()
+	var net_id = entity.get_component(CN_NetworkIdentity)
+	if not net_id:
+		_sync_entity_index.erase(eid)
+		return
+
+	# Collect SyncComponents on this entity
+	var sync_comps: Array = []
+	for comp in entity.components.values():
+		if comp is SyncComponent:
+			sync_comps.append(comp)
+
+	if sync_comps.is_empty():
+		_sync_entity_index.erase(eid)
+	else:
+		_sync_entity_index[eid] = {"entity": entity, "sync_comps": sync_comps}
+
+
+## Remove an entity from the sync entity index.
+func _remove_from_sync_entity_index(entity: Entity) -> void:
+	_sync_entity_index.erase(entity.get_instance_id())
 
 
 func _apply_component_data(
