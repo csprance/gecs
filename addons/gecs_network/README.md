@@ -14,8 +14,8 @@ Multiplayer synchronization addon for the GECS (Godot Entity Component System) f
 ## Features
 
 - **ECS-First Architecture**: Designed specifically for GECS entities and components
-- **Automatic Marker Assignment**: Entities automatically get `C_LocalAuthority`, `C_RemoteEntity`, or `C_ServerOwned` markers
-- **Native Sync Support**: Auto-configures Godot's `MultiplayerSynchronizer` via `C_SyncEntity` component (high-level API for transform sync)
+- **Automatic Marker Assignment**: Entities automatically get `CN_LocalAuthority`, `CN_RemoteEntity`, or `CN_ServerOwned` markers
+- **Native Sync Support**: Auto-configures Godot's `MultiplayerSynchronizer` via `CN_SyncEntity` component (high-level API for transform sync)
 - **Component RPC Sync**: Property-level synchronization for ECS components (low-level API for game state)
 - **Priority-Based Batching**: Reduces bandwidth 50-90% by syncing at different rates
 - **Late Join Support**: New players receive full world state on connection
@@ -89,13 +89,13 @@ func _ready():
 
 ### 4. Add Network Identity to Entities
 
-Every networked entity needs `C_NetworkIdentity`:
+Every networked entity needs `CN_NetworkIdentity`:
 
 ```gdscript
 # In your entity's define_components():
 func define_components() -> Array[Component]:
     return [
-        C_NetworkIdentity.new(peer_id),  # peer_id of owner
+        CN_NetworkIdentity.new(peer_id),  # peer_id of owner
         C_Transform.new(),
         # ... other components
     ]
@@ -110,16 +110,16 @@ For entities with predictable behavior (projectiles, effects), only sync the spa
 ```gdscript
 func define_components() -> Array[Component]:
     return [
-        C_NetworkIdentity.new(0),  # 0 = server-owned
+        CN_NetworkIdentity.new(0),  # 0 = server-owned
         C_Velocity.new(),          # Synced at spawn time
         C_Transform.new(),         # Synced at spawn time
         C_DeathTimer.new(3.0),
     ]
-    # NO C_SyncEntity - clients simulate locally after spawn
+    # NO CN_SyncEntity - clients simulate locally after spawn
 ```
 
 **How it works:**
-1. Server adds entity → addon detects `C_NetworkIdentity`
+1. Server adds entity → addon detects `CN_NetworkIdentity`
 2. Addon serializes all `@export` properties
 3. Addon broadcasts `_spawn_entity.rpc()` to clients
 4. Clients reconstruct identical entity
@@ -134,8 +134,8 @@ For entities needing real-time position updates (players, enemies):
 ```gdscript
 func define_components() -> Array[Component]:
     return [
-        C_NetworkIdentity.new(peer_id),
-        C_SyncEntity.new(),  # Enables MultiplayerSynchronizer
+        CN_NetworkIdentity.new(peer_id),
+        CN_SyncEntity.new(),  # Enables MultiplayerSynchronizer
         C_Transform.new(),
     ]
 ```
@@ -144,7 +144,7 @@ func define_components() -> Array[Component]:
 
 ## Components
 
-### C_NetworkIdentity
+### CN_NetworkIdentity
 
 Required for all networked entities. Stores ownership information.
 
@@ -161,7 +161,7 @@ is_local() -> bool         # True if peer_id matches local peer
 has_authority() -> bool    # True if server, or local peer owns entity
 ```
 
-### C_SyncEntity
+### CN_SyncEntity
 
 Configures automatic `MultiplayerSynchronizer` creation.
 
@@ -183,15 +183,15 @@ Configures automatic `MultiplayerSynchronizer` creation.
 
 Automatically assigned by NetworkSync based on ownership:
 
-- **C_LocalAuthority**: Entity is controlled by local peer
-- **C_RemoteEntity**: Entity is controlled by remote peer/server
-- **C_ServerOwned**: Entity is owned by server (peer_id 0 or 1)
+- **CN_LocalAuthority**: Entity is controlled by local peer
+- **CN_RemoteEntity**: Entity is controlled by remote peer/server
+- **CN_ServerOwned**: Entity is owned by server (peer_id 0 or 1)
 
 Query pattern example:
 ```gdscript
 func query() -> QueryBuilder:
     # Only process locally controlled entities
-    return q.with_all([C_Velocity, C_LocalAuthority])
+    return q.with_all([C_Velocity, CN_LocalAuthority])
 ```
 
 ## Configuration
@@ -276,7 +276,7 @@ Use cases:
 
 The recommended approach is a **thin middleware layer** between the generic addon and your project:
 
-```text
+```
 addons/gecs_network/     ← Generic, reusable addon
 game/network/            ← Project-specific middleware
 game/                    ← Your game code
@@ -359,7 +359,7 @@ func fire():
     _spawn_local(pos, dir, speed)
     _spawn_projectile_rpc.rpc(pos, dir, speed)  # Don't do this!
 
-# GOOD - Just add entity with C_NetworkIdentity
+# GOOD - Just add entity with CN_NetworkIdentity
 func fire():
     var projectile = projectile_scene.instantiate()
     # Set component values...
@@ -383,11 +383,50 @@ var owner_entity: Entity = null    # NOT synced (Entity refs don't serialize)
 
 | Entity Type | Sync Pattern | Components |
 |-------------|--------------|------------|
-| Projectiles | Spawn-only | `C_NetworkIdentity` only |
-| Effects/VFX | Spawn-only | `C_NetworkIdentity` only |
-| Players | Continuous | `C_NetworkIdentity` + `C_SyncEntity` |
-| Enemies | Continuous | `C_NetworkIdentity` + `C_SyncEntity` |
-| Vehicles | Continuous | `C_NetworkIdentity` + `C_SyncEntity` |
+| Projectiles | Spawn-only | `CN_NetworkIdentity` only |
+| Effects/VFX | Spawn-only | `CN_NetworkIdentity` only |
+| Players | Continuous | `CN_NetworkIdentity` + `CN_SyncEntity` |
+| Enemies | Continuous | `CN_NetworkIdentity` + `CN_SyncEntity` |
+| Vehicles | Continuous | `CN_NetworkIdentity` + `CN_SyncEntity` |
+
+### Exclusive State Ownership (Cooldowns, Timers)
+
+**Critical:** When splitting player abilities into server spawning + client feedback systems, state tracking (cooldowns, timers, counters) must have EXCLUSIVE ownership by ONE system.
+
+```gdscript
+# ❌ BAD - Both systems track cooldown (double-increment bug)
+# S_WeaponSpawning (server):
+weapon.time_since_shot += delta
+if can_fire: weapon.time_since_shot = 0.0
+
+# S_WeaponFeedback (client):
+weapon.time_since_shot += delta  # ALSO increments - BUG!
+if can_fire: weapon.time_since_shot = 0.0  # Steals reset from server!
+
+# ✅ GOOD - Server EXCLUSIVELY owns cooldown state
+# S_WeaponSpawning (server-authoritative):
+weapon.time_since_shot += delta  # Only place that increments
+if can_fire:
+    _spawn_projectile()
+    weapon.time_since_shot = 0.0  # Only place that resets
+
+# S_WeaponFeedback (client feedback only):
+# NO cooldown logic - just animation/audio
+if firing_input.is_firing:
+    _play_firing_animation()
+```
+
+**Why this matters:** Double-increment causes cooldown to tick 2x faster, and client stealing the reset prevents server from ever seeing `can_fire = true`.
+
+### System Split Pattern for Player Abilities
+
+When implementing player abilities with server-authoritative spawning:
+
+| System | Group | Query | Responsibility |
+|--------|-------|-------|----------------|
+| `S_*Input` | input | `CN_LocalAuthority` | Read Input, set `is_firing` flag |
+| `S_*Spawning` | server-authoritative | All players | Spawn entities, own cooldown |
+| `S_*Feedback` | combat | `CN_LocalAuthority` | Animation, audio (NO state) |
 
 ## Implementing Spawn-Only Sync (Projectiles)
 
@@ -467,25 +506,25 @@ func _spawn_projectile(position, direction, speed, damage, color):
     proj_comp.projectile_color = color
 ```
 
-### Rule 5: Entity Definition (No C_SyncEntity)
+### Rule 5: Entity Definition (No CN_SyncEntity)
 
 ```gdscript
 # e_projectile.gd
-func define_components() -> Array[Component]:
+func define_components() -> Array:
     return [
-        C_NetworkIdentity.new(0),  # 0 = server-owned
+        CN_NetworkIdentity.new(0),  # 0 = server-owned
         C_Projectile.new(),
         C_Velocity.new(),
         C_Transform.new(),
         C_DeathTimer.new(3.0),
     ]
-    # NO C_SyncEntity - this is what makes it spawn-only!
+    # NO CN_SyncEntity - this is what makes it spawn-only!
 ```
 
 ### How It Works Internally
 
 1. Server calls `ECS.world.add_entity(projectile)`
-2. `_on_entity_added` detects `C_NetworkIdentity`, schedules `call_deferred("_broadcast_entity_spawn")`
+2. `_on_entity_added` detects `CN_NetworkIdentity`, schedules `call_deferred("_broadcast_entity_spawn")`
 3. Your code sets component values (velocity, position, damage, color)
 4. At end of frame, `_broadcast_entity_spawn` serializes all `@export` properties
 5. RPC broadcasts spawn data to all clients
@@ -494,14 +533,14 @@ func define_components() -> Array[Component]:
 
 ### Complete Flow Example
 
-```text
+```
 CLIENT A (firing):
 1. Holds fire button → S_Input sets C_FiringInput.is_firing = true
 2. C_FiringInput syncs to server (20 Hz, HIGH priority)
 
 SERVER:
 3. S_WeaponFiring sees is_firing=true for Client A's player
-4. Server spawns projectile with C_NetworkIdentity.new(0)
+4. Server spawns projectile with CN_NetworkIdentity.new(0)
 5. Sets velocity, position, damage, color on components
 6. End of frame: addon broadcasts spawn RPC to ALL clients
 
@@ -516,13 +555,13 @@ ALL CLIENTS (including A):
 
 ### Entity not syncing
 
-1. Ensure entity has `C_NetworkIdentity`
+1. Ensure entity has `CN_NetworkIdentity`
 2. Check peer_id is set correctly
 3. Verify NetworkSync is child of World
 
 ### Transform not syncing
 
-1. Add `C_SyncEntity` to entity
+1. Add `CN_SyncEntity` to entity
 2. Or use component-based sync (C_Transform changes trigger RPC)
 3. Check `sync_config.skip_component_types` doesn't include your component
 
@@ -537,7 +576,7 @@ ALL CLIENTS (including A):
 1. Use priority batching (default config)
 2. Increase sync intervals for non-critical data
 3. Enable component filtering to skip unnecessary syncs
-4. Use native sync (C_SyncEntity) for transform data
+4. Use native sync (CN_SyncEntity) for transform data
 
 ### Spawn-only entity appears at origin (0,0,0)
 
@@ -568,12 +607,12 @@ ALL CLIENTS (including A):
 1. Ensure input component extends `SyncComponent`, not `Component`
 2. Add `@export` to input properties
 3. Add component to `SyncConfig.component_priorities` with HIGH priority
-4. Verify client has `C_LocalAuthority` on the player entity
+4. Verify client has `CN_LocalAuthority` on the player entity
 
 ### Spawn-only entity receiving continuous updates (breaking local simulation)
 
-1. **Remove `C_SyncEntity`** from the entity - its presence enables continuous sync
-2. Entities without `C_SyncEntity` only sync at spawn time
+1. **Remove `CN_SyncEntity`** from the entity - its presence enables continuous sync
+2. Entities without `CN_SyncEntity` only sync at spawn time
 3. Check no other code is manually syncing the entity
 
 ## Animation Synchronization
@@ -624,19 +663,19 @@ This pattern is used in production Godot multiplayer games and avoids the pitfal
 
 1. Remove `Net` singleton references - use `net_adapter` methods
 2. Remove manual marker assignment - NetworkSync handles it
-3. Remove manual `MultiplayerSynchronizer` setup - use `C_SyncEntity`
+3. Remove manual `MultiplayerSynchronizer` setup - use `CN_SyncEntity`
 4. Update component imports to addon paths
 
 Before:
 ```gdscript
 if Net.is_server():
-    entity.add_component(C_ServerOwned.new())
+    entity.add_component(CN_ServerOwned.new())
 ```
 
 After:
 ```gdscript
-# Automatic! Just add C_NetworkIdentity with correct peer_id
-entity.add_component(C_NetworkIdentity.new(0))  # Server-owned
+# Automatic! Just add CN_NetworkIdentity with correct peer_id
+entity.add_component(CN_NetworkIdentity.new(0))  # Server-owned
 ```
 
 ## Architecture
@@ -644,7 +683,7 @@ entity.add_component(C_NetworkIdentity.new(0))  # Server-owned
 This addon uses a **two-tier synchronization approach** that leverages Godot's native APIs where they shine:
 
 ### High-Level API: Native Transform Sync
-For position, rotation, and velocity, use `C_SyncEntity` which auto-configures Godot's `MultiplayerSynchronizer`:
+For position, rotation, and velocity, use `CN_SyncEntity` which auto-configures Godot's `MultiplayerSynchronizer`:
 - Automatic interpolation (handled by Godot)
 - Efficient delta compression
 - No RPC overhead for transform updates
@@ -655,11 +694,11 @@ For ECS component data (health, state, inventory), use priority-based RPC batchi
 - Configurable sync rates per component type
 - Reliable/unreliable transport based on priority
 
-```text
+```
 ┌─────────────────────────────────────────────────────────────┐
 │                     NetworkSync                              │
 ├─────────────────────────────────────────────────────────────┤
-│  C_SyncEntity                    │  Component RPC Sync       │
+│  CN_SyncEntity                    │  Component RPC Sync       │
 │  (MultiplayerSynchronizer)       │  (Priority Batching)      │
 │  ────────────────────────────    │  ─────────────────────    │
 │  • global_position               │  • C_Health               │
@@ -673,21 +712,40 @@ For ECS component data (health, state, inventory), use priority-based RPC batchi
 
 ## File Structure
 
-```text
+```
 addons/gecs_network/
-├── plugin.gd                 # Editor plugin registration
-├── plugin.cfg               # Plugin metadata
-├── network_sync.gd          # Main sync node (attach to World)
-├── net_adapter.gd           # Network abstraction layer
-├── simple_logger.gd         # Logging (uses cLogger if available)
-├── sync_config.gd           # Priority and filtering config
-├── icons/                   # Editor icons
+├── plugin.gd                  # Editor plugin registration
+├── plugin.cfg                 # Plugin metadata
+├── network_sync.gd            # Main sync orchestrator (signals, RPCs, public API)
+├── sync_spawn_handler.gd      # Entity spawn/despawn, world state serialization
+├── sync_native_handler.gd     # MultiplayerSynchronizer setup, model instantiation
+├── sync_property_handler.gd   # Component property sync, change detection, batching
+├── sync_state_handler.gd      # State management, authority markers, time sync
+├── net_adapter.gd             # Network abstraction layer
+├── sync_config.gd             # Priority and filtering config
+├── sync_component.gd          # Base class for priority-synced components
+├── icons/                     # Editor icons
 │   ├── network_sync.svg
 │   └── sync_config.svg
 └── components/
-    ├── c_network_identity.gd # Required for all networked entities
-    ├── c_sync_entity.gd      # Opt-in native transform sync
-    ├── c_local_authority.gd  # Marker: local peer controls this
-    ├── c_remote_entity.gd    # Marker: remote peer controls this
-    └── c_server_owned.gd     # Marker: server owns this entity
+    ├── cn_network_identity.gd # Required for all networked entities
+    ├── cn_sync_entity.gd      # Opt-in native transform sync
+    ├── cn_local_authority.gd  # Marker: local peer controls this
+    ├── cn_remote_entity.gd    # Marker: remote peer controls this
+    ├── cn_server_authority.gd # Marker: server has authority over this
+    └── cn_server_owned.gd     # Marker: server owns this entity
 ```
+
+### Handler Architecture
+
+The addon uses a modular handler pattern for maintainability:
+
+| Handler | Responsibility |
+|---------|----------------|
+| `network_sync.gd` | Orchestrator - RPC stubs, signals, public API |
+| `sync_spawn_handler.gd` | Entity lifecycle - spawn/despawn broadcasts, world state |
+| `sync_native_handler.gd` | Native sync - MultiplayerSynchronizer setup, model ready |
+| `sync_property_handler.gd` | Property sync - change detection, priority batching |
+| `sync_state_handler.gd` | State - authority markers, time sync, reconciliation |
+
+All RPC methods remain on `NetworkSync` (Godot requirement) and delegate to handlers internally.

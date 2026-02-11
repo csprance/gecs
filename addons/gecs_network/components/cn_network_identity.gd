@@ -1,4 +1,4 @@
-class_name C_NetworkIdentity
+class_name CN_NetworkIdentity
 extends Component
 ## Network identity component for multiplayer synchronization.
 ## Stores the peer ID that controls this entity.
@@ -17,12 +17,11 @@ extends Component
 ##       velocity.direction = Input.get_vector(...)
 ##
 ##   # Or use marker components in queries (ECS-idiomatic approach):
-##   # query: q.with_all([C_Velocity, C_LocalAuthority])
+##   # query: q.with_all([C_Velocity, CN_LocalAuthority])
 ##
 ##   # Pure logic checks (no network state needed):
 ##   if net_id.is_player():
 ##       # Process player-owned entities
-
 
 ## The multiplayer peer ID that owns/controls this entity.
 ## 0 = server-owned (enemies, projectiles), 1+ = player peer IDs
@@ -31,10 +30,6 @@ extends Component
 ## The network spawn index (used for entity identification).
 ## Helps with deterministic entity ordering.
 @export var spawn_index: int = 0
-
-## Cached default NetAdapter instance to avoid allocation on every call.
-## This is a static variable shared across all instances of C_NetworkIdentity.
-var _default_adapter: NetAdapter = null
 
 
 func _init(p_peer_id: int = 0) -> void:
@@ -73,24 +68,20 @@ func is_player() -> bool:
 ## Check if this entity is controlled by the local player.
 ## Returns true if this entity's peer_id matches the local peer.
 ## @param adapter: NetAdapter instance for network state queries
-##                 (optional - uses cached default if null)
+##                 (optional - creates default if null)
 func is_local(adapter: NetAdapter = null) -> bool:
 	if adapter == null:
-		if _default_adapter == null:
-			_default_adapter = NetAdapter.new()
-		adapter = _default_adapter
+		adapter = NetAdapter.new()
 	return peer_id == adapter.get_my_peer_id()
 
 
 ## Check if we have authority to modify this entity.
 ## Server can modify anything, clients can only modify their own entities.
 ## @param adapter: NetAdapter instance for network state queries
-##                 (optional - uses cached default if null)
+##                 (optional - creates default if null)
 func has_authority(adapter: NetAdapter = null) -> bool:
 	if adapter == null:
-		if _default_adapter == null:
-			_default_adapter = NetAdapter.new()
-		adapter = _default_adapter
+		adapter = NetAdapter.new()
 	# Server has authority over everything
 	if adapter.is_server():
 		return true

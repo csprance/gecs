@@ -1,35 +1,5 @@
 class_name SyncComponent
 extends Component
-## DESIGN RATIONALE: Intentional Logic in Addon Component
-##
-## This component deliberately contains change-tracking logic, deviating from
-## the standard data-only GECS pattern. This is a necessary design choice for
-## the network addon because:
-##
-## 1. AUTOMATIC CHANGE DETECTION
-##    The addon needs to detect when properties change to sync them over the
-##    network. Without tracking state (_sync_cache), the addon cannot know
-##    if a property changed since the last sync interval.
-##
-## 2. ADDON REUSABILITY
-##    This logic is generic and project-agnostic. It belongs in the addon,
-##    not in project-specific systems. Each game doesn't re-implement this.
-##
-## 3. PERFORMANCE OPTIMIZATION
-##    Change detection is done via poll (at sync intervals), not callbacks.
-##    This avoids hooking every property setter. Approximate comparison for
-##    vectors/floats prevents floating-point noise from causing false syncs.
-##
-## 4. SIGNAL EMISSION
-##    The property_changed signal enables loose coupling between the addon
-##    and project-specific middleware (e.g., visual updates).
-##
-## BEST PRACTICES FOR PROJECT CODE:
-## - Game components (C_Health, C_Velocity, etc.) remain data-only
-## - SyncComponent is only for addon internal logic
-## - Use @export and @export_group to control sync priority and frequency
-## - Middleware handles all project-specific logic in response to signals
-##
 ## SyncComponent - Automatically syncs @export properties at configurable intervals.
 ##
 ## Use @export_group to specify sync priority per property:
@@ -48,7 +18,6 @@ extends Component
 ## Properties without a group default to HIGH priority.
 ## NetworkSync polls check_changes_for_priority() at each priority's interval.
 
-signal property_changed(component: SyncComponent, property: String, old_value: Variant, new_value: Variant)
 
 # Priority string to SyncConfig.Priority enum mapping
 const PRIORITY_MAP = {

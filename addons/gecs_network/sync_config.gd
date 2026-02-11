@@ -82,15 +82,22 @@ const RELIABILITY_BY_PRIORITY := {
 # ============================================================================
 
 ## Component name that signals when an entity's model/body is ready.
-## When this component is added to an entity with C_SyncEntity, native
+## When this component is added to an entity with CN_SyncEntity, native
 ## MultiplayerSynchronizer setup is triggered.
 ##
 ## Set to empty string "" to disable component-based triggering.
-## In that case, ensure C_SyncEntity.target_node is set before adding
+## In that case, ensure CN_SyncEntity.target_node is set before adding
 ## the entity to the world, or call NetworkSync._auto_setup_native_sync() manually.
 ##
 ## Example: "C_Instantiated", "C_ModelReady", "C_Spawned"
 @export var model_ready_component: String = ""
+
+## Script reference for model_ready_component (for instantiation).
+## Set this to preload the script so NetworkSync can add the marker component
+## after sync-instantiating a model.
+##
+## Example: preload("res://game/components/c_instantiated.gd")
+var model_ready_class: GDScript = null
 
 # ============================================================================
 # CONFIGURATION - TRANSFORM COMPONENT
@@ -107,6 +114,69 @@ const RELIABILITY_BY_PRIORITY := {
 ##
 ## Example: "C_Transform", "C_Position", "C_Spatial"
 @export var transform_component: String = ""
+
+# ============================================================================
+# CONFIGURATION - MODEL INSTANTIATION (for native sync timing)
+# ============================================================================
+
+## Component name that contains model scene path (e.g., "C_Model").
+## When set, NetworkSync will instantiate the model synchronously during
+## entity spawn to ensure node structure exists before sync data arrives.
+## Set to empty string "" to disable addon-managed model instantiation.
+##
+## The component must have the properties specified below.
+@export var model_component: String = ""
+
+## Property name on model_component that contains the scene path (PackedScene).
+## Example: "model_scene_path"
+@export var model_scene_path_property: String = "model_scene_path"
+
+## Property name on model_component for storing the instantiated model reference.
+## Example: "model_instance"
+@export var model_instance_property: String = "model_instance"
+
+## Property name on model_component to check/set if model is already instantiated.
+## Example: "is_instantiated"
+@export var model_instantiated_property: String = "is_instantiated"
+
+## Component name that holds CharacterBody3D/RigidBody3D reference (e.g., "C_CharacterBody3D").
+## Used to set the body reference after model instantiation.
+## Set to empty string "" if not using physics bodies.
+@export var character_body_component: String = ""
+
+## Property name on character_body_component for the body reference.
+## Example: "body"
+@export var character_body_property: String = "body"
+
+## Component name that holds animation references (e.g., "C_AnimationRig").
+## Used to set animation_player and rig_node references after model instantiation.
+## Set to empty string "" if not using animations.
+@export var animation_rig_component: String = ""
+
+## Property name for the visual rig node reference (child node named "Rig").
+## Example: "rig_node"
+@export var animation_rig_property: String = "rig_node"
+
+## Property name for the AnimationPlayer reference.
+## Example: "animation_player"
+@export var animation_player_property: String = "animation_player"
+
+## Child node name to look for as the visual rig.
+## Example: "Rig"
+@export var animation_rig_node_name: String = "Rig"
+
+## Child node name to look for as the AnimationPlayer.
+## Example: "AnimationPlayer"
+@export var animation_player_node_name: String = "AnimationPlayer"
+
+## Property name on animation_rig_component for the AnimationTree reference.
+## Set to empty string "" to disable AnimationTree lookup.
+## Example: "animation_tree"
+@export var animation_tree_property: String = ""
+
+## Child node name to look for as the AnimationTree.
+## Example: "AnimationTree"
+@export var animation_tree_node_name: String = ""
 
 # ============================================================================
 # CONFIGURATION - RECONCILIATION

@@ -1,6 +1,6 @@
-class_name C_SyncEntity
+class_name CN_SyncEntity
 extends Component
-## C_SyncEntity - Configuration component for native MultiplayerSynchronizer setup.
+## CN_SyncEntity - Configuration component for native MultiplayerSynchronizer setup.
 ##
 ## Add this component to entities that should use Godot's native MultiplayerSynchronizer
 ## for transform/property replication. NetworkSync will automatically create and configure
@@ -13,16 +13,15 @@ extends Component
 ##
 ## Usage:
 ##   # Basic usage - sync position and rotation
-##   entity.add_component(C_SyncEntity.new())
+##   entity.add_component(CN_SyncEntity.new())
 ##
 ##   # Custom configuration
-##   var sync = C_SyncEntity.new()
+##   var sync = CN_SyncEntity.new()
 ##   sync.sync_velocity = true
 ##   sync.custom_properties = ["health", "score"]
 ##   entity.add_component(sync)
 ##
-## Note: Requires C_NetworkIdentity to be present on the entity.
-
+## Note: Requires CN_NetworkIdentity to be present on the entity.
 
 # ============================================================================
 # SYNC PROPERTIES
@@ -41,7 +40,6 @@ extends Component
 ## Additional properties to sync (property paths relative to target node)
 ## Example: ["health", "score", "custom_data:value"]
 @export var custom_properties: Array[String] = []
-
 
 # ============================================================================
 # ADVANCED OPTIONS
@@ -71,16 +69,13 @@ extends Component
 ## Note: Cannot use @export here - Component is not a Node. Set programmatically.
 var target_node: Node = null
 
-
 # ============================================================================
 # METHODS
 # ============================================================================
 
 
 func _init(
-	p_sync_position: bool = true,
-	p_sync_rotation: bool = true,
-	p_sync_velocity: bool = false
+	p_sync_position: bool = true, p_sync_rotation: bool = true, p_sync_velocity: bool = false
 ) -> void:
 	sync_position = p_sync_position
 	sync_rotation = p_sync_rotation

@@ -66,15 +66,14 @@ func get_connected_peers() -> Array[int]:
 	if not _has_multiplayer():
 		return []
 	var peers: Array[int] = []
-	peers.assign(multiplayer.get_peers())
+	for peer_id in multiplayer.get_peers():
+		peers.append(peer_id)
 	return peers
 
 
 ## Returns all peer IDs including self.
 ## Useful for broadcasting.
 func get_all_peers() -> Array[int]:
-	if not _has_multiplayer():
-		return []
 	var peers = get_connected_peers()
 	var my_id = get_my_peer_id()
 	if my_id > 0 and not peers.has(my_id):
