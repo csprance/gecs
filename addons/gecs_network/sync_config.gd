@@ -188,6 +188,25 @@ var model_ready_class: GDScript = null
 ## Seconds between full state reconciliation broadcasts (server only)
 @export var reconciliation_interval: float = 30.0
 
+# ============================================================================
+# CONFIGURATION - ENTITY CATEGORIZATION
+# ============================================================================
+
+## Entity categories for diagnostic logging.
+## Maps category name (e.g., "enemy", "player") to an Array of component class names.
+## Entities with any of the listed components are classified into that category.
+##
+## Example:
+##   entity_categories = {
+##       "enemy": ["C_EnemyAI"],
+##       "player": ["C_Player"],
+##   }
+##
+## If empty, entity categorization falls back to peer_id-based heuristic:
+## - peer_id > 0: player
+## - peer_id <= 0: other
+@export var entity_categories: Dictionary = {}
+
 # Legacy alias for backwards compatibility
 var priorities: Dictionary:
 	get:
@@ -203,7 +222,15 @@ var priorities: Dictionary:
 ## Get the sync priority for a component
 ## Returns MEDIUM as default if component type not configured
 func get_priority(component: Component) -> Priority:
-	var class_name_str = component.get_script().get_global_name()
+	var script = component.get_script()
+	if script == null:
+		return Priority.MEDIUM
+
+	var class_name_str = script.get_global_name()
+	if class_name_str == "":
+		# Fallback to script path for anonymous classes
+		class_name_str = script.resource_path.get_file().get_basename()
+
 	return component_priorities.get(class_name_str, Priority.MEDIUM)
 
 
@@ -265,3 +292,54 @@ func should_skip_component(component: Component) -> bool:
 		class_name_str = script.resource_path.get_file().get_basename()
 
 	return should_skip(class_name_str)
+
+
+# ============================================================================
+# ENTITY CATEGORIZATION METHODS
+# ============================================================================
+
+
+## Get the category for an entity based on its components.
+## @param entity: Entity to categorize
+## @return: Category name (e.g., "enemy", "player") or "other" if no match
+func get_entity_category(entity: Entity) -> String:
+	# If no categories configured, fall back to peer_id heuristic
+	if entity_categories.is_empty():
+		var net_id = entity.get_component(CN_NetworkIdentity)
+		if net_id and net_id.peer_id > 0:
+			return "player"
+		else:
+			return "other"
+
+	# Check each category's component list
+	for category_name in entity_categories.keys():
+		var component_names = entity_categories[category_name]
+		if not component_names is Array:
+			continue
+
+		# Check if entity has any of the category's components
+		for comp_name in component_names:
+			if _entity_has_component_by_name(entity, comp_name):
+				return category_name
+
+	# No match found
+	return "other"
+
+
+## Helper: Check if entity has a component by class name
+func _entity_has_component_by_name(entity: Entity, comp_name: String) -> bool:
+	for comp_path in entity.components.keys():
+		var comp = entity.components[comp_path]
+		var script = comp.get_script()
+		if script == null:
+			continue
+
+		var class_name_str = script.get_global_name()
+		if class_name_str == "":
+			# Fallback to script path for anonymous classes
+			class_name_str = script.resource_path.get_file().get_basename()
+
+		if class_name_str == comp_name:
+			return true
+
+	return false

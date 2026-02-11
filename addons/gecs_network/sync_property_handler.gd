@@ -149,7 +149,8 @@ func on_component_property_changed(
 
 		# Log HIGH priority component changes for debugging sync flow
 		if _ns.debug_logging:
-			var comp_type = component.get_script().get_global_name()
+			var script = component.get_script()
+			var comp_type = script.get_global_name() if script else component.get_class()
 			var priority = (
 				_ns.sync_config.get_priority(component)
 				if _ns.sync_config
@@ -183,7 +184,8 @@ func queue_component_update(
 	entity: Entity, component: Resource, property: String, value: Variant
 ) -> void:
 	var entity_id = entity.id
-	var comp_type = component.get_script().get_global_name()
+	var script = component.get_script()
+	var comp_type = script.get_global_name() if script else component.get_class()
 
 	# Get priority for this component type
 	var priority = (
@@ -221,7 +223,8 @@ func queue_component_update(
 
 func queue_full_component_sync(entity: Entity, component: Resource) -> void:
 	var entity_id = entity.id
-	var comp_type = component.get_script().get_global_name()
+	var script = component.get_script()
+	var comp_type = script.get_global_name() if script else component.get_class()
 	var data = component.serialize()
 
 	# Get priority for this component type

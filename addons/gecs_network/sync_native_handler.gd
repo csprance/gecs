@@ -44,6 +44,15 @@ func sync_instantiate_model(entity: Entity) -> bool:
 			print("[NetworkSync] Entity %s has model component but no scene path" % entity.name)
 		return false
 
+	# Validate scene path before loading (security: prevent loading arbitrary files)
+	if not scene_path.begins_with("res://"):
+		push_warning("[NetworkSync] Invalid scene path (must start with res://): %s" % scene_path)
+		return false
+
+	if not ResourceLoader.exists(scene_path, "PackedScene"):
+		push_warning("[NetworkSync] Scene file does not exist or is not a PackedScene: %s" % scene_path)
+		return false
+
 	# Load and instantiate scene
 	var packed_scene = load(scene_path) as PackedScene
 	if not packed_scene:

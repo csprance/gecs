@@ -142,7 +142,10 @@ func _ready() -> void:
 	_init_sync_config()
 
 	_world = get_parent() as World
-	assert(_world != null, "NetworkSync must be a child of a World node")
+	if _world == null:
+		push_error("NetworkSync: Parent node is not a World. NetworkSync must be a child of a World node.")
+		queue_free()
+		return
 
 	# Initialize handler helpers BEFORE connecting signals
 	_spawn_handler = SyncSpawnHandler.new(self)
@@ -245,7 +248,7 @@ func reset_for_new_game() -> void:
 
 
 func _process(delta: float) -> void:
-	if not net_adapter.is_in_game():
+	if _world == null or not net_adapter.is_in_game():
 		return
 
 	# Server time synchronization (clients only)
@@ -339,7 +342,7 @@ func _disconnect_multiplayer_signals() -> void:
 
 
 func _on_peer_connected(peer_id: int) -> void:
-	if not net_adapter.is_server():
+	if not net_adapter.is_server() or _world == null:
 		return
 
 	# Send full world state to new peer (includes session_id for sync)
@@ -372,7 +375,7 @@ func _on_peer_disconnected(peer_id: int) -> void:
 	if debug_logging:
 		print("Peer %d disconnected" % peer_id)
 
-	if not net_adapter.is_server():
+	if not net_adapter.is_server() or _world == null:
 		return
 
 	# Remove entities owned by disconnected peer
@@ -386,6 +389,9 @@ func _on_peer_disconnected(peer_id: int) -> void:
 		if debug_logging:
 			print("Removing entity owned by disconnected peer: %s" % entity.id)
 		_world.remove_entity(entity)
+		# Free the node from scene tree (remove_entity only removes from ECS world)
+		if is_instance_valid(entity):
+			entity.queue_free()
 
 
 func _on_connected_to_server() -> void:
@@ -411,6 +417,9 @@ func _on_server_disconnected() -> void:
 	if debug_logging:
 		print("Server disconnected")
 
+	if _world == null:
+		return
+
 	# Clear all networked entities
 	var entities_to_remove: Array[Entity] = []
 	for entity in _world.entities:
@@ -420,6 +429,9 @@ func _on_server_disconnected() -> void:
 
 	for entity in entities_to_remove:
 		_world.remove_entity(entity)
+		# Free the node from scene tree (remove_entity only removes from ECS world)
+		if is_instance_valid(entity):
+			entity.queue_free()
 
 
 # ============================================================================
@@ -484,7 +496,8 @@ func _on_entity_added(entity: Entity) -> void:
 	# Use a pending flag to prevent duplicate broadcasts.
 	if not _broadcast_pending.has(entity.id):
 		_broadcast_pending[entity.id] = true
-		call_deferred("_deferred_broadcast_entity_spawn", entity)
+		# Pass entity.id to avoid accessing potentially invalid instance later
+		call_deferred("_deferred_broadcast_entity_spawn", entity, entity.id)
 
 
 func _on_entity_removed(entity: Entity) -> void:
@@ -572,8 +585,8 @@ func _disconnect_entity_signals(entity: Entity) -> void:
 # ============================================================================
 
 
-func _deferred_broadcast_entity_spawn(entity: Entity) -> void:
-	_spawn_handler.broadcast_entity_spawn(entity)
+func _deferred_broadcast_entity_spawn(entity: Entity, entity_id: String) -> void:
+	_spawn_handler.broadcast_entity_spawn(entity, entity_id)
 
 
 func _deferred_send_position_snapshot(peer_id: int) -> void:

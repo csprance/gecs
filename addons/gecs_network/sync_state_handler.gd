@@ -256,9 +256,22 @@ func handle_sync_full_state(state: Dictionary) -> void:
 				continue
 			if not script_paths.has(comp_type):
 				continue
-			var script = load(script_paths[comp_type])
-			if not script:
+
+			# Validate script path before loading
+			var script_path = script_paths[comp_type]
+			if not script_path.begins_with("res://"):
+				push_warning("[RECONCILIATION] Invalid script path for %s: %s (must start with res://)" % [comp_type, script_path])
 				continue
+
+			if not ResourceLoader.exists(script_path):
+				push_warning("[RECONCILIATION] Script not found for %s: %s" % [comp_type, script_path])
+				continue
+
+			var script = load(script_path)
+			if not script:
+				push_warning("[RECONCILIATION] Failed to load script for %s: %s" % [comp_type, script_path])
+				continue
+
 			var new_comp = script.new()
 			_ns._applying_network_data = true
 			entity.add_component(new_comp)
@@ -372,9 +385,7 @@ func process_entity_count_diagnostics(delta: float) -> void:
 	_ns._entity_count_timer = 0.0
 
 	# Count networked entities by type
-	var enemy_count := 0
-	var player_count := 0
-	var other_count := 0
+	var category_counts: Dictionary = {}
 	var enemy_names: Array[String] = []
 
 	for entity in _ns._world.entities:
@@ -382,17 +393,31 @@ func process_entity_count_diagnostics(delta: float) -> void:
 		if not net_id:
 			continue
 
-		# Check entity type by name pattern or components
-		if entity.name.begins_with("Enemy"):
-			enemy_count += 1
-			enemy_names.append(entity.name)
-		elif "Player" in entity.name or net_id.peer_id > 0:
-			player_count += 1
+		# Get entity category from SyncConfig (or fallback to peer_id heuristic)
+		var category = "other"
+		if _ns.sync_config:
+			category = _ns.sync_config.get_entity_category(entity)
 		else:
-			other_count += 1
+			# Fallback to peer_id heuristic if no config
+			if net_id.peer_id > 0:
+				category = "player"
+
+		# Increment category count
+		if not category_counts.has(category):
+			category_counts[category] = 0
+		category_counts[category] += 1
+
+		# Collect enemy names for detailed logging
+		if category == "enemy":
+			enemy_names.append(entity.name)
 
 	# Sort enemy names for comparison
 	enemy_names.sort()
+
+	# Extract common counts for backward-compatible logging
+	var enemy_count = category_counts.get("enemy", 0)
+	var player_count = category_counts.get("player", 0)
+	var other_count = category_counts.get("other", 0)
 
 	var prefix = "SERVER" if _ns.net_adapter.is_server() else "CLIENT"
 	var peer_id = _ns.net_adapter.get_my_peer_id()

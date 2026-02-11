@@ -61,13 +61,11 @@ func handle_sync_world_state(state: Dictionary) -> void:
 
 
 ## Broadcast entity spawn to all clients (called deferred to allow component setup)
-func broadcast_entity_spawn(entity: Entity) -> void:
+func broadcast_entity_spawn(entity: Entity, entity_id: String) -> void:
 	# Validate entity still exists (may have been removed before deferred call)
 	if not is_instance_valid(entity):
-		_ns._broadcast_pending.erase(entity.id if entity else "")
+		_ns._broadcast_pending.erase(entity_id)
 		return
-
-	var entity_id = entity.id
 
 	# Check if spawn was cancelled (entity removed before broadcast)
 	# _on_entity_removed erases from _broadcast_pending when entity is removed early
@@ -159,6 +157,14 @@ func handle_spawn_entity(data: Dictionary) -> void:
 	var entity: Entity
 
 	if scene_path != "":
+		# Validate scene path before loading (security: prevent arbitrary resource loading)
+		if not scene_path.begins_with("res://"):
+			push_warning("Invalid scene path (must start with res://): %s" % scene_path)
+			return
+		if not ResourceLoader.exists(scene_path):
+			push_warning("Scene path does not exist: %s" % scene_path)
+			return
+
 		var scene = load(scene_path)
 		if scene:
 			entity = scene.instantiate()
@@ -223,7 +229,18 @@ func handle_spawn_entity(data: Dictionary) -> void:
 			continue  # Already exists
 		if not script_paths.has(comp_type):
 			continue  # No script path to instantiate from
-		var script = load(script_paths[comp_type])
+
+		var script_path = script_paths[comp_type]
+
+		# Validate script path before loading (security: prevent arbitrary resource loading)
+		if not script_path.begins_with("res://"):
+			push_warning("Invalid script path (must start with res://): %s" % script_path)
+			continue
+		if not ResourceLoader.exists(script_path):
+			push_warning("Script path does not exist: %s" % script_path)
+			continue
+
+		var script = load(script_path)
 		if not script:
 			continue
 		var new_comp = script.new()
@@ -509,7 +526,16 @@ func serialize_entity_spawn(entity: Entity) -> Dictionary:
 	for comp_path in entity.components.keys():
 		var comp = entity.components[comp_path]
 		var script = comp.get_script()
-		var comp_type = script.get_global_name()
+
+		# Null guard: handle components without scripts (use class name as fallback)
+		var comp_type: String
+		if script == null:
+			comp_type = comp.get_class()
+		else:
+			comp_type = script.get_global_name()
+			# Fallback to filename if class_name not declared
+			if comp_type == "":
+				comp_type = script.resource_path.get_file().get_basename()
 
 		# Skip model_ready_component (e.g., C_Instantiated) - clients must instantiate models locally
 		# If this component is synced, clients will have C_Instantiated before S_ModelInstantiation
@@ -521,7 +547,9 @@ func serialize_entity_spawn(entity: Entity) -> Dictionary:
 		# but we DO need their initial values at spawn (e.g., C_Transform for position)
 
 		components_data[comp_type] = comp.serialize()
-		script_paths[comp_type] = script.resource_path
+		# Only add script path if script exists
+		if script != null and script.resource_path != "":
+			script_paths[comp_type] = script.resource_path
 
 	return {
 		"id": entity.id,

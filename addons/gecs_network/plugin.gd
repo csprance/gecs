@@ -39,8 +39,13 @@ func _enter_tree() -> void:
 	for type_name in CUSTOM_TYPES.keys():
 		var type_data = CUSTOM_TYPES[type_name]
 		var script = load(type_data["script"])
-		var icon = _load_icon(type_data["icon"])
 
+		# Skip registration if script failed to load
+		if script == null:
+			push_error("[%s] Failed to load script for %s: %s" % [PLUGIN_NAME, type_name, type_data["script"]])
+			continue
+
+		var icon = _load_icon(type_data["icon"])
 		add_custom_type(type_name, type_data["base"], script, icon)
 
 	print("[%s] Plugin enabled - NetworkSync, SyncConfig registered" % PLUGIN_NAME)
