@@ -431,10 +431,14 @@ func disable_entity(entity) -> Entity:
 	entity_disabled.emit(entity)
 	_worldLogger.debug("disable_entity Disabling Entity: ", entity)
 
-	entity.component_added.disconnect(_on_entity_component_added)
-	entity.component_removed.disconnect(_on_entity_component_removed)
-	entity.relationship_added.disconnect(_on_entity_relationship_added)
-	entity.relationship_removed.disconnect(_on_entity_relationship_removed)
+	if entity.component_added.is_connected(_on_entity_component_added):
+		entity.component_added.disconnect(_on_entity_component_added)
+	if entity.component_removed.is_connected(_on_entity_component_removed):
+		entity.component_removed.disconnect(_on_entity_component_removed)
+	if entity.relationship_added.is_connected(_on_entity_relationship_added):
+		entity.relationship_added.disconnect(_on_entity_relationship_added)
+	if entity.relationship_removed.is_connected(_on_entity_relationship_removed):
+		entity.relationship_removed.disconnect(_on_entity_relationship_removed)
 	entity.on_disable()
 	entity.set_process(false)
 	entity.set_physics_process(false)

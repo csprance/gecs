@@ -947,7 +947,7 @@ func entity_removed(ent: int, path: NodePath) -> void:
 		var child = root.get_first_child()
 		while child:
 			if child.get_meta("entity_id", null) == ent:
-				root.remove_child(child)
+				child.free()
 				break
 			child = child.get_next()
 
@@ -1084,7 +1084,7 @@ func system_last_run_data(system_id: int, system_name: String, last_run_data: Di
 		var prev_child = existing.get_first_child()
 		while prev_child:
 			var next_child = prev_child.get_next()
-			existing.remove_child(prev_child)
+			prev_child.free()
 			prev_child = next_child
 		# Create nested rows for key info
 		var ent_count = last_run_data.get("entity_count", null)
@@ -1157,7 +1157,7 @@ func entity_component_added(ent: int, comp: int, comp_path: String, data: Dictio
 					var prev = existing_comp_item.get_first_child()
 					while prev:
 						var nxt = prev.get_next()
-						existing_comp_item.remove_child(prev)
+						prev.free()
 						prev = nxt
 					# Update title/path with icon
 					var icon = ICON_FLAG if _is_flag_component(final_data) else ICON_COMPONENT
@@ -1213,7 +1213,7 @@ func entity_component_removed(ent: int, comp: int):
 			var comp_child = entity_item.get_first_child()
 			while comp_child:
 				if comp_child.has_meta("component_id") and comp_child.get_meta("component_id") == comp:
-					entity_item.remove_child(comp_child)
+					comp_child.free()
 					break
 				comp_child = comp_child.get_next()
 			# Update entity counts
@@ -1335,7 +1335,7 @@ func entity_relationship_added(ent: int, rel: int, rel_data: Dictionary):
 					var prev = existing_rel_item.get_first_child()
 					while prev:
 						var nxt = prev.get_next()
-						existing_rel_item.remove_child(prev)
+						prev.free()
 						prev = nxt
 					_update_relationship_item(existing_rel_item, rel_data)
 				else:
@@ -1414,7 +1414,7 @@ func entity_relationship_removed(ent: int, rel: int):
 			var rel_child = entity_item.get_first_child()
 			while rel_child:
 				if rel_child.has_meta("relationship_id") and rel_child.get_meta("relationship_id") == rel:
-					entity_item.remove_child(rel_child)
+					rel_child.free()
 					break
 				rel_child = rel_child.get_next()
 			# Update entity counts
