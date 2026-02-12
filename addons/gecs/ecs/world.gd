@@ -72,7 +72,7 @@ var entity_to_archetype: Dictionary = {} # Entity -> Archetype
 ## so that all queries are invalidated anytime we emit cache_invalidated.
 var query: QueryBuilder:
 	get:
-		var q: QueryBuilder = QueryBuilder.new(self)
+		var q: QueryBuilder = QueryBuilder.new(self )
 		if not cache_invalidated.is_connected(q.invalidate_cache):
 			cache_invalidated.connect(q.invalidate_cache)
 		return q
@@ -100,6 +100,8 @@ var _perf_metrics := {
 	"frame": {}, # Per-frame aggregated timings
 	"accum": {} # Long-lived totals (cleared manually)
 }
+## Queue of systems waiting for setup after ECS.world is assigned
+var _deferred_setup_systems: Array[System] = []
 
 
 ## Internal perf helper (debug only)
@@ -174,7 +176,7 @@ func initialize():
 		_make_nodes_root("Systems").get_path() if not system_nodes_root else system_nodes_root
 	)
 
-	# Add systems from scene tree
+	# Add systems from scene tree - setup will be deferred until ECS.world is set
 	var _systems = get_node(system_nodes_root).find_children("*", "System") as Array[System]
 	add_systems(_systems, true) # and sort them after they're added
 	_worldLogger.debug("_initialize Added Systems from Scene Tree and dep sorted: ", _systems)
@@ -192,8 +194,24 @@ func initialize():
 	if ECS.debug:
 		assert(GECSEditorDebuggerMessages.world_init(self ), '')
 		# Register debugger message handler for entity polling
-		if not Engine.is_editor_hint() and OS.has_feature("editor"):
+		if not Engine.is_editor_hint() and OS.has_feature("editor") and not EngineDebugger.has_capture('gecs'):
 			EngineDebugger.register_message_capture("gecs", _handle_debugger_message)
+
+
+## Finalize deferred system setup after ECS.world is set.
+## All systems defer their setup() until this method is called to ensure
+## setup() methods can safely access both _world and ECS.world.
+func finalize_system_setup() -> void:
+	if _deferred_setup_systems.is_empty():
+		return
+	
+	_worldLogger.debug("finalize_system_setup Executing deferred setup for ", _deferred_setup_systems.size(), " systems")
+	for system in _deferred_setup_systems:
+		system._internal_setup() # Now safe to call setup() with ECS.world available
+		_worldLogger.trace("finalize_system_setup Completed setup for system: ", system)
+	
+	_deferred_setup_systems.clear()
+	_worldLogger.debug("finalize_system_setup All deferred system setups completed")
 
 #endregion Built-in Virtual Methods
 
@@ -215,8 +233,29 @@ func process(delta: float, group: String = "") -> void:
 					system.lastRunData["execution_order"] = system_index
 					assert(GECSEditorDebuggerMessages.system_last_run_data(system, system.lastRunData), '')
 					system_index += 1
+
+		# Flush PER_GROUP command buffers after all systems in the group complete
+		for system in systems_by_group[group]:
+			if system.command_buffer_flush_mode == "PER_GROUP" and system.has_pending_commands():
+				system.cmd.execute()
 	if ECS.debug:
 		assert(GECSEditorDebuggerMessages.process_world(delta, group), '')
+
+
+## Manually flush all command buffers with MANUAL flush mode.[br]
+## This executes all queued commands from systems that use command_buffer_flush_mode = "MANUAL".[br]
+## [b]Example:[/b]
+## [codeblock]
+## func _process(delta):
+##     ECS.process(delta, "physics")
+##     ECS.process(delta, "render")
+##     ECS.world.flush_command_buffers()  # Execute all MANUAL commands at once
+## [/codeblock]
+func flush_command_buffers() -> void:
+	for group_key in systems_by_group.keys():
+		for system in systems_by_group[group_key]:
+			if system.command_buffer_flush_mode == "MANUAL" and system.has_pending_commands():
+				system.cmd.execute()
 
 
 ## Updates the pause behavior for all systems based on the provided paused state.
@@ -484,7 +523,12 @@ func add_system(system: System, topo_sort: bool = false) -> void:
 		systems_by_group[system.group] = []
 	systems_by_group[system.group].push_back(system)
 	system_added.emit(system)
-	system._internal_setup() # Determines execution method and calls user setup()
+	
+	# ALWAYS DEFER SETUP: Queue system setup until ECS.world is assigned
+	# This ensures setup() methods can safely access ECS.world
+	_deferred_setup_systems.append(system)
+	_worldLogger.trace("add_system Deferring setup for system: ", system)
+	
 	if topo_sort:
 		ArrayExtensions.topological_sort(systems_by_group)
 	if ECS.debug:

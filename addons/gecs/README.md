@@ -26,6 +26,10 @@
 - **[Observers](docs/OBSERVERS.md)** - Reactive systems that respond to component changes
 - **[Serialization](docs/SERIALIZATION.md)** - Save and load game state and entities
 
+### 🔄 Deferred Execution (NEW in v6.8.0)
+
+- **CommandBuffer** - Queue structural changes during iteration with `cmd`. Eliminates backwards iteration and defensive snapshots. Three flush modes: PER_SYSTEM, PER_GROUP, MANUAL.
+
 ### ⚡ Optimization & Advanced (As needed)
 
 - **[Debug Viewer](docs/DEBUG_VIEWER.md)** - Real-time debugging and performance monitoring

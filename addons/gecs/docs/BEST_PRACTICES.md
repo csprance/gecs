@@ -150,6 +150,38 @@ func process(entities: Array[Entity], components: Array, delta: float):
         health.current = min(health.current + health.regeneration_rate * delta, health.maximum)
 ```
 
+### Use CommandBuffer for Structural Changes During Iteration
+
+When adding/removing components, entities, or relationships during system processing, use the `cmd` CommandBuffer instead of direct world/entity calls. This allows safe forward iteration and deferred cache invalidation.
+
+```gdscript
+# ✅ Good - Use CommandBuffer for safe iteration
+class_name LifetimeSystem extends System
+
+func query():
+    return q.with_all([C_Lifetime])
+
+func process(entities: Array[Entity], components: Array, delta: float):
+    for entity in entities:
+        var lifetime = entity.get_component(C_Lifetime)
+        lifetime.time -= delta
+        if lifetime.time <= 0:
+            cmd.remove_entity(entity)  # Queued, executed after system completes
+```
+
+```gdscript
+# ❌ Avoid - Direct removal during iteration requires backwards iteration
+func process(entities: Array[Entity], components: Array, delta: float):
+    for i in range(entities.size() - 1, -1, -1):
+        if should_delete(entities[i]):
+            ECS.world.remove_entity(entities[i])  # Modifies array during iteration
+```
+
+**Flush Modes** control when queued commands execute:
+- **PER_SYSTEM** (default) — executes after each system completes
+- **PER_GROUP** — executes after all systems in the group complete
+- **MANUAL** — requires explicit `ECS.world.flush_command_buffers()` call
+
 ## 🏗️ Code Organization Patterns
 
 ### GECS Naming Conventions

@@ -2,6 +2,73 @@
 
 ## [Unreleased]
 
+## [6.8.0] - CommandBuffer System
+
+### New Features
+
+#### CommandBuffer System
+
+Callable-based deferred execution buffer for safe structural ECS changes during iteration. Eliminates the need for backwards iteration or defensive snapshots.
+
+**New Files:**
+- `addons/gecs/ecs/command_buffer.gd` — CommandBuffer class (extends RefCounted)
+
+**API:**
+```gdscript
+# Inside any System, use the cmd property:
+cmd.add_component(entity, component)
+cmd.remove_component(entity, component_type)
+cmd.add_entity(entity)
+cmd.remove_entity(entity)
+cmd.add_relationship(entity, relationship)
+cmd.remove_relationship(entity, relationship, limit)
+cmd.add_custom(callable)
+```
+
+**Flush Modes** (configurable per-system via `command_buffer_flush_mode`):
+- **PER_SYSTEM** (default) — executes after each system completes
+- **PER_GROUP** — executes after all systems in the group complete
+- **MANUAL** — requires explicit `ECS.world.flush_command_buffers()` call
+
+**Architecture:**
+- Each queue method appends a lambda to `Array[Callable]` with baked-in `is_instance_valid` guard
+- Commands execute in exact queued order (preserves user intent)
+- Single cache invalidation per `execute()` call
+- Statistics tracking: `commands_queued`, `commands_executed`, `last_execution_time_ms`
+
+**Migration:**
+```gdscript
+# Before (backwards iteration)
+for i in range(entities.size() - 1, -1, -1):
+    if should_delete(entities[i]):
+        ECS.world.remove_entity(entities[i])
+
+# After (CommandBuffer)
+for entity in entities:
+    if should_delete(entity):
+        cmd.remove_entity(entity)
+```
+
+### Modified
+
+- **System** (`system.gd`): Added `cmd: CommandBuffer` property (lazy-initialized), `command_buffer_flush_mode` export, `has_pending_commands()` helper, auto-flush logic
+- **World** (`world.gd`): Added `flush_command_buffers()`, PER_GROUP flush logic in `process()`, deferred system setup via `finalize_system_setup()`
+- **ECS** (`ecs.gd`): Calls `world.finalize_system_setup()` after assigning `ECS.world` to fix system setup timing
+
+### Fixed
+
+- **System setup timing**: Systems were calling `setup()` before `ECS.world` was assigned. Now deferred until world is available.
+
+### Tests
+
+- `test_command_buffer.gd` — Unit tests for all command types, freed entity handling, cache invalidation
+- `test_command_buffer_integration.gd` — Integration tests for PER_SYSTEM, PER_GROUP, and MANUAL flush modes
+- `test_command_buffer_perf.gd` — Performance benchmarks comparing backwards iteration vs CommandBuffer
+
+### External
+
+- `addons/gdUnit4/src/core/GdUnitFileAccess.gd` — Removed deprecated `true` parameter from `get_as_text()`
+
 ## [6.7.2] - 2025-11-29 - Critical Query Cache Bugfix
 
 ### Fixed

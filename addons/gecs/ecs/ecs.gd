@@ -45,6 +45,10 @@ var world: World:
 				get_tree().root.get_node("./Root").add_child(world)
 			if not world.is_connected("tree_exited", _on_world_exited):
 				world.connect("tree_exited", _on_world_exited)
+			
+			# TIMING FIX: Now that ECS.world is set, finalize any deferred system setup
+			# This ensures system setup() methods can safely access ECS.world
+			world.finalize_system_setup()
 		world_changed.emit(world)
 		assert(GECSEditorDebuggerMessages.set_world(world) if debug else true, 'Debug Data')
 

@@ -10,13 +10,14 @@ GECS is a lightweight, performant Entity Component System (ECS) framework for Go
 
 ### ECS Components
 
-The framework is built around five main classes:
+The framework is built around six main classes:
 
 - **Entity** (`addons/gecs/entity.gd`): Container nodes that hold components and relationships. Entities extend Godot's Node class and can be placed in the scene tree.
 - **Component** (`addons/gecs/component.gd`): Data-only resources that extend Godot's Resource class. Components hold properties but no logic.
 - **System** (`addons/gecs/system.gd`): Processing nodes that operate on entities with specific components. Systems contain the game logic.
 - **World** (`addons/gecs/world.gd`): Manager for all entities and systems, handles querying and processing.
-- **ECS Singleton** (`addons/gecs/ecs.gd`): Global access point for the current World instance.
+- **CommandBuffer** (`addons/gecs/ecs/command_buffer.gd`): Callable-based deferred execution buffer for safe structural changes during iteration.
+- **ECS Singleton** (`addons/gecs/ecs.gd`): Global access point for the current World instance. Also handles deferred system setup timing.
 
 ### Query System
 
@@ -38,6 +39,127 @@ ECS.process(delta, "physics")
 
 # Process all systems
 ECS.process(delta)
+```
+
+### CommandBuffer System
+
+**NEW in v6.8.0** - The CommandBuffer system allows safe structural changes (add/remove components, entities, relationships) during iteration without backwards iteration or defensive snapshots.
+
+#### Problem It Solves
+
+Before CommandBuffer, systems needed awkward workarounds:
+- **Backwards iteration**: `for i in range(entities.size() - 1, -1, -1)`
+- **Defensive snapshots**: `var snapshot = entities.duplicate()` (O(N) memory overhead)
+
+#### Basic Usage
+
+```gdscript
+class_name MySystem
+extends System
+
+func query():
+    return q.with_all([C_Lifetime])
+
+func process(entities: Array[Entity], components: Array, delta: float):
+    # Use forward iteration with CommandBuffer
+    for entity in entities:
+        if should_delete(entity):
+            cmd.remove_entity(entity)  # Queued for later
+        if should_transform(entity):
+            cmd.remove_component(entity, C_OldState)
+            cmd.add_component(entity, C_NewState.new())
+    # Auto-executes after system completes (based on flush mode)
+```
+
+#### Command Buffer API
+
+```gdscript
+# Queue component operations
+cmd.add_component(entity, component)
+cmd.remove_component(entity, component_type)
+cmd.add_components(entity, [comp1, comp2])
+cmd.remove_components(entity, [type1, type2])
+
+# Queue entity operations
+cmd.add_entity(entity)
+cmd.remove_entity(entity)
+
+# Queue relationship operations
+cmd.add_relationship(entity, relationship)
+cmd.remove_relationship(entity, relationship, limit)
+
+# Custom operations
+cmd.add_custom(callable)  # For complex multi-step operations
+
+# Manual control (normally automatic)
+cmd.execute()  # Execute queued commands
+cmd.clear()    # Discard queued commands
+```
+
+#### Flush Modes
+
+Systems can configure when commands execute:
+
+**PER_SYSTEM (default)** - Executes immediately after each system completes:
+```gdscript
+@export_enum("PER_SYSTEM", "PER_GROUP", "MANUAL") var command_buffer_flush_mode: String = "PER_SYSTEM"
+```
+- Commands execute immediately after system completes
+- Later systems in the same frame see the changes
+- Safest default, maintains same-frame visibility
+
+**PER_GROUP** - Executes at the end of the process group:
+```gdscript
+func _init():
+    command_buffer_flush_mode = "PER_GROUP"
+```
+- Commands execute after ALL systems in the group complete
+- Later groups or next frame will see the changes
+- Good for spawning/cleanup within a single process() call
+- Auto-executed, no manual flush needed
+
+**MANUAL** - Requires manual flush call:
+```gdscript
+func _init():
+    command_buffer_flush_mode = "MANUAL"
+```
+- Commands are queued but NOT auto-executed
+- **Must manually call** `ECS.world.flush_command_buffers()`
+- Maximum batching (single cache invalidation for all queued commands)
+- Best for cross-group batching or precise control
+
+**Example with MANUAL mode:**
+```gdscript
+func _process(delta):
+    ECS.process(delta, "physics")   # Systems may queue commands
+    ECS.process(delta, "render")    # More systems may queue commands
+    ECS.world.flush_command_buffers()  # Execute all MANUAL commands at once
+```
+
+#### Performance Benefits
+
+- **Single cache invalidation** per `execute()` call instead of one per operation
+- **Deferred execution** allows safe forward iteration without snapshots
+- **No memory overhead** from defensive snapshots
+- **Correct ordering** — commands execute in exact queued order, preserving user intent
+- **Freed entity safety** — each lambda bakes in an `is_instance_valid` guard
+
+#### Migration Example
+
+**Before (backwards iteration):**
+```gdscript
+func process(entities: Array[Entity], components: Array, delta: float):
+    for i in range(entities.size() - 1, -1, -1):
+        if should_delete(entities[i]):
+            ECS.world.remove_entity(entities[i])
+```
+
+**After (CommandBuffer):**
+```gdscript
+func process(entities: Array[Entity], components: Array, delta: float):
+    for entity in entities:
+        if should_delete(entity):
+            cmd.remove_entity(entity)
 ```
 
 ## Development Commands
@@ -236,8 +358,11 @@ extends System
 func query():
     return q.with_all([C_Transform, C_Velocity])
 
-func process(entity: Entity, delta: float):
-    # Process each matching entity
+func process(entities: Array[Entity], components: Array, delta: float) -> void:
+    for entity in entities:
+        var transform = entity.get_component(C_Transform)
+        var velocity = entity.get_component(C_Velocity)
+        transform.position += velocity.direction * velocity.speed * delta
 ```
 
 ## Script Templates
@@ -251,10 +376,14 @@ The project provides script templates in `script_templates/Node/` for:
 
 ## Key Files to Understand
 
-- `addons/gecs/world.gd` - Core world management and entity indexing
+- `addons/gecs/ecs/ecs.gd` - ECS singleton, global World access, deferred system setup coordination
+- `addons/gecs/ecs/world.gd` - Core world management, entity indexing, query caching, system group processing
+- `addons/gecs/ecs/system.gd` - Base system class with CommandBuffer integration and flush modes
+- `addons/gecs/ecs/command_buffer.gd` - Callable-based deferred command execution
 - `addons/gecs/query_builder.gd` - Query system implementation
 - `addons/gecs/relationship.gd` - Entity relationship system
 - `addons/gecs/observer.gd` - Reactive systems for component changes
+- `addons/gecs/array_extensions.gd` - Optimized set operations for queries
 
 ## Relationships System
 
@@ -321,12 +450,3 @@ This is a Godot 4.x project with the following key settings:
 - **Debug Logging**: `gecs.log_level=4` in project settings
 - **Enabled Plugins**: GECS (`res://addons/gecs/plugin.cfg`) and gdUnit4 (`res://addons/gdUnit4/plugin.cfg`)
 
-## Core Files to Understand
-
-The GECS framework architecture is built around these key files:
-
-- `addons/gecs/world.gd` - Core world management with component indexing and query caching
-- `addons/gecs/query_builder.gd` - Optimized entity filtering with performance optimizations
-- `addons/gecs/relationship.gd` - Entity relationship system for hierarchical queries
-- `addons/gecs/observer.gd` - Reactive systems for component changes
-- `addons/gecs/array_extensions.gd` - Optimized set operations for queries

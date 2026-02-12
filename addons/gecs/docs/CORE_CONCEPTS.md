@@ -292,13 +292,12 @@ func query() -> QueryBuilder:
     return q.with_all([C_Lifetime])
 
 func process(entities: Array[Entity], components: Array, delta: float):
-    # Process each entity - all systems use the same signature
     for entity in entities:
         var c_lifetime = entity.get_component(C_Lifetime) as C_Lifetime
         c_lifetime.lifetime -= delta
 
         if c_lifetime.lifetime <= 0:
-            ECS.world.remove_entity(entity)
+            cmd.remove_entity(entity)  # Queued via CommandBuffer, safe during iteration
 ```
 
 **Optimized Batch Processing with iterate():**

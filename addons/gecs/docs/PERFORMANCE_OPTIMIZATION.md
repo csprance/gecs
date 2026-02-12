@@ -340,28 +340,33 @@ func process(entities: Array[Entity], components: Array, delta: float):
 
 ### Batch Entity Operations
 
-Group entity operations together:
+Group entity operations together. Use CommandBuffer for deferred execution with single cache invalidation:
 
 ```gdscript
-# ✅ Good - Batch creation
+# ✅ Best - Use CommandBuffer in systems for bulk operations
+class_name CleanupSystem extends System
+
+func query():
+    return q.with_all([C_Dead])
+
+func process(entities: Array[Entity], components: Array, delta: float):
+    for entity in entities:
+        cmd.remove_entity(entity)  # Queued, single cache invalidation when flushed
+
+# ✅ Good - Batch creation outside of systems
 func spawn_enemy_wave():
     var enemies: Array[Entity] = []
-
-    # Create all entities using entity pooling
     for i in range(50):
-        var enemy = ECS.world.create_entity()  # Uses entity pool for performance
+        var enemy = ECS.world.create_entity()
         setup_enemy_components(enemy)
         enemies.append(enemy)
-
-    # Add all to world at once
     ECS.world.add_entities(enemies)
-
-# ✅ Good - Individual removal (batch removal not available)
-func cleanup_dead_entities():
-    var dead_entities = ECS.world.query.with_all([C_Dead]).execute()
-    for entity in dead_entities:
-        ECS.world.remove_entity(entity)  # Remove individually
 ```
+
+**CommandBuffer flush modes** for performance tuning:
+- **PER_SYSTEM** (default) — safe, flushes after each system
+- **PER_GROUP** — batches all systems in a group, flushes once at end
+- **MANUAL** — maximum batching, requires explicit `ECS.world.flush_command_buffers()` call
 
 ## 📊 Performance Targets
 

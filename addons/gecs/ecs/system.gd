@@ -61,6 +61,13 @@ enum Runs {
 ## Minimum entities required to use parallel processing (performance threshold)
 @export var parallel_threshold := 50
 
+@export_group("Command Buffer")
+## When to flush the command buffer:
+## - PER_SYSTEM: Flush immediately after this system completes (default, safest)
+## - PER_GROUP: Flush at the end of the process group (after all systems in the group)
+## - MANUAL: Requires manual world.flush_command_buffers() call (for cross-group batching)
+@export_enum("PER_SYSTEM", "PER_GROUP", "MANUAL") var command_buffer_flush_mode: String = "PER_SYSTEM"
+
 #endregion Exported Variables
 
 #region Public Variables
@@ -84,6 +91,14 @@ var _world: World = null
 var q: QueryBuilder:
 	get:
 		return _world.query if _world else ECS.world.query
+## Command buffer for queuing structural changes (add/remove components, entities, relationships)
+## Commands are executed after the system completes based on command_buffer_flush_mode
+var cmd: CommandBuffer = null:
+	get:
+		if cmd == null:
+			cmd = CommandBuffer.new(_world if _world else ECS.world)
+		return cmd
+
 ## Cached query to avoid recreating it every frame (lazily initialized)
 var _query_cache: QueryBuilder = null
 ## Cached component paths for iterate() fast path (6.0.0 style)
@@ -154,10 +169,15 @@ func setup():
 func process(entities: Array[Entity], components: Array, delta: float) -> void:
 	pass # Override in subclasses - base implementation does nothing
 
+
+## Check if this system has a command buffer with pending commands
+func has_pending_commands() -> bool:
+	# Accessing cmd will initialize it if needed, then check if it has commands
+	return not cmd.is_empty()
+
 #endregion Public Methods
 
 #region Private Methods
-
 
 ## INTERNAL: Called by World.add_system() to initialize the system
 ## DO NOT CALL OR OVERRIDE - this is framework code
@@ -217,6 +237,10 @@ func _handle(delta: float) -> void:
 		_run_subsystems(delta)
 	else:
 		_run_process(delta)
+	# Flush command buffer if mode is PER_SYSTEM
+	if command_buffer_flush_mode == "PER_SYSTEM" and has_pending_commands():
+		cmd.execute()
+
 	if ECS.debug:
 		var end_time_usec = Time.get_ticks_usec()
 		lastRunData["execution_time_ms"] = (end_time_usec - start_time_usec) / 1000.0
