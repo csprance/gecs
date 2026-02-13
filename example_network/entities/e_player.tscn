@@ -1,0 +1,14 @@
+[gd_scene load_steps=3 format=3 uid="uid://d3oivm6oa8g8h"]
+
+[ext_resource type="Script" path="res://example_network/entities/e_player.gd" id="1_player"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_player"]
+albedo_color = Color(0.3, 0.3, 0.8, 1)
+
+[node name="E_NetworkPlayer" type="Node3D"]
+script = ExtResource("1_player")
+
+[node name="Visual" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8, 0)
+size = Vector3(0.8, 1.6, 0.8)
+material = SubResource("StandardMaterial3D_player")

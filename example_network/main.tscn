@@ -1,0 +1,171 @@
+[gd_scene load_steps=11 format=3 uid="uid://cqkoebmqmtdrs"]
+
+[ext_resource type="Script" uid="uid://dr2fms7bejad5" path="res://example_network/main.gd" id="1_main"]
+[ext_resource type="Script" uid="uid://cdu5tlyk72uu4" path="res://addons/gecs/ecs/world.gd" id="2_world"]
+[ext_resource type="Script" uid="uid://b3vi2ingux88g" path="res://addons/gecs/lib/system_group.gd" id="3_sysgroup"]
+[ext_resource type="Script" uid="uid://dww2wfip0uq7k" path="res://example_network/systems/s_input.gd" id="4_input"]
+[ext_resource type="Script" uid="uid://b30rleaob260h" path="res://example_network/systems/s_movement.gd" id="5_movement"]
+[ext_resource type="Script" uid="uid://cqb7ug3cw1vbh" path="res://example_network/systems/s_shooting.gd" id="6_shooting"]
+[ext_resource type="Script" uid="uid://bn41hwmgw5iix" path="res://example_network/systems/s_projectile.gd" id="7_projectile"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_floor"]
+albedo_color = Color(0.4, 0.4, 0.4, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wall"]
+albedo_color = Color(0.25, 0.25, 0.3, 1)
+
+[sub_resource type="Environment" id="Environment_1"]
+background_mode = 1
+background_color = Color(0.15, 0.15, 0.2, 1)
+ambient_light_source = 2
+ambient_light_color = Color(0.5, 0.5, 0.6, 1)
+
+[node name="Main" type="Node3D"]
+script = ExtResource("1_main")
+
+[node name="World" type="Node" parent="."]
+script = ExtResource("2_world")
+entity_nodes_root = NodePath("Entities")
+system_nodes_root = NodePath("Systems")
+
+[node name="Entities" type="Node" parent="World"]
+
+[node name="Systems" type="Node" parent="World"]
+
+[node name="input" type="Node" parent="World/Systems"]
+script = ExtResource("3_sysgroup")
+
+[node name="InputSystem" type="Node" parent="World/Systems/input"]
+script = ExtResource("4_input")
+group = &"input"
+
+[node name="gameplay" type="Node" parent="World/Systems"]
+script = ExtResource("3_sysgroup")
+
+[node name="ShootingSystem" type="Node" parent="World/Systems/gameplay"]
+script = ExtResource("6_shooting")
+group = &"gameplay"
+
+[node name="physics" type="Node" parent="World/Systems"]
+script = ExtResource("3_sysgroup")
+
+[node name="MovementSystem" type="Node" parent="World/Systems/physics"]
+script = ExtResource("5_movement")
+group = &"physics"
+
+[node name="ProjectileSystem" type="Node" parent="World/Systems/physics"]
+script = ExtResource("7_projectile")
+group = &"physics"
+
+[node name="Arena" type="Node3D" parent="."]
+
+[node name="Floor" type="CSGBox3D" parent="Arena"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.05, 0)
+size = Vector3(10, 0.1, 10)
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="WallNorth" type="CSGBox3D" parent="Arena"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, -5)
+size = Vector3(10, 1, 0.2)
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="WallSouth" type="CSGBox3D" parent="Arena"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 5)
+size = Vector3(10, 1, 0.2)
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="WallEast" type="CSGBox3D" parent="Arena"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0.5, 0)
+size = Vector3(0.2, 1, 10)
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="WallWest" type="CSGBox3D" parent="Arena"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 0.5, 0)
+size = Vector3(0.2, 1, 10)
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 15, 0)
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.866025, -0.353553, 0.353553, 0, 0.707107, 0.707107, -0.5, -0.612372, 0.612372, 0, 10, 0)
+shadow_enabled = true
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_1")
+
+[node name="UI" type="CanvasLayer" parent="."]
+
+[node name="LobbyUI" type="Control" parent="UI"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="CenterContainer" type="CenterContainer" parent="UI/LobbyUI"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="UI/LobbyUI/CenterContainer"]
+layout_mode = 2
+
+[node name="TitleLabel" type="Label" parent="UI/LobbyUI/CenterContainer/VBoxContainer"]
+layout_mode = 2
+text = "GECS Network Example"
+horizontal_alignment = 1
+
+[node name="Spacer1" type="Control" parent="UI/LobbyUI/CenterContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 20)
+layout_mode = 2
+
+[node name="IPInput" type="LineEdit" parent="UI/LobbyUI/CenterContainer/VBoxContainer"]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+placeholder_text = "Server IP"
+alignment = 1
+
+[node name="Spacer2" type="Control" parent="UI/LobbyUI/CenterContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 10)
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="UI/LobbyUI/CenterContainer/VBoxContainer"]
+layout_mode = 2
+alignment = 1
+
+[node name="HostButton" type="Button" parent="UI/LobbyUI/CenterContainer/VBoxContainer/HBoxContainer"]
+custom_minimum_size = Vector2(80, 0)
+layout_mode = 2
+text = "Host"
+
+[node name="JoinButton" type="Button" parent="UI/LobbyUI/CenterContainer/VBoxContainer/HBoxContainer"]
+custom_minimum_size = Vector2(80, 0)
+layout_mode = 2
+text = "Join"
+
+[node name="Spacer3" type="Control" parent="UI/LobbyUI/CenterContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 10)
+layout_mode = 2
+
+[node name="StatusLabel" type="Label" parent="UI/LobbyUI/CenterContainer/VBoxContainer"]
+layout_mode = 2
+horizontal_alignment = 1
+
+[node name="Spacer4" type="Control" parent="UI/LobbyUI/CenterContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 10)
+layout_mode = 2
+
+[node name="DisconnectButton" type="Button" parent="UI/LobbyUI/CenterContainer/VBoxContainer"]
+visible = false
+layout_mode = 2
+text = "Disconnect"
+
+[node name="HelpLabel" type="Label" parent="UI/LobbyUI/CenterContainer/VBoxContainer"]
+layout_mode = 2
+text = "Arrow keys: Move | Space: Shoot"
+horizontal_alignment = 1

@@ -33,7 +33,7 @@ ECS="*res://addons/gecs/ecs/ecs.gd"
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/debug_menu/plugin.cfg", "res://addons/gdUnit4/plugin.cfg", "res://addons/gecs/plugin.cfg", "res://addons/godot-plugin-refresher/plugin.cfg")
+enabled=PackedStringArray("res://addons/debug_menu/plugin.cfg", "res://addons/gdUnit4/plugin.cfg", "res://addons/gecs/plugin.cfg", "res://addons/gecs_network/plugin.cfg", "res://addons/godot-plugin-refresher/plugin.cfg")
 
 [gdunit4]
 
