@@ -30,7 +30,11 @@ func create_host_peer(config: Dictionary) -> MultiplayerPeer:
 	if peer == null:
 		push_error("SteamTransportProvider: Failed to instantiate SteamMultiplayerPeer")
 		return null
-	peer.call("create_host", config.get("steam_port", 0), config.get("options", []))
+	var result = peer.call("create_host", config.get("steam_port", 0), config.get("options", []))
+	if result is int and result != OK:
+		push_error("SteamTransportProvider: create_host failed with error code %s" % result)
+		peer.free()
+		return null
 	return peer
 
 
@@ -47,7 +51,11 @@ func create_client_peer(config: Dictionary) -> MultiplayerPeer:
 	if peer == null:
 		push_error("SteamTransportProvider: Failed to instantiate SteamMultiplayerPeer")
 		return null
-	peer.call("create_client", steam_id, config.get("steam_port", 0), config.get("options", []))
+	var result = peer.call("create_client", steam_id, config.get("steam_port", 0), config.get("options", []))
+	if result is int and result != OK:
+		push_error("SteamTransportProvider: create_client failed with error code %s" % result)
+		peer.free()
+		return null
 	return peer
 
 

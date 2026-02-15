@@ -123,8 +123,9 @@ func _resolve_target(target_type: String, target_ref: String):
 			return null
 		"E":
 			# Entity not yet in world returns null - caller should queue for deferred resolution
-			if target_ref != "":
+			if target_ref != "" and _ns and _ns._world and _ns._world.entity_id_registry:
 				return _ns._world.entity_id_registry.get(target_ref)
+			return null
 		"C":
 			return _load_script_instance(target_ref)
 		"S":
@@ -157,7 +158,8 @@ func apply_entity_relationships(entity: Entity, data: Array) -> void:
 	for recipe in data:
 		var relationship = deserialize_relationship(recipe)
 		if relationship != null:
-			entity.add_relationship(relationship)
+			if is_instance_valid(entity):
+				entity.call_deferred("add_relationship", relationship)
 		elif recipe.get("tt", "") == "E":
 			# Entity target unresolved - queue for deferred resolution
 			if not _pending_relationships.has(entity.id):
@@ -198,8 +200,8 @@ func try_resolve_pending(entity: Entity) -> void:
 			if recipe.get("tt", "") == "E" and recipe.get("t", "") == entity.id:
 				# This pending relationship was waiting for the newly added entity
 				var relationship = deserialize_relationship(recipe)
-				if relationship != null:
-					source_entity.add_relationship(relationship)
+				if relationship != null and is_instance_valid(source_entity):
+					source_entity.call_deferred("add_relationship", relationship)
 				# else: still can't resolve (shouldn't happen since entity was just added)
 			else:
 				still_pending.append(recipe)
@@ -325,7 +327,8 @@ func handle_relationship_add(payload: Dictionary) -> void:
 	_applying_relationship_data = true
 	var relationship = deserialize_relationship(recipe)
 	if relationship != null:
-		entity.add_relationship(relationship)
+		if is_instance_valid(entity):
+			entity.call_deferred("add_relationship", relationship)
 	elif recipe.get("tt", "") == "E":
 		# Queue for deferred resolution
 		if not _pending_relationships.has(entity_id):

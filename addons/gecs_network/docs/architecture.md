@@ -16,7 +16,7 @@ For ECS component data (health, state, inventory), use priority-based RPC batchi
 - Configurable sync rates per component type
 - Reliable/unreliable transport based on priority
 
-```
+```text
 +-------------------------------------------------------------+
 |                     NetworkSync                               |
 +-----------------------------+-------------------------------+
@@ -43,16 +43,28 @@ The addon is split into focused handlers for maintainability:
 | `sync_spawn_handler.gd` | Entity lifecycle — spawn/despawn broadcasts, world state serialization |
 | `sync_native_handler.gd` | Native sync — MultiplayerSynchronizer setup, model instantiation |
 | `sync_property_handler.gd` | Property sync — change detection, priority batching, polling |
-| `sync_relationship_handler.gd` | Relationship sync — parent/child links, ownership and authority propagation |
+| `sync_relationship_handler.gd` | Relationship sync — ECS relationship serialization/deserialization across peers (Entity/Component/Script targets) with deferred resolution |
 | `sync_state_handler.gd` | State — authority markers, time sync, reconciliation |
 
 All RPC methods remain on `NetworkSync` (Godot requirement) and delegate to handlers internally.
+
+## Relationship Sync
+
+`sync_relationship_handler.gd` serializes ECS relationships across peers using **creation recipes** — lightweight descriptors that can reconstruct a relationship's component and target on any peer.
+
+Key concepts:
+
+- **Creation recipes**: Encode a relationship's component (class + exported properties) and target (Entity, Component, or Script reference) into a dictionary that any peer can deserialize.
+- **Deferred entity resolution**: When a target entity hasn't spawned on the receiving peer yet, the handler queues a pending resolution and retries once the entity appears.
+- **Spawn payloads**: During world-state sync (late-join), relationships are bundled into the entity spawn payload so new clients reconstruct the full relationship graph in one pass.
+
+The handler validates all incoming script paths (`res://` prefix + `ResourceLoader.exists`) before instantiation and guards against stale entity references.
 
 ## Middleware Pattern
 
 The recommended approach is a **thin middleware layer** between the generic addon and your project:
 
-```
+```text
 addons/gecs_network/     <-- Generic, reusable addon
 game/network/            <-- Project-specific middleware
 game/                    <-- Your game code
