@@ -223,7 +223,14 @@ func serialize_entity_full(entity: Entity) -> Dictionary:
 		components_data[comp_type] = comp.serialize()
 		script_paths[comp_type] = script.resource_path
 
-	return {"components": components_data, "script_paths": script_paths}
+	var result = {"components": components_data, "script_paths": script_paths}
+
+	# Include relationships if sync is enabled
+	var relationships = _ns._relationship_handler.serialize_entity_relationships(entity)
+	if not relationships.is_empty():
+		result["relationships"] = relationships
+
+	return result
 
 
 ## Receive full state reconciliation from server
@@ -264,16 +271,25 @@ func handle_sync_full_state(state: Dictionary) -> void:
 			# Validate script path before loading
 			var script_path = script_paths[comp_type]
 			if not script_path.begins_with("res://"):
-				push_warning("[RECONCILIATION] Invalid script path for %s: %s (must start with res://)" % [comp_type, script_path])
+				push_warning(
+					(
+						"[RECONCILIATION] Invalid script path for %s: %s (must start with res://)"
+						% [comp_type, script_path]
+					)
+				)
 				continue
 
 			if not ResourceLoader.exists(script_path):
-				push_warning("[RECONCILIATION] Script not found for %s: %s" % [comp_type, script_path])
+				push_warning(
+					"[RECONCILIATION] Script not found for %s: %s" % [comp_type, script_path]
+				)
 				continue
 
 			var script = load(script_path)
 			if not script:
-				push_warning("[RECONCILIATION] Failed to load script for %s: %s" % [comp_type, script_path])
+				push_warning(
+					"[RECONCILIATION] Failed to load script for %s: %s" % [comp_type, script_path]
+				)
 				continue
 
 			var new_comp = script.new()
@@ -283,6 +299,14 @@ func handle_sync_full_state(state: Dictionary) -> void:
 			_ns._apply_component_data(entity, {comp_type: comp_data[comp_type]})
 			if _ns.debug_logging:
 				print("[RECONCILIATION] Added missing component %s to %s" % [comp_type, entity_id])
+
+		# Reconcile relationships: replace with server state
+		var rel_data = entity_data.get("relationships", [])
+		if not rel_data.is_empty():
+			_ns._applying_network_data = true
+			entity.remove_all_relationships()
+			_ns._applying_network_data = false
+			_ns._relationship_handler.apply_entity_relationships(entity, rel_data)
 
 	# Ghost cleanup: Remove local entities that don't exist on the server
 	# This catches entities where both the despawn RPC and component sync failed
@@ -356,7 +380,7 @@ func handle_request_server_time(ping_id: int) -> void:
 	if not _ns.net_adapter.is_server():
 		return
 	var server_time = Time.get_ticks_msec() / 1000.0
-	_ns._respond_server_time.rpc_id(_ns.multiplayer.get_remote_sender_id(), ping_id, server_time)
+	_ns._respond_server_time.rpc_id(_ns.net_adapter.get_remote_sender_id(), ping_id, server_time)
 
 
 func handle_respond_server_time(ping_id: int, server_time: float) -> void:
