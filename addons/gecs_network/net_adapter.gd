@@ -103,23 +103,26 @@ func _has_multiplayer() -> bool:
 
 ## Get the multiplayer node for RPC operations.
 ## Returns null if not available. Caches the result for performance.
+## Note: The cache auto-detects when the SceneTree's MultiplayerAPI has been
+## replaced (e.g., on disconnect/reconnect) and refreshes automatically.
 func get_multiplayer() -> MultiplayerAPI:
-	# Return cached value if valid
-	if _cache_valid and is_instance_valid(_cached_multiplayer):
-		return _cached_multiplayer
+	# Fetch the current tree reference for validation
+	var tree: SceneTree = null
+	if is_instance_valid(Engine.get_main_loop()):
+		tree = Engine.get_main_loop() as SceneTree
 
-	# Fetch fresh reference
-	if not is_instance_valid(Engine.get_main_loop()):
-		_cache_valid = false
-		_cached_multiplayer = null
-		return null
-
-	var tree = Engine.get_main_loop() as SceneTree
 	if tree == null:
 		_cache_valid = false
 		_cached_multiplayer = null
 		return null
 
+	# Validate cache: the SceneTree may have replaced its MultiplayerAPI
+	# (e.g., after disconnect/reconnect). Since MultiplayerAPI is RefCounted,
+	# is_instance_valid alone cannot detect this — compare identity instead.
+	if _cache_valid and _cached_multiplayer == tree.get_multiplayer():
+		return _cached_multiplayer
+
+	# Refresh cache
 	_cached_multiplayer = tree.get_multiplayer()
 	_cache_valid = _cached_multiplayer != null
 	return _cached_multiplayer
