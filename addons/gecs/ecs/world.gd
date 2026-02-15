@@ -329,6 +329,12 @@ func add_entity(entity: Entity, components = null, add_to_tree = true) -> void:
 	# add entity to our list
 	entities.append(entity)
 
+	# OPTIMIZATION: Suppress cache invalidation during entity initialization.
+	# _add_entity_to_archetype and each component_added signal would each
+	# invalidate the cache individually. Defer to a single invalidation at the end.
+	var original_invalidate = _should_invalidate_cache
+	_should_invalidate_cache = false
+
 	# ARCHETYPE: Add entity to archetype system BEFORE initialization
 	# Start with empty archetype, then move as components are added
 	_add_entity_to_archetype(entity)
@@ -337,6 +343,10 @@ func add_entity(entity: Entity, components = null, add_to_tree = true) -> void:
 	# This will trigger component_added signals which move the entity to the right archetype
 	if not Engine.is_editor_hint():
 		entity._initialize(components if components else [])
+
+	# Re-enable and perform a single cache invalidation for the entire add_entity operation
+	_should_invalidate_cache = original_invalidate
+	_invalidate_cache("entity_added")
 
 	entity_added.emit(entity)
 
@@ -389,7 +399,11 @@ func remove_entity(entity) -> void:
 		processor.call(entity)
 	entity_removed.emit(entity)
 	_worldLogger.debug("remove_entity Removing Entity: ", entity)
-	entities.erase(entity)  # FIXME: This doesn't always work for some reason?
+	var erase_idx = entities.find(entity)
+	if erase_idx >= 0:
+		entities.remove_at(erase_idx)
+	else:
+		_worldLogger.warn("remove_entity: entity not found in entities array: ", entity)
 
 	# Only disconnect signals if they're actually connected
 	if entity.component_added.is_connected(_on_entity_component_added):
@@ -795,8 +809,6 @@ func _on_entity_relationship_removed(entity: Entity, relationship: Relationship)
 ## [b]Example:[/b]
 ##      [codeblock]world.add_observer(health_change_system)[/codeblock]
 func add_observer(_observer: Observer) -> void:
-	# Verify the system has a valid watch component
-	_observer.watch()  # Just call to validate it returns a component
 	if not _observer.is_inside_tree():
 		get_node(system_nodes_root).add_child(_observer)
 	_worldLogger.trace("add_observer Adding Observer: ", _observer)
