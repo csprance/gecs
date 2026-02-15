@@ -17,7 +17,10 @@ extends RefCounted
 ##   "S" = Script (loaded as archetype reference)
 ##   "N" = Null (no target)
 
-var _ns  # NetworkSync reference (untyped to avoid circular deps)
+## NetworkSync reference (untyped to avoid circular deps).
+## Expected interface: sync_config, net_adapter, _world, _game_session_id,
+## _applying_network_data, _sync_relationship_add, _sync_relationship_remove.
+var _ns
 
 ## Pending relationships waiting for entity target resolution.
 ## { source_entity_id: Array[Dictionary] } where each dict is a raw recipe.
@@ -160,6 +163,8 @@ func apply_entity_relationships(entity: Entity, data: Array) -> void:
 			if not _pending_relationships.has(entity.id):
 				_pending_relationships[entity.id] = []
 			_pending_relationships[entity.id].append(recipe)
+		else:
+			push_warning("SyncRelationshipHandler: Failed to deserialize relationship recipe: %s" % str(recipe))
 
 	_applying_relationship_data = false
 
@@ -178,6 +183,7 @@ func try_resolve_pending(entity: Entity) -> void:
 	# Check all pending sources to see if any are waiting for this entity as target
 	var resolved_sources: Array[String] = []
 
+	_applying_relationship_data = true
 	for source_id in _pending_relationships.keys():
 		var source_entity = _ns._world.entity_id_registry.get(source_id)
 		if source_entity == null:
@@ -187,8 +193,6 @@ func try_resolve_pending(entity: Entity) -> void:
 
 		var pending_recipes: Array = _pending_relationships[source_id]
 		var still_pending: Array = []
-
-		_applying_relationship_data = true
 
 		for recipe in pending_recipes:
 			if recipe.get("tt", "") == "E" and recipe.get("t", "") == entity.id:
@@ -200,12 +204,11 @@ func try_resolve_pending(entity: Entity) -> void:
 			else:
 				still_pending.append(recipe)
 
-		_applying_relationship_data = false
-
 		if still_pending.is_empty():
 			resolved_sources.append(source_id)
 		else:
 			_pending_relationships[source_id] = still_pending
+	_applying_relationship_data = false
 
 	for source_id in resolved_sources:
 		_pending_relationships.erase(source_id)
@@ -305,7 +308,10 @@ func handle_relationship_add(payload: Dictionary) -> void:
 		# Server accepts from entity owner only
 		if net_id.peer_id != sender_id:
 			return
-		# Relay to all clients
+		# Relay to all clients. Trust assumption: recipe script paths (res://) are
+		# relayed as-is. Receiving clients validate paths via _load_script_instance
+		# (res:// prefix check + ResourceLoader.exists), so blast radius is limited
+		# to scripts already present in the project.
 		_ns._sync_relationship_add.rpc(payload)
 	else:
 		# Client accepts from server only
@@ -351,6 +357,7 @@ func handle_relationship_remove(payload: Dictionary) -> void:
 	if _ns.net_adapter.is_server():
 		if net_id.peer_id != sender_id:
 			return
+		# Relay to all clients (same trust assumption as handle_relationship_add)
 		_ns._sync_relationship_remove.rpc(payload)
 	else:
 		if sender_id != 1:

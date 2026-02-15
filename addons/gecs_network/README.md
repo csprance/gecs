@@ -113,6 +113,7 @@ See [Sync Patterns](docs/sync-patterns.md) for detailed guidance.
 | [Authority](docs/authority.md) | Query-based authority patterns A-E, system group gating, authority transfer |
 | [Configuration](docs/configuration.md) | SyncConfig, priorities, NetAdapter, transport providers (ENet/Steam) |
 | [Architecture](docs/architecture.md) | Two-tier design, handler architecture, middleware pattern, signals |
+| [Architecture — Relationships](docs/architecture.md) | Relationship sync via creation recipes, deferred entity resolution, spawn payloads |
 | [Best Practices](docs/best-practices.md) | Avoid RPCs, serialization, state ownership, animation sync |
 | [Troubleshooting](docs/troubleshooting.md) | Common issues, solutions, migration guide |
 | [Examples](docs/examples.md) | Complete code examples for players, enemies, projectiles, abilities |

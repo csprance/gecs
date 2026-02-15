@@ -206,8 +206,16 @@ func _exit_tree() -> void:
 	# Disconnect multiplayer signals
 	_disconnect_multiplayer_signals()
 
-	# Disconnect relationship signals
+	# Disconnect world signals
 	if _world:
+		if _world.entity_added.is_connected(_on_entity_added):
+			_world.entity_added.disconnect(_on_entity_added)
+		if _world.entity_removed.is_connected(_on_entity_removed):
+			_world.entity_removed.disconnect(_on_entity_removed)
+		if _world.component_added.is_connected(_on_component_added):
+			_world.component_added.disconnect(_on_component_added)
+		if _world.component_removed.is_connected(_on_component_removed):
+			_world.component_removed.disconnect(_on_component_removed)
 		if _world.relationship_added.is_connected(_on_relationship_added):
 			_world.relationship_added.disconnect(_on_relationship_added)
 		if _world.relationship_removed.is_connected(_on_relationship_removed):

@@ -67,7 +67,7 @@ func _enter_tree() -> void:
 		var icon = _load_icon(type_data["icon"])
 		add_custom_type(type_name, type_data["base"], script, icon)
 
-	print("[%s] Plugin enabled - NetworkSync, SyncConfig registered" % PLUGIN_NAME)
+	print("[%s] Plugin enabled - %s registered" % [PLUGIN_NAME, ", ".join(CUSTOM_TYPES.keys())])
 
 
 func _exit_tree() -> void:

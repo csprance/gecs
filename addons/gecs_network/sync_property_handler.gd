@@ -434,6 +434,8 @@ func handle_apply_sync_data(data: Dictionary) -> void:
 				if _ns.debug_logging:
 					print("SECURITY: Rejected CN_NetworkIdentity update from client %d" % sender_id)
 				data[entity_id].erase("CN_NetworkIdentity")
+				if data[entity_id].is_empty():
+					continue
 
 			# SERVER RELAY: Queue received client data for broadcast to all clients
 			# This ensures rotation-only updates (when stationary) get relayed

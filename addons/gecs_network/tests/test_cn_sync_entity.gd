@@ -21,8 +21,6 @@ func after_test():
 	if is_instance_valid(world):
 		for entity in world.entities.duplicate():
 			world.remove_entity(entity)
-			if is_instance_valid(entity):
-				entity.free()
 		world.free()
 	world = null
 
@@ -40,7 +38,7 @@ func test_get_sync_target_returns_target_node_when_set():
 	entity.add_child(target)
 	sync.target_node = target
 	assert_object(sync.get_sync_target(entity)).is_same(target)
-	target.free()
+	# Note: target is freed by entity cleanup in after_test()
 
 
 func test_get_sync_target_falls_back_to_entity():

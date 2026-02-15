@@ -27,6 +27,9 @@ class MockNetAdapter:
 	func get_my_peer_id() -> int:
 		return _my_peer_id
 
+	# NOTE: Returns empty peer list — _is_valid_peer() will only pass for
+	# peer IDs 0, 1, and _my_peer_id. Extend this if adding authority
+	# transfer tests that involve connected peers.
 	func get_connected_peers() -> Array[int]:
 		return []
 

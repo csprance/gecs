@@ -27,6 +27,7 @@ func create_host_peer(config: Dictionary) -> MultiplayerPeer:
 	peer.set_bind_ip(bind_address)
 	var error = peer.create_server(port, max_players)
 	if error != OK:
+		push_error("ENetTransportProvider: create_server failed on port %d: %s" % [port, error_string(error)])
 		return null
 	return peer
 
@@ -38,6 +39,7 @@ func create_client_peer(config: Dictionary) -> MultiplayerPeer:
 	var peer = ENetMultiplayerPeer.new()
 	var error = peer.create_client(address, port)
 	if error != OK:
+		push_error("ENetTransportProvider: create_client failed for %s:%d: %s" % [address, port, error_string(error)])
 		return null
 	return peer
 
