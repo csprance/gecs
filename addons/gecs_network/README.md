@@ -73,7 +73,7 @@ Every networked entity needs `CN_NetworkIdentity` in its `define_components()`:
 ```gdscript
 func define_components() -> Array:
     return [
-        CN_NetworkIdentity.new(peer_id),  # 0=server, 1=host, 2+=clients
+        CN_NetworkIdentity.new(peer_id),  # 0=server-owned (sentinel), 1=host peer, 2+=client peers
         C_Transform.new(),
         # ... other components
     ]
