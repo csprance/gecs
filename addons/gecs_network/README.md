@@ -16,7 +16,7 @@ Multiplayer synchronization addon for the GECS (Godot Entity Component System) f
 - **Two Sync Patterns**: Spawn-only sync (fire-and-forget) and continuous sync (real-time updates)
 - **Automatic Marker Assignment**: Authority markers (`CN_LocalAuthority`, `CN_RemoteEntity`, etc.) assigned based on ownership
 - **Native Sync Support**: Auto-configures Godot's `MultiplayerSynchronizer` via `CN_SyncEntity`
-- **Priority-Based Batching**: Reduces bandwidth 50-90% (HIGH=20Hz, MEDIUM=10Hz, LOW=1Hz)
+- **Priority-Based Batching**: Can reduce bandwidth significantly (HIGH=20Hz, MEDIUM=10Hz, LOW=1Hz), depending on workload
 - **Late Join Support**: New players receive full world state on connection
 - **Authority Transfer**: Transfer entity ownership between peers at runtime
 - **Reconciliation**: Periodic full-state sync to correct drift
