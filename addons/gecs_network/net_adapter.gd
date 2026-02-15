@@ -27,7 +27,6 @@ var multiplayer: MultiplayerAPI:
 	get:
 		return get_multiplayer()
 
-
 # ============================================================================
 # CORE METHODS - Override these for custom implementations
 # ============================================================================
@@ -81,32 +80,12 @@ func get_all_peers() -> Array[int]:
 	return peers
 
 
-# ============================================================================
-# RPC METHODS - Stubs for custom implementations
-# ============================================================================
-
-
-## Send RPC to a specific peer.
-## Override for custom networking.
-## @param peer_id: Target peer ID
-## @param method: Method name to call
-## @param args: Arguments to pass
-func rpc_to_peer(_peer_id: int, _method: String, _args: Array) -> void:
-	# Default implementation does nothing - NetworkSync uses Godot's @rpc directly
-	# Override this for custom networking solutions
-	push_warning(
-		"NetAdapter.rpc_to_peer() called but not implemented. Override for custom networking."
-	)
-
-
-## Send RPC to all connected peers.
-## Override for custom networking.
-## @param method: Method name to call
-## @param args: Arguments to pass
-func rpc_to_all(_method: String, _args: Array) -> void:
-	# Default implementation does nothing - NetworkSync uses Godot's @rpc directly
-	# Override this for custom networking solutions
-	push_warning("NetAdapter.rpc_to_all() called but not implemented. Override for custom networking.")
+## Returns the peer ID of the sender of the most recent RPC.
+## Default: Uses Godot's multiplayer.get_remote_sender_id()
+func get_remote_sender_id() -> int:
+	if not _has_multiplayer():
+		return 0
+	return multiplayer.get_remote_sender_id()
 
 
 # ============================================================================

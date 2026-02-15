@@ -67,6 +67,7 @@ func is_player() -> bool:
 ## Shared default adapter to avoid allocation per call in hot loops.
 static var _default_adapter: NetAdapter = null
 
+
 static func _get_default_adapter() -> NetAdapter:
 	if _default_adapter == null:
 		_default_adapter = NetAdapter.new()

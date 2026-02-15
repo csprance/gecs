@@ -18,14 +18,13 @@ extends Component
 ## Properties without a group default to HIGH priority.
 ## NetworkSync polls check_changes_for_priority() at each priority's interval.
 
-
 # Priority string to SyncConfig.Priority enum mapping
 const PRIORITY_MAP = {
 	"REALTIME": SyncConfig.Priority.REALTIME,
 	"HIGH": SyncConfig.Priority.HIGH,
 	"MEDIUM": SyncConfig.Priority.MEDIUM,
 	"LOW": SyncConfig.Priority.LOW,
-	"LOCAL": -1     # Special: never synced
+	"LOCAL": -1  # Special: never synced
 }
 
 ## Cache of last-known values: {prop_name: value}
@@ -154,16 +153,16 @@ func _has_changed(old_value: Variant, new_value: Variant) -> bool:
 			return not old_value.is_equal_approx(new_value)
 		TYPE_TRANSFORM2D:
 			return not (
-				old_value.origin.is_equal_approx(new_value.origin) and
-				old_value.x.is_equal_approx(new_value.x) and
-				old_value.y.is_equal_approx(new_value.y)
+				old_value.origin.is_equal_approx(new_value.origin)
+				and old_value.x.is_equal_approx(new_value.x)
+				and old_value.y.is_equal_approx(new_value.y)
 			)
 		TYPE_TRANSFORM3D:
 			return not (
-				old_value.origin.is_equal_approx(new_value.origin) and
-				old_value.basis.x.is_equal_approx(new_value.basis.x) and
-				old_value.basis.y.is_equal_approx(new_value.basis.y) and
-				old_value.basis.z.is_equal_approx(new_value.basis.z)
+				old_value.origin.is_equal_approx(new_value.origin)
+				and old_value.basis.x.is_equal_approx(new_value.basis.x)
+				and old_value.basis.y.is_equal_approx(new_value.basis.y)
+				and old_value.basis.z.is_equal_approx(new_value.basis.z)
 			)
 		TYPE_QUATERNION:
 			return not old_value.is_equal_approx(new_value)
