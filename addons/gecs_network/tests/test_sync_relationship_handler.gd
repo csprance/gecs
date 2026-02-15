@@ -10,13 +10,14 @@ var world: World
 var handler: RefCounted  # SyncRelationshipHandler
 var mock_ns: RefCounted  # Mock NetworkSync
 
-
 # ============================================================================
 # MOCK OBJECTS
 # ============================================================================
 
+
 ## Minimal mock for NetworkSync - provides only what the handler needs
-class MockNetworkSync extends RefCounted:
+class MockNetworkSync:
+	extends RefCounted
 	var _world: World
 	var _applying_network_data: bool = false
 	var _game_session_id: int = 0

@@ -4,7 +4,6 @@ extends GdUnitTestSuite
 ## Tests property parsing, change detection, priority lookup, cache management,
 ## and type-aware comparison (_has_changed).
 
-
 # ============================================================================
 # INLINE TEST COMPONENT
 # ============================================================================
@@ -51,7 +50,6 @@ class TestSyncComp:
 # ============================================================================
 # SETUP / TEARDOWN
 # ============================================================================
-
 
 var comp: TestSyncComp
 
@@ -109,7 +107,7 @@ func test_check_changes_returns_changed_high_properties():
 	comp.position = Vector3(10, 20, 30)
 	var changed = comp.check_changes_for_priority(SyncConfig.Priority.HIGH)
 	assert_bool(changed.has("position")).is_true()
-	assert_vector3(changed["position"]).is_equal(Vector3(10, 20, 30))
+	assert_that(changed["position"]).is_equal(Vector3(10, 20, 30))
 
 
 func test_check_changes_returns_empty_when_no_change():
@@ -130,14 +128,13 @@ func test_check_changes_updates_cache():
 	assert_dict(changed2).is_empty()
 
 
-func test_check_changes_does_not_return_local_properties():
+func test_local_properties_excluded_from_sync_cache():
 	comp._ensure_initialized()
-	comp.client_only = true
-	# LOCAL priority = -1, not synced
-	var changed = comp.check_changes_for_priority(-1)
-	# LOCAL properties are never checked by check_changes_for_priority
-	# because _ensure_initialized skips LOCAL from the sync cache
-	assert_dict(changed).is_empty()
+	# LOCAL properties are not added to the sync cache
+	# so NetworkSync (which only queries non-LOCAL priorities) never syncs them
+	assert_bool(comp._sync_cache.has("client_only")).is_false()
+	# But HIGH properties ARE in the cache
+	assert_bool(comp._sync_cache.has("position")).is_true()
 
 
 # ============================================================================
@@ -178,13 +175,11 @@ func test_get_priority_for_property_local():
 func test_update_cache_silent_updates_without_signal():
 	comp._ensure_initialized()
 	var signal_emitted = false
-	comp.property_changed.connect(
-		func(_c, _p, _o, _n): signal_emitted = true
-	)
+	comp.property_changed.connect(func(_c, _p, _o, _n): signal_emitted = true)
 	comp.update_cache_silent("position", Vector3(5, 5, 5))
 	assert_bool(signal_emitted).is_false()
 	# Cache should be updated
-	assert_vector3(comp._sync_cache["position"]).is_equal(Vector3(5, 5, 5))
+	assert_that(comp._sync_cache["position"]).is_equal(Vector3(5, 5, 5))
 
 
 # ============================================================================

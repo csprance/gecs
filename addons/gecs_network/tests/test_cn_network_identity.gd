@@ -4,7 +4,6 @@ extends GdUnitTestSuite
 ## Tests pure logic methods (is_server_owned, is_host, is_player)
 ## and adapter-based methods (is_local, has_authority).
 
-
 # ============================================================================
 # MOCK ADAPTER
 # ============================================================================

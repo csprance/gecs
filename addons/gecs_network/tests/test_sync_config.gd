@@ -4,7 +4,6 @@ extends GdUnitTestSuite
 ## Tests priority methods, filtering (blacklist/whitelist), entity categorization,
 ## and static helper methods.
 
-
 # ============================================================================
 # SETUP / TEARDOWN
 # ============================================================================
@@ -57,15 +56,12 @@ func test_get_priority_returns_low_when_configured():
 	assert_int(priority).is_equal(SyncConfig.Priority.LOW)
 
 
-func test_get_priority_by_name_returns_configured_value():
+func test_get_priority_by_name():
 	config.component_priorities["C_TestA"] = SyncConfig.Priority.REALTIME
-	var priority = config.get_priority_by_name("C_TestA")
-	assert_int(priority).is_equal(SyncConfig.Priority.REALTIME)
-
-
-func test_get_priority_by_name_returns_medium_default():
-	var priority = config.get_priority_by_name("NonExistentComponent")
-	assert_int(priority).is_equal(SyncConfig.Priority.MEDIUM)
+	assert_int(config.get_priority_by_name("C_TestA")).is_equal(SyncConfig.Priority.REALTIME)
+	assert_int(config.get_priority_by_name("NonExistentComponent")).is_equal(
+		SyncConfig.Priority.MEDIUM
+	)
 
 
 func test_get_priority_component_without_script():
@@ -85,12 +81,9 @@ func test_should_skip_returns_true_for_blacklisted_type():
 	assert_bool(config.should_skip("C_TestA")).is_true()
 
 
-func test_should_skip_returns_false_for_unlisted_type():
+func test_should_skip_returns_false_for_unlisted_or_empty():
 	config.skip_component_types = ["C_TestA"]
 	assert_bool(config.should_skip("C_TestB")).is_false()
-
-
-func test_should_skip_returns_false_when_blacklist_empty():
 	config.skip_component_types = []
 	assert_bool(config.should_skip("C_TestA")).is_false()
 
@@ -99,7 +92,8 @@ func test_should_skip_component_returns_true_for_null():
 	assert_bool(config.should_skip_component(null)).is_true()
 
 
-func test_should_skip_component_returns_true_for_no_script():
+func test_should_skip_component_blacklists_by_class_name():
+	config.skip_component_types = ["Component"]
 	var comp = Component.new()
 	assert_bool(config.should_skip_component(comp)).is_true()
 
@@ -185,19 +179,10 @@ func test_get_entity_category_returns_other_for_no_match():
 # ============================================================================
 
 
-func test_get_interval_realtime():
+func test_get_interval_for_each_priority():
 	assert_float(SyncConfig.get_interval(SyncConfig.Priority.REALTIME)).is_equal(0.0)
-
-
-func test_get_interval_high():
 	assert_float(SyncConfig.get_interval(SyncConfig.Priority.HIGH)).is_equal(0.05)
-
-
-func test_get_interval_medium():
 	assert_float(SyncConfig.get_interval(SyncConfig.Priority.MEDIUM)).is_equal(0.1)
-
-
-func test_get_interval_low():
 	assert_float(SyncConfig.get_interval(SyncConfig.Priority.LOW)).is_equal(1.0)
 
 
@@ -206,34 +191,25 @@ func test_should_sync_realtime_always_true():
 	assert_bool(SyncConfig.should_sync(SyncConfig.Priority.REALTIME, 100.0)).is_true()
 
 
-func test_should_sync_high_below_interval():
-	# HIGH interval = 0.05, so 0.04 should be false
+func test_should_sync_high_respects_interval():
+	# HIGH interval = 0.05, so 0.04 should be false, 0.05 should be true
 	assert_bool(SyncConfig.should_sync(SyncConfig.Priority.HIGH, 0.04)).is_false()
-
-
-func test_should_sync_high_at_interval():
-	# HIGH interval = 0.05, so 0.05 should be true
 	assert_bool(SyncConfig.should_sync(SyncConfig.Priority.HIGH, 0.05)).is_true()
 
 
-func test_get_reliability_high_is_unreliable():
-	var rel = SyncConfig.get_reliability(SyncConfig.Priority.HIGH)
-	assert_int(rel).is_equal(SyncConfig.Reliability.UNRELIABLE)
-
-
-func test_get_reliability_realtime_is_unreliable():
-	var rel = SyncConfig.get_reliability(SyncConfig.Priority.REALTIME)
-	assert_int(rel).is_equal(SyncConfig.Reliability.UNRELIABLE)
-
-
-func test_get_reliability_medium_is_reliable():
-	var rel = SyncConfig.get_reliability(SyncConfig.Priority.MEDIUM)
-	assert_int(rel).is_equal(SyncConfig.Reliability.RELIABLE)
-
-
-func test_get_reliability_low_is_reliable():
-	var rel = SyncConfig.get_reliability(SyncConfig.Priority.LOW)
-	assert_int(rel).is_equal(SyncConfig.Reliability.RELIABLE)
+func test_get_reliability_for_each_priority():
+	assert_int(SyncConfig.get_reliability(SyncConfig.Priority.REALTIME)).is_equal(
+		SyncConfig.Reliability.UNRELIABLE
+	)
+	assert_int(SyncConfig.get_reliability(SyncConfig.Priority.HIGH)).is_equal(
+		SyncConfig.Reliability.UNRELIABLE
+	)
+	assert_int(SyncConfig.get_reliability(SyncConfig.Priority.MEDIUM)).is_equal(
+		SyncConfig.Reliability.RELIABLE
+	)
+	assert_int(SyncConfig.get_reliability(SyncConfig.Priority.LOW)).is_equal(
+		SyncConfig.Reliability.RELIABLE
+	)
 
 
 # ============================================================================

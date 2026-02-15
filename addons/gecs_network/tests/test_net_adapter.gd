@@ -3,7 +3,6 @@ extends GdUnitTestSuite
 ## Test suite for NetAdapter
 ## Tests singleplayer defaults, peer lists, and cache invalidation.
 
-
 # ============================================================================
 # SINGLEPLAYER DEFAULTS (no multiplayer peer)
 # ============================================================================
@@ -24,10 +23,19 @@ func test_get_my_peer_id_returns_one_singleplayer():
 	assert_int(adapter.get_my_peer_id()).is_equal(1)
 
 
-func test_is_in_game_returns_false_singleplayer():
+func test_is_in_game_reflects_peer_status():
 	var adapter = NetAdapter.new()
-	# Not connected to any multiplayer game
-	assert_bool(adapter.is_in_game()).is_false()
+	# GdUnit4 runs with a SceneTree that has an OfflineMultiplayerPeer,
+	# which reports CONNECTION_CONNECTED. Verify is_in_game matches
+	# the actual peer connection status.
+	var mp = adapter.get_multiplayer()
+	if mp and mp.multiplayer_peer:
+		var connected = (
+			mp.multiplayer_peer.get_connection_status() == MultiplayerPeer.CONNECTION_CONNECTED
+		)
+		assert_bool(adapter.is_in_game()).is_equal(connected)
+	else:
+		assert_bool(adapter.is_in_game()).is_false()
 
 
 func test_get_remote_sender_id_returns_zero():

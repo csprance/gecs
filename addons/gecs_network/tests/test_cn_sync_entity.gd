@@ -3,7 +3,6 @@ extends GdUnitTestSuite
 ## Test suite for CN_SyncEntity
 ## Tests sync target resolution, has_sync_properties, and get_property_paths.
 
-
 # ============================================================================
 # SETUP / TEARDOWN
 # ============================================================================
@@ -70,13 +69,13 @@ func test_has_sync_properties_true_with_defaults():
 
 func test_has_sync_properties_false_when_all_disabled():
 	var sync = CN_SyncEntity.new(false, false, false)
-	sync.custom_properties = []
+	sync.custom_properties.clear()
 	assert_bool(sync.has_sync_properties()).is_false()
 
 
 func test_has_sync_properties_true_with_only_custom():
 	var sync = CN_SyncEntity.new(false, false, false)
-	sync.custom_properties = ["health"]
+	sync.custom_properties.append("health")
 	assert_bool(sync.has_sync_properties()).is_true()
 
 
@@ -101,7 +100,8 @@ func test_get_property_paths_default():
 
 func test_get_property_paths_includes_custom():
 	var sync = CN_SyncEntity.new()
-	sync.custom_properties = ["health", "score"]
+	sync.custom_properties.append("health")
+	sync.custom_properties.append("score")
 	var entity = Entity.new()
 	world.add_entity(entity)
 	var paths = sync.get_property_paths(entity)
@@ -111,7 +111,7 @@ func test_get_property_paths_includes_custom():
 
 func test_get_property_paths_no_duplicate_custom():
 	var sync = CN_SyncEntity.new()
-	sync.custom_properties = ["global_position"]  # Already included by sync_position
+	sync.custom_properties.append("global_position")  # Already included by sync_position
 	var entity = Entity.new()
 	world.add_entity(entity)
 	var paths = sync.get_property_paths(entity)

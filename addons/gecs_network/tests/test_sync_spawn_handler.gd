@@ -11,7 +11,6 @@ var world: World
 var handler: RefCounted  # SyncSpawnHandler
 var mock_ns: RefCounted  # Mock NetworkSync
 
-
 # ============================================================================
 # MOCK OBJECTS
 # ============================================================================
