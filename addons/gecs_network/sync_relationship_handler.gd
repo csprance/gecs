@@ -226,6 +226,17 @@ func try_resolve_pending(entity: Entity) -> void:
 
 ## Called when a relationship is added to an entity in the local world.
 func on_relationship_added(entity: Entity, relationship: Relationship) -> void:
+	_broadcast_relationship_change(entity, relationship, _ns._sync_relationship_add)
+
+
+## Called when a relationship is removed from an entity in the local world.
+func on_relationship_removed(entity: Entity, relationship: Relationship) -> void:
+	_broadcast_relationship_change(entity, relationship, _ns._sync_relationship_remove)
+
+
+## Shared guard/authority/serialize/broadcast logic for relationship changes.
+## rpc_callable is the bound RPC function to invoke (e.g. _ns._sync_relationship_add).
+func _broadcast_relationship_change(entity: Entity, relationship: Relationship, rpc_callable: Callable) -> void:
 	# Guard against sync loops
 	if _applying_relationship_data or _ns._applying_network_data:
 		return
@@ -238,10 +249,7 @@ func on_relationship_added(entity: Entity, relationship: Relationship) -> void:
 		return  # Non-networked entity
 
 	# Authority check: only broadcast if we have authority
-	if _ns.net_adapter.is_server():
-		# Server can broadcast for any entity
-		pass
-	else:
+	if not _ns.net_adapter.is_server():
 		# Client can only broadcast for own entities
 		if net_id.peer_id != _ns.net_adapter.get_my_peer_id():
 			return
@@ -252,36 +260,7 @@ func on_relationship_added(entity: Entity, relationship: Relationship) -> void:
 
 	var payload = {"entity_id": entity.id, "recipe": recipe, "session_id": _ns._game_session_id}
 
-	_ns._sync_relationship_add.rpc(payload)
-
-
-## Called when a relationship is removed from an entity in the local world.
-func on_relationship_removed(entity: Entity, relationship: Relationship) -> void:
-	# Guard against sync loops
-	if _applying_relationship_data or _ns._applying_network_data:
-		return
-
-	if not _ns.sync_config or not _ns.sync_config.sync_relationships:
-		return
-
-	var net_id = entity.get_component(CN_NetworkIdentity)
-	if not net_id:
-		return  # Non-networked entity
-
-	# Authority check: only broadcast if we have authority
-	if _ns.net_adapter.is_server():
-		pass
-	else:
-		if net_id.peer_id != _ns.net_adapter.get_my_peer_id():
-			return
-
-	var recipe = serialize_relationship(relationship)
-	if recipe.is_empty():
-		return
-
-	var payload = {"entity_id": entity.id, "recipe": recipe, "session_id": _ns._game_session_id}
-
-	_ns._sync_relationship_remove.rpc(payload)
+	rpc_callable.rpc(payload)
 
 
 # ============================================================================
@@ -297,6 +276,9 @@ func handle_relationship_add(payload: Dictionary) -> void:
 
 	# Reject stale RPCs
 	if session_id != _ns._game_session_id:
+		return
+
+	if _ns._world == null:
 		return
 
 	var sender_id = _ns.net_adapter.get_remote_sender_id()
@@ -348,6 +330,9 @@ func handle_relationship_remove(payload: Dictionary) -> void:
 
 	# Reject stale RPCs
 	if session_id != _ns._game_session_id:
+		return
+
+	if _ns._world == null:
 		return
 
 	var sender_id = _ns.net_adapter.get_remote_sender_id()
