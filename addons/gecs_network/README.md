@@ -60,6 +60,16 @@ func _ready():
     var net_sync = NetworkSync.attach_to_world(world, ProjectSyncConfig.new())
 
     # Optional: project-specific middleware
+    # NetworkMiddleware is a user-defined class (see docs/architecture.md)
+    # that connects to network_sync signals in its _init, e.g.:
+    #
+    # class_name MyMiddleware extends Node
+    #     func _init(net_sync: NetworkSync):
+    #         net_sync.entity_spawned.connect(_on_entity_spawned)
+    #     func _on_entity_spawned(entity: Entity):
+    #         pass  # Handle spawned entities
+    #
+    # var middleware = MyMiddleware.new(net_sync)
     var middleware = NetworkMiddleware.new(net_sync)
 ```
 

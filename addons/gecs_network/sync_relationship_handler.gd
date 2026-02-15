@@ -384,9 +384,35 @@ func handle_relationship_remove(payload: Dictionary) -> void:
 					found = true
 					break
 			else:
-				entity.remove_relationship(existing_rel)
-				found = true
-				break
+				# Non-Entity target: match by script path
+				var target_ref = recipe.get("t", "")
+				var target_type = recipe.get("tt", "")
+				var matches := false
+
+				if target_type == "N":
+					# Null target: match null or freed targets
+					if existing_rel.target == null or not is_instance_valid(existing_rel.target):
+						matches = true
+				elif target_type == "C":
+					# Component target: match by script path
+					if existing_rel.target is Component:
+						var target_script = existing_rel.target.get_script()
+						if target_script != null and target_script.resource_path == target_ref:
+							matches = true
+					elif existing_rel.target == null or not is_instance_valid(existing_rel.target):
+						matches = true
+				elif target_type == "S":
+					# Script target: match by script path
+					if existing_rel.target is Script:
+						if existing_rel.target.resource_path == target_ref:
+							matches = true
+					elif existing_rel.target == null or not is_instance_valid(existing_rel.target):
+						matches = true
+
+				if matches:
+					entity.remove_relationship(existing_rel)
+					found = true
+					break
 		if not found:
 			push_warning("handle_relationship_remove: no matching relationship found for entity_id=%s recipe=%s" % [entity_id, recipe])
 	_applying_relationship_data = false
