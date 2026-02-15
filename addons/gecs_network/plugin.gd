@@ -30,6 +30,20 @@ const CUSTOM_TYPES = {
 		"base": "Resource",
 		"script": "res://addons/gecs_network/sync_config.gd",
 		"icon": "sync_config.svg"
+	},
+	"TransportProvider":
+	{"base": "RefCounted", "script": "res://addons/gecs_network/transport_provider.gd", "icon": ""},
+	"ENetTransportProvider":
+	{
+		"base": "RefCounted",
+		"script": "res://addons/gecs_network/transports/enet_transport_provider.gd",
+		"icon": ""
+	},
+	"SteamTransportProvider":
+	{
+		"base": "RefCounted",
+		"script": "res://addons/gecs_network/transports/steam_transport_provider.gd",
+		"icon": ""
 	}
 }
 
@@ -42,7 +56,12 @@ func _enter_tree() -> void:
 
 		# Skip registration if script failed to load
 		if script == null:
-			push_error("[%s] Failed to load script for %s: %s" % [PLUGIN_NAME, type_name, type_data["script"]])
+			push_error(
+				(
+					"[%s] Failed to load script for %s: %s"
+					% [PLUGIN_NAME, type_name, type_data["script"]]
+				)
+			)
 			continue
 
 		var icon = _load_icon(type_data["icon"])
