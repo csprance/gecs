@@ -107,6 +107,8 @@ func _load_script_instance(script_path: String):
 	var script = load(script_path)
 	if script == null:
 		return null
+	if not script is Script or not script.can_instantiate():
+		return null
 	return script.new()
 
 
@@ -361,6 +363,34 @@ func handle_relationship_remove(payload: Dictionary) -> void:
 	var relationship = deserialize_relationship(recipe)
 	if relationship != null:
 		entity.remove_relationship(relationship)
+	else:
+		# Fallback: target may be despawned, scan existing relationships by recipe fields
+		var relation_path = recipe.get("r", "")
+		var target_id = recipe.get("t", "")
+		var found := false
+		for existing_rel in entity.relationships:
+			if existing_rel.relation == null:
+				continue
+			var rel_script = existing_rel.relation.get_script()
+			if rel_script == null or rel_script.resource_path != relation_path:
+				continue
+			# Match target by entity id if target type is Entity
+			if recipe.get("tt", "") == "E":
+				if existing_rel.target is Entity and existing_rel.target.id == target_id:
+					entity.remove_relationship(existing_rel)
+					found = true
+					break
+				# Target entity already freed - match by null target with same relation
+				if existing_rel.target == null or not is_instance_valid(existing_rel.target):
+					entity.remove_relationship(existing_rel)
+					found = true
+					break
+			else:
+				entity.remove_relationship(existing_rel)
+				found = true
+				break
+		if not found:
+			push_warning("handle_relationship_remove: no matching relationship found for entity_id=%s recipe=%s" % [entity_id, recipe])
 	_applying_relationship_data = false
 
 

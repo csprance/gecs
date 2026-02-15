@@ -43,6 +43,7 @@ The addon is split into focused handlers for maintainability:
 | `sync_spawn_handler.gd` | Entity lifecycle — spawn/despawn broadcasts, world state serialization |
 | `sync_native_handler.gd` | Native sync — MultiplayerSynchronizer setup, model instantiation |
 | `sync_property_handler.gd` | Property sync — change detection, priority batching, polling |
+| `sync_relationship_handler.gd` | Relationship sync — parent/child links, ownership and authority propagation |
 | `sync_state_handler.gd` | State — authority markers, time sync, reconciliation |
 
 All RPC methods remain on `NetworkSync` (Godot requirement) and delegate to handlers internally.

@@ -92,6 +92,7 @@ func process(entities: Array[Entity], components: Array, delta: float):
     var weapons = components[0]
     var inputs = components[1]
     var transforms = components[2]
+    var entities_node = ECS.world.get_node("Entities")
 
     for i in entities.size():
         var weapon = weapons[i] as C_Weapon
@@ -103,12 +104,14 @@ func process(entities: Array[Entity], components: Array, delta: float):
 
         if input.is_firing and weapon.time_since_shot >= weapon.cooldown:
             var proj = _projectile_scene.instantiate()
-            _entities_node.add_child(proj)
-            ECS.world.add_entity(proj)
+            entities_node.add_child(proj)
+            cmd.add_entity(proj)
 
-            # Set values AFTER add_entity
-            proj.get_component(C_Velocity).direction = input.aim_direction * weapon.speed
-            proj.get_component(C_Transform).position = transform.position
+            # Set values AFTER add_entity via CommandBuffer
+            cmd.add_custom(func():
+                proj.get_component(C_Velocity).direction = input.aim_direction * weapon.speed
+                proj.get_component(C_Transform).position = transform.position
+            )
 
             weapon.time_since_shot = 0.0
 ```
@@ -164,7 +167,7 @@ func process(entities: Array[Entity], components: Array, delta: float):
 
 ## Example 6: Complete Spawn-Only Flow
 
-```
+```text
 CLIENT A (firing):
   1. Holds fire button
   2. S_Input sets C_FiringInput.is_firing = true (local player, CN_LocalAuthority)

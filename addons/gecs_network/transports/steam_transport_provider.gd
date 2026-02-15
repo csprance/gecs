@@ -27,6 +27,9 @@ func create_host_peer(config: Dictionary) -> MultiplayerPeer:
 		return null
 
 	var peer = ClassDB.instantiate("SteamMultiplayerPeer") as MultiplayerPeer
+	if peer == null:
+		push_error("SteamTransportProvider: Failed to instantiate SteamMultiplayerPeer")
+		return null
 	peer.call("create_host", config.get("steam_port", 0), config.get("options", []))
 	return peer
 
@@ -37,7 +40,13 @@ func create_client_peer(config: Dictionary) -> MultiplayerPeer:
 		return null
 
 	var steam_id: int = config.get("steam_id", 0)
+	if steam_id == 0:
+		push_error("SteamTransportProvider: steam_id is required but was missing or zero in config")
+		return null
 	var peer = ClassDB.instantiate("SteamMultiplayerPeer") as MultiplayerPeer
+	if peer == null:
+		push_error("SteamTransportProvider: Failed to instantiate SteamMultiplayerPeer")
+		return null
 	peer.call("create_client", steam_id, config.get("steam_port", 0), config.get("options", []))
 	return peer
 

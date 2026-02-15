@@ -192,7 +192,7 @@ func define_components() -> Array:
 
 ### Complete Spawn-Only Flow
 
-```
+```text
 CLIENT A (firing):
   1. Holds fire button
   2. S_Input sets C_FiringInput.is_firing = true (local player, CN_LocalAuthority)
