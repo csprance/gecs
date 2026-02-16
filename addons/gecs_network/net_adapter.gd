@@ -27,7 +27,6 @@ var multiplayer: MultiplayerAPI:
 	get:
 		return get_multiplayer()
 
-
 # ============================================================================
 # CORE METHODS - Override these for custom implementations
 # ============================================================================
@@ -81,32 +80,12 @@ func get_all_peers() -> Array[int]:
 	return peers
 
 
-# ============================================================================
-# RPC METHODS - Stubs for custom implementations
-# ============================================================================
-
-
-## Send RPC to a specific peer.
-## Override for custom networking.
-## @param peer_id: Target peer ID
-## @param method: Method name to call
-## @param args: Arguments to pass
-func rpc_to_peer(_peer_id: int, _method: String, _args: Array) -> void:
-	# Default implementation does nothing - NetworkSync uses Godot's @rpc directly
-	# Override this for custom networking solutions
-	push_warning(
-		"NetAdapter.rpc_to_peer() called but not implemented. Override for custom networking."
-	)
-
-
-## Send RPC to all connected peers.
-## Override for custom networking.
-## @param method: Method name to call
-## @param args: Arguments to pass
-func rpc_to_all(_method: String, _args: Array) -> void:
-	# Default implementation does nothing - NetworkSync uses Godot's @rpc directly
-	# Override this for custom networking solutions
-	push_warning("NetAdapter.rpc_to_all() called but not implemented. Override for custom networking.")
+## Returns the peer ID of the sender of the most recent RPC.
+## Default: Uses Godot's multiplayer.get_remote_sender_id()
+func get_remote_sender_id() -> int:
+	if not _has_multiplayer():
+		return 0
+	return multiplayer.get_remote_sender_id()
 
 
 # ============================================================================
@@ -124,23 +103,26 @@ func _has_multiplayer() -> bool:
 
 ## Get the multiplayer node for RPC operations.
 ## Returns null if not available. Caches the result for performance.
+## Note: The cache auto-detects when the SceneTree's MultiplayerAPI has been
+## replaced (e.g., on disconnect/reconnect) and refreshes automatically.
 func get_multiplayer() -> MultiplayerAPI:
-	# Return cached value if valid
-	if _cache_valid and is_instance_valid(_cached_multiplayer):
-		return _cached_multiplayer
+	# Fetch the current tree reference for validation
+	var tree: SceneTree = null
+	if is_instance_valid(Engine.get_main_loop()):
+		tree = Engine.get_main_loop() as SceneTree
 
-	# Fetch fresh reference
-	if not is_instance_valid(Engine.get_main_loop()):
-		_cache_valid = false
-		_cached_multiplayer = null
-		return null
-
-	var tree = Engine.get_main_loop() as SceneTree
 	if tree == null:
 		_cache_valid = false
 		_cached_multiplayer = null
 		return null
 
+	# Validate cache: the SceneTree may have replaced its MultiplayerAPI
+	# (e.g., after disconnect/reconnect). Since MultiplayerAPI is RefCounted,
+	# is_instance_valid alone cannot detect this — compare identity instead.
+	if _cache_valid and _cached_multiplayer == tree.get_multiplayer():
+		return _cached_multiplayer
+
+	# Refresh cache
 	_cached_multiplayer = tree.get_multiplayer()
 	_cache_valid = _cached_multiplayer != null
 	return _cached_multiplayer

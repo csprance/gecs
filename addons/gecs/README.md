@@ -30,6 +30,10 @@
 
 - **CommandBuffer** - Queue structural changes during iteration with `cmd`. Eliminates backwards iteration and defensive snapshots. Three flush modes: PER_SYSTEM, PER_GROUP, MANUAL.
 
+### 🌐 Networking (Optional addon)
+
+- **[GECS Network Addon](../gecs_network/README.md)** - Multiplayer synchronization for GECS entities. Supports **transport providers** (ENet, Steam, or custom backends) that can be swapped without changing game code. See the addon docs for [Configuration & NetAdapter](../gecs_network/docs/configuration.md), [Examples](../gecs_network/docs/examples.md), and [Troubleshooting](../gecs_network/docs/troubleshooting.md).
+
 ### ⚡ Optimization & Advanced (As needed)
 
 - **[Debug Viewer](docs/DEBUG_VIEWER.md)** - Real-time debugging and performance monitoring
@@ -58,6 +62,15 @@
 | **Property Filtering** | [Component Queries](docs/COMPONENT_QUERIES.md) | Query entities by component data    |
 | **Event Systems**      | [Observers](docs/OBSERVERS.md)                 | React to component changes          |
 | **Data Persistence**   | [Serialization](docs/SERIALIZATION.md)         | Save/load entities and game state   |
+
+### Networking (Optional addon)
+
+| Topic                  | Document                                                                  | Description                                          |
+| ---------------------- | ------------------------------------------------------------------------- | ---------------------------------------------------- |
+| **Overview**           | [GECS Network Addon](../gecs_network/README.md)                          | Multiplayer sync, transport providers (ENet/Steam)   |
+| **Configuration**      | [Configuration & NetAdapter](../gecs_network/docs/configuration.md)      | SyncConfig, priorities, transport provider setup      |
+| **Examples**           | [Examples](../gecs_network/docs/examples.md)                             | Players, enemies, projectiles, abilities              |
+| **Troubleshooting**    | [Troubleshooting](../gecs_network/docs/troubleshooting.md)               | Common networking issues and migration guide          |
 
 ### Optimization & Debugging
 

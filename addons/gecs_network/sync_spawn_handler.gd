@@ -297,6 +297,11 @@ func handle_spawn_entity(data: Dictionary) -> void:
 				)
 			)
 
+	# Apply relationships from spawn data
+	var rel_data = data.get("relationships", [])
+	if not rel_data.is_empty():
+		_ns._relationship_handler.apply_entity_relationships(entity, rel_data)
+
 	# Emit signal for projects to do post-spawn setup (e.g., apply visual properties)
 	_ns.entity_spawned.emit(entity)
 
@@ -397,7 +402,7 @@ func handle_add_component(
 			)
 		return
 
-	var sender_id = _ns.multiplayer.get_remote_sender_id()
+	var sender_id = _ns.net_adapter.get_remote_sender_id()
 
 	var entity = _ns._world.entity_id_registry.get(entity_id)
 	if not entity:
@@ -468,7 +473,7 @@ func handle_add_component(
 
 
 func handle_remove_component(entity_id: String, comp_type: String) -> void:
-	var sender_id = _ns.multiplayer.get_remote_sender_id()
+	var sender_id = _ns.net_adapter.get_remote_sender_id()
 
 	var entity = _ns._world.entity_id_registry.get(entity_id)
 	if not entity:
@@ -552,7 +557,7 @@ func serialize_entity_spawn(entity: Entity) -> Dictionary:
 		if script != null and script.resource_path != "":
 			script_paths[comp_type] = script.resource_path
 
-	return {
+	var result = {
 		"id": entity.id,
 		"name": entity.name,  # Include entity name for consistent naming across peers
 		"scene_path": entity.scene_file_path,
@@ -560,6 +565,13 @@ func serialize_entity_spawn(entity: Entity) -> Dictionary:
 		"script_paths": script_paths,  # Script paths for adding missing components on clients
 		"session_id": _ns._game_session_id  # Prevent stale spawns after game reset
 	}
+
+	# Include relationships if sync is enabled
+	var relationships = _ns._relationship_handler.serialize_entity_relationships(entity)
+	if not relationships.is_empty():
+		result["relationships"] = relationships
+
+	return result
 
 
 func validate_entity_spawn(scene_path: String) -> bool:

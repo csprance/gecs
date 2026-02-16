@@ -102,11 +102,13 @@ const SyncSpawnHandler = preload("res://addons/gecs_network/sync_spawn_handler.g
 const SyncNativeHandler = preload("res://addons/gecs_network/sync_native_handler.gd")
 const SyncPropertyHandler = preload("res://addons/gecs_network/sync_property_handler.gd")
 const SyncStateHandler = preload("res://addons/gecs_network/sync_state_handler.gd")
+const SyncRelationshipHandler = preload("res://addons/gecs_network/sync_relationship_handler.gd")
 
 var _spawn_handler  # SyncSpawnHandler
 var _native_handler  # SyncNativeHandler
 var _property_handler  # SyncPropertyHandler
 var _state_handler  # SyncStateHandler
+var _relationship_handler  # SyncRelationshipHandler
 
 # ============================================================================
 # STATIC FACTORY METHOD
@@ -152,7 +154,9 @@ func _ready() -> void:
 
 	_world = get_parent() as World
 	if _world == null:
-		push_error("NetworkSync: Parent node is not a World. NetworkSync must be a child of a World node.")
+		push_error(
+			"NetworkSync: Parent node is not a World. NetworkSync must be a child of a World node."
+		)
 		queue_free()
 		return
 
@@ -161,6 +165,7 @@ func _ready() -> void:
 	_native_handler = SyncNativeHandler.new(self)
 	_property_handler = SyncPropertyHandler.new(self)
 	_state_handler = SyncStateHandler.new(self)
+	_relationship_handler = SyncRelationshipHandler.new(self)
 
 	if debug_logging:
 		print(
@@ -180,6 +185,8 @@ func _ready() -> void:
 	_world.entity_removed.connect(_on_entity_removed)
 	_world.component_added.connect(_on_component_added)
 	_world.component_removed.connect(_on_component_removed)
+	_world.relationship_added.connect(_on_relationship_added)
+	_world.relationship_removed.connect(_on_relationship_removed)
 
 	# Connect multiplayer signals
 	_connect_multiplayer_signals()
@@ -198,6 +205,21 @@ func _ready() -> void:
 func _exit_tree() -> void:
 	# Disconnect multiplayer signals
 	_disconnect_multiplayer_signals()
+
+	# Disconnect world signals
+	if _world:
+		if _world.entity_added.is_connected(_on_entity_added):
+			_world.entity_added.disconnect(_on_entity_added)
+		if _world.entity_removed.is_connected(_on_entity_removed):
+			_world.entity_removed.disconnect(_on_entity_removed)
+		if _world.component_added.is_connected(_on_component_added):
+			_world.component_added.disconnect(_on_component_added)
+		if _world.component_removed.is_connected(_on_component_removed):
+			_world.component_removed.disconnect(_on_component_removed)
+		if _world.relationship_added.is_connected(_on_relationship_added):
+			_world.relationship_added.disconnect(_on_relationship_added)
+		if _world.relationship_removed.is_connected(_on_relationship_removed):
+			_world.relationship_removed.disconnect(_on_relationship_removed)
 
 	# Disconnect from all entities
 	for entity in _entity_connections.keys():
@@ -249,6 +271,9 @@ func reset_for_new_game() -> void:
 
 	# Reset spawn counter for deterministic IDs
 	_spawn_counter = 0
+
+	# Reset relationship handler state
+	_relationship_handler.reset()
 
 	# Disconnect from existing entities (they will be cleaned up)
 	for entity in _entity_connections.keys():
@@ -493,6 +518,9 @@ func _on_entity_added(entity: Entity) -> void:
 	# NOTE: _auto_setup_native_sync is called from _on_component_added when model_ready_component
 	# is added, ensuring the sync target exists for proper native sync setup
 
+	# Resolve any pending relationships waiting for this entity as target
+	_relationship_handler.try_resolve_pending(entity)
+
 	# Only server broadcasts spawns
 	if not net_adapter.is_server():
 		return
@@ -563,6 +591,14 @@ func _on_component_added(entity: Entity, component: Resource) -> void:
 	if component is SyncComponent or component is CN_NetworkIdentity:
 		_update_sync_entity_index(entity)
 	_property_handler.on_component_added(entity, component)
+
+
+func _on_relationship_added(entity: Entity, relationship: Relationship) -> void:
+	_relationship_handler.on_relationship_added(entity, relationship)
+
+
+func _on_relationship_removed(entity: Entity, relationship: Relationship) -> void:
+	_relationship_handler.on_relationship_removed(entity, relationship)
 
 
 func _on_component_removed(entity: Entity, component: Resource) -> void:
@@ -827,3 +863,15 @@ func _notify_peers_to_refresh() -> void:
 	if debug_logging:
 		print("Received refresh notification, updating synchronizer visibility")
 	_native_handler.refresh_synchronizer_visibility()
+
+
+## RPC to sync a relationship addition to other peers.
+@rpc("any_peer", "reliable")
+func _sync_relationship_add(payload: Dictionary) -> void:
+	_relationship_handler.handle_relationship_add(payload)
+
+
+## RPC to sync a relationship removal to other peers.
+@rpc("any_peer", "reliable")
+func _sync_relationship_remove(payload: Dictionary) -> void:
+	_relationship_handler.handle_relationship_remove(payload)

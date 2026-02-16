@@ -65,12 +65,25 @@ func is_player() -> bool:
 # ============================================================================
 
 ## Shared default adapter to avoid allocation per call in hot loops.
+## Note: NetAdapter.get_multiplayer() auto-detects stale MultiplayerAPI
+## references, so this static instance is safe across scene transitions.
+## Call reset_default_adapter() for explicit cleanup if needed.
 static var _default_adapter: NetAdapter = null
+
 
 static func _get_default_adapter() -> NetAdapter:
 	if _default_adapter == null:
 		_default_adapter = NetAdapter.new()
 	return _default_adapter
+
+
+## Reset the shared default adapter, forcing a fresh instance on next use.
+## Call this during explicit session teardown (host migration, reconnect)
+## if the automatic stale-detection in NetAdapter is insufficient.
+static func reset_default_adapter() -> void:
+	if _default_adapter != null:
+		_default_adapter.invalidate_cache()
+	_default_adapter = null
 
 
 ## Check if this entity is controlled by the local player.

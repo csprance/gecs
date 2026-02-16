@@ -138,6 +138,11 @@ func on_component_property_changed(
 	if not net_id:
 		return  # Non-networked entity
 
+	# SECURITY: Prevent clients from syncing CN_NetworkIdentity even if it becomes a SyncComponent
+	# This ensures ownership can never be transferred by a client
+	if component is CN_NetworkIdentity and not _ns.net_adapter.is_server():
+		return
+
 	# SPAWN-ONLY SYNC: Entities without CN_SyncEntity only sync at spawn time.
 	# Skip continuous property sync for these entities (e.g., projectiles).
 	# This allows local deterministic simulation without network interference.
@@ -372,7 +377,7 @@ func poll_sync_components_for_priority(priority: int) -> void:
 
 ## Shared handler for both reliable and unreliable syncs
 func handle_apply_sync_data(data: Dictionary) -> void:
-	var sender_id = _ns.multiplayer.get_remote_sender_id()
+	var sender_id = _ns.net_adapter.get_remote_sender_id()
 	var prefix = "SERVER" if _ns.net_adapter.is_server() else "CLIENT"
 
 	# Log incoming sync data at DEBUG level
@@ -422,6 +427,15 @@ func handle_apply_sync_data(data: Dictionary) -> void:
 						)
 					)
 				continue
+
+			# SECURITY: Prevent clients from updating CN_NetworkIdentity (ownership transfer)
+			# Even if a client modifies their local component and sends it, the server must reject it.
+			if data[entity_id].has("CN_NetworkIdentity"):
+				if _ns.debug_logging:
+					print("SECURITY: Rejected CN_NetworkIdentity update from client %d" % sender_id)
+				data[entity_id].erase("CN_NetworkIdentity")
+				if data[entity_id].is_empty():
+					continue
 
 			# SERVER RELAY: Queue received client data for broadcast to all clients
 			# This ensures rotation-only updates (when stationary) get relayed

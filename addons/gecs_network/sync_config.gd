@@ -23,14 +23,14 @@ extends Resource
 
 enum Priority {
 	REALTIME, ## Every frame (~60 FPS)
-	HIGH,     ## 20 FPS
-	MEDIUM,   ## 10 FPS
-	LOW       ## 1 FPS
+	HIGH, ## 20 FPS
+	MEDIUM, ## 10 FPS
+	LOW, ## 1 FPS
 }
 
 enum Reliability {
 	UNRELIABLE, ## Fast, may drop packets (position, velocity)
-	RELIABLE    ## Guaranteed delivery (health, authority changes)
+	RELIABLE, ## Guaranteed delivery (health, authority changes)
 }
 
 # ============================================================================
@@ -196,6 +196,9 @@ var model_ready_class: GDScript = null
 ## Seconds between full state reconciliation broadcasts (server only)
 @export var reconciliation_interval: float = 30.0
 
+## Enable relationship synchronization (creation recipes)
+@export var sync_relationships: bool = true
+
 # ============================================================================
 # CONFIGURATION - ENTITY CATEGORIZATION
 # ============================================================================
@@ -316,8 +319,7 @@ func get_entity_category(entity: Entity) -> String:
 		var net_id = entity.get_component(CN_NetworkIdentity)
 		if net_id and net_id.peer_id > 0:
 			return "player"
-		else:
-			return "other"
+		return "other"
 
 	# Check each category's component list
 	for category_name in entity_categories.keys():
