@@ -13,6 +13,6 @@ func _init() -> void:
 	# Not using a separate transform component
 	transform_component = ""
 
-	# CRITICAL: Trigger native sync (MultiplayerSynchronizer) setup when C_NetworkIdentity is added
+	# CRITICAL: Trigger native sync (MultiplayerSynchronizer) setup when CN_NetworkIdentity is added
 	# This enables continuous position sync for players via Godot's native replication
-	model_ready_component = "C_NetworkIdentity"
+	model_ready_component = "CN_NetworkIdentity"

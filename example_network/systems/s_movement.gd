@@ -1,7 +1,7 @@
 class_name S_NetworkMovement
 extends System
 ## Movement system - applies velocity to entity position.
-## Processes entities with C_LocalAuthority (local simulation).
+## Processes entities with CN_LocalAuthority (local simulation).
 ## Remote entities receive position updates via native MultiplayerSynchronizer.
 
 const MOVE_SPEED := 5.0
@@ -10,7 +10,7 @@ const ARENA_BOUND := 4.5  # Half of 10x10 arena minus player size
 
 func query() -> QueryBuilder:
 	# Only move local entities - remote positions come from network sync
-	return q.with_all([C_NetVelocity, C_PlayerInput, C_LocalAuthority]).iterate([C_NetVelocity, C_PlayerInput])
+	return q.with_all([C_NetVelocity, C_PlayerInput, CN_LocalAuthority]).iterate([C_NetVelocity, C_PlayerInput])
 
 
 func process(entities: Array[Entity], components: Array, delta: float) -> void:

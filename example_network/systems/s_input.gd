@@ -1,12 +1,12 @@
 class_name S_NetworkInput
 extends System
 ## Input system - reads keyboard input, updates C_PlayerInput.
-## Only processes local player (entities with C_LocalAuthority).
+## Only processes local player (entities with CN_LocalAuthority).
 
 
 func query() -> QueryBuilder:
 	# Only process entities we have local control over
-	return q.with_all([C_PlayerInput, C_LocalAuthority]).iterate([C_PlayerInput])
+	return q.with_all([C_PlayerInput, CN_LocalAuthority]).iterate([C_PlayerInput])
 
 
 func process(entities: Array[Entity], components: Array, delta: float) -> void:
