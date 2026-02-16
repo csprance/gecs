@@ -86,9 +86,9 @@ static func entity_added(ent: Entity) -> bool:
 		EngineDebugger.send_message(Msg.ENTITY_ADDED, [ent.get_instance_id(), ent.get_path()])
 	return true
 
-static func entity_removed(ent: Entity) -> bool:
+static func entity_removed(ent_id: String) -> bool:
 	if can_send_message():
-		EngineDebugger.send_message(Msg.ENTITY_REMOVED, [ent.get_instance_id(), ent.get_path()])
+		EngineDebugger.send_message(Msg.ENTITY_REMOVED, [ent_id])
 	return true
 
 static func entity_disabled(ent: Entity) -> bool:
