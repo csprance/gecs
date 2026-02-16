@@ -37,6 +37,9 @@ var world: World:
 	get:
 		return world
 	set(value):
+		# Disconnect old world to prevent stale tree_exited callback
+		if world and world.is_connected("tree_exited", _on_world_exited):
+			world.disconnect("tree_exited", _on_world_exited)
 		# Add the new world to the scenes
 		world = value
 		if world:
