@@ -16,9 +16,6 @@ func query() -> QueryBuilder:
 func process(entities: Array[Entity], components: Array, delta: float) -> void:
 	var velocities = components[0]
 
-	# Collect entities to remove (can't modify during iteration)
-	var to_remove: Array[Entity] = []
-
 	for i in entities.size():
 		var entity = entities[i]
 		var velocity = velocities[i] as C_NetVelocity
@@ -39,10 +36,6 @@ func process(entities: Array[Entity], components: Array, delta: float) -> void:
 			should_remove = should_remove or abs(pos.x) > ARENA_BOUND or abs(pos.z) > ARENA_BOUND
 
 		if should_remove:
-			to_remove.append(entity)
-
-	# Remove expired projectiles
-	for entity in to_remove:
-		_lifetime_tracker.erase(entity.id)
-		ECS.world.remove_entity(entity)
-		entity.queue_free()
+			_lifetime_tracker.erase(entity.id)
+			cmd.remove_entity(entity)
+			cmd.add_custom(entity.queue_free)
