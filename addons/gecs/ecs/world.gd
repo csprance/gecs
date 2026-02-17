@@ -397,6 +397,13 @@ func remove_entity(entity: Entity) -> void:
 
 	for processor in ECS.entity_postprocessors:
 		processor.call(entity)
+
+	# Emit component_removed for each component before teardown
+	# so observers learn about removal when an entity is destroyed
+	for comp in entity.components.values():
+		component_removed.emit(entity, comp)
+		_handle_observer_component_removed(entity, comp)
+
 	entity_removed.emit(entity)
 	_worldLogger.debug("remove_entity Removing Entity: ", entity)
 	var erase_idx = entities.find(entity)
