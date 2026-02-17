@@ -12,6 +12,7 @@ Build scalable, maintainable games with clean separation of data and logic. GECS
 - 🔍 **Debug Viewer** - Real-time inspection and performance monitoring
 - 📦 **Editor Support** - Visual component editing and scene integration
 - 🎮 **Battle Tested** - Used in games being actively developed
+- 🎮🎮🎮🎮 **Multiplayer** - GECS goes Multiplayer! Check out the [GECS Network Addon](addons/gecs_network/README.md)
 
 
 ```gdscript

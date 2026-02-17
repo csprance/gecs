@@ -4,7 +4,7 @@ extends SyncComponent
 ## Extends SyncComponent for automatic change detection and sync.
 
 ## Movement input direction (WASD/Arrow keys normalized)
-@export var move_direction: Vector2 = Vector2.ZERO
+var move_direction: Vector2 = Vector2.ZERO
 
 ## Whether shoot key is pressed (Space)
 @export var is_shooting: bool = false

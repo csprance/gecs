@@ -1,7 +1,7 @@
 class_name E_NetworkPlayer
 extends Entity
 ## Player entity for the network example.
-## Demonstrates continuous sync via C_SyncEntity.
+## Demonstrates continuous sync via CN_SyncEntity.
 
 ## Peer ID that owns this player (set by main.gd when spawning)
 @export var owner_peer_id: int = 0
@@ -17,7 +17,7 @@ func _enter_tree() -> void:
 
 func on_ready() -> void:
 	# Add network identity based on owner_peer_id
-	add_component(C_NetworkIdentity.new(owner_peer_id))
+	add_component(CN_NetworkIdentity.new(owner_peer_id))
 
 
 func define_components() -> Array:
@@ -25,6 +25,6 @@ func define_components() -> Array:
 		C_NetVelocity.new(),
 		C_PlayerInput.new(),
 		C_PlayerNumber.new(),  # Join order number (1-4) for color assignment
-		# C_SyncEntity enables native MultiplayerSynchronizer for position/rotation
-		C_SyncEntity.new(true, true, false),  # sync_position=true, sync_rotation=true
+		# CN_SyncEntity enables native MultiplayerSynchronizer for position/rotation
+		CN_SyncEntity.new(true, true, false),  # sync_position=true, sync_rotation=true
 	]

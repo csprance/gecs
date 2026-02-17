@@ -21,6 +21,8 @@ func after_test():
 	if is_instance_valid(world):
 		for entity in world.entities.duplicate():
 			world.remove_entity(entity)
+			if is_instance_valid(entity):
+				entity.free()
 		world.free()
 	world = null
 

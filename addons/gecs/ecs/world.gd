@@ -355,7 +355,7 @@ func add_entity(entity: Entity, components = null, add_to_tree = true) -> void:
 		processor.call(entity)
 
 	if ECS.debug:
-		assert(GECSEditorDebuggerMessages.entity_added(entity), "")
+		assert(GECSEditorDebuggerMessages.entity_added(entity, add_to_tree), "")
 
 
 ## Adds multiple entities to the world.[br]
@@ -390,7 +390,7 @@ func add_entities(_entities: Array, components = null):
 ## [param entity] The [Entity] to remove.[br]
 ## [b]Example:[/b]
 ##      [codeblock]world.remove_entity(player_entity)[/codeblock]
-func remove_entity(entity) -> void:
+func remove_entity(entity: Entity) -> void:
 	if not is_instance_valid(entity):
 		return
 	entity = entity as Entity
@@ -434,9 +434,9 @@ func remove_entity(entity) -> void:
 	else:
 		entity.free()
 
+	# Notify debugger before freeing (entity must still be valid)
 	if ECS.debug:
-		assert(GECSEditorDebuggerMessages.entity_removed(entity), "")
-
+		assert(GECSEditorDebuggerMessages.entity_removed(entity_id), "")
 
 ## Removes an Array of [Entity] from the world.[br]
 ## [param entity] The Array of [Entity] to remove.[br]

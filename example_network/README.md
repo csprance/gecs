@@ -5,7 +5,7 @@ A minimal multiplayer example demonstrating the GECS Network addon's two synchro
 ## Features Demonstrated
 
 ### 1. Continuous Sync (Players)
-Players use `C_SyncEntity` which enables Godot's native `MultiplayerSynchronizer` for real-time position updates.
+Players use `CN_SyncEntity` which enables Godot's native `MultiplayerSynchronizer` for real-time position updates.
 
 ```gdscript
 # e_player.gd
@@ -13,22 +13,22 @@ func define_components() -> Array:
 	return [
 		C_NetVelocity.new(),
 		C_PlayerInput.new(),
-		C_SyncEntity.new(true, true, false),  # sync position + rotation
+		CN_SyncEntity.new(true, true, false),  # sync position + rotation
 	]
 ```
 
 ### 2. Spawn-Only Sync (Projectiles)
-Projectiles do NOT have `C_SyncEntity`. The server spawns them and broadcasts component values once - then all clients simulate locally.
+Projectiles do NOT have `CN_SyncEntity`. The server spawns them and broadcasts component values once - then all clients simulate locally.
 
 ```gdscript
 # e_projectile.gd
 func define_components() -> Array:
 	return [
-		C_NetworkIdentity.new(0),  # Server-owned
+		CN_NetworkIdentity.new(0),  # Server-owned
 		C_Projectile.new(),
 		C_NetVelocity.new(),
 		C_NetPosition.new(),       # Position synced at spawn
-		# NO C_SyncEntity - spawn-only pattern
+		# NO CN_SyncEntity - spawn-only pattern
 	]
 ```
 
@@ -89,9 +89,9 @@ projectile.get_component(C_Projectile).projectile_color = color
 
 ### Local-Only Movement (Continuous Sync)
 ```gdscript
-# s_movement.gd - Query with C_LocalAuthority
+# s_movement.gd - Query with CN_LocalAuthority
 func query() -> QueryBuilder:
-	return q.with_all([C_NetVelocity, C_PlayerInput, C_LocalAuthority])...
+	return q.with_all([C_NetVelocity, C_PlayerInput, CN_LocalAuthority])...
 ```
 
 ### Middleware Visual Setup
