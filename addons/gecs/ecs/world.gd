@@ -355,7 +355,7 @@ func add_entity(entity: Entity, components = null, add_to_tree = true) -> void:
 		processor.call(entity)
 
 	if ECS.debug:
-		assert(GECSEditorDebuggerMessages.entity_added(entity), "")
+		assert(GECSEditorDebuggerMessages.entity_added(entity, add_to_tree), "")
 
 
 ## Adds multiple entities to the world.[br]
