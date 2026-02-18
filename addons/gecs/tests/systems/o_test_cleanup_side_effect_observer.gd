@@ -1,7 +1,7 @@
 ## Observer that removes C_ObserverHealth as a side effect when C_ObserverTest is removed.
 ## Used to test re-entrancy safety in remove_entity: if signals remain connected during
 ## the observer notification loop, health_observer will be notified twice.
-class_name O_TestCleanupSideEffect
+class_name O_TestCleanupSideEffectObserver
 extends Observer
 
 func watch() -> Resource:

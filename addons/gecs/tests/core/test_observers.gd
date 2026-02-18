@@ -469,7 +469,7 @@ func test_observer_on_remove_multiple_entities():
 ## If entity signals are still connected during the loop, health_observer fires twice (bug).
 ## If signals are disconnected before the loop, health_observer fires exactly once (correct).
 func test_observer_no_double_notification_on_remove_entity():
-	var cleanup_observer = O_TestCleanupSideEffect.new()
+	var cleanup_observer = O_TestCleanupSideEffectObserver.new()
 	var health_observer = O_HealthObserver.new()
 	world.add_observer(cleanup_observer)
 	world.add_observer(health_observer)
