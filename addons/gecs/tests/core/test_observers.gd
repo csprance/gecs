@@ -390,3 +390,97 @@ func test_observer_with_multiple_entities():
 
 	# Should have detected all 5 changes
 	assert_int(observer.changed_count).is_equal(5)
+
+
+## Test that removing an entity via world.remove_entity triggers on_component_removed
+func test_observer_on_remove_entity_triggers_component_removed():
+	var observer = O_ObserverTest.new()
+	world.add_observer(observer)
+
+	# Create entity with the watched component
+	var entity = Entity.new()
+	var component = C_ObserverTest.new(42, "test")
+	entity.add_component(component)
+	world.add_entity(entity)
+
+	assert_int(observer.added_count).is_equal(1)
+	observer.reset()
+
+	# Remove the entire entity from the world
+	world.remove_entity(entity)
+
+	# Observer should have been notified about the component removal
+	assert_int(observer.removed_count).is_equal(1)
+	assert_object(observer.last_removed_entity).is_equal(entity)
+
+
+## Test that removing an entity with multiple components notifies all relevant observers
+func test_observer_on_remove_entity_multiple_components():
+	var observer = O_ObserverTest.new()
+	var health_observer = O_HealthObserver.new()
+	world.add_observer(observer)
+	world.add_observer(health_observer)
+
+	# Create entity with both watched components
+	var entity = Entity.new()
+	entity.add_component(C_ObserverTest.new())
+	entity.add_component(C_ObserverHealth.new(100))
+	world.add_entity(entity)
+
+	assert_int(observer.added_count).is_equal(1)
+	assert_int(health_observer.health_added_count).is_equal(1)
+	observer.reset()
+	health_observer.reset()
+
+	# Remove the entire entity
+	world.remove_entity(entity)
+
+	# Both observers should have been notified
+	assert_int(observer.removed_count).is_equal(1)
+	assert_int(health_observer.health_removed_count).is_equal(1)
+
+
+## Test that removing multiple entities notifies observer for each
+func test_observer_on_remove_multiple_entities():
+	var observer = O_ObserverTest.new()
+	world.add_observer(observer)
+
+	# Create and add 3 entities
+	var entities_list: Array[Entity] = []
+	for i in range(3):
+		var entity = Entity.new()
+		entity.add_component(C_ObserverTest.new(i))
+		world.add_entity(entity)
+		entities_list.append(entity)
+
+	assert_int(observer.added_count).is_equal(3)
+	observer.reset()
+
+	# Remove all entities
+	for entity in entities_list:
+		world.remove_entity(entity)
+
+	# Observer should have been notified for each removal
+	assert_int(observer.removed_count).is_equal(3)
+
+
+## Regression test: observer side-effects during remove_entity must not cause double notification.
+## O_TestCleanupSideEffect removes C_ObserverHealth when it sees C_ObserverTest removed.
+## If entity signals are still connected during the loop, health_observer fires twice (bug).
+## If signals are disconnected before the loop, health_observer fires exactly once (correct).
+func test_observer_no_double_notification_on_remove_entity():
+	var cleanup_observer = O_TestCleanupSideEffectObserver.new()
+	var health_observer = O_HealthObserver.new()
+	world.add_observer(cleanup_observer)
+	world.add_observer(health_observer)
+
+	var entity = Entity.new()
+	entity.add_component(C_ObserverTest.new())
+	entity.add_component(C_ObserverHealth.new(100))
+	world.add_entity(entity)
+
+	health_observer.reset()
+
+	world.remove_entity(entity)
+
+	assert_int(health_observer.health_removed_count).is_equal(1)

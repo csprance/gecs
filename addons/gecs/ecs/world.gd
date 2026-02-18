@@ -397,15 +397,10 @@ func remove_entity(entity: Entity) -> void:
 
 	for processor in ECS.entity_postprocessors:
 		processor.call(entity)
-	entity_removed.emit(entity)
-	_worldLogger.debug("remove_entity Removing Entity: ", entity)
-	var erase_idx = entities.find(entity)
-	if erase_idx >= 0:
-		entities.remove_at(erase_idx)
-	else:
-		_worldLogger.warning("remove_entity: entity not found in entities array: ", entity)
 
-	# Only disconnect signals if they're actually connected
+	# Disconnect entity signals before notifying observers to prevent re-entrancy:
+	# if an observer's on_component_removed calls entity.remove_component() as a side effect,
+	# the signal must not be connected or it will double-notify observers watching that component.
 	if entity.component_added.is_connected(_on_entity_component_added):
 		entity.component_added.disconnect(_on_entity_component_added)
 	if entity.component_removed.is_connected(_on_entity_component_removed):
@@ -414,6 +409,20 @@ func remove_entity(entity: Entity) -> void:
 		entity.relationship_added.disconnect(_on_entity_relationship_added)
 	if entity.relationship_removed.is_connected(_on_entity_relationship_removed):
 		entity.relationship_removed.disconnect(_on_entity_relationship_removed)
+
+	# Emit component_removed for each component before teardown
+	# so observers learn about removal when an entity is destroyed
+	for comp in entity.components.values():
+		component_removed.emit(entity, comp)
+		_handle_observer_component_removed(entity, comp)
+
+	entity_removed.emit(entity)
+	_worldLogger.debug("remove_entity Removing Entity: ", entity)
+	var erase_idx = entities.find(entity)
+	if erase_idx >= 0:
+		entities.remove_at(erase_idx)
+	else:
+		_worldLogger.warning("remove_entity: entity not found in entities array: ", entity)
 
 	# Remove from ID registry
 	var entity_id = entity.id
