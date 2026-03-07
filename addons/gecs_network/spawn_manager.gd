@@ -217,6 +217,14 @@ func _find_component_by_type(entity: Entity, comp_type: String) -> Component:
 # ============================================================================
 
 
+## Handle a full world state snapshot sent to a late-joining peer.
+## Iterates the entities array and calls handle_spawn_entity() for each.
+func handle_world_state(state: Dictionary) -> void:
+	var entities_data = state.get("entities", [])
+	for entity_data in entities_data:
+		handle_spawn_entity(entity_data)
+
+
 ## Called when an entity is added to the world on the server.
 ## If the entity has CN_NetworkIdentity, queues a deferred broadcast spawn.
 func on_entity_added(entity: Entity) -> void:
