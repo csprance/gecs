@@ -1,0 +1,96 @@
+# Requirements: GECS Networking v2
+
+**Defined:** 2026-03-07
+**Core Value:** Developers can add multiplayer to their ECS game by marking components as networked — no manual RPC calls, serialization code, or complex networking logic required.
+
+## v1 Requirements
+
+### Foundation
+
+- [ ] **FOUND-01**: Developer can declare a component's sync priority using `@export_group` annotations (REALTIME/HIGH/MEDIUM/LOW) — no external SyncConfig registry required
+- [ ] **FOUND-02**: Every network RPC includes a monotonic session ID — receivers reject RPCs from previous game sessions, preventing ghost entity accumulation across resets
+- [ ] **FOUND-03**: All sync work is gated on session state — zero networking overhead when running as single-player or offline
+- [ ] **FOUND-04**: NetAdapter abstraction wraps MultiplayerAPI — networking logic is testable without running two Godot instances
+
+### Entity Lifecycle
+
+- [ ] **LIFE-01**: When the server spawns a networked entity, it is automatically replicated to all connected clients — no manual spawn RPC required
+- [ ] **LIFE-02**: When the server despawns a networked entity, it is automatically removed on all connected clients — no manual despawn RPC required
+- [ ] **LIFE-03**: A client connecting after a game session has started receives a full world state snapshot — all existing networked entities appear on the client
+- [ ] **LIFE-04**: When a peer disconnects, all entities owned by that peer are automatically removed from the world on all remaining peers
+- [ ] **LIFE-05**: Entity network authority is declared via `CN_LocalAuthority` / `CN_ServerAuthority` marker components — game systems query authority by checking for these components, not by calling `is_multiplayer_authority()`
+
+### Property Sync
+
+- [ ] **SYNC-01**: Component properties sync to clients at rates matching their declared priority group (REALTIME: every frame, HIGH: 20Hz, MEDIUM: 10Hz, LOW: 2Hz) using batched RPCs
+- [ ] **SYNC-02**: Only properties that changed since the last sync tick are included in each outbound batch — unchanged properties generate no bandwidth
+- [ ] **SYNC-03**: A component can be declared as spawn-only — its values are sent once on entity spawn and not synced continuously
+- [ ] **SYNC-04**: Entity transforms use Godot's native `MultiplayerSynchronizer` for position/rotation sync — provides built-in interpolation without per-frame RPC overhead
+
+### Advanced
+
+- [ ] **ADV-01**: Entity-to-entity relationships are synchronized across peers — a deferred resolution queue handles cases where the target entity has not yet spawned on the client
+- [ ] **ADV-02**: A periodic full-state reconciliation broadcast (default 30s interval, configurable) silently corrects property drift and packets missed due to unreliable transport
+- [ ] **ADV-03**: Systems can register custom sync handlers that override default property sync behavior — the system-level override mechanism is sufficient for games to implement client-side prediction patterns; this override surface is documented with an example prediction pattern
+
+## Future Requirements
+
+### Server Time Sync
+
+- **TIME-01**: Client can query server clock offset — enables server-authoritative cooldowns and timestamps
+- **TIME-02**: Time sync uses ping/pong round-trip measurement with configurable sample count
+
+### Client-Side Prediction (v3)
+
+- **PRED-01**: Framework provides a reconciliation helper for systems running local prediction
+- **PRED-02**: Systems can flag a component as "predicted" — server corrections are applied with smoothing
+- **PRED-03**: Input history buffer utility for rollback-based prediction
+
+### Interest Management
+
+- **INT-01**: Entities can be marked with a visibility zone — only sent to clients within range
+- **INT-02**: Game code can implement custom relevancy filters via the NetAdapter hook
+
+## Out of Scope
+
+| Feature | Reason |
+|---------|--------|
+| Client-side prediction implementation | Architectural hooks provided in ADV-03; full implementation deferred to v3 |
+| Server time synchronization | Useful but not blocking core sync — deferred to next milestone |
+| P2P / WebRTC networking | Different topology, fundamentally changes architecture — server-client only |
+| Lobby / matchmaking | Out of scope — GECS Networking is a state sync layer, not session management |
+| Interest management / spatial culling | Expose hooks (ADV-03), leave policy to game code — full impl deferred |
+| Backwards compatibility with v0.1.x | Clean break on new branch — no migration path required |
+| Deterministic physics / lockstep | Different architecture; incompatible with the async sync model |
+
+## Traceability
+
+Which phases cover which requirements. Updated during roadmap creation.
+
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| FOUND-01 | — | Pending |
+| FOUND-02 | — | Pending |
+| FOUND-03 | — | Pending |
+| FOUND-04 | — | Pending |
+| LIFE-01 | — | Pending |
+| LIFE-02 | — | Pending |
+| LIFE-03 | — | Pending |
+| LIFE-04 | — | Pending |
+| LIFE-05 | — | Pending |
+| SYNC-01 | — | Pending |
+| SYNC-02 | — | Pending |
+| SYNC-03 | — | Pending |
+| SYNC-04 | — | Pending |
+| ADV-01 | — | Pending |
+| ADV-02 | — | Pending |
+| ADV-03 | — | Pending |
+
+**Coverage:**
+- v1 requirements: 16 total
+- Mapped to phases: 0
+- Unmapped: 16 ⚠️ (will be resolved during roadmap creation)
+
+---
+*Requirements defined: 2026-03-07*
+*Last updated: 2026-03-07 after initial definition*
