@@ -45,6 +45,13 @@ func test_is_server_owned_peer_id_two():
 	assert_bool(net_id.is_server_owned()).is_false()
 
 
+func test_is_server_owned_peer_id_one_is_not_server_owned():
+	# LOCKED DECISION: peer_id=1 (host) is NOT server-owned in v2
+	# Server-owned means peer_id=0 ONLY — the host-as-player decides their own authority
+	var net_id = CN_NetworkIdentity.new(1)
+	assert_bool(net_id.is_server_owned()).is_false()
+
+
 func test_is_host_peer_id_one():
 	var net_id = CN_NetworkIdentity.new(1)
 	assert_bool(net_id.is_host()).is_true()
