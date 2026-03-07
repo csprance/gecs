@@ -8,8 +8,8 @@ extends Component
 ##
 ## Authority Model:
 ## - peer_id = 0: Server-owned (enemies, projectiles, world entities)
-## - peer_id = 1: Host player (also acts as server)
-## - peer_id > 1: Client player
+## - peer_id > 0: Player-owned (peer_id=1 is host-player, >1 are client players)
+## - Framework makes no assumption about whether peer_id=1 is "server" — game decides
 ##
 ## Usage in systems:
 ##   # Check if entity is controlled by local player:
@@ -42,16 +42,10 @@ func _init(p_peer_id: int = 0) -> void:
 
 
 ## Check if this entity is owned by the server.
-## Server owns enemies, projectiles, and world entities (peer_id = 0 or 1).
-## Note: peer_id = 1 is the host, who is also the server.
+## Server-owned means peer_id == 0 ONLY. The host player (peer_id=1) is a player,
+## not a server-owned entity. Game code decides how to treat peer_id=1.
 func is_server_owned() -> bool:
-	return peer_id == 0 or peer_id == 1
-
-
-## Check if this is the host/server peer.
-## The host has peer_id = 1 and runs the server logic.
-func is_host() -> bool:
-	return peer_id == 1
+	return peer_id == 0
 
 
 ## Check if this entity is a player (not server-owned NPC).
