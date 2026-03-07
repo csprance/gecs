@@ -9,8 +9,8 @@
 
 - [x] **FOUND-01**: Developer can declare a component's sync priority using `@export_group` annotations (REALTIME/HIGH/MEDIUM/LOW) — no external SyncConfig registry required
 - [x] **FOUND-02**: Every network RPC includes a monotonic session ID — receivers reject RPCs from previous game sessions, preventing ghost entity accumulation across resets
-- [ ] **FOUND-03**: All sync work is gated on session state — zero networking overhead when running as single-player or offline
-- [ ] **FOUND-04**: NetAdapter abstraction wraps MultiplayerAPI — networking logic is testable without running two Godot instances
+- [x] **FOUND-03**: All sync work is gated on session state — zero networking overhead when running as single-player or offline
+- [x] **FOUND-04**: NetAdapter abstraction wraps MultiplayerAPI — networking logic is testable without running two Godot instances
 
 ### Entity Lifecycle
 
@@ -71,8 +71,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 |-------------|-------|--------|
 | FOUND-01 | Phase 1 | Complete |
 | FOUND-02 | Phase 1 | Complete |
-| FOUND-03 | Phase 1 | Pending |
-| FOUND-04 | Phase 1 | Pending |
+| FOUND-03 | Phase 1 | Complete |
+| FOUND-04 | Phase 1 | Complete |
 | LIFE-01 | Phase 1 | Complete |
 | LIFE-02 | Phase 1 | Complete |
 | LIFE-03 | Phase 1 | Complete |

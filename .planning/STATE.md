@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 01-foundation-and-entity-lifecycle-01-02-PLAN.md
-last_updated: "2026-03-07T21:08:22.472Z"
+stopped_at: Completed 01-foundation-and-entity-lifecycle-01-03-PLAN.md
+last_updated: "2026-03-07T21:17:57.635Z"
 last_activity: 2026-03-07 — Plan 01-01 complete (Wave 0 RED tests for SpawnManager + is_server_owned semantics)
 progress:
   total_phases: 5
   completed_phases: 0
   total_plans: 4
-  completed_plans: 2
+  completed_plans: 3
   percent: 25
 ---
 
@@ -52,6 +52,7 @@ Progress: [██░░░░░░░░] 25%
 *Updated after each plan completion*
 | Phase 01-foundation-and-entity-lifecycle P01 | 8 | 2 tasks | 2 files |
 | Phase 01-foundation-and-entity-lifecycle P02 | 18 | 2 tasks | 3 files |
+| Phase 01-foundation-and-entity-lifecycle P03 | 525537 | 1 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -67,6 +68,8 @@ Recent decisions affecting current work:
 - [Phase 01-foundation-and-entity-lifecycle]: MockNetworkSync v2 has no sync_config field — tests enforce v2 API contract before implementation
 - [Phase 01-foundation-and-entity-lifecycle]: SpawnManager calls _ns.call_deferred('_deferred_broadcast') — MockNetworkSync lacks this; Plan 03 adds it to NetworkSync
 - [Phase 01-foundation-and-entity-lifecycle]: Manual .godot/global_script_class_cache.cfg update required for new class_name files in CLI test runs
+- [Phase 01-foundation-and-entity-lifecycle]: NetworkSync.rpc_broadcast_despawn() is a public helper (not @rpc) so SpawnManager can call it via _ns reference without owning the Node
+- [Phase 01-foundation-and-entity-lifecycle]: _deferred_broadcast checks _broadcast_pending before serializing to handle add-then-remove-same-frame race
 
 ### Pending Todos
 
@@ -79,6 +82,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-07T21:08:22.468Z
-Stopped at: Completed 01-foundation-and-entity-lifecycle-01-02-PLAN.md
+Last session: 2026-03-07T21:17:57.631Z
+Stopped at: Completed 01-foundation-and-entity-lifecycle-01-03-PLAN.md
 Resume file: None
