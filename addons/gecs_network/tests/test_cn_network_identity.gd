@@ -1,8 +1,11 @@
 extends GdUnitTestSuite
 
 ## Test suite for CN_NetworkIdentity
-## Tests pure logic methods (is_server_owned, is_host, is_player)
+## Tests pure logic methods (is_server_owned, is_player)
 ## and adapter-based methods (is_local, has_authority).
+##
+## NOTE: is_host() was removed in v2. peer_id=1 is a player, not a "host" in the
+## framework. Game code decides how to treat peer_id=1 (e.g. check peer_id == 1 directly).
 
 # ============================================================================
 # MOCK ADAPTER
@@ -35,36 +38,17 @@ func test_is_server_owned_peer_id_zero():
 	assert_bool(net_id.is_server_owned()).is_true()
 
 
-func test_is_server_owned_peer_id_one():
+func test_is_server_owned_peer_id_one_is_not_server_owned():
+	# LOCKED DECISION: peer_id=1 is the host-player, NOT server-owned.
+	# Server-owned means peer_id=0 ONLY. The host player (peer_id=1) is a player,
+	# not a server-owned entity. Game code decides how to treat peer_id=1.
 	var net_id = CN_NetworkIdentity.new(1)
-	assert_bool(net_id.is_server_owned()).is_true()
+	assert_bool(net_id.is_server_owned()).is_false()
 
 
 func test_is_server_owned_peer_id_two():
 	var net_id = CN_NetworkIdentity.new(2)
 	assert_bool(net_id.is_server_owned()).is_false()
-
-
-func test_is_server_owned_peer_id_one_is_not_server_owned():
-	# LOCKED DECISION: peer_id=1 (host) is NOT server-owned in v2
-	# Server-owned means peer_id=0 ONLY — the host-as-player decides their own authority
-	var net_id = CN_NetworkIdentity.new(1)
-	assert_bool(net_id.is_server_owned()).is_false()
-
-
-func test_is_host_peer_id_one():
-	var net_id = CN_NetworkIdentity.new(1)
-	assert_bool(net_id.is_host()).is_true()
-
-
-func test_is_host_peer_id_zero():
-	var net_id = CN_NetworkIdentity.new(0)
-	assert_bool(net_id.is_host()).is_false()
-
-
-func test_is_host_peer_id_two():
-	var net_id = CN_NetworkIdentity.new(2)
-	assert_bool(net_id.is_host()).is_false()
 
 
 func test_is_player_peer_id_zero():
@@ -73,6 +57,7 @@ func test_is_player_peer_id_zero():
 
 
 func test_is_player_peer_id_one():
+	# peer_id=1 is the host-player — still a player, not server-owned
 	var net_id = CN_NetworkIdentity.new(1)
 	assert_bool(net_id.is_player()).is_true()
 
