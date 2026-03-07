@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: planning
-stopped_at: Completed 01-foundation-and-entity-lifecycle-01-01-PLAN.md
-last_updated: "2026-03-07T20:54:46.141Z"
-last_activity: 2026-03-07 — Roadmap created, all 16 requirements mapped to 5 phases
+status: executing
+stopped_at: Completed 01-foundation-and-entity-lifecycle-01-02-PLAN.md
+last_updated: "2026-03-07T21:08:22.472Z"
+last_activity: 2026-03-07 — Plan 01-01 complete (Wave 0 RED tests for SpawnManager + is_server_owned semantics)
 progress:
   total_phases: 5
   completed_phases: 0
   total_plans: 4
-  completed_plans: 1
-  percent: 0
+  completed_plans: 2
+  percent: 25
 ---
 
 # Project State
@@ -51,6 +51,7 @@ Progress: [██░░░░░░░░] 25%
 
 *Updated after each plan completion*
 | Phase 01-foundation-and-entity-lifecycle P01 | 8 | 2 tasks | 2 files |
+| Phase 01-foundation-and-entity-lifecycle P02 | 18 | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -64,6 +65,8 @@ Recent decisions affecting current work:
 - Research flag: CN_NetSync + SyncRule API shape warrants a focused design session before Phase 2 coding begins
 - [Phase 01-foundation-and-entity-lifecycle]: LOCKED: peer_id=1 (host) is NOT server-owned in v2 — server-owned means peer_id=0 ONLY
 - [Phase 01-foundation-and-entity-lifecycle]: MockNetworkSync v2 has no sync_config field — tests enforce v2 API contract before implementation
+- [Phase 01-foundation-and-entity-lifecycle]: SpawnManager calls _ns.call_deferred('_deferred_broadcast') — MockNetworkSync lacks this; Plan 03 adds it to NetworkSync
+- [Phase 01-foundation-and-entity-lifecycle]: Manual .godot/global_script_class_cache.cfg update required for new class_name files in CLI test runs
 
 ### Pending Todos
 
@@ -76,6 +79,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-07T20:54:46.137Z
-Stopped at: Completed 01-foundation-and-entity-lifecycle-01-01-PLAN.md
+Last session: 2026-03-07T21:08:22.468Z
+Stopped at: Completed 01-foundation-and-entity-lifecycle-01-02-PLAN.md
 Resume file: None
