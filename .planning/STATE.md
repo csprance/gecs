@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: Phase 1 context gathered
-last_updated: "2026-03-07T20:23:14.902Z"
+stopped_at: Completed 01-foundation-and-entity-lifecycle-01-01-PLAN.md
+last_updated: "2026-03-07T20:54:46.141Z"
 last_activity: 2026-03-07 — Roadmap created, all 16 requirements mapped to 5 phases
 progress:
   total_phases: 5
   completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
+  total_plans: 4
+  completed_plans: 1
   percent: 0
 ---
 
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-03-07)
 ## Current Position
 
 Phase: 1 of 5 (Foundation and Entity Lifecycle)
-Plan: 0 of TBD in current phase
-Status: Ready to plan
-Last activity: 2026-03-07 — Roadmap created, all 16 requirements mapped to 5 phases
+Plan: 2 of 4 in current phase
+Status: In progress
+Last activity: 2026-03-07 — Plan 01-01 complete (Wave 0 RED tests for SpawnManager + is_server_owned semantics)
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [██░░░░░░░░] 25%
 
 ## Performance Metrics
 
@@ -50,6 +50,7 @@ Progress: [░░░░░░░░░░] 0%
 - Trend: —
 
 *Updated after each plan completion*
+| Phase 01-foundation-and-entity-lifecycle P01 | 8 | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -61,6 +62,8 @@ Recent decisions affecting current work:
 - Roadmap: 5-phase structure derived from 16 requirements; critical pitfalls (session IDs, sync loops, node naming, spawn timing) must be resolved in Phase 1 — cannot be retrofitted
 - Architecture: Replace NetworkMiddleware with declarative CN_NetSync component; NetworkSync node as single RPC surface delegating to SpawnManager, SyncSender, SyncReceiver, RelationshipSync
 - Research flag: CN_NetSync + SyncRule API shape warrants a focused design session before Phase 2 coding begins
+- [Phase 01-foundation-and-entity-lifecycle]: LOCKED: peer_id=1 (host) is NOT server-owned in v2 — server-owned means peer_id=0 ONLY
+- [Phase 01-foundation-and-entity-lifecycle]: MockNetworkSync v2 has no sync_config field — tests enforce v2 API contract before implementation
 
 ### Pending Todos
 
@@ -73,6 +76,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-07T20:23:14.898Z
-Stopped at: Phase 1 context gathered
-Resume file: .planning/phases/01-foundation-and-entity-lifecycle/01-CONTEXT.md
+Last session: 2026-03-07T20:54:46.137Z
+Stopped at: Completed 01-foundation-and-entity-lifecycle-01-01-PLAN.md
+Resume file: None

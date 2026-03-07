@@ -7,17 +7,17 @@
 
 ### Foundation
 
-- [ ] **FOUND-01**: Developer can declare a component's sync priority using `@export_group` annotations (REALTIME/HIGH/MEDIUM/LOW) — no external SyncConfig registry required
-- [ ] **FOUND-02**: Every network RPC includes a monotonic session ID — receivers reject RPCs from previous game sessions, preventing ghost entity accumulation across resets
+- [x] **FOUND-01**: Developer can declare a component's sync priority using `@export_group` annotations (REALTIME/HIGH/MEDIUM/LOW) — no external SyncConfig registry required
+- [x] **FOUND-02**: Every network RPC includes a monotonic session ID — receivers reject RPCs from previous game sessions, preventing ghost entity accumulation across resets
 - [ ] **FOUND-03**: All sync work is gated on session state — zero networking overhead when running as single-player or offline
 - [ ] **FOUND-04**: NetAdapter abstraction wraps MultiplayerAPI — networking logic is testable without running two Godot instances
 
 ### Entity Lifecycle
 
-- [ ] **LIFE-01**: When the server spawns a networked entity, it is automatically replicated to all connected clients — no manual spawn RPC required
-- [ ] **LIFE-02**: When the server despawns a networked entity, it is automatically removed on all connected clients — no manual despawn RPC required
-- [ ] **LIFE-03**: A client connecting after a game session has started receives a full world state snapshot — all existing networked entities appear on the client
-- [ ] **LIFE-04**: When a peer disconnects, all entities owned by that peer are automatically removed from the world on all remaining peers
+- [x] **LIFE-01**: When the server spawns a networked entity, it is automatically replicated to all connected clients — no manual spawn RPC required
+- [x] **LIFE-02**: When the server despawns a networked entity, it is automatically removed on all connected clients — no manual despawn RPC required
+- [x] **LIFE-03**: A client connecting after a game session has started receives a full world state snapshot — all existing networked entities appear on the client
+- [x] **LIFE-04**: When a peer disconnects, all entities owned by that peer are automatically removed from the world on all remaining peers
 - [ ] **LIFE-05**: Entity network authority is declared via `CN_LocalAuthority` / `CN_ServerAuthority` marker components — game systems query authority by checking for these components, not by calling `is_multiplayer_authority()`
 
 ### Property Sync
@@ -69,14 +69,14 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| FOUND-01 | Phase 1 | Pending |
-| FOUND-02 | Phase 1 | Pending |
+| FOUND-01 | Phase 1 | Complete |
+| FOUND-02 | Phase 1 | Complete |
 | FOUND-03 | Phase 1 | Pending |
 | FOUND-04 | Phase 1 | Pending |
-| LIFE-01 | Phase 1 | Pending |
-| LIFE-02 | Phase 1 | Pending |
-| LIFE-03 | Phase 1 | Pending |
-| LIFE-04 | Phase 1 | Pending |
+| LIFE-01 | Phase 1 | Complete |
+| LIFE-02 | Phase 1 | Complete |
+| LIFE-03 | Phase 1 | Complete |
+| LIFE-04 | Phase 1 | Complete |
 | LIFE-05 | Phase 3 | Pending |
 | SYNC-01 | Phase 2 | Pending |
 | SYNC-02 | Phase 2 | Pending |
