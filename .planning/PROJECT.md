@@ -55,5 +55,17 @@ The ECS pattern is perfect for automatic networking - components are pure data t
 | Replace rather than extend | Current approach is fundamentally complex, clean slate needed | — Pending |
 | New branch development | Allows complete redesign without breaking existing users | — Pending |
 
+## Current Milestone: v1.0 GECS Networking v2
+
+**Goal:** Replace the current NetworkMiddleware system with a declarative, component-driven networking layer that requires zero manual RPC code.
+
+**Target features:**
+- Component-level network configuration (sync rules, authority, rate limiting)
+- Automatic entity lifecycle sync (spawn/despawn without manual RPCs)
+- System-level networking overrides for complex behaviors
+- Fallback to manual networking for edge cases
+- Clean separation between local and networked entities
+- Robust error handling and connection management
+
 ---
-*Last updated: 2026-03-04 after initialization*
+*Last updated: 2026-03-07 after milestone v1.0 started*
