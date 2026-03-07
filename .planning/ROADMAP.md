@@ -30,7 +30,13 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. Server despawns an entity and it is automatically removed on all connected clients
   4. A client that connects mid-game receives all existing networked entities immediately
   5. When a peer disconnects, all entities owned by that peer are removed from the world on all remaining peers; single-player sessions have zero networking overhead
-**Plans**: TBD
+**Plans**: 4 plans
+
+Plans:
+- [ ] 01-01-PLAN.md — Wave 0 test stubs: failing tests for SpawnManager and CN_NetworkIdentity semantics
+- [ ] 01-02-PLAN.md — Foundation implementation: CN_NetworkIdentity fix + SpawnManager creation
+- [ ] 01-03-PLAN.md — NetworkSync Phase 1 skeleton: RPC surface, lifecycle signal wiring, Phase 2-5 cleanup
+- [ ] 01-04-PLAN.md — Integration pass: complete _apply_component_data, finalize RPC dispatch, human checkpoint
 
 ### Phase 2: Component Property Sync
 **Goal**: Component properties declared as networked stay synchronized across peers at correct rates, with bounded bandwidth and zero feedback loops
@@ -76,7 +82,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation and Entity Lifecycle | 0/TBD | Not started | - |
+| 1. Foundation and Entity Lifecycle | 0/4 | Planning complete | - |
 | 2. Component Property Sync | 0/TBD | Not started | - |
 | 3. Authority Model and Native Transform Sync | 0/TBD | Not started | - |
 | 4. Relationship Sync | 0/TBD | Not started | - |
