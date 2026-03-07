@@ -1,8 +1,7 @@
 extends GdUnitTestSuite
 
-## Test suite for SpawnManager (Wave 0 — RED phase stubs)
-## All tests FAIL because SpawnManager does not yet exist (created in Wave 1).
-## Tests define the behavioral contract for LIFE-01, LIFE-02, LIFE-03, LIFE-04.
+## Test suite for SpawnManager (Wave 1 — GREEN phase)
+## Tests verify the behavioral contract for LIFE-01, LIFE-02, LIFE-03, LIFE-04.
 ##
 ## MockNetworkSync has NO sync_config field (removed in v2).
 
@@ -164,7 +163,6 @@ func test_serialize_world_state():
 	assert_bool(state.has("session_id")).is_true()
 	assert_int(state["session_id"]).is_equal(42)
 	assert_int(state["entities"].size()).is_equal(1)
-	assert_bool(false).is_true()  # Stub sentinel — must be replaced in Wave 1 GREEN phase
 
 
 # ============================================================================
