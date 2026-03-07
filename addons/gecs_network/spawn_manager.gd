@@ -218,10 +218,12 @@ func _find_component_by_type(entity: Entity, comp_type: String) -> Component:
 
 
 ## Handle a full world state snapshot sent to a late-joining peer.
-## Iterates the entities array and calls handle_spawn_entity() for each.
+## CRITICAL: syncs session_id FIRST so handle_spawn_entity() accepts the payloads.
 func handle_world_state(state: Dictionary) -> void:
-	var entities_data = state.get("entities", [])
-	for entity_data in entities_data:
+	var server_session_id = state.get("session_id", 0)
+	if server_session_id != _ns._game_session_id:
+		_ns._game_session_id = server_session_id
+	for entity_data in state.get("entities", []):
 		handle_spawn_entity(entity_data)
 
 
@@ -259,6 +261,8 @@ func on_entity_removed(entity: Entity) -> void:
 ## Called when a peer disconnects from the session.
 ## Removes all entities owned by the disconnected peer.
 func on_peer_disconnected(peer_id: int) -> void:
+	if _ns._world == null:
+		return
 	var to_remove: Array = []
 	for entity in _ns._world.entities:
 		var net_id = entity.get_component(CN_NetworkIdentity)
