@@ -8,6 +8,10 @@
 
 config_version=5
 
+[animation]
+
+compatibility/default_parent_skeleton_in_mesh_instance_3d=true
+
 [application]
 
 config/name="GECS"
@@ -28,8 +32,8 @@ manager/music/bus="Music"
 
 [autoload]
 
-DebugMenu="*res://addons/debug_menu/debug_menu.tscn"
-ECS="*res://addons/gecs/ecs/ecs.gd"
+DebugMenu="*uid://cggqb75a8w8r"
+ECS="*uid://dfqwl5njvdnmq"
 
 [editor_plugins]
 
