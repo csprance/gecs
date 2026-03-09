@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: completed
-stopped_at: Completed 02-component-property-sync-02-03-PLAN.md
-last_updated: "2026-03-09T13:31:32.306Z"
+stopped_at: Checkpoint 02-04 human-verify — Task 1 complete, awaiting human verification of end-to-end sync
+last_updated: "2026-03-09T15:30:30.226Z"
 last_activity: 2026-03-07 — Plan 01-04 complete (Phase 1 integration — _apply_component_data, real RPC dispatch, all 33 network tests GREEN)
 progress:
   total_phases: 5
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 8
-  completed_plans: 7
+  completed_plans: 8
   percent: 100
 ---
 
@@ -57,6 +57,7 @@ Progress: [██████████] 100% (Phase 1)
 | Phase 02-component-property-sync P01 | 7 | 2 tasks | 14 files |
 | Phase 02-component-property-sync P02 | 302 | 2 tasks | 9 files |
 | Phase 02-component-property-sync P03 | 150 | 2 tasks | 6 files |
+| Phase 02-component-property-sync P04 | 13 | 1 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -83,6 +84,8 @@ Recent decisions affecting current work:
 - [Phase 02-component-property-sync]: SyncSender calls _ns methods directly (no .rpc()) for testability; plan 04 wiring provides real @rpc surface
 - [Phase 02-component-property-sync]: REALTIME interval 0.0 handled by _should_flush() returning true unconditionally when interval <= 0.0
 - [Phase 02-component-property-sync]: SyncReceiver guards relay call with _ns.get('_sender') \!= null — safety for plan 04 wiring window
+- [Phase 02-component-property-sync]: EditorPlugin cannot be instantiated in headless GdUnit4 runner — test_plugin_settings.gd replicates _register_project_settings() inline
+- [Phase 02-component-property-sync]: _sync_components_unreliable/_reliable use 'any_peer' RPC mode — authority validated inside SyncReceiver via get_remote_sender_id()
 
 ### Pending Todos
 
@@ -95,6 +98,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-09T13:31:32.301Z
-Stopped at: Completed 02-component-property-sync-02-03-PLAN.md
+Last session: 2026-03-09T15:30:30.222Z
+Stopped at: Checkpoint 02-04 human-verify — Task 1 complete, awaiting human verification of end-to-end sync
 Resume file: None
