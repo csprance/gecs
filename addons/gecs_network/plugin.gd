@@ -61,6 +61,8 @@ func _enter_tree() -> void:
 		var icon = _load_icon(type_data["icon"])
 		add_custom_type(type_name, type_data["base"], script, icon)
 
+	_register_project_settings()
+
 	print("[%s] Plugin enabled - %s registered" % [PLUGIN_NAME, ", ".join(CUSTOM_TYPES.keys())])
 
 
@@ -79,3 +81,19 @@ func _load_icon(icon_name: String) -> Texture2D:
 	if ResourceLoader.exists(icon_path):
 		return load(icon_path)
 	return null
+
+
+## Register gecs_network ProjectSettings for sync Hz values.
+## Called from _enter_tree() so settings appear in Project Settings dialog.
+## Safe to call multiple times — set_setting() is idempotent.
+func _register_project_settings() -> void:
+	_add_setting("gecs_network/sync/high_hz", 20, TYPE_INT)
+	_add_setting("gecs_network/sync/medium_hz", 10, TYPE_INT)
+	_add_setting("gecs_network/sync/low_hz", 2, TYPE_INT)
+
+
+func _add_setting(path: String, default_value: Variant, type: int) -> void:
+	if not ProjectSettings.has_setting(path):
+		ProjectSettings.set_setting(path, default_value)
+	ProjectSettings.set_initial_value(path, default_value)
+	ProjectSettings.add_property_info({"name": path, "type": type})

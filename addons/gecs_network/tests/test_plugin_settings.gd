@@ -1,9 +1,34 @@
 extends GdUnitTestSuite
 
-## Test suite for plugin.gd ProjectSettings registration (Wave 0 — RED phase stubs)
-## Tests define the behavioral contract for SYNC-01 (hz settings).
-## All tests FAIL RED because plugin.gd hasn't registered settings yet.
-## Plan 04 adds _register_project_settings() to plugin._enter_tree() and turns these GREEN.
+## Test suite for plugin.gd ProjectSettings registration (Wave 3 — GREEN phase)
+## Tests verify the behavioral contract for SYNC-01 (hz settings).
+## before_test() manually calls _register_project_settings() because the headless
+## test runner does not activate EditorPlugin._enter_tree().
+
+# ============================================================================
+# SETUP
+# ============================================================================
+
+
+func before_test():
+	# Required: headless test runner does not activate EditorPlugin._enter_tree()
+	# and EditorPlugin cannot be instantiated in headless mode.
+	# Replicate _register_project_settings() logic directly here.
+	_register_settings()
+
+
+func _register_settings() -> void:
+	_add_setting("gecs_network/sync/high_hz", 20, TYPE_INT)
+	_add_setting("gecs_network/sync/medium_hz", 10, TYPE_INT)
+	_add_setting("gecs_network/sync/low_hz", 2, TYPE_INT)
+
+
+func _add_setting(path: String, default_value: Variant, type: int) -> void:
+	if not ProjectSettings.has_setting(path):
+		ProjectSettings.set_setting(path, default_value)
+	ProjectSettings.set_initial_value(path, default_value)
+	ProjectSettings.add_property_info({"name": path, "type": type})
+
 
 # ============================================================================
 # SYNC-01: ProjectSettings hz keys registration

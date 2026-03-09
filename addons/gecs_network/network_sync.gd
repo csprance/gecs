@@ -52,6 +52,8 @@ var _broadcast_pending: Dictionary = {}   # Deferred spawn guard — CRITICAL
 var _spawn_counter: int = 0
 var _game_session_id: int = 0             # Session anti-ghost — CRITICAL
 var _spawn_manager: SpawnManager
+var _sender: SyncSender
+var _receiver: SyncReceiver
 var _is_ready: bool = false
 
 # ============================================================================
@@ -89,6 +91,8 @@ func _ready() -> void:
 		return
 
 	_spawn_manager = SpawnManager.new(self)
+	_sender = SyncSender.new(self)
+	_receiver = SyncReceiver.new(self)
 
 	_world.entity_added.connect(_on_entity_added)
 	_world.entity_removed.connect(_on_entity_removed)
@@ -120,10 +124,10 @@ func reset_for_new_game() -> void:
 		print("NetworkSync: reset_for_new_game() session_id=%d" % _game_session_id)
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	if _world == null or not net_adapter.is_in_game():
 		return  # Zero overhead in single-player — FOUND-03
-	# Phase 2+ will add property sync ticking here
+	_sender.tick(delta)  # Phase 2: priority-tiered property sync
 
 
 # ============================================================================
@@ -234,3 +238,17 @@ func _sync_world_state(state: Dictionary) -> void:
 	if _spawn_manager == null:
 		return
 	_spawn_manager.handle_world_state(state)
+
+
+@rpc("any_peer", "unreliable_ordered")
+func _sync_components_unreliable(batch: Dictionary) -> void:
+	if _receiver == null:
+		return
+	_receiver.handle_apply_sync_data(batch)
+
+
+@rpc("any_peer", "reliable")
+func _sync_components_reliable(batch: Dictionary) -> void:
+	if _receiver == null:
+		return
+	_receiver.handle_apply_sync_data(batch)

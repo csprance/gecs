@@ -3,6 +3,7 @@ extends Component
 ## Position component for network example.
 ## The @export allows NetworkSync to serialize and sync this value during spawn.
 
+@export_group("HIGH")
 @export var position: Vector3 = Vector3.ZERO
 
 
