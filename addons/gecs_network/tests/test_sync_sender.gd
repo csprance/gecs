@@ -2,8 +2,8 @@ extends GdUnitTestSuite
 
 ## Test suite for SyncSender (Wave 0 — RED phase stubs)
 ## Tests define the behavioral contract for SYNC-01.
-## All tests FAIL RED because SyncSender class does not exist yet.
-## Plan 03 creates SyncSender and turns these GREEN.
+## All tests FAIL RED via assertion — SyncSender class does not exist yet.
+## Plan 03 creates SyncSender and replaces these stubs with real tests.
 
 # ============================================================================
 # MOCK OBJECTS
@@ -90,32 +90,32 @@ func after_test():
 
 
 func test_realtime_fires_every_tick():
-	# Stub: fails because SyncSender class does not exist yet.
+	# Stub: RED — SyncSender does not exist yet.
 	# After a single tick(0.016), unreliable_rpc_calls must have an entry
 	# (REALTIME priority always fires every tick).
-	var sender = SyncSender.new(mock_ns)  # Fails to resolve — RED
+	# Plan 03: var sender = SyncSender.new(mock_ns); sender.tick(0.016)
 	assert_bool(false).is_true()
 
 
 func test_high_fires_at_20hz():
-	# Stub: fails because SyncSender class does not exist yet.
+	# Stub: RED — SyncSender does not exist yet.
 	# After 1/20 seconds (0.05) accumulated, unreliable_rpc_calls must have an
 	# entry. Before that threshold (e.g. after 0.04 s only), it must not.
-	var sender = SyncSender.new(mock_ns)  # Fails to resolve — RED
+	# Plan 03: SyncSender timer accumulator test at HIGH priority.
 	assert_bool(false).is_true()
 
 
 func test_medium_fires_at_10hz():
-	# Stub: fails because SyncSender class does not exist yet.
+	# Stub: RED — SyncSender does not exist yet.
 	# After 1/10 seconds (0.1) accumulated, reliable_rpc_calls must have an entry.
-	var sender = SyncSender.new(mock_ns)  # Fails to resolve — RED
+	# Plan 03: SyncSender timer accumulator test at MEDIUM priority.
 	assert_bool(false).is_true()
 
 
 func test_low_fires_at_2hz():
-	# Stub: fails because SyncSender class does not exist yet.
+	# Stub: RED — SyncSender does not exist yet.
 	# After 0.5 seconds accumulated, reliable_rpc_calls must have an entry.
-	var sender = SyncSender.new(mock_ns)  # Fails to resolve — RED
+	# Plan 03: SyncSender timer accumulator test at LOW priority.
 	assert_bool(false).is_true()
 
 
@@ -125,16 +125,16 @@ func test_low_fires_at_2hz():
 
 
 func test_batch_format():
-	# Stub: fails because SyncSender class does not exist yet.
+	# Stub: RED — SyncSender does not exist yet.
 	# The outbound batch must match wire format:
 	# { entity_id: { comp_type: { prop: value } } }
-	var sender = SyncSender.new(mock_ns)  # Fails to resolve — RED
+	# Plan 03: verify SyncSender batch structure before dispatch.
 	assert_bool(false).is_true()
 
 
 func test_relay_goes_to_unreliable():
-	# Stub: fails because SyncSender class does not exist yet.
+	# Stub: RED — SyncSender does not exist yet.
 	# queue_relay_data() must queue data into the HIGH (unreliable) bucket
 	# so it is relayed to other peers via the unreliable channel.
-	var sender = SyncSender.new(mock_ns)  # Fails to resolve — RED
+	# Plan 03: SyncSender.queue_relay_data() routes to unreliable RPC.
 	assert_bool(false).is_true()

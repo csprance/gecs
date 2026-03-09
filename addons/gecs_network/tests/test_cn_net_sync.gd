@@ -2,12 +2,8 @@ extends GdUnitTestSuite
 
 ## Test suite for CN_NetSync (Wave 0 — RED phase stubs)
 ## Tests define the behavioral contract for SYNC-02 and SYNC-03.
-## All tests FAIL RED because CN_NetSync class does not exist yet.
-## Plan 02 creates CN_NetSync and turns these GREEN.
-##
-## NOTE: Inner classes cannot use @export_group scanning at runtime because
-## get_script() returns null for inner classes. Stubs fail via unresolvable
-## class_name CN_NetSync; the real implementation tests will use file-based scripts.
+## All tests FAIL RED via assertion — CN_NetSync class does not exist yet.
+## Plan 02 creates CN_NetSync and replaces these stubs with real tests.
 
 # ============================================================================
 # MOCK OBJECTS
@@ -94,41 +90,36 @@ func after_test():
 
 
 func test_scanner_maps_export_group_to_priority():
-	# Stub: fails because CN_NetSync class does not exist yet.
+	# Stub: RED — CN_NetSync does not exist yet.
 	# Plan 02 creates CN_NetSync.scan_entity_components() which populates an
 	# internal map; a component with @export_group("MEDIUM") has its property
 	# in Priority.MEDIUM bucket.
-	var net_sync = CN_NetSync.new()  # Fails to resolve — RED
-	assert_bool(false).is_true()    # Extra guard
+	assert_bool(false).is_true()
 
 
 func test_scanner_skips_spawn_only_props():
-	# Stub: fails because CN_NetSync class does not exist yet.
+	# Stub: RED — CN_NetSync does not exist yet.
 	# Properties under @export_group("SPAWN_ONLY") must NOT appear in any
 	# priority bucket.
-	var net_sync = CN_NetSync.new()  # Fails to resolve — RED
 	assert_bool(false).is_true()
 
 
 func test_scanner_skips_local_props():
-	# Stub: fails because CN_NetSync class does not exist yet.
+	# Stub: RED — CN_NetSync does not exist yet.
 	# Properties under @export_group("LOCAL") must NOT appear in any
 	# priority bucket.
-	var net_sync = CN_NetSync.new()  # Fails to resolve — RED
 	assert_bool(false).is_true()
 
 
 func test_scanner_skips_cn_net_sync_itself():
-	# Stub: fails because CN_NetSync class does not exist yet.
+	# Stub: RED — CN_NetSync does not exist yet.
 	# scan_entity_components() must not include CN_NetSync's own properties.
-	var net_sync = CN_NetSync.new()  # Fails to resolve — RED
 	assert_bool(false).is_true()
 
 
 func test_scanner_skips_cn_network_identity():
-	# Stub: fails because CN_NetSync class does not exist yet.
+	# Stub: RED — CN_NetSync does not exist yet.
 	# scan_entity_components() must not include CN_NetworkIdentity properties.
-	var net_sync = CN_NetSync.new()  # Fails to resolve — RED
 	assert_bool(false).is_true()
 
 
@@ -138,25 +129,22 @@ func test_scanner_skips_cn_network_identity():
 
 
 func test_check_changes_returns_changed_props():
-	# Stub: fails because CN_NetSync class does not exist yet.
+	# Stub: RED — CN_NetSync does not exist yet.
 	# After mutating a component property, check_changes_for_priority(Priority.HIGH)
 	# must include it in the returned Dictionary.
-	var net_sync = CN_NetSync.new()  # Fails to resolve — RED
 	assert_bool(false).is_true()
 
 
 func test_check_changes_excludes_unchanged_props():
-	# Stub: fails because CN_NetSync class does not exist yet.
+	# Stub: RED — CN_NetSync does not exist yet.
 	# Second poll with no mutations must return an empty Dictionary.
-	var net_sync = CN_NetSync.new()  # Fails to resolve — RED
 	assert_bool(false).is_true()
 
 
 func test_has_changed_float_approx():
-	# Stub: fails because CN_NetSync class does not exist yet.
+	# Stub: RED — CN_NetSync does not exist yet.
 	# Float values within epsilon must NOT be flagged as changed.
 	# Values beyond epsilon MUST be flagged as changed.
-	var net_sync = CN_NetSync.new()  # Fails to resolve — RED
 	assert_bool(false).is_true()
 
 
@@ -166,8 +154,7 @@ func test_has_changed_float_approx():
 
 
 func test_update_cache_silent_suppresses_resync():
-	# Stub: fails because CN_NetSync class does not exist yet.
+	# Stub: RED — CN_NetSync does not exist yet.
 	# After update_cache_silent(), the same value must not appear as changed
 	# in the next poll (prevents sync echo loop).
-	var net_sync = CN_NetSync.new()  # Fails to resolve — RED
 	assert_bool(false).is_true()
