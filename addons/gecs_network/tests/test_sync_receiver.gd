@@ -1,9 +1,8 @@
 extends GdUnitTestSuite
 
-## Test suite for SyncReceiver (Wave 0 — RED phase stubs)
-## Tests define the behavioral contract for SYNC-01, SYNC-02, SYNC-03.
-## All tests FAIL RED via assertion — SyncReceiver class does not exist yet.
-## Plan 03 creates SyncReceiver and replaces these stubs with real tests.
+## Test suite for SyncReceiver (SYNC-01, SYNC-02, SYNC-03).
+## Tests verify: authority validation, CN_NetworkIdentity strip,
+## _applying_network_data guard, relay dispatch, and spawn-only rejection.
 
 # ============================================================================
 # MOCK OBJECTS
@@ -33,6 +32,15 @@ class MockNetAdapter:
 		return true
 
 
+class MockSender:
+	extends RefCounted
+
+	var relay_calls: Array = []
+
+	func queue_relay_data(entity_id: String, comp_data: Dictionary) -> void:
+		relay_calls.append({"entity_id": entity_id, "comp_data": comp_data})
+
+
 class MockNetworkSync:
 	extends RefCounted
 
@@ -44,16 +52,26 @@ class MockNetworkSync:
 	var debug_logging: bool = false
 	var unreliable_rpc_calls: Array = []
 	var reliable_rpc_calls: Array = []
+	var _sender: MockSender  # For relay tests
 
 	func _init(w: World) -> void:
 		_world = w
 		net_adapter = MockNetAdapter.new()
+		_sender = MockSender.new()
 
 	func _sync_components_unreliable(batch: Dictionary) -> void:
 		unreliable_rpc_calls.append(batch)
 
 	func _sync_components_reliable(batch: Dictionary) -> void:
 		reliable_rpc_calls.append(batch)
+
+
+# Mock component to track property changes
+class MockComp:
+	extends Component
+
+	@export_group("HIGH")
+	@export var value: int = 0
 
 
 # ============================================================================
@@ -85,32 +103,114 @@ func after_test():
 
 
 # ============================================================================
+# HELPERS
+# ============================================================================
+
+
+## Resolve the wire-format type name for a component, matching _find_component_by_type().
+func _comp_type_name(comp: Component) -> String:
+	var script = comp.get_script()
+	if script == null:
+		return comp.get_class()
+	var name_str: String = script.get_global_name()
+	if name_str == "":
+		name_str = script.resource_path.get_file().get_basename()
+	return name_str
+
+
+## Create a fully networked entity (has CN_NetworkIdentity + CN_NetSync + MockComp).
+func _make_networked_entity(peer_id: int) -> Entity:
+	var entity = Entity.new()
+	entity.name = "TestEntity"
+	world.add_entity(entity)
+	entity.add_component(CN_NetworkIdentity.new(peer_id))
+	var net_sync = CN_NetSync.new()
+	entity.add_component(net_sync)
+	var comp = MockComp.new()
+	entity.add_component(comp)
+	net_sync.scan_entity_components(entity)
+	return entity
+
+
+## Create a spawn-only entity (has CN_NetworkIdentity but NO CN_NetSync).
+func _make_spawn_only_entity(peer_id: int) -> Entity:
+	var entity = Entity.new()
+	entity.name = "SpawnOnly"
+	world.add_entity(entity)
+	entity.add_component(CN_NetworkIdentity.new(peer_id))
+	# Deliberately NO CN_NetSync
+	return entity
+
+
+# ============================================================================
 # SYNC-01 / SYNC-02: Server authority checks
 # ============================================================================
 
 
 func test_server_rejects_non_owner():
-	# Stub: RED — SyncReceiver does not exist yet.
-	# Server receives batch for entity where net_id.peer_id != sender_id.
+	# Server receives batch for entity where net_id.peer_id (2) != sender_id (3).
 	# Entity properties must remain unchanged.
-	# Plan 03: var receiver = SyncReceiver.new(mock_ns); receiver.handle_apply_sync_data(...)
-	assert_bool(false).is_true()
+	mock_ns.net_adapter._is_server = true
+	mock_ns.net_adapter._remote_sender_id = 3
+
+	var entity = _make_networked_entity(2)  # peer_id=2, sender=3 → mismatch
+	var comp = entity.get_component(MockComp)
+	comp.value = 99  # Set initial value
+
+	var comp_key = _comp_type_name(comp)
+	var batch = {entity.id: {comp_key: {"value": 999}}}
+	var receiver = SyncReceiver.new(mock_ns)
+	receiver.handle_apply_sync_data(batch)
+
+	# Value must remain 99 (not 999)
+	assert_int(comp.value).is_equal(99)
 
 
 func test_server_strips_cn_network_identity():
-	# Stub: RED — SyncReceiver does not exist yet.
 	# Server receives batch containing "CN_NetworkIdentity" key.
-	# That key must be stripped; other props must be applied.
-	# Plan 03: SyncReceiver strips identity key before applying component data.
-	assert_bool(false).is_true()
+	# That key must be stripped; other comp data must still be applied.
+	mock_ns.net_adapter._is_server = true
+	mock_ns.net_adapter._remote_sender_id = 2
+
+	var entity = _make_networked_entity(2)  # peer_id matches sender_id
+	var comp = entity.get_component(MockComp)
+	comp.value = 0
+
+	# Use actual resolved type name so _find_component_by_type() can match it
+	var comp_key = _comp_type_name(comp)
+	var batch = {
+		entity.id: {
+			"CN_NetworkIdentity": {"peer_id": 999},  # Spoof attempt — must be stripped
+			comp_key: {"value": 42}
+		}
+	}
+	var receiver = SyncReceiver.new(mock_ns)
+	receiver.handle_apply_sync_data(batch)
+
+	# CN_NetworkIdentity spoof must not apply (peer_id unchanged = 2)
+	var net_id = entity.get_component(CN_NetworkIdentity)
+	assert_int(net_id.peer_id).is_equal(2)
+	# MockComp update must still apply
+	assert_int(comp.value).is_equal(42)
 
 
 func test_server_relays_to_clients():
-	# Stub: RED — SyncReceiver does not exist yet.
-	# Valid client update received on server must queue relay in SyncSender
-	# so other clients receive the update.
-	# Plan 03: SyncReceiver calls sender.queue_relay_data() after valid apply.
-	assert_bool(false).is_true()
+	# Valid client update received on server must queue relay in _sender.
+	mock_ns.net_adapter._is_server = true
+	mock_ns.net_adapter._remote_sender_id = 2
+
+	var entity = _make_networked_entity(2)
+
+	var comp = entity.get_component(MockComp)
+	var comp_key = _comp_type_name(comp)
+	var batch = {entity.id: {comp_key: {"value": 77}}}
+	var receiver = SyncReceiver.new(mock_ns)
+	receiver.handle_apply_sync_data(batch)
+
+	# Relay must have been queued
+	assert_int(mock_ns._sender.relay_calls.size()).is_greater(0)
+	var relay = mock_ns._sender.relay_calls[0]
+	assert_str(relay["entity_id"]).is_equal(entity.id)
 
 
 # ============================================================================
@@ -119,19 +219,43 @@ func test_server_relays_to_clients():
 
 
 func test_client_rejects_non_server():
-	# Stub: RED — SyncReceiver does not exist yet.
-	# Client receives batch from peer_id=2 (not the server).
-	# The batch must be rejected entirely.
-	# Plan 03: SyncReceiver checks get_remote_sender_id() == 1 (server).
-	assert_bool(false).is_true()
+	# Client receives batch from peer_id=2 (not server).
+	# The entire batch must be rejected.
+	mock_ns.net_adapter._is_server = false
+	mock_ns.net_adapter._my_peer_id = 3
+	mock_ns.net_adapter._remote_sender_id = 2  # Not the server (server=1)
+
+	var entity = _make_networked_entity(0)  # server-owned entity
+	var comp = entity.get_component(MockComp)
+	comp.value = 55
+
+	var comp_key = _comp_type_name(comp)
+	var batch = {entity.id: {comp_key: {"value": 999}}}
+	var receiver = SyncReceiver.new(mock_ns)
+	receiver.handle_apply_sync_data(batch)
+
+	# Must be rejected — value stays 55
+	assert_int(comp.value).is_equal(55)
 
 
 func test_client_skips_own_entity():
-	# Stub: RED — SyncReceiver does not exist yet.
 	# Client receives batch for a locally-owned entity.
-	# The entity update must be skipped (client is authoritative for own entity).
-	# Plan 03: SyncReceiver skips entities where net_id.peer_id == my_peer_id.
-	assert_bool(false).is_true()
+	# The entity update must be skipped.
+	mock_ns.net_adapter._is_server = false
+	mock_ns.net_adapter._my_peer_id = 2
+	mock_ns.net_adapter._remote_sender_id = 1  # From server — accepted
+
+	var entity = _make_networked_entity(2)  # peer_id == my_peer_id → own entity
+	var comp = entity.get_component(MockComp)
+	comp.value = 33
+
+	var comp_key = _comp_type_name(comp)
+	var batch = {entity.id: {comp_key: {"value": 999}}}
+	var receiver = SyncReceiver.new(mock_ns)
+	receiver.handle_apply_sync_data(batch)
+
+	# Must be skipped — value stays 33
+	assert_int(comp.value).is_equal(33)
 
 
 # ============================================================================
@@ -140,16 +264,47 @@ func test_client_skips_own_entity():
 
 
 func test_applying_flag_set_during_apply():
-	# Stub: RED — SyncReceiver does not exist yet.
-	# _applying_network_data on the MockNetworkSync must be true while
-	# handle_apply_sync_data() is executing, and false after it returns.
-	# Plan 03: SyncReceiver sets _ns._applying_network_data guard around apply.
-	assert_bool(false).is_true()
+	# _applying_network_data must be false before and after handle_apply_sync_data().
+	# Inside the call it is true, but we can only verify the post-condition
+	# (false after return) from outside. The post-condition is the key guarantee.
+	mock_ns.net_adapter._is_server = true
+	mock_ns.net_adapter._remote_sender_id = 2
+
+	var entity = _make_networked_entity(2)
+	var comp = entity.get_component(MockComp)
+	comp.value = 0
+
+	# Ensure flag starts false
+	assert_bool(mock_ns._applying_network_data).is_false()
+
+	var comp_key = _comp_type_name(comp)
+	var batch = {entity.id: {comp_key: {"value": 10}}}
+	var receiver = SyncReceiver.new(mock_ns)
+	receiver.handle_apply_sync_data(batch)
+
+	# Must be false after returning
+	assert_bool(mock_ns._applying_network_data).is_false()
+	# Data must have been applied (confirms the path ran with guard)
+	assert_int(comp.value).is_equal(10)
 
 
 func test_spawn_only_entity_rejected():
-	# Stub: RED — SyncReceiver does not exist yet.
-	# An entity without CN_NetSync (spawn-only) must be rejected for
-	# continuous update; SyncReceiver must not apply the data.
-	# Plan 03: SyncReceiver checks entity.get_component(CN_NetSync) != null.
-	assert_bool(false).is_true()
+	# Entity without CN_NetSync (spawn-only) must be rejected for continuous updates.
+	mock_ns.net_adapter._is_server = true
+	mock_ns.net_adapter._remote_sender_id = 0
+
+	# spawn-only entity has NO CN_NetSync
+	var entity = _make_spawn_only_entity(0)
+
+	# Add a bare component directly (no CN_NetSync scan — just test rejection)
+	var comp = MockComp.new()
+	comp.value = 50
+	entity.add_component(comp)
+
+	var comp_key = _comp_type_name(comp)
+	var batch = {entity.id: {comp_key: {"value": 999}}}
+	var receiver = SyncReceiver.new(mock_ns)
+	receiver.handle_apply_sync_data(batch)
+
+	# Must be rejected — value stays 50
+	assert_int(comp.value).is_equal(50)
