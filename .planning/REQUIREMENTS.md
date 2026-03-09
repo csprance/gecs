@@ -22,9 +22,9 @@
 
 ### Property Sync
 
-- [ ] **SYNC-01**: Component properties sync to clients at rates matching their declared priority group (REALTIME: every frame, HIGH: 20Hz, MEDIUM: 10Hz, LOW: 2Hz) using batched RPCs
-- [ ] **SYNC-02**: Only properties that changed since the last sync tick are included in each outbound batch — unchanged properties generate no bandwidth
-- [ ] **SYNC-03**: A component can be declared as spawn-only — its values are sent once on entity spawn and not synced continuously
+- [x] **SYNC-01**: Component properties sync to clients at rates matching their declared priority group (REALTIME: every frame, HIGH: 20Hz, MEDIUM: 10Hz, LOW: 2Hz) using batched RPCs
+- [x] **SYNC-02**: Only properties that changed since the last sync tick are included in each outbound batch — unchanged properties generate no bandwidth
+- [x] **SYNC-03**: A component can be declared as spawn-only — its values are sent once on entity spawn and not synced continuously
 - [ ] **SYNC-04**: Entity transforms use Godot's native `MultiplayerSynchronizer` for position/rotation sync — provides built-in interpolation without per-frame RPC overhead
 
 ### Advanced
@@ -78,9 +78,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | LIFE-03 | Phase 1 | Complete |
 | LIFE-04 | Phase 1 | Complete |
 | LIFE-05 | Phase 3 | Pending |
-| SYNC-01 | Phase 2 | Pending |
-| SYNC-02 | Phase 2 | Pending |
-| SYNC-03 | Phase 2 | Pending |
+| SYNC-01 | Phase 2 | Complete |
+| SYNC-02 | Phase 2 | Complete |
+| SYNC-03 | Phase 2 | Complete |
 | SYNC-04 | Phase 3 | Pending |
 | ADV-01 | Phase 4 | Pending |
 | ADV-02 | Phase 5 | Pending |
