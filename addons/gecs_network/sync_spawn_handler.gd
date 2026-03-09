@@ -276,26 +276,10 @@ func handle_spawn_entity(data: Dictionary) -> void:
 		if transform_comp and "position" in transform_comp:
 			entity.global_position = transform_comp.get("position")
 
-	# CRITICAL: For entities with CN_SyncEntity, synchronously instantiate model and create
-	# MultiplayerSynchronizer BEFORE the server's sync data arrives. Without this, Godot's
-	# multiplayer system can't find the target node and produces "Node not found" errors.
-	#
-	# Note: _auto_assign_markers is still called via _on_entity_added signal handler.
-	# But we must set up native sync synchronously here to avoid timing race.
-	if entity.has_component(CN_SyncEntity):
-		# Instantiate model synchronously (creates CharacterBody3D, sets up references)
-		var model_created = _ns._native_handler.sync_instantiate_model(entity)
-		if model_created or entity.get_component(CN_SyncEntity).target_node != null:
-			# Model exists (either just created or already had target_node set)
-			# Now create MultiplayerSynchronizer immediately
-			_ns._native_handler.auto_setup_native_sync(entity)
-		elif _ns.debug_logging:
-			print(
-				(
-					"[NetworkSync] Warning: Entity %s has CN_SyncEntity but no model - sync may fail"
-					% entity.name
-				)
-			)
+	# TODO Phase 3 (SYNC-04): Native MultiplayerSynchronizer setup for CN_NetSync entities.
+	# CN_SyncEntity was removed in Phase 2; this block will be rewritten in Phase 3
+	# using CN_NetSync + native sync handler instead.
+	# if entity.has_component(CN_SyncEntity): ...
 
 	# Apply relationships from spawn data
 	var rel_data = data.get("relationships", [])
