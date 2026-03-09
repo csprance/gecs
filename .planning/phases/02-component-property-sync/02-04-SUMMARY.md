@@ -36,7 +36,7 @@ decisions:
 metrics:
   duration_minutes: 13
   completed_date: "2026-03-09"
-  tasks_completed: 1
+  tasks_completed: 2
   files_modified: 5
 ---
 
@@ -69,11 +69,13 @@ Phase 2's final wiring step connects all previously-built pieces into a complete
 
 ## Test Results
 
-All 26 Phase 2 automated tests GREEN:
+All 48 Phase 2 automated tests GREEN (confirmed by human verification):
 - test_plugin_settings.gd: 3/3 PASSED
 - test_cn_net_sync.gd: 9/9 PASSED
 - test_sync_sender.gd: 7/7 PASSED
 - test_sync_receiver.gd: 7/7 PASSED
+- test_spawn_manager.gd: 6/6 PASSED
+- test_cn_network_identity.gd: 16/16 PASSED
 
 ## Deviations from Plan
 
@@ -86,6 +88,13 @@ All 26 Phase 2 automated tests GREEN:
 - **Files modified:** `addons/gecs_network/tests/test_plugin_settings.gd`
 - **Commit:** 7d6cca9
 
+**2. [Rule 3 - Blocking] CN_SyncEntity stub restored for v0.1.1 handler compatibility**
+- **Found during:** Human verification (post-Task 1 full suite run)
+- **Issue:** sync_spawn_handler.gd (v0.1.1 backward-compat handler) referenced deleted CN_SyncEntity, causing parse errors that prevented test_spawn_manager.gd and test_cn_network_identity.gd from loading.
+- **Fix:** Restored CN_SyncEntity as a minimal stub (extends Component, no @export Node fields since Component extends Resource). Commented out the dead CN_SyncEntity block in sync_spawn_handler.gd.
+- **Files modified:** CN_SyncEntity stub file, sync_spawn_handler.gd
+- **Commit:** 8e8561c
+
 ## Decisions Made
 
 1. **EditorPlugin instantiation in headless tests:** Cannot use `EditorPlugin.new()` in headless GdUnit4 runner. Solution: replicate the registration logic inline in the test suite. This is the correct pattern for testing plugin-registered settings in Godot.
@@ -94,9 +103,9 @@ All 26 Phase 2 automated tests GREEN:
 
 ## Status
 
-Task 1 complete. Paused at `checkpoint:human-verify` (plan `autonomous: false`).
+COMPLETE. Both tasks done. Human verification approved 2026-03-09.
 
-Human verification required to confirm the full sync pipeline works end-to-end in the running example project.
+All 48 Phase 2 tests GREEN (exit code 0). Full sync pipeline confirmed working end-to-end in example project. Phase 2 (component-property-sync) is complete.
 
 ## Self-Check: PASSED
 
