@@ -46,7 +46,13 @@ Plans:
   1. A component property decorated with REALTIME priority syncs every frame; HIGH syncs at 20Hz; MEDIUM at 10Hz; LOW at 2Hz — verified by observing client receive rates
   2. Only properties that changed since the last sync tick are included in the outbound batch — a static entity generates no outbound sync traffic
   3. A component declared as spawn-only sends its values once at spawn and never generates continuous sync traffic thereafter
-**Plans**: TBD
+**Plans**: 4 plans
+
+Plans:
+- [ ] 02-01-PLAN.md — Wave 0 test stubs: 4 failing test files created; 3 obsolete test files deleted
+- [ ] 02-02-PLAN.md — Delete obsolete source files + create CN_NetSync (scanner, dirty cache, change detection)
+- [ ] 02-03-PLAN.md — Create SyncSender (timer loop, batch dispatch) + SyncReceiver (authority validation, apply guard)
+- [ ] 02-04-PLAN.md — Wire into NetworkSync + register plugin ProjectSettings + annotate example components; human checkpoint
 
 ### Phase 3: Authority Model and Native Transform Sync
 **Goal**: Player-owned entities have correct input authority across all peers and entity transforms use native Godot interpolation rather than per-frame RPCs
@@ -83,7 +89,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation and Entity Lifecycle | 3/4 | In Progress|  |
-| 2. Component Property Sync | 0/TBD | Not started | - |
+| 2. Component Property Sync | 0/4 | Not started | - |
 | 3. Authority Model and Native Transform Sync | 0/TBD | Not started | - |
 | 4. Relationship Sync | 0/TBD | Not started | - |
 | 5. Reconciliation and Custom Sync | 0/TBD | Not started | - |
