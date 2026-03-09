@@ -25,12 +25,6 @@ const CUSTOM_TYPES = {
 		"script": "res://addons/gecs_network/network_sync.gd",
 		"icon": "network_sync.svg"
 	},
-	"SyncConfig":
-	{
-		"base": "Resource",
-		"script": "res://addons/gecs_network/sync_config.gd",
-		"icon": "sync_config.svg"
-	},
 	"TransportProvider":
 	{"base": "RefCounted", "script": "res://addons/gecs_network/transport_provider.gd", "icon": ""},
 	"ENetTransportProvider":
