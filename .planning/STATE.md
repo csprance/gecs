@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 03-01-PLAN.md
-last_updated: "2026-03-10T00:58:45.186Z"
+stopped_at: Completed 03-02-PLAN.md
+last_updated: "2026-03-10T01:05:22.377Z"
 last_activity: 2026-03-10 — Plan 03-01 complete (Wave 0 TDD stubs — authority markers and NativeSyncHandler, 10 RED stubs, 48 existing GREEN)
 progress:
   total_phases: 5
   completed_phases: 2
   total_plans: 12
-  completed_plans: 9
+  completed_plans: 10
   percent: 40
 ---
 
@@ -59,6 +59,7 @@ Progress: [████████░░] 40% (Phase 3 in progress)
 | Phase 02-component-property-sync P03 | 150 | 2 tasks | 6 files |
 | Phase 02-component-property-sync P04 | 13 | 1 tasks | 5 files |
 | Phase 03-authority-model-and-native-transform-sync P01 | 813 | 2 tasks | 4 files |
+| Phase 03-authority-model-and-native-transform-sync P02 | 3 | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -90,6 +91,8 @@ Recent decisions affecting current work:
 - [Phase 02-component-property-sync]: Human verification approved 2026-03-09 — 48/48 Phase 2 tests GREEN, full end-to-end sync pipeline confirmed working in example project
 - [Phase 02-component-property-sync]: CN_SyncEntity stub restored (extends Component, no @export Node) + dead block commented in sync_spawn_handler.gd — required for v0.1.1 handler backward compat (commit 8e8561c)
 - [Phase 03-authority-model-and-native-transform-sync]: MockNetworkSync must NOT override call_deferred — RefCounted inherits it from Object with fixed signature (StringName, ...) -> Variant; override causes GDScript parser error at runtime
+- [Phase 03-authority-model-and-native-transform-sync]: _inject_authority_markers() uses remove-then-add idempotency pattern for safe re-spawn on CN_LocalAuthority and CN_ServerAuthority
+- [Phase 03-authority-model-and-native-transform-sync]: CN_NativeSync is data-only with no methods — locked shape from CONTEXT.md
 
 ### Pending Todos
 
@@ -102,6 +105,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-10T00:58:40.406Z
-Stopped at: Completed 03-01-PLAN.md
+Last session: 2026-03-10T01:05:22.373Z
+Stopped at: Completed 03-02-PLAN.md
 Resume file: None
