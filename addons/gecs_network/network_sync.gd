@@ -54,6 +54,7 @@ var _game_session_id: int = 0             # Session anti-ghost — CRITICAL
 var _spawn_manager: SpawnManager
 var _sender: SyncSender
 var _receiver: SyncReceiver
+var _native_sync_handler: NativeSyncHandler
 var _is_ready: bool = false
 
 # ============================================================================
@@ -93,6 +94,7 @@ func _ready() -> void:
 	_spawn_manager = SpawnManager.new(self)
 	_sender = SyncSender.new(self)
 	_receiver = SyncReceiver.new(self)
+	_native_sync_handler = NativeSyncHandler.new(self)
 
 	_world.entity_added.connect(_on_entity_added)
 	_world.entity_removed.connect(_on_entity_removed)
@@ -182,12 +184,19 @@ func _on_peer_connected(peer_id: int) -> void:
 		return
 	var state = _spawn_manager.serialize_world_state()
 	_sync_world_state.rpc_id(peer_id, state)
+	# Deferred so spawn RPC fires first, then synchronizers refresh for new peer
+	call_deferred("_deferred_refresh_visibility")
 
 
 func _on_peer_disconnected(peer_id: int) -> void:
 	if not net_adapter.is_server() or _world == null:
 		return
 	_spawn_manager.on_peer_disconnected(peer_id)
+
+
+func _deferred_refresh_visibility() -> void:
+	if _native_sync_handler != null:
+		_native_sync_handler.refresh_synchronizer_visibility()
 
 
 # ============================================================================

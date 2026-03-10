@@ -268,6 +268,19 @@ func test_has_changed_float_approx():
 # ============================================================================
 
 
+func test_scan_skips_cn_native_sync():
+	## CN_NativeSync properties must not appear in batched RPC sync (SYNC-04)
+	var net_sync := CN_NetSync.new()
+	var native_sync := CN_NativeSync.new()
+	var entity := _make_entity_with([net_sync, native_sync])
+
+	net_sync.scan_entity_components(entity)
+
+	# CN_NativeSync instance must NOT appear in _comp_refs
+	var native_sync_inst_id := native_sync.get_instance_id()
+	assert_bool(native_sync_inst_id in net_sync._comp_refs).is_false()
+
+
 func test_update_cache_silent_suppresses_resync():
 	var net_sync := CN_NetSync.new()
 	var comp := MockCompMedium.new()

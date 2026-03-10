@@ -7,10 +7,9 @@ extends EditorPlugin
 ##
 ## Features:
 ## - NetworkSync: Main synchronization node
-## - SyncConfig: Priority and filtering configuration
 ## - CN_NetworkIdentity: Entity ownership component
-## - CN_SyncEntity: Native sync configuration component
-## - Marker components: CN_LocalAuthority, CN_RemoteEntity, CN_ServerOwned
+## - CN_NativeSync: Native MultiplayerSynchronizer sync configuration component
+## - Marker components: CN_LocalAuthority, CN_RemoteEntity, CN_ServerAuthority
 
 const PLUGIN_NAME = "GECSNetwork"
 

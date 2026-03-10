@@ -199,6 +199,10 @@ func _apply_component_data(entity: Entity, data: Dictionary) -> void:
 	if net_id:
 		_inject_authority_markers(entity, net_id)
 
+	# Set up MultiplayerSynchronizer if entity has CN_NativeSync (SYNC-04)
+	if _ns.get("_native_sync_handler") != null:
+		_ns._native_sync_handler.setup_native_sync(entity)
+
 
 ## Inject CN_LocalAuthority and CN_ServerAuthority markers onto entity.
 ## Called from _apply_component_data() after CN_NetworkIdentity is populated.

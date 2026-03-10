@@ -93,6 +93,8 @@ func scan_entity_components(entity: Entity) -> void:
 			continue  # Never scan ourselves
 		if comp is CN_NetworkIdentity:
 			continue  # Ownership spoofing prevention — CRITICAL
+		if comp is CN_NativeSync:
+			continue  # Native sync handles its own target node — don't batch-RPC its config
 		var script = comp.get_script()
 		if script == null:
 			continue  # Built-in resource, no exported script properties
