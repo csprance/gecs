@@ -1,6 +1,6 @@
 [gd_scene load_steps=17 format=3 uid="uid://dx7xy4dgi3wwb"]
 
-[ext_resource type="Script" uid="uid://ukcummwrkfnc" path="res://addons/gdUnit4/src/ui/parts/InspectorToolBar.gd" id="3"]
+[ext_resource type="Script" path="res://addons/gdUnit4/src/ui/parts/InspectorToolBar.gd" id="3"]
 
 [sub_resource type="DPITexture" id="DPITexture_c7rhl"]
 _source = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\"><path fill=\"#e0e0e0\" d=\"M6.973 7.441a4 4 0 1 0-1.414-1.414L3.293 8.293l1.414 1.414zM9 2a2 2 0 0 1 0 4 2 2 0 0 1 0-4zm-9 8v6h2a3 3 0 1 0 0-6zm5 3a3 3 0 1 0 6 0 3 3 0 0 0-6 0zm6 0a3 3 0 0 0 3 3h1v-2h-1a1 1 0 0 1 0-2h1v-2h-1a3 3 0 0 0-3 3zm-9-1a1 1 0 0 1 0 2zm6 0a1 1 0 1 1 0 2 1 1 0 0 1 0-2z\"/></svg>
@@ -21,7 +21,7 @@ Color(1, 0.8666667, 0.39607844, 1): Color(1, 0.87, 0.4, 1)
 }
 
 [sub_resource type="InputEventKey" id="InputEventKey_p22nw"]
-ctrl_pressed = true
+alt_pressed = true
 pressed = true
 keycode = 4194338
 physical_keycode = 4194338
@@ -42,7 +42,7 @@ data = {
 image = SubResource("Image_ndw0i")
 
 [sub_resource type="InputEventKey" id="InputEventKey_6gwbs"]
-ctrl_pressed = true
+alt_pressed = true
 pressed = true
 keycode = 4194336
 physical_keycode = 4194336
@@ -60,7 +60,7 @@ Color(1, 0.8666667, 0.39607844, 1): Color(1, 0.87, 0.4, 1)
 }
 
 [sub_resource type="InputEventKey" id="InputEventKey_fewwl"]
-ctrl_pressed = true
+alt_pressed = true
 pressed = true
 keycode = 4194337
 physical_keycode = 4194337
@@ -78,7 +78,7 @@ Color(1, 0.8666667, 0.39607844, 1): Color(1, 0.87, 0.4, 1)
 }
 
 [sub_resource type="InputEventKey" id="InputEventKey_lvbnb"]
-ctrl_pressed = true
+alt_pressed = true
 pressed = true
 keycode = 4194339
 physical_keycode = 4194339
@@ -135,12 +135,12 @@ layout_mode = 2
 
 [node name="run_overall" type="Button" parent="HBoxContainer/controls"]
 unique_name_in_owner = true
-visible = false
 use_parent_material = true
 layout_mode = 2
 tooltip_text = "Run overall tests"
 shortcut = SubResource("Shortcut_3lcek")
 icon = SubResource("ImageTexture_eoihf")
+metadata/GdUnitCommand = "Run Tests Overall"
 
 [node name="run" type="Button" parent="HBoxContainer/controls"]
 unique_name_in_owner = true
@@ -150,6 +150,7 @@ tooltip_text = "Rerun unit tests"
 disabled = true
 shortcut = SubResource("Shortcut_2i8uq")
 icon = SubResource("DPITexture_87jj1")
+metadata/GdUnitCommand = "Run Inspector Tests"
 
 [node name="debug" type="Button" parent="HBoxContainer/controls"]
 unique_name_in_owner = true
@@ -159,6 +160,7 @@ tooltip_text = "Rerun unit tests (Debug)"
 disabled = true
 shortcut = SubResource("Shortcut_f3lkx")
 icon = SubResource("DPITexture_7oobd")
+metadata/GdUnitCommand = "Debug Inspector Tests"
 
 [node name="stop" type="Button" parent="HBoxContainer/controls"]
 unique_name_in_owner = true
@@ -168,6 +170,7 @@ tooltip_text = "Stops runing unit tests"
 disabled = true
 shortcut = SubResource("Shortcut_6idxu")
 icon = SubResource("DPITexture_qf2s1")
+metadata/GdUnitCommand = "Stop Test Session"
 
 [node name="VSeparator4" type="VSeparator" parent="HBoxContainer/controls"]
 layout_mode = 2
@@ -187,13 +190,13 @@ layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 13
 localize_numeral_system = false
-text = "gdUnit4 6.0.0"
+text = "gdUnit4 6.1.0"
 horizontal_alignment = 1
 justification_flags = 160
 
 [connection signal="pressed" from="HBoxContainer/tools/help" to="." method="_on_wiki_pressed"]
 [connection signal="pressed" from="HBoxContainer/tools/tool" to="." method="_on_btn_tool_pressed"]
-[connection signal="pressed" from="HBoxContainer/controls/run_overall" to="." method="_on_runoverall_pressed"]
-[connection signal="pressed" from="HBoxContainer/controls/run" to="." method="_on_run_pressed"]
-[connection signal="pressed" from="HBoxContainer/controls/debug" to="." method="_on_run_pressed" binds= [true]]
-[connection signal="pressed" from="HBoxContainer/controls/stop" to="." method="_on_stop_pressed"]
+[connection signal="pressed" from="HBoxContainer/controls/run_overall" to="." method="_on_button_pressed" flags=18]
+[connection signal="pressed" from="HBoxContainer/controls/run" to="." method="_on_button_pressed" flags=18]
+[connection signal="pressed" from="HBoxContainer/controls/debug" to="." method="_on_button_pressed" flags=18]
+[connection signal="pressed" from="HBoxContainer/controls/stop" to="." method="_on_button_pressed" flags=18]

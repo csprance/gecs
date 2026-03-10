@@ -1,6 +1,6 @@
 [gd_scene load_steps=10 format=3 uid="uid://41l7a46fol5m"]
 
-[ext_resource type="Script" uid="uid://c3368b7v5jgeo" path="res://addons/gdUnit4/src/ui/settings/GdUnitSettingsTabHooks.gd" id="1_8yffn"]
+[ext_resource type="Script" path="res://addons/gdUnit4/src/ui/settings/GdUnitSettingsTabHooks.gd" id="1_8yffn"]
 
 [sub_resource type="Image" id="Image_h5sr5"]
 data = {
@@ -79,7 +79,6 @@ layout_direction = 2
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
-columns = 2
 hide_folding = true
 hide_root = true
 
@@ -89,7 +88,7 @@ custom_minimum_size = Vector2(0, 120)
 layout_mode = 2
 size_flags_vertical = 2
 bbcode_enabled = true
-text = "The Html test reporting hook."
+text = "The test result Html reporting hook."
 scroll_active = false
 
 [node name="hook_actions" type="VBoxContainer" parent="HBoxContainer"]

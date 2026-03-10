@@ -1,6 +1,6 @@
 [gd_scene load_steps=26 format=3 uid="uid://c22l4odk7qesc"]
 
-[ext_resource type="Script" uid="uid://m5jpa3i2drid" path="res://addons/gdUnit4/src/ui/parts/InspectorStatusBar.gd" id="3"]
+[ext_resource type="Script" path="res://addons/gdUnit4/src/ui/parts/InspectorStatusBar.gd" id="3"]
 
 [sub_resource type="DPITexture" id="DPITexture_mb3ih"]
 _source = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\"><path fill=\"#e0e0e0\" d=\"M8 1v2H6a5 5 0 0 0-4 8l1.414-1.414A3 3 0 0 1 6 5h2v2l4-3-4-3zm6 4-1.414 1.414A3 3 0 0 1 10 11H8V9l-4 3 4 3v-2h2a5 5 0 0 0 4-8z\"/></svg>
@@ -207,11 +207,11 @@ item_count = 4
 popup/item_0/text = "Unsorted"
 popup/item_0/icon = SubResource("DPITexture_ixycx")
 popup/item_0/checkable = 1
-popup/item_0/checked = true
 popup/item_0/id = 0
 popup/item_1/text = "Name ascending"
 popup/item_1/icon = SubResource("DPITexture_wo03e")
 popup/item_1/checkable = 1
+popup/item_1/checked = true
 popup/item_1/id = 1
 popup/item_2/text = "Name descending"
 popup/item_2/icon = SubResource("ImageTexture_eis20")
@@ -232,11 +232,11 @@ item_count = 2
 popup/item_0/text = "Tree"
 popup/item_0/icon = SubResource("ImageTexture_bq8kn")
 popup/item_0/checkable = 1
+popup/item_0/checked = true
 popup/item_0/id = 0
 popup/item_1/text = "Flat"
 popup/item_1/icon = SubResource("ImageTexture_8lbfl")
 popup/item_1/checkable = 1
-popup/item_1/checked = true
 popup/item_1/id = 1
 
 [node name="HSeparator" type="HSeparator" parent="VBoxContainer"]
@@ -454,7 +454,7 @@ size_flags_vertical = 4
 tooltip_text = "Jump to the next skipped test"
 icon = SubResource("ImageTexture_ikyhk")
 
-[connection signal="pressed" from="VBoxContainer/tree_tools/tree_buttons/btn_tree_sync" to="." method="_on_tree_sync_pressed"]
+[connection signal="pressed" from="VBoxContainer/tree_tools/tree_buttons/btn_tree_sync" to="." method="_on_btn_tree_sync_pressed"]
 [connection signal="pressed" from="VBoxContainer/status_bar/error/icon/btn_up" to="." method="_on_btn_error_up_pressed"]
 [connection signal="pressed" from="VBoxContainer/status_bar/error/counter/btn_down" to="." method="_on_btn_error_down_pressed"]
 [connection signal="pressed" from="VBoxContainer/status_bar/failure/icon/btn_up" to="." method="_on_failure_up_pressed"]

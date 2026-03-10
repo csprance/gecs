@@ -1,64 +1,6 @@
-[gd_scene load_steps=4 format=3 uid="uid://dte0m2endcgtu"]
+[gd_scene load_steps=2 format=3 uid="uid://dte0m2endcgtu"]
 
-[ext_resource type="Script" uid="uid://b46arvmkmkbrg" path="res://addons/gdUnit4/src/ui/templates/TestSuiteTemplate.gd" id="1"]
-
-[sub_resource type="CodeHighlighter" id="CodeHighlighter_6gsdy"]
-number_color = Color(0.63, 1, 0.88, 1)
-symbol_color = Color(0.67, 0.79, 1, 1)
-function_color = Color(0.34, 0.7, 1, 1)
-member_variable_color = Color(0.736, 0.88, 1, 1)
-keyword_colors = {
-"@": Color(1, 0.7, 0.45, 1),
-"GdUnitTestSuite": Color(0.26, 1, 0.76, 1),
-"after": Color(0.26, 1, 0.76, 1),
-"after_test": Color(0.26, 1, 0.76, 1),
-"before": Color(0.26, 1, 0.76, 1),
-"before_test": Color(0.26, 1, 0.76, 1),
-"class_name": Color(1, 0.44, 0.52, 1),
-"const": Color(1, 0.44, 0.52, 1),
-"extends": Color(1, 0.44, 0.52, 1),
-"func": Color(1, 0.44, 0.52, 1),
-"onready": Color(1, 0.44, 0.52, 1),
-"pass": Color(1, 0.44, 0.52, 1),
-"var": Color(1, 0.44, 0.52, 1),
-"void": Color(1, 0.44, 0.52, 1),
-"warning_ignore": Color(1, 0.7, 0.45, 1)
-}
-color_regions = {
-"\" \"": Color(1, 1, 0, 1),
-"#": Color(0.8025, 0.81, 0.8225, 0.5),
-"${ }": Color(1, 1, 0, 1),
-"' '": Color(1, 1, 0, 1)
-}
-
-[sub_resource type="CodeHighlighter" id="CodeHighlighter_oi772"]
-number_color = Color(0.63, 1, 0.88, 1)
-symbol_color = Color(0.67, 0.79, 1, 1)
-function_color = Color(0.34, 0.7, 1, 1)
-member_variable_color = Color(0.736, 0.88, 1, 1)
-keyword_colors = {
-"@": Color(1, 0.7, 0.45, 1),
-"GdUnitTestSuite": Color(0.26, 1, 0.76, 1),
-"after": Color(0.26, 1, 0.76, 1),
-"after_test": Color(0.26, 1, 0.76, 1),
-"before": Color(0.26, 1, 0.76, 1),
-"before_test": Color(0.26, 1, 0.76, 1),
-"class_name": Color(1, 0.44, 0.52, 1),
-"const": Color(1, 0.44, 0.52, 1),
-"extends": Color(1, 0.44, 0.52, 1),
-"func": Color(1, 0.44, 0.52, 1),
-"onready": Color(1, 0.44, 0.52, 1),
-"pass": Color(1, 0.44, 0.52, 1),
-"var": Color(1, 0.44, 0.52, 1),
-"void": Color(1, 0.44, 0.52, 1),
-"warning_ignore": Color(1, 0.7, 0.45, 1)
-}
-color_regions = {
-"\" \"": Color(1, 1, 0, 1),
-"#": Color(0.8025, 0.81, 0.8225, 0.5),
-"${ }": Color(1, 1, 0, 1),
-"' '": Color(1, 1, 0, 1)
-}
+[ext_resource type="Script" path="res://addons/gdUnit4/src/ui/templates/TestSuiteTemplate.gd" id="1"]
 
 [node name="TestSuiteTemplate" type="MarginContainer"]
 anchors_preset = 15
@@ -76,7 +18,7 @@ size_flags_horizontal = 3
 size_flags_vertical = 3
 
 [node name="sub_category" type="Panel" parent="VBoxContainer"]
-custom_minimum_size = Vector2(0, 29)
+custom_minimum_size = Vector2(0, 30)
 layout_mode = 2
 size_flags_horizontal = 3
 
@@ -101,21 +43,6 @@ size_flags_vertical = 3
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
-theme_override_colors/font_selected_color = Color(0.44, 0.73, 0.98, 0.4)
-theme_override_colors/font_color = Color(0.8025, 0.81, 0.8225, 1)
-theme_override_colors/font_readonly_color = Color(0.8025, 0.81, 0.8225, 1)
-theme_override_colors/background_color = Color(0.115499996, 0.132, 0.15949999, 1)
-theme_override_font_sizes/font_size = 13
-text = "# GdUnit generated TestSuite
-class_name ${suite_class_name}
-extends GdUnitTestSuite
-@warning_ignore('unused_parameter')
-@warning_ignore('return_value_discarded')
-
-# TestSuite generated from
-const __source: String = '${source_resource_path}'
-"
-syntax_highlighter = SubResource("CodeHighlighter_6gsdy")
 
 [node name="MarginContainer" type="MarginContainer" parent="VBoxContainer/EdiorLayout/Editor"]
 layout_mode = 1
@@ -142,8 +69,8 @@ text = "Supported Tags"
 [node name="SelectType" type="OptionButton" parent="VBoxContainer/EdiorLayout/Editor/MarginContainer/HBoxContainer"]
 layout_mode = 2
 tooltip_text = "Select the script type specific template."
-selected = 0
 item_count = 2
+selected = 0
 popup/item_0/text = "GD - GDScript"
 popup/item_0/id = 1000
 popup/item_1/text = "C# - CSharpScript"
@@ -179,8 +106,8 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = 4.0
 offset_top = 4.0
-offset_right = 296.0
-offset_bottom = 96.0
+offset_right = -856.0
+offset_bottom = -552.0
 grow_horizontal = 2
 grow_vertical = 2
 
@@ -188,48 +115,10 @@ grow_vertical = 2
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
-theme_override_colors/font_selected_color = Color(0.44, 0.73, 0.98, 0.4)
-theme_override_colors/font_color = Color(0.8025, 0.81, 0.8225, 1)
-theme_override_colors/font_readonly_color = Color(0.8025, 0.81, 0.8225, 1)
-theme_override_colors/background_color = Color(0.115499996, 0.132, 0.15949999, 1)
-theme_override_font_sizes/font_size = 13
-text = "
-	GdScript Tags are replaced when the test-suite is created.
-
-	# The class name of the test-suite, formed from the source script.
-	${suite_class_name}
-	# is used to build the test suite class name
-		class_name ${suite_class_name}
-		extends GdUnitTestSuite
-
-
-	# The class name in pascal case, formed from the source script.
-	${source_class}
-		# can be used to create the class e.g. for source 'MyClass'
-		var my_test_class := ${source_class}.new()
-		# will be result in
-		var my_test_class := MyClass.new()
-
-	# The class as variable name in snake case, formed from the source script.
-	${source_var}
-		# Can be used to build the variable name e.g. for source 'MyClass'
-		var ${source_var} := ${source_class}.new()
-		# will be result in
-		var my_class := MyClass.new()
-
-	# The full resource path from which the file was created.
-	${source_resource_path}
-		# Can be used to load the script in your test
-		var my_script := load(${source_resource_path})
-		# will be result in
-		var my_script := load(\"res://folder/my_class.gd\")
-"
 editable = false
 context_menu_enabled = false
 shortcut_keys_enabled = false
 virtual_keyboard_enabled = false
-scroll_vertical = 30.0
-syntax_highlighter = SubResource("CodeHighlighter_oi772")
 
 [connection signal="text_changed" from="VBoxContainer/EdiorLayout/Editor" to="." method="_on_Editor_text_changed"]
 [connection signal="pressed" from="VBoxContainer/EdiorLayout/Editor/MarginContainer/HBoxContainer/Tags" to="." method="_on_Tags_pressed"]
