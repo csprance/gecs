@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: completed
-stopped_at: Phase 3 context gathered
-last_updated: "2026-03-09T23:31:29.453Z"
-last_activity: 2026-03-09 — Plan 02-04 complete (Phase 2 wiring — NetworkSync SyncSender/Receiver, plugin settings, 48/48 tests GREEN, human verified)
+status: executing
+stopped_at: Completed 03-01-PLAN.md
+last_updated: "2026-03-10T00:58:45.186Z"
+last_activity: 2026-03-10 — Plan 03-01 complete (Wave 0 TDD stubs — authority markers and NativeSyncHandler, 10 RED stubs, 48 existing GREEN)
 progress:
   total_phases: 5
   completed_phases: 2
-  total_plans: 8
-  completed_plans: 8
-  percent: 100
+  total_plans: 12
+  completed_plans: 9
+  percent: 40
 ---
 
 # Project State
@@ -25,12 +25,12 @@ See: .planning/PROJECT.md (updated 2026-03-07)
 
 ## Current Position
 
-Phase: 2 of 5 (Component Property Sync) — COMPLETE
-Plan: 4 of 4 in current phase (all plans complete)
-Status: Phase 2 complete, ready for Phase 3
-Last activity: 2026-03-09 — Plan 02-04 complete (Phase 2 wiring — NetworkSync SyncSender/Receiver, plugin settings, 48/48 tests GREEN, human verified)
+Phase: 3 of 5 (Authority Model and Native Transform Sync) — IN PROGRESS
+Plan: 1 of 4 in current phase (Plan 01 complete)
+Status: Phase 3 in progress, Plan 01 complete
+Last activity: 2026-03-10 — Plan 03-01 complete (Wave 0 TDD stubs — authority markers and NativeSyncHandler, 10 RED stubs, 48 existing GREEN)
 
-Progress: [██████████] 100% (Phase 1)
+Progress: [████████░░] 40% (Phase 3 in progress)
 
 ## Performance Metrics
 
@@ -58,6 +58,7 @@ Progress: [██████████] 100% (Phase 1)
 | Phase 02-component-property-sync P02 | 302 | 2 tasks | 9 files |
 | Phase 02-component-property-sync P03 | 150 | 2 tasks | 6 files |
 | Phase 02-component-property-sync P04 | 13 | 1 tasks | 5 files |
+| Phase 03-authority-model-and-native-transform-sync P01 | 813 | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -88,6 +89,7 @@ Recent decisions affecting current work:
 - [Phase 02-component-property-sync]: _sync_components_unreliable/_reliable use 'any_peer' RPC mode — authority validated inside SyncReceiver via get_remote_sender_id()
 - [Phase 02-component-property-sync]: Human verification approved 2026-03-09 — 48/48 Phase 2 tests GREEN, full end-to-end sync pipeline confirmed working in example project
 - [Phase 02-component-property-sync]: CN_SyncEntity stub restored (extends Component, no @export Node) + dead block commented in sync_spawn_handler.gd — required for v0.1.1 handler backward compat (commit 8e8561c)
+- [Phase 03-authority-model-and-native-transform-sync]: MockNetworkSync must NOT override call_deferred — RefCounted inherits it from Object with fixed signature (StringName, ...) -> Variant; override causes GDScript parser error at runtime
 
 ### Pending Todos
 
@@ -100,6 +102,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-09T23:31:29.448Z
-Stopped at: Phase 3 context gathered
-Resume file: .planning/phases/03-authority-model-and-native-transform-sync/03-CONTEXT.md
+Last session: 2026-03-10T00:58:40.406Z
+Stopped at: Completed 03-01-PLAN.md
+Resume file: None
