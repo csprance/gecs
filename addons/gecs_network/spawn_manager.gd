@@ -194,6 +194,29 @@ func _apply_component_data(entity: Entity, data: Dictionary) -> void:
 						new_comp.set(prop, comp_values[prop])
 	_ns._applying_network_data = false
 
+	# Inject authority markers after all component data is applied (LIFE-05)
+	var net_id: CN_NetworkIdentity = entity.get_component(CN_NetworkIdentity)
+	if net_id:
+		_inject_authority_markers(entity, net_id)
+
+
+## Inject CN_LocalAuthority and CN_ServerAuthority markers onto entity.
+## Called from _apply_component_data() after CN_NetworkIdentity is populated.
+## Idempotent: removes existing markers before adding new ones (safe on re-spawn).
+func _inject_authority_markers(entity: Entity, net_id: CN_NetworkIdentity) -> void:
+	# Remove stale markers first -- idempotent re-spawn safety
+	entity.remove_component(CN_LocalAuthority)
+	entity.remove_component(CN_ServerAuthority)
+
+	# CN_ServerAuthority: server-owned entities (peer_id == 0) on ALL peers
+	if net_id.is_server_owned():
+		entity.add_component(CN_ServerAuthority.new())
+
+	# CN_LocalAuthority: local peer's own entity
+	# Also: server gets CN_LocalAuthority on server-owned entities (server "is local" for them)
+	if net_id.is_local(_ns.net_adapter) or (_ns.net_adapter.is_server() and net_id.is_server_owned()):
+		entity.add_component(CN_LocalAuthority.new())
+
 
 ## Find a component on an entity by its type name string.
 func _find_component_by_type(entity: Entity, comp_type: String) -> Component:
