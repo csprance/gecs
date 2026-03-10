@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 03-02-PLAN.md
-last_updated: "2026-03-10T01:05:22.377Z"
-last_activity: 2026-03-10 — Plan 03-01 complete (Wave 0 TDD stubs — authority markers and NativeSyncHandler, 10 RED stubs, 48 existing GREEN)
+stopped_at: Completed 03-03-PLAN.md
+last_updated: "2026-03-10T01:09:36.724Z"
+last_activity: 2026-03-09 — Plan 03-03 complete (NativeSyncHandler + native sync wiring, 6 new GREEN tests, sync_native_handler.gd deleted)
 progress:
   total_phases: 5
   completed_phases: 2
   total_plans: 12
-  completed_plans: 10
-  percent: 40
+  completed_plans: 11
+  percent: 50
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-03-07)
 ## Current Position
 
 Phase: 3 of 5 (Authority Model and Native Transform Sync) — IN PROGRESS
-Plan: 1 of 4 in current phase (Plan 01 complete)
-Status: Phase 3 in progress, Plan 01 complete
-Last activity: 2026-03-10 — Plan 03-01 complete (Wave 0 TDD stubs — authority markers and NativeSyncHandler, 10 RED stubs, 48 existing GREEN)
+Plan: 3 of 4 in current phase (Plans 01-03 complete)
+Status: Phase 3 in progress, Plans 01-03 complete
+Last activity: 2026-03-09 — Plan 03-03 complete (NativeSyncHandler + native sync wiring, 6 new GREEN tests, sync_native_handler.gd deleted)
 
-Progress: [████████░░] 40% (Phase 3 in progress)
+Progress: [██████████░░] 50% (Phase 3 in progress, 3/4 plans done)
 
 ## Performance Metrics
 
@@ -60,6 +60,7 @@ Progress: [████████░░] 40% (Phase 3 in progress)
 | Phase 02-component-property-sync P04 | 13 | 1 tasks | 5 files |
 | Phase 03-authority-model-and-native-transform-sync P01 | 813 | 2 tasks | 4 files |
 | Phase 03-authority-model-and-native-transform-sync P02 | 3 | 2 tasks | 4 files |
+| Phase 03-authority-model-and-native-transform-sync P03 | 361 | 2 tasks | 10 files |
 
 ## Accumulated Context
 
@@ -93,6 +94,7 @@ Recent decisions affecting current work:
 - [Phase 03-authority-model-and-native-transform-sync]: MockNetworkSync must NOT override call_deferred — RefCounted inherits it from Object with fixed signature (StringName, ...) -> Variant; override causes GDScript parser error at runtime
 - [Phase 03-authority-model-and-native-transform-sync]: _inject_authority_markers() uses remove-then-add idempotency pattern for safe re-spawn on CN_LocalAuthority and CN_ServerAuthority
 - [Phase 03-authority-model-and-native-transform-sync]: CN_NativeSync is data-only with no methods — locked shape from CONTEXT.md
+- [Phase 03-authority-model-and-native-transform-sync]: Deferred deletion of cn_sync_entity.gd, cn_server_owned.gd, sync_config.gd — v0.1.1 handler tests still reference them; per MEMORY.md they must wait until Phase 3/4 handlers are replaced
 
 ### Pending Todos
 
