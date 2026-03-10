@@ -12,9 +12,9 @@ This milestone replaces the current NetworkMiddleware system with a declarative,
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Foundation and Entity Lifecycle** - NetAdapter, session IDs, entity spawn/despawn across peers, late-join, and disconnect cleanup
-- [ ] **Phase 2: Component Property Sync** - Declarative CN_NetSync configuration, priority-tiered batched RPC sync, dirty tracking, spawn-only mode
-- [ ] **Phase 3: Authority Model and Native Transform Sync** - Operational authority transfer, MultiplayerSynchronizer for transforms, authority marker propagation
+- [x] **Phase 1: Foundation and Entity Lifecycle** - NetAdapter, session IDs, entity spawn/despawn across peers, late-join, and disconnect cleanup
+- [x] **Phase 2: Component Property Sync** - Declarative CN_NetSync configuration, priority-tiered batched RPC sync, dirty tracking, spawn-only mode
+- [x] **Phase 3: Authority Model and Native Transform Sync** - Operational authority transfer, MultiplayerSynchronizer for transforms, authority marker propagation
 - [ ] **Phase 4: Relationship Sync** - Entity-to-entity relationship sync with deferred resolution for non-deterministic spawn ordering
 - [ ] **Phase 5: Reconciliation and Custom Sync** - Periodic full-state reconciliation, system-level sync override hooks
 
@@ -64,10 +64,10 @@ Plans:
 **Plans**: 4 plans
 
 Plans:
-- [ ] 03-01-PLAN.md — Wave 0 test stubs: test_authority_markers.gd (5 stubs, LIFE-05) + test_native_sync_handler.gd (5 stubs, SYNC-04)
-- [ ] 03-02-PLAN.md — CN_NativeSync component + authority marker injection in SpawnManager (LIFE-05)
-- [ ] 03-03-PLAN.md — NativeSyncHandler + CN_NetSync skip + NetworkSync wire + legacy file cleanup (SYNC-04)
-- [ ] 03-04-PLAN.md — Full suite verification + human checkpoint
+- [x] 03-01-PLAN.md — Wave 0 test stubs: test_authority_markers.gd (5 stubs, LIFE-05) + test_native_sync_handler.gd (5 stubs, SYNC-04)
+- [x] 03-02-PLAN.md — CN_NativeSync component + authority marker injection in SpawnManager (LIFE-05)
+- [x] 03-03-PLAN.md — NativeSyncHandler + CN_NetSync skip + NetworkSync wire + legacy file cleanup (SYNC-04)
+- [x] 03-04-PLAN.md — Full suite verification + human checkpoint
 
 ### Phase 4: Relationship Sync
 **Goal**: Entity-to-entity relationships sync across all peers and hierarchical queries produce consistent results even when target entities arrive in non-deterministic order
@@ -94,8 +94,8 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation and Entity Lifecycle | 3/4 | In Progress|  |
-| 2. Component Property Sync | 3/4 | In Progress|  |
-| 3. Authority Model and Native Transform Sync | 3/4 | In Progress|  |
+| 1. Foundation and Entity Lifecycle | 4/4 | Complete | 2026-03-09 |
+| 2. Component Property Sync | 4/4 | Complete | 2026-03-09 |
+| 3. Authority Model and Native Transform Sync | 4/4 | Complete | 2026-03-10 |
 | 4. Relationship Sync | 0/TBD | Not started | - |
 | 5. Reconciliation and Custom Sync | 0/TBD | Not started | - |
