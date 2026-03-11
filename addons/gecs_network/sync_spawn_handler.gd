@@ -82,18 +82,11 @@ func broadcast_entity_spawn(entity: Entity, entity_id: String) -> void:
 	# Serialize and broadcast spawn (now with correct component values)
 	var spawn_data = serialize_entity_spawn(entity)
 
-	# DIAGNOSTIC: Always log spawn broadcasts for tracking desync issues
-	var transform_pos = "N/A"
-	var transform_comp_name = _ns.sync_config.transform_component
-	if transform_comp_name != "" and spawn_data.get("components", {}).has(transform_comp_name):
-		var t_data = spawn_data["components"][transform_comp_name]
-		if t_data.has("position"):
-			transform_pos = str(t_data["position"])
 	if _ns.debug_logging:
 		print(
 			(
-				"[SPAWN-TRACK] SERVER BROADCAST: entity=%s, name=%s, session=%d, position=%s"
-				% [entity_id, entity.name, _ns._game_session_id, transform_pos]
+				"[SPAWN-TRACK] SERVER BROADCAST: entity=%s, name=%s, session=%d"
+				% [entity_id, entity.name, _ns._game_session_id]
 			)
 		)
 
@@ -246,35 +239,6 @@ func handle_spawn_entity(data: Dictionary) -> void:
 			print(
 				"[SPAWN] Added missing component %s to %s from spawn data" % [comp_type, entity_id]
 			)
-
-	# Debug: log received position
-	if _ns.debug_logging:
-		var recv_pos = "N/A"
-		var transform_comp_name = _ns.sync_config.transform_component
-		if transform_comp_name != "" and components_data.has(transform_comp_name):
-			var t_data = components_data[transform_comp_name]
-			if t_data.has("position"):
-				recv_pos = str(t_data["position"])
-		var applied_pos = "N/A"
-		if transform_comp_name != "":
-			var t_comp = _ns._find_component_by_type(entity, transform_comp_name)
-			if t_comp and "position" in t_comp:
-				applied_pos = str(t_comp.position)
-		print(
-			(
-				"CLIENT: Spawn %s - received pos: %s, applied %s.position: %s"
-				% [entity_name, recv_pos, transform_comp_name, applied_pos]
-			)
-		)
-
-	# Sync Node3D position from transform component to prevent spawning at origin.
-	# This is critical for spawn-only entities (projectiles) that don't use CN_SyncEntity.
-	if entity is Entity and _ns.sync_config.transform_component != "":
-		var transform_comp = _ns._find_component_by_type(
-			entity, _ns.sync_config.transform_component
-		)
-		if transform_comp and "position" in transform_comp:
-			entity.global_position = transform_comp.get("position")
 
 	# TODO Phase 3 (SYNC-04): Native MultiplayerSynchronizer setup for CN_NetSync entities.
 	# CN_SyncEntity was removed in Phase 2; this block will be rewritten in Phase 3
@@ -526,12 +490,6 @@ func serialize_entity_spawn(entity: Entity) -> Dictionary:
 			# Fallback to filename if class_name not declared
 			if comp_type == "":
 				comp_type = script.resource_path.get_file().get_basename()
-
-		# Skip model_ready_component (e.g., C_Instantiated) - clients must instantiate models locally
-		# If this component is synced, clients will have C_Instantiated before S_ModelInstantiation
-		# runs, causing the model to never be instantiated on clients
-		if comp_type == _ns.sync_config.model_ready_component:
-			continue
 
 		# NOTE: Do NOT skip skip_component_types here - those are skipped for continuous sync
 		# but we DO need their initial values at spawn (e.g., C_Transform for position)

@@ -166,17 +166,7 @@ func _is_valid_peer(peer_id: int) -> bool:
 
 ## Process reconciliation timer (server only)
 func process_reconciliation(delta: float) -> void:
-	if not _ns.net_adapter.is_server():
-		return
-
-	if not _ns.sync_config or not _ns.sync_config.enable_reconciliation:
-		return
-
-	_ns._reconciliation_timer += delta
-
-	if _ns._reconciliation_timer >= _ns.sync_config.reconciliation_interval:
-		_ns._reconciliation_timer = 0.0
-		broadcast_full_state()
+	return  # TODO Phase 5 (ADV-02): reconciliation not yet implemented
 
 
 ## Broadcast full state of all networked entities to all clients
@@ -215,10 +205,6 @@ func serialize_entity_full(entity: Entity) -> Dictionary:
 		var comp_type = script.get_global_name()
 		if comp_type == "":
 			comp_type = script.resource_path.get_file().get_basename()
-
-		# Skip components that should be filtered
-		if _ns.sync_config and _ns.sync_config.should_skip(comp_type):
-			continue
 
 		components_data[comp_type] = comp.serialize()
 		script_paths[comp_type] = script.resource_path
@@ -432,14 +418,10 @@ func process_entity_count_diagnostics(delta: float) -> void:
 		if not net_id:
 			continue
 
-		# Get entity category from SyncConfig (or fallback to peer_id heuristic)
+		# Get entity category from peer_id heuristic
 		var category = "other"
-		if _ns.sync_config:
-			category = _ns.sync_config.get_entity_category(entity)
-		else:
-			# Fallback to peer_id heuristic if no config
-			if net_id.peer_id > 0:
-				category = "player"
+		if net_id.peer_id > 0:
+			category = "player"
 
 		# Increment category count
 		if not category_counts.has(category):

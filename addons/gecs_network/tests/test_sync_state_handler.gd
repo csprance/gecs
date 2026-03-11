@@ -44,14 +44,12 @@ class MockNetworkSync:
 	var _applying_network_data: bool = false
 	var _game_session_id: int = 0
 	var _spawn_counter: int = 0
-	var sync_config: SyncConfig
 	var net_adapter: MockNetAdapter
 	var debug_logging: bool = false
 	var _relationship_handler: RefCounted
 
 	func _init(w: World) -> void:
 		_world = w
-		sync_config = SyncConfig.new()
 		net_adapter = MockNetAdapter.new()
 
 

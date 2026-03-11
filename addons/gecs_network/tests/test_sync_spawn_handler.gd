@@ -43,15 +43,12 @@ class MockNetworkSync:
 	var _game_session_id: int = 42
 	var _spawn_counter: int = 0
 	var _broadcast_pending: Dictionary = {}
-	var sync_config: SyncConfig
 	var net_adapter: MockNetAdapter
 	var debug_logging: bool = false
 	var _relationship_handler: RefCounted
 
 	func _init(w: World) -> void:
 		_world = w
-		sync_config = SyncConfig.new()
-		sync_config.sync_relationships = true
 		net_adapter = MockNetAdapter.new()
 
 	func _find_component_by_type(entity: Entity, comp_type: String):
@@ -158,21 +155,7 @@ func test_serialize_entity_spawn_includes_script_paths():
 	assert_bool(data["script_paths"].has("CN_NetworkIdentity")).is_true()
 
 
-func test_serialize_entity_spawn_skips_model_ready_component():
-	mock_ns.sync_config.model_ready_component = "C_TestA"
-	var entity = Entity.new()
-	entity.id = "test-entity-1"
-	entity.name = "TestEntity"
-	entity.add_component(CN_NetworkIdentity.new(0))
-	entity.add_component(C_TestA.new())
-	world.add_entity(entity)
-
-	var data = handler.serialize_entity_spawn(entity)
-	assert_bool(data["components"].has("C_TestA")).is_false()
-
-
 func test_serialize_entity_spawn_includes_relationships():
-	mock_ns.sync_config.sync_relationships = true
 	var entity = Entity.new()
 	entity.id = "source-1"
 	entity.name = "Source"
