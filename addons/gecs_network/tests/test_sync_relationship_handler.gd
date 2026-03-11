@@ -16,12 +16,12 @@ var mock_ns: RefCounted  # Mock NetworkSync
 
 
 ## Minimal mock for NetworkSync - provides only what the handler needs
+## NOTE: NO sync_config field — removed in v2
 class MockNetworkSync:
 	extends RefCounted
 	var _world: World
 	var _applying_network_data: bool = false
 	var _game_session_id: int = 0
-	var sync_config: SyncConfig
 	var net_adapter: NetAdapter
 	var debug_logging: bool = false
 
@@ -31,12 +31,14 @@ class MockNetworkSync:
 
 	func _init(w: World) -> void:
 		_world = w
-		sync_config = SyncConfig.new()
-		sync_config.sync_relationships = true
 		net_adapter = NetAdapter.new()
 
 	func _sync_relationship_add(_payload: Dictionary) -> void:
 		last_rpc_method = "_sync_relationship_add"
+		last_rpc_payload = _payload
+
+	func _sync_relationship_remove(_payload: Dictionary) -> void:
+		last_rpc_method = "_sync_relationship_remove"
 		last_rpc_payload = _payload
 
 
@@ -152,14 +154,6 @@ func test_roundtrip_script_target():
 	assert_object(restored).is_not_null()
 	assert_object(restored.relation).is_instanceof(C_TestB)
 	assert_object(restored.target).is_instanceof(Script)
-
-
-func test_serialize_returns_empty_when_disabled():
-	mock_ns.sync_config.sync_relationships = false
-	var rel = Relationship.new(C_TestA.new(), null)
-	var recipe = handler.serialize_relationship(rel)
-
-	assert_dict(recipe).is_empty()
 
 
 func test_serialize_returns_empty_for_null_relation():
