@@ -5,6 +5,8 @@ extends GdUnitTestSuite
 ##
 ## MockNetworkSync has NO sync_config field (removed in v2).
 
+const SyncRelationshipHandler = preload("res://addons/gecs_network/sync_relationship_handler.gd")
+
 # ============================================================================
 # MOCK OBJECTS
 # ============================================================================
@@ -44,6 +46,9 @@ class MockNetworkSync:
 	# RPC call tracking — tests assert what was "sent"
 	var spawn_rpc_calls: Array = []
 	var despawn_rpc_calls: Array = []
+
+	# Relationship handler reference (null by default; set in tests that need it)
+	var _relationship_handler = null
 
 	func _init(w: World) -> void:
 		_world = w
@@ -246,3 +251,47 @@ func test_deferred_broadcast_not_sent_if_entity_removed_same_frame():
 
 	# No spawn RPC should have been sent
 	assert_int(mock_ns.spawn_rpc_calls.size()).is_equal(0)
+
+
+# ============================================================================
+# ADV-01: Late-join relationship coverage (RED stubs — Plan 04-01)
+# ============================================================================
+
+
+func test_serialize_entity_includes_relationships_key():
+	# serialize_entity() must include a "relationships" key for late-join snapshots.
+	# FAILS RED: serialize_entity() does not yet return a "relationships" key.
+	manager = SpawnManager.new(mock_ns)
+
+	var entity = Entity.new()
+	entity.id = "e1"
+	entity.name = "RelEntity"
+	entity.add_component(CN_NetworkIdentity.new(0))
+	world.add_entity(entity)
+
+	var data = manager.serialize_entity(entity)
+
+	assert_bool(data.has("relationships")).is_true()
+
+
+func test_handle_spawn_entity_applies_relationships():
+	# handle_spawn_entity() must call apply_entity_relationships() when spawn data
+	# includes a "relationships" key. With an empty array the entity still spawns.
+	# FAILS RED: handle_spawn_entity() does not yet call apply_entity_relationships().
+	mock_ns._relationship_handler = SyncRelationshipHandler.new(mock_ns)
+	manager = SpawnManager.new(mock_ns)
+
+	var spawn_data = {
+		"id": "e_rel_test",
+		"name": "RelEntity",
+		"scene_path": "",
+		"components": {},
+		"script_paths": {},
+		"session_id": 42,
+		"relationships": [],
+	}
+
+	manager.handle_spawn_entity(spawn_data)
+
+	# Entity must have been added to the world
+	assert_bool(mock_ns._world.entity_id_registry.has("e_rel_test")).is_true()
