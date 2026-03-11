@@ -15,7 +15,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 1: Foundation and Entity Lifecycle** - NetAdapter, session IDs, entity spawn/despawn across peers, late-join, and disconnect cleanup
 - [x] **Phase 2: Component Property Sync** - Declarative CN_NetSync configuration, priority-tiered batched RPC sync, dirty tracking, spawn-only mode
 - [x] **Phase 3: Authority Model and Native Transform Sync** - Operational authority transfer, MultiplayerSynchronizer for transforms, authority marker propagation
-- [x] **Phase 4: Relationship Sync** - Entity-to-entity relationship sync with deferred resolution for non-deterministic spawn ordering (completed 2026-03-11)
+- [x] **Phase 4: Relationship Sync** - Entity-to-entity relationship sync with deferred resolution for non-deterministic spawn ordering (completed 2026-03-11)
 - [ ] **Phase 5: Reconciliation and Custom Sync** - Periodic full-state reconciliation, system-level sync override hooks
 
 ## Phase Details
@@ -79,9 +79,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 04-01-PLAN.md � Wave 0 test stubs: failing tests for serialize_entity relationships key + MockNetworkSync cleanup
-- [ ] 04-02-PLAN.md � Core wiring: remove SyncConfig gates + wire _relationship_handler into NetworkSync
-- [ ] 04-03-PLAN.md � SpawnManager late-join inclusion + opportunistic SyncConfig cleanup + human checkpoint
+- [ ] 04-01-PLAN.md — Wave 0 test stubs: failing tests for serialize_entity relationships key + MockNetworkSync cleanup
+- [ ] 04-02-PLAN.md — Core wiring: remove SyncConfig gates + wire _relationship_handler into NetworkSync
+- [ ] 04-03-PLAN.md — SpawnManager late-join inclusion + opportunistic SyncConfig cleanup + human checkpoint
 
 ### Phase 5: Reconciliation and Custom Sync
 **Goal**: Long game sessions stay in sync through periodic correction broadcasts, and game systems can override default sync behavior to implement patterns like client-side prediction
@@ -90,7 +90,12 @@ Plans:
 **Success Criteria** (what must be TRUE):
   1. After 30 seconds of gameplay, any property drift or missed packets are silently corrected by a full-state reconciliation broadcast — no visible pop or desync
   2. A system can register a custom sync handler that overrides default property sync for specific components — the override surface is documented with a working example prediction pattern
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] 05-01-PLAN.md — Wave 0 test stubs: test_reconciliation.gd (6 stubs, ADV-02) + test_custom_sync_handlers.gd (5 stubs, ADV-03)
+- [ ] 05-02-PLAN.md — sync_reconciliation_handler.gd + NetworkSync wire + plugin ProjectSetting (ADV-02)
+- [ ] 05-03-PLAN.md — Custom handler registry in SyncSender/SyncReceiver + public API on NetworkSync + human checkpoint (ADV-03)
 
 ## Progress
 
@@ -103,4 +108,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | 2. Component Property Sync | 4/4 | Complete | 2026-03-09 |
 | 3. Authority Model and Native Transform Sync | 4/4 | Complete | 2026-03-10 |
 | 4. Relationship Sync | 3/3 | Complete   | 2026-03-11 |
-| 5. Reconciliation and Custom Sync | 0/TBD | Not started | - |
+| 5. Reconciliation and Custom Sync | 0/3 | Not started | - |
