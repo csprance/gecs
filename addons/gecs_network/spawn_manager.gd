@@ -64,12 +64,17 @@ func serialize_entity(entity: Entity) -> Dictionary:
 		if script != null and script.resource_path != "":
 			script_paths[comp_type] = script.resource_path
 
+	var relationships: Array[Dictionary] = []
+	if _ns.get("_relationship_handler") != null:
+		relationships = _ns._relationship_handler.serialize_entity_relationships(entity)
+
 	return {
 		"id": entity.id,
 		"name": entity.name,
 		"scene_path": entity.scene_file_path,
 		"components": components_data,
 		"script_paths": script_paths,
+		"relationships": relationships,
 		"session_id": _ns._game_session_id
 	}
 
@@ -120,6 +125,9 @@ func handle_spawn_entity(data: Dictionary) -> void:
 	if _ns._world.entity_id_registry.has(entity_id):
 		var existing = _ns._world.entity_id_registry[entity_id]
 		_apply_component_data(existing, data)
+		if _ns.get("_relationship_handler") != null:
+			var rel_data = data.get("relationships", [])
+			_ns._relationship_handler.apply_entity_relationships(existing, rel_data)
 		return
 
 	# Instantiate entity
@@ -136,6 +144,10 @@ func handle_spawn_entity(data: Dictionary) -> void:
 	# Add to world BEFORE applying component data (Pitfall 6)
 	_ns._world.add_entity(entity)
 	_apply_component_data(entity, data)
+
+	if _ns.get("_relationship_handler") != null:
+		var rel_data = data.get("relationships", [])
+		_ns._relationship_handler.apply_entity_relationships(entity, rel_data)
 
 	_ns._spawn_counter += 1
 
