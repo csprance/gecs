@@ -79,9 +79,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 04-01-PLAN.md — Wave 0 test stubs: failing tests for serialize_entity relationships key + MockNetworkSync cleanup
-- [ ] 04-02-PLAN.md — Core wiring: remove SyncConfig gates + wire _relationship_handler into NetworkSync
-- [ ] 04-03-PLAN.md — SpawnManager late-join inclusion + opportunistic SyncConfig cleanup + human checkpoint
+- [ ] 04-01-PLAN.md ï¿½ Wave 0 test stubs: failing tests for serialize_entity relationships key + MockNetworkSync cleanup
+- [ ] 04-02-PLAN.md ï¿½ Core wiring: remove SyncConfig gates + wire _relationship_handler into NetworkSync
+- [ ] 04-03-PLAN.md ï¿½ SpawnManager late-join inclusion + opportunistic SyncConfig cleanup + human checkpoint
 
 ### Phase 5: Reconciliation and Custom Sync
 **Goal**: Long game sessions stay in sync through periodic correction broadcasts, and game systems can override default sync behavior to implement patterns like client-side prediction
@@ -102,5 +102,5 @@ Phases execute in numeric order: 1 â†’ 2 â†’ 3 â†’ 4 â†’ 5
 | 1. Foundation and Entity Lifecycle | 4/4 | Complete | 2026-03-09 |
 | 2. Component Property Sync | 4/4 | Complete | 2026-03-09 |
 | 3. Authority Model and Native Transform Sync | 4/4 | Complete | 2026-03-10 |
-| 4. Relationship Sync | 0/TBD | Not started | - |
+| 4. Relationship Sync | 1/3 | In Progress|  |
 | 5. Reconciliation and Custom Sync | 0/TBD | Not started | - |
