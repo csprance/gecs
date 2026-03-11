@@ -27,7 +27,7 @@ decisions:
 metrics:
   duration_seconds: 292
   completed_date: "2026-03-11"
-  tasks_completed: 2
+  tasks_completed: 3
   tasks_total: 3
   files_modified: 5
 ---
@@ -82,9 +82,17 @@ All 8 spawn_manager tests GREEN including:
 
 None — plan executed exactly as written.
 
-## Pending
+## Task 3: Human Verification — ADV-01 Complete (APPROVED)
 
-Task 3 (checkpoint:human-verify) is paused awaiting human verification of ADV-01 end-to-end behavior.
+Human verified full ADV-01 implementation on 2026-03-11:
+
+- Full test suite ran: 135 test cases, 0 new failures
+- 2 pre-existing failures in test_sync_state_handler (peer_id=1 server-owned — out of scope, documented in STATE.md)
+- All ADV-01 tests passing:
+  - `test_serialize_entity_includes_relationships_key` — PASSED
+  - `test_handle_spawn_entity_applies_relationships` — PASSED
+  - All 18 relationship handler tests — PASSED
+- Human typed "approved" confirming Phase 4 ADV-01 complete
 
 ## Self-Check: PASSED
 
