@@ -55,6 +55,7 @@ var _spawn_manager: SpawnManager
 var _sender: SyncSender
 var _receiver: SyncReceiver
 var _native_sync_handler: NativeSyncHandler
+var _relationship_handler  # SyncRelationshipHandler (untyped — no class_name)
 var _is_ready: bool = false
 
 # ============================================================================
@@ -95,6 +96,8 @@ func _ready() -> void:
 	_sender = SyncSender.new(self)
 	_receiver = SyncReceiver.new(self)
 	_native_sync_handler = NativeSyncHandler.new(self)
+	var SyncRelationshipHandlerScript = load("res://addons/gecs_network/sync_relationship_handler.gd")
+	_relationship_handler = SyncRelationshipHandlerScript.new(self)
 
 	_world.entity_added.connect(_on_entity_added)
 	_world.entity_removed.connect(_on_entity_removed)
@@ -121,6 +124,8 @@ func reset_for_new_game() -> void:
 	_game_session_id += 1  # Monotonic increment invalidates all in-flight RPCs
 	_broadcast_pending.clear()
 	_spawn_counter = 0
+	if _relationship_handler != null:
+		_relationship_handler.reset()
 
 	if debug_logging:
 		print("NetworkSync: reset_for_new_game() session_id=%d" % _game_session_id)
@@ -163,9 +168,16 @@ func _disconnect_multiplayer_signals() -> void:
 
 
 func _on_entity_added(entity: Entity) -> void:
-	if not net_adapter.is_in_game() or not net_adapter.is_server():
+	if not net_adapter.is_in_game():
 		return
-	_spawn_manager.on_entity_added(entity)
+	# Server-only: queue deferred spawn broadcast
+	if net_adapter.is_server():
+		_spawn_manager.on_entity_added(entity)
+	# All peers: wire relationship signals + attempt deferred resolution
+	if _relationship_handler != null:
+		entity.relationship_added.connect(_relationship_handler.on_relationship_added)
+		entity.relationship_removed.connect(_relationship_handler.on_relationship_removed)
+		_relationship_handler.try_resolve_pending(entity)
 
 
 func _on_entity_removed(entity: Entity) -> void:
@@ -261,3 +273,17 @@ func _sync_components_reliable(batch: Dictionary) -> void:
 	if _receiver == null:
 		return
 	_receiver.handle_apply_sync_data(batch)
+
+
+@rpc("any_peer", "reliable")
+func _sync_relationship_add(payload: Dictionary) -> void:
+	if _relationship_handler == null:
+		return
+	_relationship_handler.handle_relationship_add(payload)
+
+
+@rpc("any_peer", "reliable")
+func _sync_relationship_remove(payload: Dictionary) -> void:
+	if _relationship_handler == null:
+		return
+	_relationship_handler.handle_relationship_remove(payload)
