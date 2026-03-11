@@ -142,7 +142,7 @@ func test_roundtrip_component_target():
 
 
 func test_roundtrip_script_target():
-	var target_script = load("res://tests/gecs/components/c_test_a.gd")
+	var target_script = load("res://addons/gecs/tests/components/c_test_a.gd")
 	var rel = Relationship.new(C_TestB.new(), target_script)
 	var recipe = handler.serialize_relationship(rel)
 
@@ -205,8 +205,8 @@ func test_apply_entity_relationships():
 	world.add_entity(target)
 
 	var recipes: Array = [
-		{"r": "res://tests/gecs/components/c_test_a.gd", "tt": "E", "t": "target-1"},
-		{"r": "res://tests/gecs/components/c_test_b.gd", "tt": "N", "t": ""},
+		{"r": "res://addons/gecs/tests/components/c_test_a.gd", "tt": "E", "t": "target-1"},
+		{"r": "res://addons/gecs/tests/components/c_test_b.gd", "tt": "N", "t": ""},
 	]
 
 	handler.apply_entity_relationships(source, recipes)
@@ -227,7 +227,7 @@ func test_deferred_resolution_entity_target():
 
 	# Apply a recipe referencing an entity that doesn't exist yet
 	var recipes: Array = [
-		{"r": "res://tests/gecs/components/c_test_a.gd", "tt": "E", "t": "future-entity"},
+		{"r": "res://addons/gecs/tests/components/c_test_a.gd", "tt": "E", "t": "future-entity"},
 	]
 
 	handler.apply_entity_relationships(source, recipes)
@@ -263,7 +263,7 @@ func test_deferred_resolution_ignores_unrelated_entities():
 
 	# Queue a pending recipe for "future-entity"
 	var recipes: Array = [
-		{"r": "res://tests/gecs/components/c_test_a.gd", "tt": "E", "t": "future-entity"},
+		{"r": "res://addons/gecs/tests/components/c_test_a.gd", "tt": "E", "t": "future-entity"},
 	]
 	handler.apply_entity_relationships(source, recipes)
 
@@ -332,7 +332,7 @@ func test_reset_clears_pending():
 	world.add_entity(source)
 
 	var recipes: Array = [
-		{"r": "res://tests/gecs/components/c_test_a.gd", "tt": "E", "t": "missing-entity"},
+		{"r": "res://addons/gecs/tests/components/c_test_a.gd", "tt": "E", "t": "missing-entity"},
 	]
 	handler.apply_entity_relationships(source, recipes)
 
@@ -362,12 +362,12 @@ func test_deserialize_missing_relation_path():
 
 
 func test_deserialize_unknown_target_type():
-	var recipe = {"r": "res://tests/gecs/components/c_test_a.gd", "tt": "X", "t": ""}
+	var recipe = {"r": "res://addons/gecs/tests/components/c_test_a.gd", "tt": "X", "t": ""}
 	var result = handler.deserialize_relationship(recipe)
 	assert_object(result).is_null()
 
 
 func test_deserialize_entity_target_not_found():
-	var recipe = {"r": "res://tests/gecs/components/c_test_a.gd", "tt": "E", "t": "nonexistent"}
+	var recipe = {"r": "res://addons/gecs/tests/components/c_test_a.gd", "tt": "E", "t": "nonexistent"}
 	var result = handler.deserialize_relationship(recipe)
 	assert_object(result).is_null()

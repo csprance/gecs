@@ -18,7 +18,7 @@ extends RefCounted
 ##   "N" = Null (no target)
 
 ## NetworkSync reference (untyped to avoid circular deps).
-## Expected interface: sync_config, net_adapter, _world, _game_session_id,
+## Expected interface: net_adapter, _world, _game_session_id,
 ## _applying_network_data, _sync_relationship_add, _sync_relationship_remove.
 var _ns
 
@@ -42,9 +42,6 @@ func _init(network_sync) -> void:
 ## Serialize a single Relationship into a creation recipe dictionary.
 ## Returns empty dictionary if relationship cannot be serialized.
 func serialize_relationship(relationship: Relationship) -> Dictionary:
-	if not _ns.sync_config or not _ns.sync_config.sync_relationships:
-		return {}
-
 	var relation = relationship.relation
 	if relation == null:
 		return {}
@@ -136,9 +133,6 @@ func _resolve_target(target_type: String, target_ref: String):
 
 ## Serialize all relationships for an entity.
 func serialize_entity_relationships(entity: Entity) -> Array[Dictionary]:
-	if not _ns.sync_config or not _ns.sync_config.sync_relationships:
-		return []
-
 	var result: Array[Dictionary] = []
 	for relationship in entity.relationships:
 		var recipe = serialize_relationship(relationship)
@@ -239,9 +233,6 @@ func on_relationship_removed(entity: Entity, relationship: Relationship) -> void
 func _broadcast_relationship_change(entity: Entity, relationship: Relationship, rpc_callable: Callable) -> void:
 	# Guard against sync loops
 	if _applying_relationship_data or _ns._applying_network_data:
-		return
-
-	if not _ns.sync_config or not _ns.sync_config.sync_relationships:
 		return
 
 	var net_id = entity.get_component(CN_NetworkIdentity)
