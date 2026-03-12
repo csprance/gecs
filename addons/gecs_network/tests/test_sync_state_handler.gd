@@ -116,9 +116,9 @@ func test_host_player_entity_on_server_gets_local_authority():
 
 	assert_bool(entity.has_component(CN_LocalAuthority)).is_true()
 	assert_bool(entity.has_component(CN_RemoteEntity)).is_false()
-	# peer_id=1 is server-owned (is_server_owned returns true for 0 and 1)
-	assert_bool(entity.has_component(CN_ServerOwned)).is_true()
-	assert_bool(entity.has_component(CN_ServerAuthority)).is_true()
+	# peer_id=1 is a player (host), not server-owned — is_server_owned() returns true for peer_id==0 only
+	assert_bool(entity.has_component(CN_ServerOwned)).is_false()
+	assert_bool(entity.has_component(CN_ServerAuthority)).is_false()
 
 
 func test_client_entity_on_server_gets_remote_entity():
