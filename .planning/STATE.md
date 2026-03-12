@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v0.1
 milestone_name: milestone
 status: completed
-stopped_at: Completed 06-03-PLAN.md (docs v2 rewrite + migration guide)
-last_updated: "2026-03-12T18:18:37.323Z"
+stopped_at: Completed 06-04-PLAN.md (README and CHANGELOG v2 update — Phase 6 complete)
+last_updated: "2026-03-12T18:31:35.763Z"
 last_activity: 2026-03-10 — Plan 03-04 complete (human verification checkpoint — Phase 3 authority markers + native transform sync approved)
 progress:
   total_phases: 6
-  completed_phases: 5
+  completed_phases: 6
   total_plans: 22
-  completed_plans: 21
+  completed_plans: 22
   percent: 60
 ---
 
@@ -70,6 +70,7 @@ Progress: [████████████░░] 60% (Phase 3 complete, 4/
 | Phase 06-cleanup-documentation-and-example-network-update-v1-to-v2-migration P01 | 231 | 2 tasks | 19 files |
 | Phase 06-cleanup-documentation-and-example-network-update-v1-to-v2-migration P02 | 15 | 2 tasks | 3 files |
 | Phase 06-cleanup-documentation-and-example-network-update-v1-to-v2-migration P03 | 600 | 2 tasks | 9 files |
+| Phase 06 P04 | 5 | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -124,6 +125,8 @@ Recent decisions affecting current work:
 - [Phase 06-cleanup-documentation-and-example-network-update-v1-to-v2-migration]: ADV-03 pattern: register_receive_handler in System._ready() with null guard on NetworkSync node lookup
 - [Phase 06-cleanup-documentation-and-example-network-update-v1-to-v2-migration]: troubleshooting.md cross-references migration-v1-to-v2.md instead of repeating v1 name table
 - [Phase 06-cleanup-documentation-and-example-network-update-v1-to-v2-migration]: custom-sync-handlers.md left unchanged — already v2-accurate from Phase 5
+- [Phase 06-cleanup-documentation-and-example-network-update-v1-to-v2-migration]: README full rewrite removes all SyncConfig, CN_SyncEntity, NetworkMiddleware, SyncComponent, CN_ServerOwned references — zero v1 names in public-facing docs
+- [Phase 06-cleanup-documentation-and-example-network-update-v1-to-v2-migration]: CHANGELOG [2.0.0] entry explicitly lists every removed file and its v2 replacement to ease upgrader research
 
 ### Roadmap Evolution
 
@@ -140,6 +143,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-12T18:18:37.319Z
-Stopped at: Completed 06-03-PLAN.md (docs v2 rewrite + migration guide)
+Last session: 2026-03-12T18:31:35.757Z
+Stopped at: Completed 06-04-PLAN.md (README and CHANGELOG v2 update — Phase 6 complete)
 Resume file: None
