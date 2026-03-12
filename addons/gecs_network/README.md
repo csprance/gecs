@@ -1,168 +1,115 @@
 # GECS Network Addon
 
-Multiplayer synchronization addon for the GECS (Godot Entity Component System) framework.
+Declarative multiplayer networking for GECS — mark components as networked, let the framework handle the rest.
 
-## Requirements
+## Quick Start
 
-- **Godot 4.x** (tested with 4.5+)
-- **GECS Addon** - This addon depends on the GECS framework:
-  - `Component` base class with `serialize()` method
-  - `Entity` class with `component_property_changed` signal
-  - `World` class with `entity_id_registry` and entity lifecycle signals
-  - `GECSIO.uuid()` for entity ID generation
+### Step 1: Declare sync priorities on component properties
+
+```gdscript
+class_name C_Velocity
+extends Component
+
+@export_group("HIGH")           # 20 Hz sync
+@export var direction: Vector3 = Vector3.ZERO
+```
+
+### Step 2: Add CN_NetworkIdentity and CN_NetSync to networked entities
+
+```gdscript
+func define_components() -> Array:
+    return [
+        CN_NetworkIdentity.new(peer_id),
+        CN_NetSync.new(),
+        CN_NativeSync.new(),     # Optional: transform sync via MultiplayerSynchronizer
+        C_Velocity.new(),
+    ]
+```
+
+### Step 3: Attach NetworkSync to your World
+
+```gdscript
+func _setup_network_sync() -> void:
+    var net_sync = NetworkSync.attach_to_world(world)
+    net_sync.entity_spawned.connect(_on_entity_spawned)
+    net_sync.local_player_spawned.connect(_on_local_player_spawned)
+```
 
 ## Features
 
-- **Two Sync Patterns**: Spawn-only sync (fire-and-forget) and continuous sync (real-time updates)
-- **Automatic Marker Assignment**: Authority markers (`CN_LocalAuthority`, `CN_RemoteEntity`, etc.) assigned based on ownership
-- **Native Sync Support**: Auto-configures Godot's `MultiplayerSynchronizer` via `CN_SyncEntity`
-- **Priority-Based Batching**: Can reduce bandwidth significantly (HIGH=20Hz, MEDIUM=10Hz, LOW=1Hz), depending on workload
-- **Late Join Support**: New players receive full world state on connection
-- **Authority Transfer**: Transfer entity ownership between peers at runtime
-- **Reconciliation**: Periodic full-state sync to correct drift
-- **Session Validation**: Session IDs prevent ghost entities from previous game sessions
-- **Transport Providers**: Swap ENet/Steam/custom transports without changing game code
+- **Declarative sync priorities** — annotate component properties with `@export_group("HIGH")`, `"MEDIUM"`, `"LOW"`, `"SPAWN_ONLY"`, or `"LOCAL"`; no external config class needed
+- **Native transform sync** — add `CN_NativeSync` to an entity and `NativeSyncHandler` creates and manages a `MultiplayerSynchronizer` automatically with interpolation support
+- **Authority markers** — `CN_LocalAuthority`, `CN_RemoteEntity`, and `CN_ServerAuthority` are injected automatically at spawn; use them in ECS queries to gate systems by ownership
+- **Relationship sync** — entity relationships sync across peers with deferred resolution for non-deterministic spawn ordering
+- **Periodic reconciliation** — configurable full-state broadcast corrects drift without manual intervention
+- **Custom sync handler overrides** — register per-component-type send/receive handlers at the system level for prediction blending or custom serialization
+- **Zero overhead in single-player** — `NetworkSync` detects offline mode and skips all RPC and sync work
+
+## Requirements
+
+- **Godot 4.x** (tested with 4.6+)
+- **GECS Addon** installed in `addons/gecs/`
 
 ## Installation
 
 1. Ensure the GECS addon is installed in `addons/gecs/`
 2. Copy the `addons/gecs_network/` folder to your project's `addons/` directory
-3. Enable the plugin in Project Settings > Plugins > GECSNetwork
-
-## Quick Start
-
-### 1. Create Project-Specific SyncConfig
-
-Create `game/config/project_sync_config.gd`:
-
-```gdscript
-class_name ProjectSyncConfig
-extends SyncConfig
-
-func _init() -> void:
-    component_priorities = {
-        "C_Velocity": Priority.HIGH,        # 20 Hz
-        "C_Health": Priority.MEDIUM,        # 10 Hz
-        "C_PlayerXP": Priority.LOW,         # 1 Hz
-    }
-
-    skip_component_types = ["C_Transform"]
-    model_ready_component = "C_Instantiated"
-    transform_component = "C_Transform"
-    enable_reconciliation = true
-    reconciliation_interval = 10.0
-```
-
-### 2. Attach NetworkSync to Your World
-
-```gdscript
-func _ready():
-    var net_sync = NetworkSync.attach_to_world(world, ProjectSyncConfig.new())
-
-    # Optional: project-specific middleware
-    # NetworkMiddleware is a user-defined class (see docs/architecture.md)
-    # that connects to network_sync signals in its _init, e.g.:
-    #
-    # class_name MyMiddleware extends Node
-    #     func _init(net_sync: NetworkSync):
-    #         net_sync.entity_spawned.connect(_on_entity_spawned)
-    #     func _on_entity_spawned(entity: Entity):
-    #         pass  # Handle spawned entities
-    #
-    # var middleware = MyMiddleware.new(net_sync)
-    var middleware = NetworkMiddleware.new(net_sync)
-```
-
-> **Transport selection** happens at the connection layer, not here.
-> See [Transport Providers](docs/configuration.md#transport-providers) for ENet/Steam switching.
-
-### 3. Add Network Identity to Entities
-
-Every networked entity needs `CN_NetworkIdentity` in its `define_components()`:
-
-```gdscript
-func define_components() -> Array:
-    return [
-        CN_NetworkIdentity.new(peer_id),  # 0=server-owned (sentinel), 1=host peer, 2+=client peers
-        C_Transform.new(),
-        # ... other components
-    ]
-```
-
-### 4. Choose Your Sync Pattern
-
-**Spawn-only** (projectiles, effects) — no `CN_SyncEntity`:
-```gdscript
-func define_components() -> Array:
-    return [
-        CN_NetworkIdentity.new(0),
-        C_Velocity.new(),
-        C_Transform.new(),
-        # NO CN_SyncEntity = spawn-only
-    ]
-```
-
-**Continuous** (players, enemies) — add `CN_SyncEntity`:
-```gdscript
-func define_components() -> Array:
-    return [
-        CN_NetworkIdentity.new(peer_id),
-        C_Transform.new(),
-        CN_SyncEntity.new(true, false, false),  # position sync
-    ]
-```
-
-See [Sync Patterns](docs/sync-patterns.md) for detailed guidance.
-
-## Documentation
-
-| Document | Description |
-|----------|-------------|
-| [Sync Patterns](docs/sync-patterns.md) | Spawn-only vs continuous sync, choosing between them, detailed spawn-only guide |
-| [Components](docs/components.md) | CN_NetworkIdentity, CN_SyncEntity, markers, SyncComponent, priority levels |
-| [Authority](docs/authority.md) | Query-based authority patterns A-E, system group gating, authority transfer |
-| [Configuration](docs/configuration.md) | SyncConfig, priorities, NetAdapter, transport providers (ENet/Steam) |
-| [Architecture](docs/architecture.md) | Two-tier design, handler architecture, middleware pattern, signals |
-| [Architecture — Relationships](docs/architecture.md#relationship-sync) | Relationship sync via creation recipes, deferred entity resolution, spawn payloads |
-| [Best Practices](docs/best-practices.md) | Avoid RPCs, serialization, state ownership, animation sync |
-| [Troubleshooting](docs/troubleshooting.md) | Common issues, solutions, migration guide |
-| [Examples](docs/examples.md) | Complete code examples for players, enemies, projectiles, abilities |
+3. Enable the plugin in **Project Settings > Plugins > GECSNetwork**
 
 ## File Structure
 
 ```text
 addons/gecs_network/
-├── plugin.gd                  # Editor plugin registration
-├── plugin.cfg                 # Plugin metadata
-├── network_sync.gd            # Main sync orchestrator
-├── sync_spawn_handler.gd      # Entity spawn/despawn
-├── sync_native_handler.gd     # MultiplayerSynchronizer setup
-├── sync_property_handler.gd   # Component property sync
-├── sync_state_handler.gd      # Authority markers, reconciliation
-├── net_adapter.gd             # Network abstraction layer
-├── sync_config.gd             # Priority and filtering config
-├── sync_component.gd          # Base class for priority-synced components
-├── transport_provider.gd      # Abstract transport interface
+├── plugin.gd                      # Editor plugin, ProjectSettings registration
+├── plugin.cfg                     # Plugin metadata
+├── network_sync.gd                # Main orchestrator — attach to World; all @rpc declarations
+├── spawn_manager.gd               # Entity lifecycle: spawn, despawn, late-join, disconnect
+├── sync_sender.gd                 # Priority-tiered outbound batching (REALTIME/HIGH/MEDIUM/LOW)
+├── sync_receiver.gd               # Inbound apply, authority validation, echo-loop guard
+├── native_sync_handler.gd         # Creates MultiplayerSynchronizer for CN_NativeSync entities
+├── sync_relationship_handler.gd   # Relationship sync with deferred resolution
+├── sync_reconciliation_handler.gd # Periodic full-state reconciliation (ADV-02)
+├── net_adapter.gd                 # Network abstraction — testable without two Godot instances
+├── transport_provider.gd          # Abstract transport interface
 ├── transports/
-│   ├── enet_transport_provider.gd   # Default ENet/Offline provider
-│   └── steam_transport_provider.gd  # Steam provider (optional GodotSteam)
-├── docs/                      # Documentation
-│   ├── sync-patterns.md
-│   ├── components.md
-│   ├── authority.md
-│   ├── configuration.md
-│   ├── architecture.md
-│   ├── best-practices.md
-│   ├── troubleshooting.md
-│   └── examples.md
+│   ├── enet_transport_provider.gd     # Default ENet transport
+│   └── steam_transport_provider.gd    # Steam transport (requires GodotSteam)
+├── docs/
+│   ├── components.md              # CN_NetworkIdentity, CN_NetSync, CN_NativeSync, markers
+│   ├── architecture.md            # Handler architecture, sync pipeline diagram
+│   ├── authority.md               # Authority query patterns (CN_LocalAuthority, CN_ServerAuthority)
+│   ├── configuration.md           # ProjectSettings, NetAdapter, transport providers
+│   ├── sync-patterns.md           # Spawn-only vs continuous, SPAWN_ONLY group
+│   ├── custom-sync-handlers.md    # ADV-03: register_send_handler, register_receive_handler
+│   ├── best-practices.md          # ECS patterns, authority discipline, bandwidth
+│   ├── examples.md                # Complete code examples
+│   ├── troubleshooting.md         # Common issues and fixes
+│   └── migration-v1-to-v2.md     # v0.1.x → v2 migration table
 ├── icons/
 │   ├── network_sync.svg
 │   └── sync_config.svg
 └── components/
-    ├── cn_network_identity.gd # Required for all networked entities
-    ├── cn_sync_entity.gd      # Opt-in native transform sync
-    ├── cn_local_authority.gd   # Marker: local peer controls this
-    ├── cn_remote_entity.gd     # Marker: remote peer controls this
-    ├── cn_server_authority.gd  # Marker: server has authority over this
-    └── cn_server_owned.gd      # Marker: server owns this entity
+    ├── cn_network_identity.gd     # Required: peer ownership, late-join identity
+    ├── cn_net_sync.gd             # Required for sync: priority scanner + dirty tracker
+    ├── cn_native_sync.gd          # Optional: MultiplayerSynchronizer transform sync
+    ├── cn_local_authority.gd      # Marker: local peer controls this entity
+    ├── cn_remote_entity.gd        # Marker: remote peer controls this entity
+    └── cn_server_authority.gd     # Marker: server-owned (peer_id=0 only)
 ```
+
+## Documentation
+
+- [Components](docs/components.md)
+- [Architecture](docs/architecture.md)
+- [Authority](docs/authority.md)
+- [Configuration](docs/configuration.md)
+- [Sync Patterns](docs/sync-patterns.md)
+- [Custom Sync Handlers](docs/custom-sync-handlers.md)
+- [Best Practices](docs/best-practices.md)
+- [Examples](docs/examples.md)
+- [Troubleshooting](docs/troubleshooting.md)
+- [Migration from v0.1.x](docs/migration-v1-to-v2.md)
+
+## License
+
+MIT License — see `LICENSE` file for details.

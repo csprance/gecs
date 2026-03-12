@@ -2,6 +2,36 @@
 
 All notable changes to the GECS Network addon will be documented in this file.
 
+## [2.0.0] — feature/gecs-network-v2
+
+### Added
+- `CN_NetSync` component — declarative priority-tiered property sync via `@export_group` annotations (REALTIME/HIGH/MEDIUM/LOW/SPAWN_ONLY/LOCAL)
+- `CN_NativeSync` component — native Godot `MultiplayerSynchronizer` transform sync with interpolation
+- `CN_LocalAuthority` marker component — replaces `is_multiplayer_authority()` calls in game systems
+- `CN_ServerAuthority` marker component — server-owned entities (peer_id=0 only)
+- `CN_RemoteEntity` marker component — remote-peer entities
+- `SyncSender` — priority-tiered batched outbound RPC with dirty tracking
+- `SyncReceiver` — authority-validated inbound apply with echo-loop guard
+- `SpawnManager` — late-join full-state broadcast, deferred despawn, session ID anti-ghost
+- `NativeSyncHandler` — creates and manages `MultiplayerSynchronizer` nodes for `CN_NativeSync` entities
+- `SyncRelationshipHandler` — relationship sync with deferred resolution for non-deterministic spawn ordering
+- `SyncReconciliationHandler` — periodic full-state reconciliation broadcast (default 30s, configurable)
+- `NetworkSync.register_send_handler()` / `register_receive_handler()` — system-level sync overrides (ADV-03)
+- ProjectSettings: `gecs_network/sync/high_hz`, `medium_hz`, `low_hz`, `reconciliation_interval`
+
+### Removed
+- `SyncConfig` class and subclass pattern — replaced by `@export_group` annotations on component properties
+- `CN_SyncEntity` component — replaced by `CN_NativeSync`
+- `CN_ServerOwned` marker — replaced by `CN_ServerAuthority` (semantics changed: host peer_id=1 is no longer server-owned)
+- `SyncComponent` base class — components now extend `Component` directly
+- `NetworkMiddleware` pattern — replaced by direct signal connections to `NetworkSync`
+- `sync_spawn_handler.gd` — replaced by `spawn_manager.gd`
+- `sync_property_handler.gd` — replaced by `sync_sender.gd` + `sync_receiver.gd`
+- `sync_state_handler.gd` — replaced by authority marker injection in `spawn_manager.gd`
+
+### Migration
+See [docs/migration-v1-to-v2.md](docs/migration-v1-to-v2.md) for the full v0.1.x → v2 upgrade guide.
+
 ## [0.1.1] - Add Tests; Relationship Sync
 
 ### Added
