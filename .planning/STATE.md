@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v0.1
 milestone_name: milestone
 status: completed
-stopped_at: Completed 06-01-PLAN.md (dead code deletion)
-last_updated: "2026-03-12T17:56:15.495Z"
+stopped_at: Completed 06-02-PLAN.md (example v2 migration)
+last_updated: "2026-03-12T18:03:38.564Z"
 last_activity: 2026-03-10 — Plan 03-04 complete (human verification checkpoint — Phase 3 authority markers + native transform sync approved)
 progress:
   total_phases: 6
   completed_phases: 5
   total_plans: 22
-  completed_plans: 19
+  completed_plans: 20
   percent: 60
 ---
 
@@ -68,6 +68,7 @@ Progress: [████████████░░] 60% (Phase 3 complete, 4/
 | Phase 05-reconciliation-and-custom-sync P02 | 23 | 2 tasks | 4 files |
 | Phase 05-reconciliation-and-custom-sync P03 | 16 | 2 tasks | 5 files |
 | Phase 06-cleanup-documentation-and-example-network-update-v1-to-v2-migration P01 | 231 | 2 tasks | 19 files |
+| Phase 06-cleanup-documentation-and-example-network-update-v1-to-v2-migration P02 | 15 | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -118,6 +119,8 @@ Recent decisions affecting current work:
 - [Phase 05-reconciliation-and-custom-sync]: GDScript lambdas capture bool by value: use Array([false]) wrapper for handler_called tracking in tests
 - [Phase 05-reconciliation-and-custom-sync]: SyncSender._get_comp_type_name() helper added for consistent wire-format name resolution matching CN_NetSync._comp_type_names logic
 - [Phase 06-cleanup-documentation-and-example-network-update-v1-to-v2-migration]: GdUnitRunner.cfg must be updated when test files are deleted — stale test-discovery entries will break the test runner
+- [Phase 06-cleanup-documentation-and-example-network-update-v1-to-v2-migration]: C_LocalAuthority does not exist in v2 — correct class is CN_LocalAuthority; all example systems must use CN_ prefix
+- [Phase 06-cleanup-documentation-and-example-network-update-v1-to-v2-migration]: ADV-03 pattern: register_receive_handler in System._ready() with null guard on NetworkSync node lookup
 
 ### Roadmap Evolution
 
@@ -134,6 +137,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-12T17:56:15.491Z
-Stopped at: Completed 06-01-PLAN.md (dead code deletion)
+Last session: 2026-03-12T18:03:38.559Z
+Stopped at: Completed 06-02-PLAN.md (example v2 migration)
 Resume file: None

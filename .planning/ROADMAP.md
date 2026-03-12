@@ -115,7 +115,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 **Goal:** Delete all v0.1.x dead code, rewrite example_network/ for the v2 API, and rewrite all documentation to reflect what was actually built in Phases 1-5 — including a migration guide for users coming from v0.1.x
 **Requirements**: CLEANUP-01, CLEANUP-02, CLEANUP-03, CLEANUP-04
 **Depends on:** Phase 5
-**Plans:** 1/4 plans executed
+**Plans:** 2/4 plans executed
 
 Plans:
 - [ ] 06-01-PLAN.md — Delete 16 v0.1.x files (handlers, stubs, tests + .uid sidecars); confirm v2 test suite green
