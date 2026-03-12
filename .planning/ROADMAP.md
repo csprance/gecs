@@ -122,3 +122,16 @@ Plans:
 - [ ] 06-02-PLAN.md — Rewrite example_network/ for v2 API showcasing all 4 v2 features; headless import check
 - [ ] 06-03-PLAN.md — Rewrite all 8 docs/*.md files for v2 API; create docs/migration-v1-to-v2.md
 - [ ] 06-04-PLAN.md — Rewrite README.md with v2 Quick Start; add CHANGELOG [2.0.0] entry; human checkpoint
+
+### Phase 7: Abstract multiplayer session boilerplate into NetworkSession node with host/join API and ECS-friendly events
+
+**Goal:** Reduce multiplayer connection boilerplate to zero — game code calls `session.host()` or `session.join()`, session lifecycle events surface as ECS components on a persistent Session entity, and `NetworkSync` is owned and managed internally by `NetworkSession`
+**Requirements**: SESSION-01, SESSION-02, SESSION-03
+**Depends on:** Phase 6
+**Plans:** 4 plans
+
+Plans:
+- [ ] 07-01-PLAN.md — Wave 0: event components + NetworkSession skeleton + 18 failing test stubs
+- [ ] 07-02-PLAN.md — NetworkSession host/join/end_session API + callable hooks + signal management (SESSION-01)
+- [ ] 07-03-PLAN.md — Session entity + transient ECS event components + CN_SessionState lifecycle (SESSION-02)
+- [ ] 07-04-PLAN.md — Refactor example_network/main.gd to use NetworkSession + human checkpoint (SESSION-03)
