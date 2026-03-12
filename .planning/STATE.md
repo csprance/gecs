@@ -1,16 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.0
+milestone: v0.1
 milestone_name: milestone
 status: completed
-stopped_at: Phase 6 context gathered
-last_updated: "2026-03-12T17:24:09.570Z"
+stopped_at: Completed 06-01-PLAN.md (dead code deletion)
+last_updated: "2026-03-12T17:56:15.495Z"
 last_activity: 2026-03-10 — Plan 03-04 complete (human verification checkpoint — Phase 3 authority markers + native transform sync approved)
 progress:
   total_phases: 6
   completed_phases: 5
-  total_plans: 18
-  completed_plans: 18
+  total_plans: 22
+  completed_plans: 19
   percent: 60
 ---
 
@@ -67,6 +67,7 @@ Progress: [████████████░░] 60% (Phase 3 complete, 4/
 | Phase 05-reconciliation-and-custom-sync P01 | 1 | 2 tasks | 2 files |
 | Phase 05-reconciliation-and-custom-sync P02 | 23 | 2 tasks | 4 files |
 | Phase 05-reconciliation-and-custom-sync P03 | 16 | 2 tasks | 5 files |
+| Phase 06-cleanup-documentation-and-example-network-update-v1-to-v2-migration P01 | 231 | 2 tasks | 19 files |
 
 ## Accumulated Context
 
@@ -116,6 +117,7 @@ Recent decisions affecting current work:
 - [Phase 05-reconciliation-and-custom-sync]: Custom send/receive handler keys use _comp_type_name() wire-format string — inner-class test components resolve to empty string key
 - [Phase 05-reconciliation-and-custom-sync]: GDScript lambdas capture bool by value: use Array([false]) wrapper for handler_called tracking in tests
 - [Phase 05-reconciliation-and-custom-sync]: SyncSender._get_comp_type_name() helper added for consistent wire-format name resolution matching CN_NetSync._comp_type_names logic
+- [Phase 06-cleanup-documentation-and-example-network-update-v1-to-v2-migration]: GdUnitRunner.cfg must be updated when test files are deleted — stale test-discovery entries will break the test runner
 
 ### Roadmap Evolution
 
@@ -132,6 +134,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-12T17:24:09.565Z
-Stopped at: Phase 6 context gathered
-Resume file: .planning/phases/06-cleanup-documentation-and-example-network-update-v1-to-v2-migration/06-CONTEXT.md
+Last session: 2026-03-12T17:56:15.491Z
+Stopped at: Completed 06-01-PLAN.md (dead code deletion)
+Resume file: None
