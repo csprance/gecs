@@ -1,212 +1,207 @@
 # Sync Patterns
 
-The addon supports two fundamentally different sync patterns. Choosing the right one is the most important architectural decision for each entity type.
+In GECS Network v2, **all synced entities require `CN_NetSync`**. Sync behavior — continuous vs
+spawn-only — is declared by `@export_group` annotations on component properties, not by the
+presence or absence of components.
 
-## Spawn-Only Sync
+> **Important:** Spawn-only is declared via `@export_group("SPAWN_ONLY")` on properties.
+> `CN_NetSync` must be present on every entity that syncs data — including spawn-only entities.
+> See `docs/migration-v1-to-v2.md` if you are upgrading from an older version.
 
-For entities with deterministic behavior after spawning (projectiles, effects, AoE zones). The server broadcasts spawn data once; clients reconstruct and simulate locally with **no further updates**.
+---
 
-**How to use:** Include `CN_NetworkIdentity` but **do NOT include** `CN_SyncEntity`.
+## Priority Tiers
 
-```gdscript
-# e_projectile.gd
-func define_components() -> Array:
-    return [
-        CN_NetworkIdentity.new(0),   # Server-owned
-        C_Projectile.new(),
-        C_Velocity.new(),
-        C_Transform.new(),
-        C_DeathTimer.new(3.0),
-        # NO CN_SyncEntity = spawn-only sync
-    ]
-```
+| Group name | Rate | Transport | Use for |
+|---|---|---|---|
+| `"REALTIME"` | ~60 Hz | Unreliable | Critical real-time data (rare) |
+| `"HIGH"` | 20 Hz | Unreliable | Velocity, input flags, animation state |
+| `"MEDIUM"` | 10 Hz | Reliable | Health, AI state, XP |
+| `"LOW"` | 1–2 Hz | Reliable | Inventory, stats, upgrades |
+| `"SPAWN_ONLY"` | Once at spawn | Reliable | Projectile initial position/velocity |
+| `"LOCAL"` | Never | — | Client-only state; never transmitted |
 
-**How it works internally:**
-1. Server calls `ECS.world.add_entity(projectile)`
-2. Addon detects `CN_NetworkIdentity` and schedules `call_deferred("_broadcast_entity_spawn")`
-3. Your code sets component values (velocity, position, damage)
-4. At end of frame, addon serializes all `@export` properties and broadcasts via RPC
-5. Clients instantiate the entity, apply component data, and simulate locally
-6. No further sync updates are sent
+Rates above 20 Hz use unreliable UDP (speed over reliability). 10 Hz and below use reliable
+delivery. Adjust rates via ProjectSettings (`gecs_network/sync/high_hz`, etc.).
 
-**Critical rule — set values AFTER `add_entity()`:**
-
-```gdscript
-func _spawn_projectile(position: Vector3, direction: Vector3, speed: float):
-    var proj = projectile_scene.instantiate()
-    entities_node.add_child(proj)
-
-    # Add to ECS world first (triggers define_components)
-    ECS.world.add_entity(proj)
-
-    # THEN set values (addon captures these via deferred call at end of frame)
-    proj.get_component(C_Velocity).direction = direction * speed
-    proj.get_component(C_Transform).position = position
-    proj.get_component(C_Projectile).damage = 25
-```
-
-If you set values *before* `add_entity()`, `define_components()` overwrites them with defaults. The deferred broadcast captures whatever values exist at end of frame.
-
-**Best for:** Projectiles, particle effects, AoE damage zones, short-lived entities with predictable movement.
+---
 
 ## Continuous Sync
 
-For entities with unpredictable movement that need real-time position/rotation updates. The addon auto-configures a Godot `MultiplayerSynchronizer` for native interpolation.
+For entities with ongoing state that must stay synchronized every tick (players, enemies, vehicles):
 
-**How to use:** Include both `CN_NetworkIdentity` AND `CN_SyncEntity`.
+1. Add `CN_NetSync` to the entity
+2. Annotate component properties with priority groups
 
 ```gdscript
-# e_player.gd
+# Component declaration — priority is inline, no external config
+class_name C_NetVelocity
+extends Component
+
+@export_group("HIGH")
+@export var direction: Vector3 = Vector3.ZERO  # Synced at 20 Hz
+@export var speed: float = 0.0                 # Synced at 20 Hz
+
+@export_group("LOCAL")
+@export var predicted_position: Vector3 = Vector3.ZERO  # Never synced
+```
+
+```gdscript
+# Entity definition
 func define_components() -> Array:
     return [
         CN_NetworkIdentity.new(peer_id),
-        C_Transform.new(),
-        C_Velocity.new(),
-        C_Health.new(),
+        CN_NetSync.new(),           # Required for any property sync
+        CN_NativeSync.new(),        # Optional: transform via MultiplayerSynchronizer
+        C_NetVelocity.new(),        # HIGH group properties sync at 20 Hz
+        C_PlayerInput.new(),        # HIGH group input syncs at 20 Hz
+        C_PlayerNumber.new(),       # LOW group (join order, rarely changes)
     ]
-
-static func _create_sync_entity() -> CN_SyncEntity:
-    var sync = CN_SyncEntity.new(true, false, false)  # sync_position=true
-    sync.custom_properties.append("Rig:rotation")     # Also sync child node rotation
-    return sync
 ```
 
-**CN_SyncEntity options:**
+`CN_NativeSync` adds a `MultiplayerSynchronizer` for position/rotation. Use it in addition
+to `CN_NetSync` when you want Godot's built-in transform interpolation.
+
+---
+
+## Spawn-Only Sync
+
+For entities with deterministic behavior after spawn (projectiles, effects, AoE zones): mark
+relevant component properties with `@export_group("SPAWN_ONLY")`. The server broadcasts all
+property values once at spawn; clients simulate locally with no further updates.
+
+**`CN_NetSync` is still required** — the SPAWN_ONLY group is a property annotation, not a
+signal to skip the component entirely.
 
 ```gdscript
-CN_SyncEntity.new(
-    sync_position,   # bool: sync global_position
-    sync_rotation,   # bool: sync global_rotation
-    sync_velocity,   # bool: sync velocity (CharacterBody3D)
-)
-# Plus custom_properties for arbitrary node properties:
-sync.custom_properties.append("Rig:rotation")       # Child node property
-sync.custom_properties.append("Sprite:modulate")     # Any node:property pair
-```
-
-**Best for:** Players, enemies, NPCs, vehicles — anything with unpredictable movement.
-
-## Choosing Between Patterns
-
-| Entity Type | Pattern | Components | Why |
-|---|---|---|---|
-| Projectiles | Spawn-only | `CN_NetworkIdentity` only | Deterministic flight path, short-lived |
-| AoE effects | Spawn-only | `CN_NetworkIdentity` only | Static position, timed lifetime |
-| Players | Continuous | `+ CN_SyncEntity` | Unpredictable movement, long-lived |
-| Enemies | Continuous | `+ CN_SyncEntity` | Server-controlled AI, position matters |
-| Vehicles | Continuous | `+ CN_SyncEntity` | Physics-driven, unpredictable |
-| Pickups | Spawn-only | `CN_NetworkIdentity` only | Static position, collected once |
-
-## Implementing Spawn-Only Sync (Detailed)
-
-Spawn-only sync requires careful implementation. Follow these rules:
-
-### Rule 1: Only Server Spawns
-
-**Never spawn locally on clients.** The server spawns, broadcasts, and all clients (including the firing player) receive via RPC.
-
-```gdscript
-# In your weapon/spawning system:
-func process(...):
-    if Net.is_in_game:
-        if Net.is_server():
-            # Server spawns - addon broadcasts to ALL clients
-            _spawn_projectile(position, direction, ...)
-        # CLIENT: Do NOT spawn prediction - wait for server broadcast
-    else:
-        # Single player: spawn locally
-        _spawn_projectile(position, direction, ...)
-```
-
-**Why no client prediction?** With spawn-only sync, there's no way to reconcile a client prediction with the server-spawned version. You'd get duplicate projectiles.
-
-### Rule 2: Input Must Sync to Server
-
-For the server to spawn on behalf of clients, it needs their input. Use `SyncComponent`:
-
-```gdscript
-class_name C_FiringInput
-extends SyncComponent  # NOT Component!
-
-@export var is_firing: bool = false      # @export required for sync
-@export var aim_direction: Vector3 = Vector3.FORWARD
-
-# Add to SyncConfig priorities:
-# "C_FiringInput": SyncConfig.Priority.HIGH  # 20 Hz
-```
-
-### Rule 3: All Synced Data Must Be @export
-
-Everything that differs between spawns must be serialized:
-
-```gdscript
-class_name C_Projectile
+# Component with SPAWN_ONLY properties
+class_name C_NetPosition
 extends Component
 
-@export var damage: int = 0              # Synced
-@export var projectile_color: Color = Color.WHITE  # Synced (for visuals)
-var owner_entity: Entity = null          # NOT synced (Entity refs don't serialize)
+@export_group("SPAWN_ONLY")
+@export var position: Vector3 = Vector3.ZERO   # Sent once at spawn, never continuous
 ```
 
-### Rule 4: Set Component Values AFTER add_entity()
-
-The addon uses `call_deferred` to serialize components at end of frame. Set values after `add_entity()`:
-
 ```gdscript
-func _spawn_projectile(position, direction, speed, damage, color):
-    var projectile = projectile_scene.instantiate()
-
-    # Add to scene tree first
-    entities_node.add_child(projectile)
-    projectile.global_position = position
-
-    # Add to ECS world - triggers define_components()
-    ECS.world.add_entity(projectile)
-
-    # Set component values AFTER add_entity (addon captures these via deferred call)
-    var velocity_comp = projectile.get_component(C_Velocity)
-    velocity_comp.direction = direction * speed
-
-    var transform_comp = projectile.get_component(C_Transform)
-    transform_comp.position = position
-
-    var proj_comp = projectile.get_component(C_Projectile)
-    proj_comp.damage = damage
-    proj_comp.projectile_color = color
-```
-
-### Rule 5: Entity Definition (No CN_SyncEntity)
-
-```gdscript
-# e_projectile.gd
+# Projectile entity — spawn-only
 func define_components() -> Array:
     return [
-        CN_NetworkIdentity.new(0),  # 0 = server-owned
+        CN_NetworkIdentity.new(0),   # 0 = server-owned
+        CN_NetSync.new(),            # Required — SPAWN_ONLY group lives here
+        C_NetPosition.new(),         # SPAWN_ONLY: position
+        C_NetVelocity.new(),         # SPAWN_ONLY: initial velocity
         C_Projectile.new(),
-        C_Velocity.new(),
-        C_Transform.new(),
-        C_DeathTimer.new(3.0),
     ]
-    # NO CN_SyncEntity - this is what makes it spawn-only!
 ```
 
-### Complete Spawn-Only Flow
+**How spawn-only works internally:**
+
+```text
+1. Server: ECS.world.add_entity(projectile)
+2. SpawnManager detects CN_NetworkIdentity → schedules call_deferred("_deferred_broadcast")
+3. Your code sets component values (velocity, position) AFTER add_entity()
+4. End of frame: _deferred_broadcast serializes SPAWN_ONLY + all @export properties
+5. SpawnManager.rpc_broadcast_spawn() → sends payload to all clients
+6. Clients instantiate entity, apply component data, simulate locally
+7. No further property sync is sent for this entity
+```
+
+**Critical:** Set component values AFTER `add_entity()`:
+
+```gdscript
+func _spawn_projectile(position: Vector3, direction: Vector3) -> void:
+    var proj = projectile_scene.instantiate()
+    entities.add_child(proj)
+
+    # add_entity() triggers define_components() with defaults
+    ECS.world.add_entity(proj)
+
+    # Set values AFTER — addon captures these at end of frame
+    proj.get_component(C_NetPosition).position = position
+    proj.get_component(C_NetVelocity).direction = direction
+```
+
+Setting values *before* `add_entity()` causes `define_components()` to overwrite them with
+defaults. The deferred broadcast captures values at end of frame, not at `add_entity()` time.
+
+---
+
+## LOCAL Properties
+
+`@export_group("LOCAL")` marks properties that belong only to the declaring peer. They are
+never included in any outbound payload:
+
+```gdscript
+class_name C_NetVelocity
+extends Component
+
+@export_group("HIGH")
+@export var direction: Vector3 = Vector3.ZERO
+
+@export_group("LOCAL")
+@export var predicted_position: Vector3 = Vector3.ZERO   # Client-only, not synced
+@export var smoothed_speed: float = 0.0                  # Display only, not synced
+```
+
+Use `LOCAL` for client-predicted state, UI-only values, or any data that should never leave
+the declaring peer.
+
+---
+
+## Mixed Priorities on One Entity
+
+A single entity can have components at multiple priority tiers. `CN_NetSync.scan_entity_components()`
+discovers all tiers at spawn and the send pipeline handles each independently:
+
+```gdscript
+class_name C_PlayerInput
+extends Component
+
+@export_group("HIGH")
+@export var move_direction: Vector2 = Vector2.ZERO  # Synced at 20 Hz
+
+class_name C_PlayerNumber
+extends Component
+
+@export_group("LOW")
+@export var player_number: int = 0                  # Synced at 1–2 Hz
+```
+
+Both components on the same player entity sync independently. `SyncSender` checks HIGH every
+~50 ms and LOW every ~500 ms.
+
+---
+
+## Choosing a Pattern
+
+| Entity Type | Pattern | Components | Reason |
+|---|---|---|---|
+| Players | Continuous + transform | `CN_NetSync` + `CN_NativeSync` | Unpredictable movement, long-lived |
+| Enemies | Continuous + transform | `CN_NetSync` + `CN_NativeSync` | Server-controlled AI |
+| Vehicles | Continuous + transform | `CN_NetSync` + `CN_NativeSync` | Physics-driven |
+| Projectiles | Spawn-only | `CN_NetSync` (SPAWN_ONLY props) | Deterministic flight, short-lived |
+| AoE effects | Spawn-only | `CN_NetSync` (SPAWN_ONLY props) | Static position, timed lifetime |
+| Pickups | Spawn-only | `CN_NetSync` (SPAWN_ONLY props) | Static position, collected once |
+
+---
+
+## Complete Spawn-Only Flow
 
 ```text
 CLIENT A (firing):
   1. Holds fire button
-  2. S_Input sets C_FiringInput.is_firing = true (local player, CN_LocalAuthority)
-  3. C_FiringInput syncs to server via SyncComponent polling (HIGH, 20Hz)
+  2. S_Input sets C_PlayerInput.move_direction (CN_LocalAuthority entity only)
+  3. Input properties sync to server at HIGH priority (20 Hz)
 
 SERVER:
-  4. S_WeaponSpawning reads is_firing=true on Client A's player entity
-  5. Cooldown check passes -> spawns projectile with CN_NetworkIdentity.new(0)
-  6. Sets velocity, position, damage on components AFTER add_entity()
-  7. End of frame: addon serializes @export properties, broadcasts spawn RPC
+  4. S_Shooting reads firing input on Client A's player entity
+  5. Cooldown check passes → spawns projectile with CN_NetworkIdentity.new(0)
+  6. Sets C_NetPosition.position and C_NetVelocity.direction AFTER add_entity()
+  7. End of frame: SpawnManager serializes SPAWN_ONLY + all @export properties, broadcasts
 
 ALL CLIENTS (including A):
   8. Receive spawn RPC with session_id validation
-  9. Instantiate projectile, apply component data from RPC
-  10. Local movement system simulates flight (no further sync)
-  11. C_DeathTimer expires -> entity removed (despawn also synced)
+  9. Instantiate projectile, apply component data
+  10. Local movement system simulates flight (C_NetVelocity read each frame)
+  11. Projectile lifetime expires → despawn also synced via NetworkSync
 ```
