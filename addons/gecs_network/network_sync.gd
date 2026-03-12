@@ -319,6 +319,14 @@ func _deferred_broadcast(entity: Entity, entity_id: String) -> void:
 	if not _broadcast_pending.has(entity_id):
 		return  # Cancelled by on_entity_removed before deferred call fired
 	_broadcast_pending.erase(entity_id)
+	# Server-side setup: inject authority markers and native sync.
+	# Clients receive these via _apply_component_data in handle_spawn_entity.
+	# The server never receives its own spawn RPCs, so we do it here.
+	var net_id: CN_NetworkIdentity = entity.get_component(CN_NetworkIdentity)
+	if net_id:
+		_spawn_manager._inject_authority_markers(entity, net_id)
+	if _native_sync_handler != null:
+		_native_sync_handler.setup_native_sync(entity)
 	var data = _spawn_manager.serialize_entity(entity)
 	_spawn_entity.rpc(data)
 
