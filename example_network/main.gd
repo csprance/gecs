@@ -6,7 +6,6 @@ const PLAYER_SCENE_PATH := "res://example_network/entities/e_player.tscn"
 const DEFAULT_PORT := 7777
 
 var _network_sync: NetworkSync
-var _network_middleware: ExampleMiddleware
 var _is_connected: bool = false
 var _spawned_peer_ids: Dictionary = {}  # peer_id -> entity_id
 var _next_player_number: int = 1  # Track join order (1-4) for color assignment
@@ -163,14 +162,15 @@ func _setup_network_sync() -> void:
 	if _network_sync:
 		return
 
-	# Create NetworkSync with project-specific config
-	_network_sync = NetworkSync.attach_to_world(world, ExampleSyncConfig.new())
+	# v2 API: attach_to_world with no config argument
+	_network_sync = NetworkSync.attach_to_world(world)
 	_network_sync.debug_logging = true  # Enable for demo visibility
 
-	# Create middleware for visual setup
-	_network_middleware = ExampleMiddleware.new(_network_sync)
+	# ADV-02: configure reconciliation interval (30s periodic state correction)
+	_network_sync.reconciliation_interval = 30.0
 
-	# Connect to local player spawned signal
+	# Connect NetworkSync signals directly (no middleware layer)
+	_network_sync.entity_spawned.connect(_on_entity_spawned)
 	_network_sync.local_player_spawned.connect(_on_local_player_spawned)
 
 
@@ -196,7 +196,10 @@ func _cleanup_network() -> void:
 	if _network_sync:
 		_network_sync.queue_free()
 	_network_sync = null
-	_network_middleware = null
+
+
+func _on_entity_spawned(entity: Entity) -> void:
+	print("[Main] Entity spawned via network: %s" % entity.name)
 
 
 func _on_local_player_spawned(entity: Entity) -> void:

@@ -1,16 +1,37 @@
 class_name S_NetworkMovement
 extends System
 ## Movement system - applies velocity to entity position.
-## Processes entities with C_LocalAuthority (local simulation).
+## Processes entities with CN_LocalAuthority (local simulation).
 ## Remote entities receive position updates via native MultiplayerSynchronizer.
+## ADV-03: Registers a custom receive handler for C_NetVelocity to blend corrections.
 
 const MOVE_SPEED := 5.0
 const ARENA_BOUND := 4.5  # Half of 10x10 arena minus player size
 
 
+func _ready() -> void:
+	# ADV-03: Register a blend-correction receive handler for C_NetVelocity.
+	# When the server sends a velocity correction, we lerp instead of snapping
+	# so local movement feels smooth even under reconciliation.
+	var ns := ECS.world.get_node("NetworkSync") as NetworkSync
+	if ns == null:
+		return
+	ns.register_receive_handler("C_NetVelocity", _blend_velocity_correction)
+
+
+func _blend_velocity_correction(entity: Entity, comp: Component, props: Dictionary) -> bool:
+	# Only blend on entities we have local authority over; let server apply others directly.
+	if not entity.has_component(CN_LocalAuthority):
+		return false
+	if props.has("direction"):
+		var c := comp as C_NetVelocity
+		c.direction = c.direction.lerp(props["direction"], 0.3)
+	return true
+
+
 func query() -> QueryBuilder:
 	# Only move local entities - remote positions come from network sync
-	return q.with_all([C_NetVelocity, C_PlayerInput, C_LocalAuthority]).iterate([C_NetVelocity, C_PlayerInput])
+	return q.with_all([C_NetVelocity, C_PlayerInput, CN_LocalAuthority]).iterate([C_NetVelocity, C_PlayerInput])
 
 
 func process(entities: Array[Entity], components: Array, delta: float) -> void:
