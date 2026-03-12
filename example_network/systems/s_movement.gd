@@ -9,10 +9,11 @@ const MOVE_SPEED := 5.0
 const ARENA_BOUND := 4.5  # Half of 10x10 arena minus player size
 
 
-func _ready() -> void:
+func setup() -> void:
 	# ADV-03: Register a blend-correction receive handler for C_NetVelocity.
 	# When the server sends a velocity correction, we lerp instead of snapping
 	# so local movement feels smooth even under reconciliation.
+	# setup() is deferred until ECS.world is assigned, so get_node() is safe here.
 	var ns := ECS.world.get_node("NetworkSync") as NetworkSync
 	if ns == null:
 		return
