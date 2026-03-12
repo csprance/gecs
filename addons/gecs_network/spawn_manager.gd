@@ -68,7 +68,7 @@ func serialize_entity(entity: Entity) -> Dictionary:
 	if _ns.get("_relationship_handler") != null:
 		relationships = _ns._relationship_handler.serialize_entity_relationships(entity)
 
-	return {
+	var result := {
 		"id": entity.id,
 		"name": entity.name,
 		"scene_path": entity.scene_file_path,
@@ -77,6 +77,11 @@ func serialize_entity(entity: Entity) -> Dictionary:
 		"relationships": relationships,
 		"session_id": _ns._game_session_id
 	}
+	var node_pos = entity.get("global_position")
+	if node_pos != null:
+		result["node_position"] = node_pos
+		result["node_rotation"] = entity.get("global_rotation")
+	return result
 
 
 # ============================================================================
@@ -143,6 +148,13 @@ func handle_spawn_entity(data: Dictionary) -> void:
 
 	# Add to world BEFORE applying component data (Pitfall 6)
 	_ns._world.add_entity(entity)
+	# Apply node transform from serialized position (e.g. projectile spawn point)
+	var node_pos = data.get("node_position")
+	if node_pos != null:
+		entity.set("global_position", node_pos)
+		var node_rot = data.get("node_rotation")
+		if node_rot != null:
+			entity.set("global_rotation", node_rot)
 	_apply_component_data(entity, data)
 
 	if _ns.get("_relationship_handler") != null:

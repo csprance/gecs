@@ -177,13 +177,11 @@ func _setup_network_sync() -> void:
 func _cleanup_network() -> void:
 	_is_connected = false
 
-	# Clear spawned players
-	for peer_id in _spawned_peer_ids.keys():
-		var entity_id = _spawned_peer_ids[peer_id]
-		var entity = world.get_entity_by_id(entity_id)
-		if entity:
-			world.remove_entity(entity)
-			entity.queue_free()
+	# Remove ALL entities (players + any lingering projectiles).
+	# Duplicate because remove_entity modifies world.entities in place.
+	for entity in world.entities.duplicate():
+		world.remove_entity(entity)
+		entity.queue_free()
 	_spawned_peer_ids.clear()
 
 	# Reset player number counter
