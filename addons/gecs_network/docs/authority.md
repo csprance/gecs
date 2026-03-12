@@ -1,127 +1,177 @@
-# Authority Patterns
+# Authority Model
 
-Authority markers replace runtime `is_server()` checks with declarative query filtering. This keeps network logic out of your game systems.
+## Overview
 
-## Pattern A: Local Player Only
+GECS Network v2 uses three marker components to declare authority. `SpawnManager` assigns them
+automatically when an entity with `CN_NetworkIdentity` enters the world — you never set them
+manually.
 
-For input handling, camera control, and local feedback:
+| Marker | Meaning | Assigned when |
+|---|---|---|
+| `CN_LocalAuthority` | Local peer controls this entity | Entity's `peer_id` matches the local peer's ID |
+| `CN_RemoteEntity` | Remote peer controls this entity | Entity's `peer_id` does NOT match local peer |
+| `CN_ServerAuthority` | Server-owned — `peer_id == 0` only | Entity's `peer_id` is exactly `0` |
+
+**Key distinction:** `CN_ServerAuthority` means `peer_id == 0` ONLY. The host player
+(`peer_id == 1`) is NOT a server-authority entity. On the host machine, the host player gets
+`CN_LocalAuthority`; on all clients, it gets `CN_RemoteEntity` — exactly like any other player.
+
+---
+
+## Marker Assignment per Peer Type
+
+| Entity owner | On server | On any client |
+|---|---|---|
+| Server (`peer_id=0`) | `CN_LocalAuthority` + `CN_ServerAuthority` | `CN_RemoteEntity` + `CN_ServerAuthority` |
+| Host player (`peer_id=1`) | `CN_LocalAuthority` | `CN_RemoteEntity` |
+| Client player (`peer_id=2+`) | `CN_RemoteEntity` | `CN_LocalAuthority` (on that client only) |
+
+`CN_ServerAuthority` is present on BOTH server and clients for server-owned entities. Use it
+in queries to filter for server-owned entities regardless of which peer is running the query.
+
+---
+
+## Query Patterns
+
+### Pattern A: Local Player Only
+
+For input handling, camera control, and local feedback. Only the entity owned by the local peer
+matches:
 
 ```gdscript
-# Only runs for the entity owned by the local peer
-func query():
-    return q.with_all([C_Velocity, C_Movement, CN_LocalAuthority])
+func query() -> QueryBuilder:
+    return q.with_all([C_PlayerInput, CN_LocalAuthority])
 ```
 
-## Pattern B: Skip Remote Entities
+On each peer this matches exactly one entity — the one that peer controls.
 
-For physics systems where remote entities are positioned by native sync:
+### Pattern B: Skip Remote Entities in Physics
+
+For physics systems where remote entity positions are already handled by `MultiplayerSynchronizer`:
 
 ```gdscript
-func query():
-    return q.with_all([C_CharacterBody3D, C_Velocity])
-        .with_none([CN_RemoteEntity, C_Dying, C_Dead])
+func query() -> QueryBuilder:
+    return q.with_all([C_NetVelocity]).with_none([CN_RemoteEntity])
 ```
 
-## Pattern C: Server-Owned Entity Filtering
+Excludes all remote-owned entities. The local authority entity and all server-owned entities
+(on the server) are processed.
 
-For systems that should only process server-owned entities (enemies, pickups) and only on the server:
+### Pattern C: Server-Owned Processing (Server + Client Safe)
+
+For systems that process server-owned entities (enemies, pickups, projectiles). Add BOTH
+`CN_ServerAuthority` and `CN_LocalAuthority` so the system only runs on the machine that has
+authority over those entities:
 
 ```gdscript
-func query():
+func query() -> QueryBuilder:
     return q.with_all([C_EnemyAI, CN_ServerAuthority, CN_LocalAuthority])
 ```
 
-**How this works:**
-- **On server:** Server-owned entities have both `CN_ServerAuthority` AND `CN_LocalAuthority` -> query matches -> system processes
-- **On client:** Server-owned entities have `CN_ServerAuthority` but NOT `CN_LocalAuthority` (they have `CN_RemoteEntity`) -> query fails -> skipped
+- **On server:** Server-owned entities have both markers → query matches → system processes
+- **On client:** Server-owned entities have `CN_ServerAuthority` + `CN_RemoteEntity` (not `CN_LocalAuthority`) → query fails → skipped
 
-This is more granular than system group gating — it filters at the entity level within a system that processes multiple entity types.
+This is entity-level gating within a system that may process mixed entity types. See
+Pattern E below for whole-system gating.
 
-## Pattern D: Local vs Remote Subsystems
+### Pattern D: Local vs Remote Subsystems
 
-For systems that need different logic per authority:
+For systems that need different behavior per authority (full physics vs. animation-only):
 
 ```gdscript
 func sub_systems() -> Array[Array]:
     return [
-        # Local entities: full physics simulation
+        # Local entities: full movement simulation
         [
-            q.with_all([C_CharacterBody3D, C_Velocity, CN_LocalAuthority])
-                .with_none([C_Dying, C_Dead]),
+            q.with_all([C_NetVelocity, CN_LocalAuthority]),
             _process_local
         ],
-        # Remote entities: derive velocity for animation, skip physics
+        # Remote entities: position via native sync; derive velocity for animation only
         [
-            q.with_all([C_CharacterBody3D, C_Velocity, CN_RemoteEntity])
-                .with_none([C_Dying, C_Dead]),
+            q.with_all([C_NetVelocity, CN_RemoteEntity]),
             _process_remote
         ]
     ]
 
 func _process_local(entities, components, delta):
-    # Full physics: move_and_slide()
-    body.velocity = velocity.direction * movement.speed
-    body.move_and_slide()
+    # Apply physics, move_and_slide(), clamp to arena, etc.
+    pass
 
 func _process_remote(entities, components, delta):
-    # No physics - MultiplayerSynchronizer handles position
-    body.velocity = velocity.direction  # Just for animation blending
+    # No physics — MultiplayerSynchronizer handles position.
+    # Use synced velocity for animation blending only.
+    pass
 ```
 
-## Pattern E: System Group Gating
+### Pattern E: System Group Gating
 
-For entire systems that should only run on the server (enemy spawning, AI, loot drops):
+For entire systems that must only run on the server (enemy spawning, loot drops, game logic):
 
 ```gdscript
 # In your main scene _process():
-func _process(delta):
-    world.process(delta, "initialization")
-
-    if Net.is_server():
-        world.process(delta, "server-authoritative")  # Only runs on server
-
+func _process(delta: float) -> void:
     world.process(delta, "input")
-    world.process(delta, "movement")
-    world.process(delta, "combat")
+    world.process(delta, "physics")
+
+    if multiplayer.is_server():
+        world.process(delta, "server-authoritative")  # Enemy AI, spawning, loot
 ```
 
-Systems in the `"server-authoritative"` group need **no** `is_server()` checks in their `process()` method — the group gating handles it.
+Systems in `"server-authoritative"` need no `is_server()` guard in their own `process()` —
+the group gating handles it.
 
-**Important exception:** System group gating only affects the ECS `process()` method. Godot Node callbacks (`_ready()`, signal handlers, Timer callbacks) run on ALL peers. If a server-authoritative system uses these callbacks to spawn entities or mutate state, those callbacks must be guarded:
+**Important exception:** Godot Node callbacks (`_ready()`, signal handlers, Timer callbacks)
+run on ALL peers regardless of system group. If a server-only system uses signals or timers,
+those handlers require explicit guards:
 
 ```gdscript
 # System in "server-authoritative" group
-func _ready():
+func _ready() -> void:
     GameState.state_changed.connect(_on_state_changed)  # Fires on ALL peers
 
-func _on_state_changed(_old, new_state):
+func _on_state_changed(_old, new_state) -> void:
     if new_state == GameState.State.PLAYING:
+        if not multiplayer.is_server():
+            return   # Guard required — signal fires on clients too
         _start_spawning()
-
-func _start_spawning():
-    # REQUIRED: Guard signal handler - system group gating doesn't apply here
-    if not Net.is_server():
-        return
-    _spawn_timer = Timer.new()
-    _spawn_timer.timeout.connect(_on_spawn_timer_timeout)
-    add_child(_spawn_timer)
-    _spawn_timer.start()
-
-func _on_spawn_timer_timeout():
-    # Timer only exists on server (guarded above) - no check needed
-    _spawn_enemy()
 ```
 
-## Authority Transfer
+---
 
-Transfer entity ownership between peers at runtime:
+## Authority Injection (Automatic)
+
+`SpawnManager._inject_authority_markers()` runs immediately after a new entity enters the
+world and uses an idempotent remove-then-add pattern:
+
+```text
+1. Remove CN_LocalAuthority, CN_RemoteEntity, CN_ServerAuthority (if present)
+2. Determine local peer ID vs entity peer_id
+3. Add the correct markers
+```
+
+This means re-spawning the same entity (e.g., respawn on death) always produces a correct
+marker state regardless of previous state.
+
+You never need to call this manually. Do not add or remove authority markers directly in
+game systems — always let `SpawnManager` manage them.
+
+---
+
+## Checking Authority at Runtime
+
+Use ECS query methods rather than direct marker checks when possible:
 
 ```gdscript
-# Server only
-network_sync.transfer_authority(entity, new_peer_id)
+# Preferred: query filter (most common use case)
+q.with_all([C_PlayerInput, CN_LocalAuthority])
+
+# OK: direct component check (for conditional logic inside a system)
+if entity.has_component(CN_LocalAuthority):
+    _do_local_only_work()
+
+if entity.has_component(CN_ServerAuthority):
+    _do_server_authoritative_work()
 ```
 
-Use cases:
-- Player picks up item -> transfer to player
-- Player drops item -> transfer to server (peer_id=0)
-- Vehicle enter/exit -> transfer ownership
+Avoid calling `CN_NetworkIdentity.is_server_owned()` for authority checks — it only tests
+`peer_id == 0` and bypasses the marker system. The marker components are the source of truth.
