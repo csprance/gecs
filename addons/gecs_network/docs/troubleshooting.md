@@ -1,6 +1,6 @@
 # Troubleshooting
 
-For migration from v0.1.x, see `docs/migration-v1-to-v2.md`.
+For migration from an older version, see `docs/migration-v1-to-v2.md`.
 
 ---
 
@@ -9,13 +9,13 @@ For migration from v0.1.x, see `docs/migration-v1-to-v2.md`.
 **Symptom:** GDScript parser error at startup or test run referencing an unknown component
 base class.
 
-**Cause:** A component file extends a v0.1.x base class that no longer exists.
-All components in v2 extend `Component` directly.
+**Cause:** A component file extends a base class that no longer exists. All components
+extend `Component` directly.
 
 **Fix:** Change the extends clause and add `@export_group` annotations for sync priority:
 
 ```gdscript
-# WRONG — v0.1.x base class does not exist in v2
+# WRONG — old base class
 class_name C_MyInput
 extends Component  # was: extends <old-base>
 
@@ -33,8 +33,8 @@ extends Component
 
 **Symptom:** Runtime error when creating a component instance — class not found.
 
-**Cause:** v0.1.x component names used in entity definitions. All network components
-use the `CN_` prefix in v2.
+**Cause:** Old component names used in entity definitions. All network components use
+the `CN_` prefix.
 
 **Fix:** See the full name map in `docs/migration-v1-to-v2.md` (Quick Reference table).
 Key points: `C_NetworkIdentity` → `CN_NetworkIdentity`; authority markers and sync entity
@@ -47,13 +47,12 @@ components have been renamed. The migration guide lists every change.
 **Symptom:** Error when passing a configuration object as the second argument to
 `NetworkSync.attach_to_world()`.
 
-**Cause:** The v2 signature takes an optional `NetAdapter`, not a config object. The
-v0.1.x config class does not exist in v2.
+**Cause:** The signature takes an optional `NetAdapter`, not a config object.
 
 **Fix:**
 
 ```gdscript
-# WRONG — passing a config object that no longer exists
+# WRONG — passing a config object
 var net_sync = NetworkSync.attach_to_world(world, ExampleConfig.new())
 
 # CORRECT
@@ -69,14 +68,14 @@ If you need a custom networking backend: pass a `NetAdapter` subclass as the sec
 **Symptom:** A system that queries `CN_ServerAuthority` also fires for the host player
 (peer_id = 1), producing incorrect behavior.
 
-**Cause:** In v0.1.x, the server ownership check returned `true` for `peer_id == 0 OR 1`.
-In v2, `CN_ServerAuthority` is assigned only for `peer_id == 0`.
+**Cause:** `CN_ServerAuthority` is assigned only for `peer_id == 0`. The host player
+(`peer_id == 1`) is not server-owned.
 
 **Expected behavior:**
 
-| Entity | On server | On client |
-|---|---|---|
-| Host player (`peer_id=1`) | `CN_LocalAuthority` only | `CN_RemoteEntity` only |
+| Entity                     | On server                                  | On client                                |
+| -------------------------- | ------------------------------------------ | ---------------------------------------- |
+| Host player (`peer_id=1`)  | `CN_LocalAuthority` only                   | `CN_RemoteEntity` only                   |
 | Server-owned (`peer_id=0`) | `CN_LocalAuthority` + `CN_ServerAuthority` | `CN_RemoteEntity` + `CN_ServerAuthority` |
 
 **Fix:** Replace `is_server_owned()` calls with `has_component(CN_ServerAuthority)`.
@@ -107,7 +106,7 @@ projectile.get_component(C_NetVelocity).direction = shoot_dir
 
 **Cause C:** Properties are missing `@export` — only `@export` properties are serialized.
 
-**Cause D (v2-specific):** Spawn-only properties are declared with `@export_group("SPAWN_ONLY")`.
+**Cause D:** Spawn-only properties are declared with `@export_group("SPAWN_ONLY")`.
 If `CN_NetSync` is absent from the entity, even SPAWN_ONLY properties are not sent.
 
 ---

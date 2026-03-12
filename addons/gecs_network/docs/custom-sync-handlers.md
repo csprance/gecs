@@ -22,11 +22,11 @@ Custom sync handlers let game systems override the default send/receive behavior
 func my_send_handler(entity: Entity, comp: Component, priority: int) -> Dictionary
 ```
 
-| Return value | Effect |
-|---|---|
-| `{ prop: value, ... }` | Send this dict instead of the default dirty-check result |
-| `{}` (empty dict) | Suppress this component from the outbound batch entirely |
-| `null` | Fall through to the default dirty-check for all components |
+| Return value           | Effect                                                     |
+| ---------------------- | ---------------------------------------------------------- |
+| `{ prop: value, ... }` | Send this dict instead of the default dirty-check result   |
+| `{}` (empty dict)      | Suppress this component from the outbound batch entirely   |
+| `null`                 | Fall through to the default dirty-check for all components |
 
 The framework calls the send handler **for each component that has a registered handler key**, before evaluating `check_changes_for_priority()`. Only components with a custom handler are intercepted; components without one use the default dirty-check.
 
@@ -36,10 +36,10 @@ The framework calls the send handler **for each component that has a registered 
 func my_receive_handler(entity: Entity, comp: Component, props: Dictionary) -> bool
 ```
 
-| Return value | Effect |
-|---|---|
-| `true` | Handler processed the update; default `comp.set()` is skipped |
-| `false` | Fall through to the default `comp.set()` path |
+| Return value | Effect                                                        |
+| ------------ | ------------------------------------------------------------- |
+| `true`       | Handler processed the update; default `comp.set()` is skipped |
+| `false`      | Fall through to the default `comp.set()` path                 |
 
 **Critical guarantee:** Regardless of the return value, the framework **always** calls `net_sync.update_cache_silent(comp, prop, value)` for every property in `props`. This prevents the dirty-change detector from re-broadcasting received values as new changes (echo-loop prevention).
 
@@ -106,7 +106,7 @@ func process(_entities: Array[Entity], _components: Array, _delta: float) -> voi
 
 ### Registration Wiring
 
-Wire handlers in `_ready()` using `ECS.world.get_node("NetworkSync")`. The NetworkSync node is always named "NetworkSync" (enforced by the factory and _ready() fallback). Make sure your system is added to the scene tree AFTER the World and NetworkSync nodes.
+Wire handlers in `_ready()` using `ECS.world.get_node("NetworkSync")`. The NetworkSync node is always named "NetworkSync" (enforced by the factory and \_ready() fallback). Make sure your system is added to the scene tree AFTER the World and NetworkSync nodes.
 
 ---
 
@@ -155,6 +155,7 @@ func _my_receive_handler(entity: Entity, comp: Component, props: Dictionary) -> 
 ## Reference
 
 For quick in-editor reference, see the inline GDScript doc comments on:
+
 - `NetworkSync.register_send_handler()` in `addons/gecs_network/network_sync.gd`
 - `NetworkSync.register_receive_handler()` in `addons/gecs_network/network_sync.gd`
 - `SyncSender.register_send_handler()` in `addons/gecs_network/sync_sender.gd`

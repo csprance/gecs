@@ -44,14 +44,14 @@ net_sync.update_cache_silent(comp, prop, val)   # Update cache without marking d
 
 Priority is declared directly on component properties using `@export_group` sentinel names:
 
-| Group name | Rate | Transport | Use for |
-|---|---|---|---|
-| `"REALTIME"` | ~60 Hz | Unreliable | Critical real-time data (rare) |
-| `"HIGH"` | 20 Hz | Unreliable | Velocity, input flags, animation state |
-| `"MEDIUM"` | 10 Hz | Reliable | Health, AI state, XP |
-| `"LOW"` | 1 Hz | Reliable | Inventory, stats, upgrades |
-| `"SPAWN_ONLY"` | Once at spawn | Reliable | Projectile initial position/velocity |
-| `"LOCAL"` | Never | — | Client-only state; never transmitted |
+| Group name     | Rate          | Transport  | Use for                                |
+| -------------- | ------------- | ---------- | -------------------------------------- |
+| `"REALTIME"`   | ~60 Hz        | Unreliable | Critical real-time data (rare)         |
+| `"HIGH"`       | 20 Hz         | Unreliable | Velocity, input flags, animation state |
+| `"MEDIUM"`     | 10 Hz         | Reliable   | Health, AI state, XP                   |
+| `"LOW"`        | 1 Hz          | Reliable   | Inventory, stats, upgrades             |
+| `"SPAWN_ONLY"` | Once at spawn | Reliable   | Projectile initial position/velocity   |
+| `"LOCAL"`      | Never         | —          | Client-only state; never transmitted   |
 
 All properties under an `@export_group` sentinel inherit that tier until the next group is declared.
 
@@ -97,6 +97,7 @@ continuously-synced entities. `CN_NativeSync` handles position/rotation; `CN_Net
 component property sync.
 
 **When to use vs CN_NetSync:**
+
 - Use `CN_NativeSync` for transform (position, rotation) — Godot handles interpolation
 - Use `CN_NetSync` + `@export_group` for all other component data (health, input, AI state)
 
@@ -106,19 +107,19 @@ SpawnManager automatically assigns these markers when an entity with `CN_Network
 added to the world. **Do not assign or remove these manually** — SpawnManager uses an
 idempotent remove-then-add pattern to ensure they are always correct.
 
-| Marker | Assigned when | Typical use in queries |
-|---|---|---|
-| `CN_LocalAuthority` | Entity is owned by the local peer | Input systems, camera, local physics |
-| `CN_RemoteEntity` | Entity is owned by a remote peer | Skip in physics, apply interpolation |
-| `CN_ServerAuthority` | Entity has `peer_id == 0` (server-owned only) | Server-only processing |
+| Marker               | Assigned when                                 | Typical use in queries               |
+| -------------------- | --------------------------------------------- | ------------------------------------ |
+| `CN_LocalAuthority`  | Entity is owned by the local peer             | Input systems, camera, local physics |
+| `CN_RemoteEntity`    | Entity is owned by a remote peer              | Skip in physics, apply interpolation |
+| `CN_ServerAuthority` | Entity has `peer_id == 0` (server-owned only) | Server-only processing               |
 
 **Marker assignment per peer type:**
 
-| Entity owner | On server | On any client |
-|---|---|---|
-| Server (`peer_id=0`) | `CN_LocalAuthority` + `CN_ServerAuthority` | `CN_RemoteEntity` + `CN_ServerAuthority` |
-| Host player (`peer_id=1`) | `CN_LocalAuthority` | `CN_RemoteEntity` |
-| Client player (`peer_id=2+`) | `CN_RemoteEntity` | `CN_LocalAuthority` (on that client only) |
+| Entity owner                 | On server                                  | On any client                             |
+| ---------------------------- | ------------------------------------------ | ----------------------------------------- |
+| Server (`peer_id=0`)         | `CN_LocalAuthority` + `CN_ServerAuthority` | `CN_RemoteEntity` + `CN_ServerAuthority`  |
+| Host player (`peer_id=1`)    | `CN_LocalAuthority`                        | `CN_RemoteEntity`                         |
+| Client player (`peer_id=2+`) | `CN_RemoteEntity`                          | `CN_LocalAuthority` (on that client only) |
 
 **Key distinction:** `CN_ServerAuthority` means `peer_id == 0` only. The host player
 (`peer_id == 1`) is NOT a server-authority entity — it gets `CN_LocalAuthority` on the host

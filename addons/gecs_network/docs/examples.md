@@ -102,15 +102,13 @@ extends Component
 
 ## Example 4: World Setup (main.gd)
 
-`example_network/main.gd` — v2 setup with no config object, direct signal connections,
-and reconciliation interval:
+`example_network/main.gd` — setup with direct signal connections and reconciliation interval:
 
 ```gdscript
 func _setup_network_sync() -> void:
     if _network_sync:
         return   # Guard against double-attach
 
-    # v2 API: attach_to_world with no config argument
     _network_sync = NetworkSync.attach_to_world(world)
     _network_sync.debug_logging = true
 

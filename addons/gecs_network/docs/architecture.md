@@ -17,14 +17,14 @@ focused handler objects. All `@rpc` declarations live on `NetworkSync`; handlers
            |                               SyncReconciliationHandler
 ```
 
-| Handler | File | Responsibility |
-|---|---|---|
-| `SpawnManager` | `spawn_manager.gd` | Entity lifecycle: spawn broadcast, despawn, late-join sync, peer disconnect cleanup |
-| `SyncSender` | `sync_sender.gd` | Priority-tiered outbound batching: polls `CN_NetSync.check_changes_for_priority()` per tier per tick |
-| `SyncReceiver` | `sync_receiver.gd` | Inbound apply: authority validation, `_applying_network_data` echo-loop guard, custom receive handlers |
-| `NativeSyncHandler` | `native_sync_handler.gd` | Creates `MultiplayerSynchronizer` for entities with `CN_NativeSync`; configures position/rotation sync |
-| `SyncRelationshipHandler` | `sync_relationship_handler.gd` | Serializes ECS relationships via creation recipes; deferred entity resolution for late-join |
-| `SyncReconciliationHandler` | `sync_reconciliation_handler.gd` | Periodic full-state reconciliation (ADV-02): broadcasts authoritative state at configured interval |
+| Handler                     | File                             | Responsibility                                                                                         |
+| --------------------------- | -------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `SpawnManager`              | `spawn_manager.gd`               | Entity lifecycle: spawn broadcast, despawn, late-join sync, peer disconnect cleanup                    |
+| `SyncSender`                | `sync_sender.gd`                 | Priority-tiered outbound batching: polls `CN_NetSync.check_changes_for_priority()` per tier per tick   |
+| `SyncReceiver`              | `sync_receiver.gd`               | Inbound apply: authority validation, `_applying_network_data` echo-loop guard, custom receive handlers |
+| `NativeSyncHandler`         | `native_sync_handler.gd`         | Creates `MultiplayerSynchronizer` for entities with `CN_NativeSync`; configures position/rotation sync |
+| `SyncRelationshipHandler`   | `sync_relationship_handler.gd`   | Serializes ECS relationships via creation recipes; deferred entity resolution for late-join            |
+| `SyncReconciliationHandler` | `sync_reconciliation_handler.gd` | Periodic full-state reconciliation (ADV-02): broadcasts authoritative state at configured interval     |
 
 ## Spawn Flow
 

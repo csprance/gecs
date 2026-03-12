@@ -1,25 +1,24 @@
 # Sync Patterns
 
-In GECS Network v2, **all synced entities require `CN_NetSync`**. Sync behavior — continuous vs
-spawn-only — is declared by `@export_group` annotations on component properties, not by the
-presence or absence of components.
+**All synced entities require `CN_NetSync`**. Sync behavior — continuous vs spawn-only — is
+declared by `@export_group` annotations on component properties, not by the presence or
+absence of components.
 
 > **Important:** Spawn-only is declared via `@export_group("SPAWN_ONLY")` on properties.
 > `CN_NetSync` must be present on every entity that syncs data — including spawn-only entities.
-> See `docs/migration-v1-to-v2.md` if you are upgrading from an older version.
 
 ---
 
 ## Priority Tiers
 
-| Group name | Rate | Transport | Use for |
-|---|---|---|---|
-| `"REALTIME"` | ~60 Hz | Unreliable | Critical real-time data (rare) |
-| `"HIGH"` | 20 Hz | Unreliable | Velocity, input flags, animation state |
-| `"MEDIUM"` | 10 Hz | Reliable | Health, AI state, XP |
-| `"LOW"` | 1–2 Hz | Reliable | Inventory, stats, upgrades |
-| `"SPAWN_ONLY"` | Once at spawn | Reliable | Projectile initial position/velocity |
-| `"LOCAL"` | Never | — | Client-only state; never transmitted |
+| Group name     | Rate          | Transport  | Use for                                |
+| -------------- | ------------- | ---------- | -------------------------------------- |
+| `"REALTIME"`   | ~60 Hz        | Unreliable | Critical real-time data (rare)         |
+| `"HIGH"`       | 20 Hz         | Unreliable | Velocity, input flags, animation state |
+| `"MEDIUM"`     | 10 Hz         | Reliable   | Health, AI state, XP                   |
+| `"LOW"`        | 1–2 Hz        | Reliable   | Inventory, stats, upgrades             |
+| `"SPAWN_ONLY"` | Once at spawn | Reliable   | Projectile initial position/velocity   |
+| `"LOCAL"`      | Never         | —          | Client-only state; never transmitted   |
 
 Rates above 20 Hz use unreliable UDP (speed over reliability). 10 Hz and below use reliable
 delivery. Adjust rates via ProjectSettings (`gecs_network/sync/high_hz`, etc.).
@@ -121,7 +120,7 @@ func _spawn_projectile(position: Vector3, direction: Vector3) -> void:
     proj.get_component(C_NetVelocity).direction = direction
 ```
 
-Setting values *before* `add_entity()` causes `define_components()` to overwrite them with
+Setting values _before_ `add_entity()` causes `define_components()` to overwrite them with
 defaults. The deferred broadcast captures values at end of frame, not at `add_entity()` time.
 
 ---
@@ -174,14 +173,14 @@ Both components on the same player entity sync independently. `SyncSender` check
 
 ## Choosing a Pattern
 
-| Entity Type | Pattern | Components | Reason |
-|---|---|---|---|
-| Players | Continuous + transform | `CN_NetSync` + `CN_NativeSync` | Unpredictable movement, long-lived |
-| Enemies | Continuous + transform | `CN_NetSync` + `CN_NativeSync` | Server-controlled AI |
-| Vehicles | Continuous + transform | `CN_NetSync` + `CN_NativeSync` | Physics-driven |
-| Projectiles | Spawn-only | `CN_NetSync` (SPAWN_ONLY props) | Deterministic flight, short-lived |
-| AoE effects | Spawn-only | `CN_NetSync` (SPAWN_ONLY props) | Static position, timed lifetime |
-| Pickups | Spawn-only | `CN_NetSync` (SPAWN_ONLY props) | Static position, collected once |
+| Entity Type | Pattern                | Components                      | Reason                             |
+| ----------- | ---------------------- | ------------------------------- | ---------------------------------- |
+| Players     | Continuous + transform | `CN_NetSync` + `CN_NativeSync`  | Unpredictable movement, long-lived |
+| Enemies     | Continuous + transform | `CN_NetSync` + `CN_NativeSync`  | Server-controlled AI               |
+| Vehicles    | Continuous + transform | `CN_NetSync` + `CN_NativeSync`  | Physics-driven                     |
+| Projectiles | Spawn-only             | `CN_NetSync` (SPAWN_ONLY props) | Deterministic flight, short-lived  |
+| AoE effects | Spawn-only             | `CN_NetSync` (SPAWN_ONLY props) | Static position, timed lifetime    |
+| Pickups     | Spawn-only             | `CN_NetSync` (SPAWN_ONLY props) | Static position, collected once    |
 
 ---
 

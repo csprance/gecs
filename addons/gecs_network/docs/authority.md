@@ -2,15 +2,15 @@
 
 ## Overview
 
-GECS Network v2 uses three marker components to declare authority. `SpawnManager` assigns them
+GECS Network uses three marker components to declare authority. `SpawnManager` assigns them
 automatically when an entity with `CN_NetworkIdentity` enters the world — you never set them
 manually.
 
-| Marker | Meaning | Assigned when |
-|---|---|---|
-| `CN_LocalAuthority` | Local peer controls this entity | Entity's `peer_id` matches the local peer's ID |
-| `CN_RemoteEntity` | Remote peer controls this entity | Entity's `peer_id` does NOT match local peer |
-| `CN_ServerAuthority` | Server-owned — `peer_id == 0` only | Entity's `peer_id` is exactly `0` |
+| Marker               | Meaning                            | Assigned when                                  |
+| -------------------- | ---------------------------------- | ---------------------------------------------- |
+| `CN_LocalAuthority`  | Local peer controls this entity    | Entity's `peer_id` matches the local peer's ID |
+| `CN_RemoteEntity`    | Remote peer controls this entity   | Entity's `peer_id` does NOT match local peer   |
+| `CN_ServerAuthority` | Server-owned — `peer_id == 0` only | Entity's `peer_id` is exactly `0`              |
 
 **Key distinction:** `CN_ServerAuthority` means `peer_id == 0` ONLY. The host player
 (`peer_id == 1`) is NOT a server-authority entity. On the host machine, the host player gets
@@ -20,11 +20,11 @@ manually.
 
 ## Marker Assignment per Peer Type
 
-| Entity owner | On server | On any client |
-|---|---|---|
-| Server (`peer_id=0`) | `CN_LocalAuthority` + `CN_ServerAuthority` | `CN_RemoteEntity` + `CN_ServerAuthority` |
-| Host player (`peer_id=1`) | `CN_LocalAuthority` | `CN_RemoteEntity` |
-| Client player (`peer_id=2+`) | `CN_RemoteEntity` | `CN_LocalAuthority` (on that client only) |
+| Entity owner                 | On server                                  | On any client                             |
+| ---------------------------- | ------------------------------------------ | ----------------------------------------- |
+| Server (`peer_id=0`)         | `CN_LocalAuthority` + `CN_ServerAuthority` | `CN_RemoteEntity` + `CN_ServerAuthority`  |
+| Host player (`peer_id=1`)    | `CN_LocalAuthority`                        | `CN_RemoteEntity`                         |
+| Client player (`peer_id=2+`) | `CN_RemoteEntity`                          | `CN_LocalAuthority` (on that client only) |
 
 `CN_ServerAuthority` is present on BOTH server and clients for server-owned entities. Use it
 in queries to filter for server-owned entities regardless of which peer is running the query.

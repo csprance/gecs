@@ -24,7 +24,6 @@ static func attach_to_world(world: World, net_adapter: NetAdapter = null) -> Net
 ```
 
 The second argument is an optional `NetAdapter` for custom networking backends or test mocks.
-The second argument is an optional `NetAdapter` for custom networking backends or test mocks.
 Priority is declared directly on component properties via `@export_group` annotations; there is
 no configuration object to pass here.
 
@@ -35,16 +34,15 @@ no configuration object to pass here.
 The GECS Network plugin registers the following settings on first enable. Edit them in
 **Project > Project Settings > gecs_network/sync/**:
 
-| Setting | Type | Default | Description |
-|---|---|---|---|
-| `gecs_network/sync/high_hz` | `int` | `20` | HIGH priority sync rate (Hz) |
-| `gecs_network/sync/medium_hz` | `int` | `10` | MEDIUM priority sync rate (Hz) |
-| `gecs_network/sync/low_hz` | `int` | `2` | LOW priority sync rate (Hz) |
-| `gecs_network/sync/reconciliation_interval` | `float` | `30.0` | Default reconciliation interval (seconds) |
+| Setting                                     | Type    | Default | Description                               |
+| ------------------------------------------- | ------- | ------- | ----------------------------------------- |
+| `gecs_network/sync/high_hz`                 | `int`   | `20`    | HIGH priority sync rate (Hz)              |
+| `gecs_network/sync/medium_hz`               | `int`   | `10`    | MEDIUM priority sync rate (Hz)            |
+| `gecs_network/sync/low_hz`                  | `int`   | `2`     | LOW priority sync rate (Hz)               |
+| `gecs_network/sync/reconciliation_interval` | `float` | `30.0`  | Default reconciliation interval (seconds) |
 
-REALTIME priority (60 Hz) is hard-coded to the physics tick rate. LOW is set to `2 Hz` in
-ProjectSettings; note the PLAN shows `1 Hz` as the documented target — adjust
-`gecs_network/sync/low_hz` to `1` if you want 1 Hz LOW-tier sync.
+REALTIME priority (60 Hz) is hard-coded to the physics tick rate. LOW defaults to `2 Hz` in
+ProjectSettings — adjust `gecs_network/sync/low_hz` to `1` if you want 1 Hz LOW-tier sync.
 
 ---
 
@@ -67,6 +65,7 @@ var reconciliation_interval: float  # get/set
 ## NetAdapter (Custom Networking)
 
 `NetAdapter` is an abstract interface that wraps Godot multiplayer calls. Override it to:
+
 - Use a non-standard networking layer (Steam, custom relay)
 - Mock the network in unit tests
 
@@ -100,10 +99,10 @@ without changing game code.
 
 ### Built-in Providers
 
-| Provider | Class | Transport | Requires |
-|---|---|---|---|
-| ENet (default) | `ENetTransportProvider` | Godot built-in ENet | Nothing extra |
-| Steam | `SteamTransportProvider` | Steam Networking | GodotSteam addon |
+| Provider       | Class                    | Transport           | Requires         |
+| -------------- | ------------------------ | ------------------- | ---------------- |
+| ENet (default) | `ENetTransportProvider`  | Godot built-in ENet | Nothing extra    |
+| Steam          | `SteamTransportProvider` | Steam Networking    | GodotSteam addon |
 
 ### Using ENet (Default)
 

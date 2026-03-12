@@ -108,7 +108,7 @@ addons/gecs_network/
 - [Best Practices](docs/best-practices.md)
 - [Examples](docs/examples.md)
 - [Troubleshooting](docs/troubleshooting.md)
-- [Migration from v0.1.x](docs/migration-v1-to-v2.md)
+- [Migration Guide](docs/migration-v1-to-v2.md)
 
 ## License
 
