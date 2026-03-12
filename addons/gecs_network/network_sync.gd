@@ -168,6 +168,61 @@ func broadcast_full_state() -> void:
 	_reconciliation_handler.broadcast_full_state()
 
 
+# ============================================================================
+# PUBLIC API — Custom Sync Handlers (ADV-03)
+# ============================================================================
+
+## Register a custom send handler for a component type.
+## The handler is called instead of the default dirty-check for the named component type.
+##
+## Callable signature:
+##   func(entity: Entity, comp: Component, priority: int) -> Dictionary
+##   Return: { prop: value } to send, {} to suppress, null to use default dirty-check.
+##
+## Example (client-side prediction — send only what local entity needs):
+##   func _ready() -> void:
+##       var ns := ECS.world.get_node("NetworkSync") as NetworkSync
+##       ns.register_send_handler("C_PlayerInput", _send_predicted_input)
+##
+##   func _send_predicted_input(entity: Entity, comp: Component, priority: int) -> Dictionary:
+##       if entity.has_component(CN_LocalAuthority):
+##           return {"move_dir": comp.move_dir, "jump_pressed": comp.jump_pressed}
+##       return {}  # Suppress for non-local entities
+##
+## See also: addons/gecs_network/docs/custom-sync-handlers.md
+func register_send_handler(comp_type_name: String, handler: Callable) -> void:
+	if _sender == null:
+		push_error("NetworkSync: register_send_handler called before _ready()")
+		return
+	_sender.register_send_handler(comp_type_name, handler)
+
+
+## Register a custom receive handler for a component type.
+## The handler is called instead of the default comp.set() for the named component type.
+## The framework ALWAYS calls update_cache_silent() after the handler (prevents echo loops).
+##
+## Callable signature:
+##   func(entity: Entity, comp: Component, props: Dictionary) -> bool
+##   Return: true if handled (skip default set()), false to fall through to default.
+##
+## Example (server correction blending for prediction):
+##   func _ready() -> void:
+##       var ns := ECS.world.get_node("NetworkSync") as NetworkSync
+##       ns.register_receive_handler("C_Position", _blend_server_correction)
+##
+##   func _blend_server_correction(entity: Entity, comp: Component, props: Dictionary) -> bool:
+##       if props.has("position"):
+##           comp.position = comp.position.lerp(props["position"], 0.3)
+##       return true  # Handled — update_cache_silent will be called by framework
+##
+## See also: addons/gecs_network/docs/custom-sync-handlers.md
+func register_receive_handler(comp_type_name: String, handler: Callable) -> void:
+	if _receiver == null:
+		push_error("NetworkSync: register_receive_handler called before _ready()")
+		return
+	_receiver.register_receive_handler(comp_type_name, handler)
+
+
 func _process(delta: float) -> void:
 	if _world == null or not net_adapter.is_in_game():
 		return  # Zero overhead in single-player — FOUND-03
