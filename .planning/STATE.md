@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v0.1
 milestone_name: milestone
 status: completed
-stopped_at: Completed 06-02-PLAN.md (example v2 migration)
-last_updated: "2026-03-12T18:03:38.564Z"
+stopped_at: Completed 06-03-PLAN.md (docs v2 rewrite + migration guide)
+last_updated: "2026-03-12T18:18:37.323Z"
 last_activity: 2026-03-10 — Plan 03-04 complete (human verification checkpoint — Phase 3 authority markers + native transform sync approved)
 progress:
   total_phases: 6
   completed_phases: 5
   total_plans: 22
-  completed_plans: 20
+  completed_plans: 21
   percent: 60
 ---
 
@@ -69,6 +69,7 @@ Progress: [████████████░░] 60% (Phase 3 complete, 4/
 | Phase 05-reconciliation-and-custom-sync P03 | 16 | 2 tasks | 5 files |
 | Phase 06-cleanup-documentation-and-example-network-update-v1-to-v2-migration P01 | 231 | 2 tasks | 19 files |
 | Phase 06-cleanup-documentation-and-example-network-update-v1-to-v2-migration P02 | 15 | 2 tasks | 3 files |
+| Phase 06-cleanup-documentation-and-example-network-update-v1-to-v2-migration P03 | 600 | 2 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -121,6 +122,8 @@ Recent decisions affecting current work:
 - [Phase 06-cleanup-documentation-and-example-network-update-v1-to-v2-migration]: GdUnitRunner.cfg must be updated when test files are deleted — stale test-discovery entries will break the test runner
 - [Phase 06-cleanup-documentation-and-example-network-update-v1-to-v2-migration]: C_LocalAuthority does not exist in v2 — correct class is CN_LocalAuthority; all example systems must use CN_ prefix
 - [Phase 06-cleanup-documentation-and-example-network-update-v1-to-v2-migration]: ADV-03 pattern: register_receive_handler in System._ready() with null guard on NetworkSync node lookup
+- [Phase 06-cleanup-documentation-and-example-network-update-v1-to-v2-migration]: troubleshooting.md cross-references migration-v1-to-v2.md instead of repeating v1 name table
+- [Phase 06-cleanup-documentation-and-example-network-update-v1-to-v2-migration]: custom-sync-handlers.md left unchanged — already v2-accurate from Phase 5
 
 ### Roadmap Evolution
 
@@ -137,6 +140,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-12T18:03:38.559Z
-Stopped at: Completed 06-02-PLAN.md (example v2 migration)
+Last session: 2026-03-12T18:18:37.319Z
+Stopped at: Completed 06-03-PLAN.md (docs v2 rewrite + migration guide)
 Resume file: None
