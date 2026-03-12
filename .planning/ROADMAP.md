@@ -16,7 +16,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 2: Component Property Sync** - Declarative CN_NetSync configuration, priority-tiered batched RPC sync, dirty tracking, spawn-only mode
 - [x] **Phase 3: Authority Model and Native Transform Sync** - Operational authority transfer, MultiplayerSynchronizer for transforms, authority marker propagation
 - [x] **Phase 4: Relationship Sync** - Entity-to-entity relationship sync with deferred resolution for non-deterministic spawn ordering (completed 2026-03-11)
-- [x] **Phase 5: Reconciliation and Custom Sync** - Periodic full-state reconciliation, system-level sync override hooks (completed 2026-03-12)
+- [x] **Phase 5: Reconciliation and Custom Sync** - Periodic full-state reconciliation, system-level sync override hooks (completed 2026-03-12)
 
 ## Phase Details
 
@@ -109,3 +109,16 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | 3. Authority Model and Native Transform Sync | 4/4 | Complete | 2026-03-10 |
 | 4. Relationship Sync | 3/3 | Complete   | 2026-03-11 |
 | 5. Reconciliation and Custom Sync | 3/3 | Complete   | 2026-03-12 |
+
+### Phase 6: Cleanup, Documentation, and Example Network Update (v1 to v2 migration)
+
+**Goal:** Delete all v0.1.x dead code, rewrite example_network/ for the v2 API, and rewrite all documentation to reflect what was actually built in Phases 1-5 — including a migration guide for users coming from v0.1.x
+**Requirements**: CLEANUP-01, CLEANUP-02, CLEANUP-03, CLEANUP-04
+**Depends on:** Phase 5
+**Plans:** 4 plans
+
+Plans:
+- [ ] 06-01-PLAN.md — Delete 16 v0.1.x files (handlers, stubs, tests + .uid sidecars); confirm v2 test suite green
+- [ ] 06-02-PLAN.md — Rewrite example_network/ for v2 API showcasing all 4 v2 features; headless import check
+- [ ] 06-03-PLAN.md — Rewrite all 8 docs/*.md files for v2 API; create docs/migration-v1-to-v2.md
+- [ ] 06-04-PLAN.md — Rewrite README.md with v2 Quick Start; add CHANGELOG [2.0.0] entry; human checkpoint
