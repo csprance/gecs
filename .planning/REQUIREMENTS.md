@@ -30,8 +30,8 @@
 ### Advanced
 
 - [x] **ADV-01**: Entity-to-entity relationships are synchronized across peers — a deferred resolution queue handles cases where the target entity has not yet spawned on the client
-- [ ] **ADV-02**: A periodic full-state reconciliation broadcast (default 30s interval, configurable) silently corrects property drift and packets missed due to unreliable transport
-- [ ] **ADV-03**: Systems can register custom sync handlers that override default property sync behavior — the system-level override mechanism is sufficient for games to implement client-side prediction patterns; this override surface is documented with an example prediction pattern
+- [x] **ADV-02**: A periodic full-state reconciliation broadcast (default 30s interval, configurable) silently corrects property drift and packets missed due to unreliable transport
+- [x] **ADV-03**: Systems can register custom sync handlers that override default property sync behavior — the system-level override mechanism is sufficient for games to implement client-side prediction patterns; this override surface is documented with an example prediction pattern
 
 ## Future Requirements
 
@@ -83,8 +83,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SYNC-03 | Phase 2 | Complete |
 | SYNC-04 | Phase 3 | Complete |
 | ADV-01 | Phase 4 | Complete |
-| ADV-02 | Phase 5 | Pending |
-| ADV-03 | Phase 5 | Pending |
+| ADV-02 | Phase 5 | Complete |
+| ADV-03 | Phase 5 | Complete |
 
 **Coverage:**
 - v1 requirements: 16 total
