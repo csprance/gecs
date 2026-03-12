@@ -89,6 +89,7 @@ func _register_project_settings() -> void:
 	_add_setting("gecs_network/sync/high_hz", 20, TYPE_INT)
 	_add_setting("gecs_network/sync/medium_hz", 10, TYPE_INT)
 	_add_setting("gecs_network/sync/low_hz", 2, TYPE_INT)
+	_add_setting("gecs_network/sync/reconciliation_interval", 30.0, TYPE_FLOAT)
 
 
 func _add_setting(path: String, default_value: Variant, type: int) -> void:

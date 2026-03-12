@@ -56,6 +56,7 @@ var _sender: SyncSender
 var _receiver: SyncReceiver
 var _native_sync_handler: NativeSyncHandler
 var _relationship_handler  # SyncRelationshipHandler (untyped — no class_name)
+var _reconciliation_handler  # SyncReconciliationHandler (untyped — no class_name)
 var _is_ready: bool = false
 
 # ============================================================================
@@ -98,6 +99,8 @@ func _ready() -> void:
 	_native_sync_handler = NativeSyncHandler.new(self)
 	var SyncRelationshipHandlerScript = load("res://addons/gecs_network/sync_relationship_handler.gd")
 	_relationship_handler = SyncRelationshipHandlerScript.new(self)
+	var SyncReconciliationHandlerScript = load("res://addons/gecs_network/sync_reconciliation_handler.gd")
+	_reconciliation_handler = SyncReconciliationHandlerScript.new(self)
 
 	_world.entity_added.connect(_on_entity_added)
 	_world.entity_removed.connect(_on_entity_removed)
@@ -131,10 +134,46 @@ func reset_for_new_game() -> void:
 		print("NetworkSync: reset_for_new_game() session_id=%d" % _game_session_id)
 
 
+# ============================================================================
+# PUBLIC API — Reconciliation (ADV-02)
+# ============================================================================
+
+## Runtime override for the reconciliation interval (seconds).
+## Overrides the ProjectSettings value for the current session.
+## Set to 0.0 or negative to disable automatic reconciliation.
+## Default: -1.0 (uses gecs_network/sync/reconciliation_interval ProjectSetting = 30.0).
+var reconciliation_interval: float:
+	get:
+		if _reconciliation_handler == null:
+			return ProjectSettings.get_setting(
+				"gecs_network/sync/reconciliation_interval", 30.0
+			)
+		return _reconciliation_handler._override_interval
+	set(value):
+		if _reconciliation_handler == null:
+			push_warning("NetworkSync: reconciliation_interval set before _ready()")
+			return
+		_reconciliation_handler._override_interval = value
+		# Reset timer so new interval takes effect from now, not mid-accumulation
+		_reconciliation_handler._timer = 0.0
+
+
+## Trigger an immediate full-state reconciliation broadcast.
+## Server-only; no-op on clients.
+## Use for reconnect flows or after significant world state changes.
+func broadcast_full_state() -> void:
+	if _reconciliation_handler == null:
+		push_warning("NetworkSync: broadcast_full_state() called before _ready()")
+		return
+	_reconciliation_handler.broadcast_full_state()
+
+
 func _process(delta: float) -> void:
 	if _world == null or not net_adapter.is_in_game():
 		return  # Zero overhead in single-player — FOUND-03
 	_sender.tick(delta)  # Phase 2: priority-tiered property sync
+	if _reconciliation_handler != null:
+		_reconciliation_handler.tick(delta)
 
 
 # ============================================================================
@@ -287,3 +326,10 @@ func _sync_relationship_remove(payload: Dictionary) -> void:
 	if _relationship_handler == null:
 		return
 	_relationship_handler.handle_relationship_remove(payload)
+
+
+@rpc("authority", "reliable")
+func _sync_full_state(payload: Dictionary) -> void:
+	if _reconciliation_handler == null:
+		return
+	_reconciliation_handler.handle_sync_full_state(payload)
