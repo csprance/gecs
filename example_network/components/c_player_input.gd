@@ -1,8 +1,9 @@
 class_name C_PlayerInput
-extends SyncComponent
+extends Component
 ## Player input component - synced to server for authoritative game state.
-## Extends SyncComponent for automatic change detection and sync.
+## Uses @export_group("HIGH") so CN_NetSync prioritizes these properties at ~20 Hz.
 
+@export_group("HIGH")
 ## Movement input direction (WASD/Arrow keys normalized)
 @export var move_direction: Vector2 = Vector2.ZERO
 
