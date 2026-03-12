@@ -23,6 +23,11 @@ extends RefCounted
 
 var _ns  # NetworkSync reference (untyped to avoid circular deps)
 
+## Custom receive handlers: { "CompTypeName": Callable }
+## Callable signature: func(entity: Entity, comp: Component, props: Dictionary) -> bool
+## Return true if handled (framework still calls update_cache_silent), false to use default.
+var _custom_receive_handlers: Dictionary = {}
+
 
 func _init(network_sync) -> void:
 	_ns = network_sync
@@ -31,6 +36,15 @@ func _init(network_sync) -> void:
 # ============================================================================
 # PUBLIC API
 # ============================================================================
+
+
+## Register a custom receive handler for a component type.
+## The handler is called instead of the default comp.set() for the named component type.
+## The framework ALWAYS calls update_cache_silent() after the handler (prevents echo loops).
+## Callable signature: func(entity: Entity, comp: Component, props: Dictionary) -> bool
+## Return true if handled (skip default set()), false to fall through to default.
+func register_receive_handler(comp_type_name: String, handler: Callable) -> void:
+	_custom_receive_handlers[comp_type_name] = handler
 
 
 ## Entry point called by NetworkSync's @rpc handlers.
@@ -127,6 +141,10 @@ func _handle_client_path(batch: Dictionary, sender_id: int) -> void:
 ## Apply a { comp_type: { prop: value } } dict to an entity.
 ## Guards with _applying_network_data = true to prevent echo sync loops.
 ## Calls update_cache_silent() after each set() to suppress re-detection.
+## If a custom receive handler is registered for a comp_type, it is called first.
+## When a handler returns true: update_cache_silent() is always called (echo prevention),
+## then the default comp.set() path is skipped.
+## When a handler returns false: falls through to the default comp.set() path.
 func _apply_component_data(entity: Entity, comp_data: Dictionary) -> void:
 	var net_sync: CN_NetSync = entity.get_component(CN_NetSync)
 
@@ -136,6 +154,16 @@ func _apply_component_data(entity: Entity, comp_data: Dictionary) -> void:
 		if comp == null:
 			continue
 		var props: Dictionary = comp_data[comp_type]
+		if _custom_receive_handlers.has(comp_type):
+			var handled: bool = _custom_receive_handlers[comp_type].call(entity, comp, props)
+			# Always call update_cache_silent regardless of handler result — prevents echo loop
+			if net_sync:
+				for prop in props.keys():
+					var value = props[prop]
+					net_sync.update_cache_silent(comp, prop, value)
+			if handled:
+				continue  # Skip default comp.set() path
+		# Default path (or fallthrough when handler returns false)
 		for prop in props.keys():
 			var value = props[prop]
 			if prop in comp:

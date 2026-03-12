@@ -30,6 +30,11 @@ var _pending: Dictionary = {
 	CN_NetSync.Priority.LOW: {},
 }
 
+## Custom send handlers: { "CompTypeName": Callable }
+## Callable signature: func(entity: Entity, comp: Component, priority: int) -> Dictionary
+## Return {} to suppress, null to use default dirty-check.
+var _custom_send_handlers: Dictionary = {}
+
 
 func _init(network_sync) -> void:
 	_ns = network_sync
@@ -58,6 +63,14 @@ func tick(delta: float) -> void:
 
 	# TODO: consider entity index cache if profiling shows O(N) iteration
 	# is bottleneck at 100+ entities
+
+
+## Register a custom send handler for a component type.
+## The handler is called instead of the default dirty-check for the named component type.
+## Callable signature: func(entity: Entity, comp: Component, priority: int) -> Dictionary
+## Return {} to suppress this component from outbound batch, null to use default dirty-check.
+func register_send_handler(comp_type_name: String, handler: Callable) -> void:
+	_custom_send_handlers[comp_type_name] = handler
 
 
 ## Server-side relay: queue validated client data into HIGH bucket so it is
@@ -133,7 +146,31 @@ func _poll_entities_for_priority(priority: int) -> void:
 		if not _should_broadcast(entity, net_id):
 			continue
 
-		var changes: Dictionary = net_sync.check_changes_for_priority(priority)
+		# Determine component changes — check for custom handler first
+		var changes: Dictionary = {}
+		if not _custom_send_handlers.is_empty():
+			# Check each component tracked by net_sync for a custom handler
+			for inst_id in net_sync._comp_refs.keys():
+				var comp = net_sync._comp_refs[inst_id]
+				var comp_type: String = _get_comp_type_name(comp)
+				if _custom_send_handlers.has(comp_type):
+					var result = _custom_send_handlers[comp_type].call(entity, comp, priority)
+					if result == null:
+						# Null means fall through to default dirty-check for all comps
+						changes = net_sync.check_changes_for_priority(priority)
+					elif result is Dictionary:
+						if not result.is_empty():
+							changes[comp_type] = result  # Custom data to send
+						# {} means suppress — don't add to changes
+				else:
+					# No custom handler for this comp — use default dirty-check result
+					var default_changes: Dictionary = net_sync.check_changes_for_priority(priority)
+					for k in default_changes.keys():
+						if not changes.has(k):
+							changes[k] = default_changes[k]
+		else:
+			changes = net_sync.check_changes_for_priority(priority)
+
 		if changes.is_empty():
 			continue
 
@@ -180,3 +217,20 @@ func _dispatch_batch(priority: int) -> void:
 			_ns._sync_components_unreliable(batch)
 		else:
 			_ns._sync_components_reliable(batch)
+
+
+# ============================================================================
+# PRIVATE — HELPERS
+# ============================================================================
+
+
+## Get the wire-format type name for a component instance.
+## Mirrors the logic in CN_NetSync._comp_type_names for consistency.
+func _get_comp_type_name(comp) -> String:
+	var script = comp.get_script()
+	if script == null:
+		return comp.get_class()
+	var ct: String = script.get_global_name()
+	if ct == "":
+		ct = script.resource_path.get_file().get_basename()
+	return ct
