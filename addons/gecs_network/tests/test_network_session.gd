@@ -1,11 +1,14 @@
 extends GdUnitTestSuite
 
 ## Test suite for NetworkSession host/join/end_session API.
-## Covers the 9 behavioral contracts from 07-02-PLAN.md.
+## Covers the 9 behavioral contracts from 07-02-PLAN.md (Plan 02)
+## and the 9 ECS event component contracts from 07-03-PLAN.md (Plan 03).
 ##
 ## Tests use MockTransport (returns OfflineMultiplayerPeer or null) to avoid
 ## real ENet dependency. NetworkSession is added to the scene tree so that
 ## its `multiplayer` property is backed by a real MultiplayerAPI.
+## A real World is created and assigned to ECS.world so that the session entity
+## management code works correctly.
 
 # ============================================================================
 # MOCK OBJECTS
@@ -39,9 +42,15 @@ class MockTransport:
 
 var session: NetworkSession
 var mock_transport: MockTransport
+var world: World
 
 
 func before_test():
+	world = World.new()
+	world.name = "TestWorld"
+	add_child(world)
+	ECS.world = world
+
 	mock_transport = MockTransport.new()
 	session = NetworkSession.new()
 	session.transport = mock_transport
@@ -56,6 +65,11 @@ func after_test():
 		session.queue_free()
 	session = null
 	mock_transport = null
+
+	ECS.world = null
+	if is_instance_valid(world):
+		world.queue_free()
+	world = null
 
 
 # ============================================================================
@@ -131,41 +145,104 @@ func test_empty_hooks_no_crash() -> void:
 
 
 # ============================================================================
-# PLAN 03 stubs: ECS component event tests (RED until Plan 03 implements them)
+# PLAN 03: ECS component event tests (Session entity + transient components)
 # ============================================================================
 
 
 func test_cn_peer_joined_added() -> void:
-	assert_bool(false).is_true()  # Plan 03 stub
+	# After host() establishes the session and _on_peer_connected_signal fires,
+	# the session entity must have CN_PeerJoined with the correct peer_id.
+	session.host(7777)
+	session._on_peer_connected_signal(42)
+	var entity: Entity = session._session_entity
+	assert_object(entity).is_not_null()
+	var comp = entity.get_component(CN_PeerJoined) as CN_PeerJoined
+	assert_object(comp).is_not_null()
+	assert_int(comp.peer_id).is_equal(42)
 
 
 func test_cn_peer_left_added() -> void:
-	assert_bool(false).is_true()  # Plan 03 stub
+	# After _on_peer_disconnected_signal fires, session entity has CN_PeerLeft.
+	session.host(7777)
+	session._on_peer_disconnected_signal(42)
+	var entity: Entity = session._session_entity
+	assert_object(entity).is_not_null()
+	var comp = entity.get_component(CN_PeerLeft) as CN_PeerLeft
+	assert_object(comp).is_not_null()
+	assert_int(comp.peer_id).is_equal(42)
 
 
 func test_cn_session_started_on_host() -> void:
-	assert_bool(false).is_true()  # Plan 03 stub
+	# After host() succeeds, session entity has CN_SessionStarted with is_host=true.
+	session.host(7777)
+	var entity: Entity = session._session_entity
+	assert_object(entity).is_not_null()
+	var comp = entity.get_component(CN_SessionStarted) as CN_SessionStarted
+	assert_object(comp).is_not_null()
+	assert_bool(comp.is_host).is_true()
 
 
 func test_cn_session_ended_on_disconnect() -> void:
-	assert_bool(false).is_true()  # Plan 03 stub
+	# After end_session(), session entity has CN_SessionEnded component.
+	session.host(7777)
+	var entity: Entity = session._session_entity
+	session.end_session()
+	assert_object(entity).is_not_null()
+	var comp = entity.get_component(CN_SessionEnded) as CN_SessionEnded
+	assert_object(comp).is_not_null()
 
 
 func test_cn_session_state_connected() -> void:
-	assert_bool(false).is_true()  # Plan 03 stub
+	# After host(), CN_SessionState has is_connected=true, is_hosting=true.
+	session.host(7777)
+	var entity: Entity = session._session_entity
+	assert_object(entity).is_not_null()
+	var state = entity.get_component(CN_SessionState) as CN_SessionState
+	assert_object(state).is_not_null()
+	assert_bool(state.is_connected).is_true()
+	assert_bool(state.is_hosting).is_true()
 
 
 func test_cn_session_state_disconnected() -> void:
-	assert_bool(false).is_true()  # Plan 03 stub
+	# After end_session(), CN_SessionState has is_connected=false, is_hosting=false.
+	session.host(7777)
+	var entity: Entity = session._session_entity
+	session.end_session()
+	assert_object(entity).is_not_null()
+	var state = entity.get_component(CN_SessionState) as CN_SessionState
+	assert_object(state).is_not_null()
+	assert_bool(state.is_connected).is_false()
+	assert_bool(state.is_hosting).is_false()
 
 
 func test_transient_events_cleared() -> void:
-	assert_bool(false).is_true()  # Plan 03 stub
+	# CN_PeerJoined added in one "frame" is absent after _process() runs.
+	session.host(7777)
+	session._on_peer_connected_signal(7)
+	var entity: Entity = session._session_entity
+	# Verify it was added
+	assert_object(entity.get_component(CN_PeerJoined)).is_not_null()
+	# Simulate next frame's _process() call
+	session._process(0.016)
+	# Transient component must be cleared
+	assert_object(entity.get_component(CN_PeerJoined)).is_null()
 
 
 func test_session_entity_not_networked() -> void:
-	assert_bool(false).is_true()  # Plan 03 stub
+	# Session entity must NOT have CN_NetworkIdentity at any time.
+	var entity: Entity = session._session_entity
+	assert_object(entity).is_not_null()
+	assert_object(entity.get_component(CN_NetworkIdentity)).is_null()
+	session.host(7777)
+	assert_object(entity.get_component(CN_NetworkIdentity)).is_null()
+	session.end_session()
+	assert_object(entity.get_component(CN_NetworkIdentity)).is_null()
 
 
 func test_network_sync_property() -> void:
-	assert_bool(false).is_true()  # Plan 03 stub
+	# network_sync returns null before host(), and a NetworkSync after host().
+	assert_object(session.network_sync).is_null()
+	# Enable auto_start_network_sync for this specific test
+	session.auto_start_network_sync = true
+	session.host(7777)
+	assert_object(session.network_sync).is_not_null()
