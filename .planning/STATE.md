@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v0.1
 milestone_name: milestone
 status: completed
-stopped_at: Completed 07-02 NetworkSession host/join/end_session implementation
-last_updated: "2026-03-13T00:40:59.028Z"
+stopped_at: Completed 07-03 ECS session entity and transient event component lifecycle
+last_updated: "2026-03-13T01:10:46.188Z"
 last_activity: 2026-03-10 — Plan 03-04 complete (human verification checkpoint — Phase 3 authority markers + native transform sync approved)
 progress:
   total_phases: 7
   completed_phases: 6
   total_plans: 26
-  completed_plans: 24
+  completed_plans: 25
   percent: 60
 ---
 
@@ -73,6 +73,7 @@ Progress: [████████████░░] 60% (Phase 3 complete, 4/
 | Phase 06 P04 | 5 | 2 tasks | 2 files |
 | Phase 07 P01 | 8 | 2 tasks | 8 files |
 | Phase 07-abstract-multiplayer-session-boilerplate-into-networksession-node-with-host-join-api-and-ecs-friendly-events P02 | 627 | 1 tasks | 4 files |
+| Phase 07-abstract-multiplayer-session-boilerplate-into-networksession-node-with-host-join-api-and-ecs-friendly-events P03 | 23 | 1 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -134,6 +135,9 @@ Recent decisions affecting current work:
 - [Phase 07]: CN_SessionState is permanent (kept on session entity); transient event components (CN_PeerJoined, CN_PeerLeft, etc.) are separate for ECS observer compatibility
 - [Phase 07-abstract-multiplayer-session-boilerplate-into-networksession-node-with-host-join-api-and-ecs-friendly-events]: TransportProvider changed from extends RefCounted to extends Resource for @export compatibility with Godot inspector
 - [Phase 07-abstract-multiplayer-session-boilerplate-into-networksession-node-with-host-join-api-and-ecs-friendly-events]: MockTransport uses OfflineMultiplayerPeer in tests — avoids real ENet dependency, enables synchronous test assertions
+- [Phase 07-abstract-multiplayer-session-boilerplate-into-networksession-node-with-host-join-api-and-ecs-friendly-events]: Session entity preserved across end_session() — CN_SessionState readable post-disconnect; freed only in _exit_tree()
+- [Phase 07-abstract-multiplayer-session-boilerplate-into-networksession-node-with-host-join-api-and-ecs-friendly-events]: Transient components cleared at START of _process() — game systems see events for a full frame before clearing
+- [Phase 07-abstract-multiplayer-session-boilerplate-into-networksession-node-with-host-join-api-and-ecs-friendly-events]: After-test cleanup restores OfflineMultiplayerPeer (not null) to prevent SceneTree multiplayer state contamination across test suites
 
 ### Roadmap Evolution
 
@@ -151,6 +155,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-13T00:40:59.023Z
-Stopped at: Completed 07-02 NetworkSession host/join/end_session implementation
+Last session: 2026-03-13T01:10:46.183Z
+Stopped at: Completed 07-03 ECS session entity and transient event component lifecycle
 Resume file: None
