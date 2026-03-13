@@ -1,17 +1,16 @@
 extends Node3D
 ## Main entry point for the GECS Network Example.
 ## Demonstrates multiplayer with continuous sync (players) and spawn-only sync (projectiles).
+## Uses NetworkSession to eliminate manual ENet/signal/NetworkSync boilerplate.
 
 const PLAYER_SCENE_PATH := "res://example_network/entities/e_player.tscn"
-const DEFAULT_PORT := 7777
 
-var _network_sync: NetworkSync
-var _is_connected: bool = false
 var _spawned_peer_ids: Dictionary = {}  # peer_id -> entity_id
 var _next_player_number: int = 1  # Track join order (1-4) for color assignment
 
 @onready var world: World = $World
 @onready var entities: Node = $World/Entities
+@onready var session: NetworkSession = $NetworkSession
 
 # UI references
 @onready var lobby_ui: Control = $UI/LobbyUI
@@ -27,24 +26,25 @@ func _ready() -> void:
 	ECS.world = world
 	world.initialize()
 
+	# Configure NetworkSession hooks
+	session.debug_logging = true
+	session.on_host_success = _on_host_success
+	session.on_join_success = _on_join_success
+	session.on_peer_connected = _on_peer_connected_hook
+	session.on_peer_disconnected = _on_peer_disconnected_hook
+	session.on_session_ended = _on_session_ended_hook
+
 	# Connect UI buttons
 	host_button.pressed.connect(_on_host_pressed)
 	join_button.pressed.connect(_on_join_pressed)
 	disconnect_button.pressed.connect(_on_disconnect_pressed)
-
-	# Connect multiplayer signals
-	multiplayer.peer_connected.connect(_on_peer_connected)
-	multiplayer.peer_disconnected.connect(_on_peer_disconnected)
-	multiplayer.connected_to_server.connect(_on_connected_to_server)
-	multiplayer.connection_failed.connect(_on_connection_failed)
-	multiplayer.server_disconnected.connect(_on_server_disconnected)
 
 	# Default IP
 	ip_input.text = "127.0.0.1"
 
 
 func _process(delta: float) -> void:
-	if not _is_connected:
+	if session.network_sync == null:
 		return
 
 	# Process ECS systems in order
@@ -59,38 +59,22 @@ func _process(delta: float) -> void:
 
 
 func _on_host_pressed() -> void:
-	var peer = ENetMultiplayerPeer.new()
-	var error = peer.create_server(DEFAULT_PORT, 3)  # Max 3 clients + host = 4 players
+	var error = session.host()
 	if error != OK:
 		status_label.text = "Failed to host: %s" % error_string(error)
-		return
-
-	multiplayer.multiplayer_peer = peer
-	_setup_network_sync()
-	_is_connected = true
-	_update_ui_connected(true)
-	status_label.text = "Hosting on port %d" % DEFAULT_PORT
-
-	# Host spawns own player immediately
-	_spawn_player_for_peer(1)
 
 
 func _on_join_pressed() -> void:
 	var ip = ip_input.text if ip_input.text != "" else "127.0.0.1"
-	var peer = ENetMultiplayerPeer.new()
-	var error = peer.create_client(ip, DEFAULT_PORT)
+	var error = session.join(ip)
 	if error != OK:
 		status_label.text = "Failed to connect: %s" % error_string(error)
-		return
-
-	multiplayer.multiplayer_peer = peer
-	status_label.text = "Connecting to %s..." % ip
+	else:
+		status_label.text = "Connecting to %s..." % ip
 
 
 func _on_disconnect_pressed() -> void:
-	_cleanup_network()
-	_update_ui_disconnected()
-	status_label.text = "Disconnected"
+	session.end_session()
 
 
 func _update_ui_connected(is_host: bool) -> void:
@@ -108,18 +92,36 @@ func _update_ui_disconnected() -> void:
 
 
 # =============================================================================
-# MULTIPLAYER SIGNAL HANDLERS
+# NETWORKSESSION HOOK HANDLERS
 # =============================================================================
 
 
-func _on_peer_connected(peer_id: int) -> void:
+func _on_host_success() -> void:
+	_update_ui_connected(true)
+	status_label.text = "Hosting on port %d" % session.default_port
+	# Connect NetworkSync signals for spawn notifications
+	session.network_sync.entity_spawned.connect(_on_entity_spawned)
+	session.network_sync.local_player_spawned.connect(_on_local_player_spawned)
+	# Host spawns own player immediately
+	_spawn_player_for_peer(1)
+
+
+func _on_join_success() -> void:
+	_update_ui_connected(false)
+	status_label.text = "Connected as peer %d" % multiplayer.get_unique_id()
+	# Connect NetworkSync signals for spawn notifications
+	session.network_sync.entity_spawned.connect(_on_entity_spawned)
+	session.network_sync.local_player_spawned.connect(_on_local_player_spawned)
+
+
+func _on_peer_connected_hook(peer_id: int) -> void:
 	print("[Main] Peer connected: %d" % peer_id)
 	# Host spawns players for all connected peers
 	if multiplayer.is_server():
 		_spawn_player_for_peer(peer_id)
 
 
-func _on_peer_disconnected(peer_id: int) -> void:
+func _on_peer_disconnected_hook(peer_id: int) -> void:
 	print("[Main] Peer disconnected: %d" % peer_id)
 	# Remove player entity for disconnected peer
 	if _spawned_peer_ids.has(peer_id):
@@ -131,69 +133,16 @@ func _on_peer_disconnected(peer_id: int) -> void:
 		_spawned_peer_ids.erase(peer_id)
 
 
-func _on_connected_to_server() -> void:
-	print("[Main] Connected to server as peer %d" % multiplayer.get_unique_id())
-	_setup_network_sync()
-	_is_connected = true
-	_update_ui_connected(false)
-	status_label.text = "Connected as peer %d" % multiplayer.get_unique_id()
-
-
-func _on_connection_failed() -> void:
-	print("[Main] Connection failed")
-	status_label.text = "Connection failed"
-	_cleanup_network()
+func _on_session_ended_hook() -> void:
 	_update_ui_disconnected()
-
-
-func _on_server_disconnected() -> void:
-	print("[Main] Server disconnected")
-	status_label.text = "Server disconnected"
-	_cleanup_network()
-	_update_ui_disconnected()
-
-
-# =============================================================================
-# NETWORK SETUP
-# =============================================================================
-
-
-func _setup_network_sync() -> void:
-	if _network_sync:
-		return
-
-	# v2 API: attach_to_world with no config argument
-	_network_sync = NetworkSync.attach_to_world(world)
-	_network_sync.debug_logging = true  # Enable for demo visibility
-
-	# ADV-02: configure reconciliation interval (30s periodic state correction)
-	_network_sync.reconciliation_interval = 30.0
-
-	# Connect NetworkSync signals directly (no middleware layer)
-	_network_sync.entity_spawned.connect(_on_entity_spawned)
-	_network_sync.local_player_spawned.connect(_on_local_player_spawned)
-
-
-func _cleanup_network() -> void:
-	_is_connected = false
-
-	# Remove ALL entities (players + any lingering projectiles).
-	# Duplicate because remove_entity modifies world.entities in place.
-	for entity in world.entities.duplicate():
-		world.remove_entity(entity)
-		entity.queue_free()
+	status_label.text = "Disconnected"
 	_spawned_peer_ids.clear()
-
-	# Reset player number counter
 	_next_player_number = 1
 
-	# Reset multiplayer
-	multiplayer.multiplayer_peer = null
 
-	# PROPERLY remove NetworkSync (triggers _exit_tree which disconnects signals)
-	if _network_sync:
-		_network_sync.queue_free()
-	_network_sync = null
+# =============================================================================
+# NETWORKSYNC EVENT HANDLERS
+# =============================================================================
 
 
 func _on_entity_spawned(entity: Entity) -> void:
