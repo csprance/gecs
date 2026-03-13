@@ -24,8 +24,8 @@ func define_components() -> Array:
 	return [
 		CN_NetworkIdentity.new(peer_id),
 		CN_NetSync.new(),
-		CN_NativeSync.new(),         # Syncs position/rotation via MultiplayerSynchronizer
+		CN_NativeSync.new(), # Syncs position/rotation via MultiplayerSynchronizer
 		C_NetVelocity.new(),
 		C_PlayerInput.new(),
-		C_PlayerNumber.new(),        # Join order number (1-4) for color assignment
+		C_PlayerNumber.new(), # Join order number (1-4) for color assignment
 	]

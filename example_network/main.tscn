@@ -61,8 +61,6 @@ group = &"physics"
 [node name="NetworkSession" type="Node" parent="." unique_id=1234567890]
 script = ExtResource("8_network_session")
 debug_logging = true
-max_players = 4
-default_port = 7777
 
 [node name="Arena" type="Node3D" parent="." unique_id=1619613811]
 

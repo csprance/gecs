@@ -14,9 +14,9 @@ func _init(p_owner: int = 0) -> void:
 
 func define_components() -> Array:
 	return [
-		CN_NetworkIdentity.new(0),   # server-owned projectile (peer_id = 0)
-		CN_NetSync.new(),            # C_NetPosition + C_NetVelocity use SPAWN_ONLY group
-		C_NetPosition.new(),         # Position synced at spawn only
-		C_NetVelocity.new(),         # Velocity synced at spawn only (SPAWN_ONLY via export_group)
+		CN_NetworkIdentity.new(0), # server-owned projectile (peer_id = 0)
+		CN_NetSync.new(), # C_NetPosition + C_NetVelocity use SPAWN_ONLY group
+		C_NetPosition.new(), # Position synced at spawn only
+		C_NetVelocity.new(), # Velocity synced at spawn only (SPAWN_ONLY via export_group)
 		C_Projectile.new(),
 	]

@@ -6,5 +6,6 @@
     "titleBar.activeForeground": "#e7e7e7",
     "titleBar.inactiveBackground": "#3b4949",
     "titleBar.inactiveForeground": "#e7e7e7"
-  }
+  },
+  "svg.preview.background": "black"
 }

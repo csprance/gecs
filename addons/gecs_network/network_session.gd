@@ -80,7 +80,6 @@ func _exit_tree() -> void:
 		var world = _get_world()
 		if world != null:
 			world.remove_entity(_session_entity)
-		_session_entity.queue_free()
 		_session_entity = null
 
 
