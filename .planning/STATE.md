@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v0.1
 milestone_name: milestone
 status: completed
-stopped_at: Phase 7 context gathered
-last_updated: "2026-03-12T20:50:46.257Z"
+stopped_at: Completed 07-01-PLAN.md
+last_updated: "2026-03-13T00:38:31.442Z"
 last_activity: 2026-03-10 — Plan 03-04 complete (human verification checkpoint — Phase 3 authority markers + native transform sync approved)
 progress:
   total_phases: 7
   completed_phases: 6
-  total_plans: 22
-  completed_plans: 22
+  total_plans: 26
+  completed_plans: 23
   percent: 60
 ---
 
@@ -71,6 +71,7 @@ Progress: [████████████░░] 60% (Phase 3 complete, 4/
 | Phase 06-cleanup-documentation-and-example-network-update-v1-to-v2-migration P02 | 15 | 2 tasks | 3 files |
 | Phase 06-cleanup-documentation-and-example-network-update-v1-to-v2-migration P03 | 600 | 2 tasks | 9 files |
 | Phase 06 P04 | 5 | 2 tasks | 2 files |
+| Phase 07 P01 | 8 | 2 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -127,6 +128,9 @@ Recent decisions affecting current work:
 - [Phase 06-cleanup-documentation-and-example-network-update-v1-to-v2-migration]: custom-sync-handlers.md left unchanged — already v2-accurate from Phase 5
 - [Phase 06-cleanup-documentation-and-example-network-update-v1-to-v2-migration]: README full rewrite removes all SyncConfig, CN_SyncEntity, NetworkMiddleware, SyncComponent, CN_ServerOwned references — zero v1 names in public-facing docs
 - [Phase 06-cleanup-documentation-and-example-network-update-v1-to-v2-migration]: CHANGELOG [2.0.0] entry explicitly lists every removed file and its v2 replacement to ease upgrader research
+- [Phase 07]: end_session() chosen over disconnect() — Node.disconnect() is a built-in signal method; shadowing causes GDScript parser warnings
+- [Phase 07]: Callable() hooks with is_valid() guards for NetworkSession event callbacks — simpler API than signals for one-shot session events
+- [Phase 07]: CN_SessionState is permanent (kept on session entity); transient event components (CN_PeerJoined, CN_PeerLeft, etc.) are separate for ECS observer compatibility
 
 ### Roadmap Evolution
 
@@ -144,6 +148,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-12T20:50:46.251Z
-Stopped at: Phase 7 context gathered
-Resume file: .planning/phases/07-abstract-multiplayer-session-boilerplate-into-networksession-node-with-host-join-api-and-ecs-friendly-events/07-CONTEXT.md
+Last session: 2026-03-13T00:38:31.437Z
+Stopped at: Completed 07-01-PLAN.md
+Resume file: None
