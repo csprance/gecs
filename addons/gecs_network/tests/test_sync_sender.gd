@@ -48,10 +48,10 @@ class MockNetworkSync:
 		_world = w
 		net_adapter = MockNetAdapter.new()
 
-	func _sync_components_unreliable(batch: Dictionary) -> void:
+	func _send_sync_unreliable(batch: Dictionary) -> void:
 		unreliable_rpc_calls.append(batch)
 
-	func _sync_components_reliable(batch: Dictionary) -> void:
+	func _send_sync_reliable(batch: Dictionary) -> void:
 		reliable_rpc_calls.append(batch)
 
 

@@ -338,6 +338,32 @@ func rpc_broadcast_despawn(entity_id: String, session_id: int) -> void:
 
 
 # ============================================================================
+# SEND HELPERS — called by SyncSender to dispatch component sync batches.
+# Separate from the @rpc receivers so SyncSender remains testable with mocks.
+# Server path: broadcasts to all connected clients.
+# Client path: sends to server (peer 1) only.
+# ============================================================================
+
+
+## Send an unreliable component sync batch.
+## Server: broadcasts to all clients. Client: sends to server only.
+func _send_sync_unreliable(batch: Dictionary) -> void:
+	if net_adapter.is_server():
+		_sync_components_unreliable.rpc(batch)
+	else:
+		_sync_components_unreliable.rpc_id(1, batch)
+
+
+## Send a reliable component sync batch.
+## Server: broadcasts to all clients. Client: sends to server only.
+func _send_sync_reliable(batch: Dictionary) -> void:
+	if net_adapter.is_server():
+		_sync_components_reliable.rpc(batch)
+	else:
+		_sync_components_reliable.rpc_id(1, batch)
+
+
+# ============================================================================
 # RPC DECLARATIONS — all @rpc methods must live on this Node (Godot requirement)
 # ============================================================================
 

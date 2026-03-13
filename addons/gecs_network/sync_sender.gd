@@ -208,15 +208,15 @@ func _dispatch_batch(priority: int) -> void:
 
 	if _ns.net_adapter.is_server():
 		if is_unreliable:
-			_ns._sync_components_unreliable(batch)
+			_ns._send_sync_unreliable(batch)
 		else:
-			_ns._sync_components_reliable(batch)
+			_ns._send_sync_reliable(batch)
 	else:
 		# Client sends to server only
 		if is_unreliable:
-			_ns._sync_components_unreliable(batch)
+			_ns._send_sync_unreliable(batch)
 		else:
-			_ns._sync_components_reliable(batch)
+			_ns._send_sync_reliable(batch)
 
 
 # ============================================================================
