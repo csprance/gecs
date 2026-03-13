@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v0.1
 milestone_name: milestone
 status: completed
-stopped_at: "Checkpoint: 07-04 Task 1 complete — awaiting human-verify of live multiplayer session"
-last_updated: "2026-03-13T01:15:09.848Z"
+stopped_at: Completed 07-04-PLAN.md
+last_updated: "2026-03-13T01:38:10.839Z"
 last_activity: 2026-03-10 — Plan 03-04 complete (human verification checkpoint — Phase 3 authority markers + native transform sync approved)
 progress:
   total_phases: 7
@@ -75,6 +75,7 @@ Progress: [████████████░░] 60% (Phase 3 complete, 4/
 | Phase 07-abstract-multiplayer-session-boilerplate-into-networksession-node-with-host-join-api-and-ecs-friendly-events P02 | 627 | 1 tasks | 4 files |
 | Phase 07-abstract-multiplayer-session-boilerplate-into-networksession-node-with-host-join-api-and-ecs-friendly-events P03 | 23 | 1 tasks | 3 files |
 | Phase 07 P04 | 3 | 1 tasks | 2 files |
+| Phase 07-abstract-multiplayer-session-boilerplate-into-networksession-node-with-host-join-api-and-ecs-friendly-events P04 | 45 | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -141,6 +142,7 @@ Recent decisions affecting current work:
 - [Phase 07-abstract-multiplayer-session-boilerplate-into-networksession-node-with-host-join-api-and-ecs-friendly-events]: After-test cleanup restores OfflineMultiplayerPeer (not null) to prevent SceneTree multiplayer state contamination across test suites
 - [Phase 07-04]: NetworkSync signals connected inside on_host_success/on_join_success hooks — NetworkSync only exists after host/join returns
 - [Phase 07-04]: session.network_sync == null replaces _is_connected bool — single source of truth avoiding drift
+- [Phase 07-04]: SyncSender dispatch uses _send_sync_unreliable/_send_sync_reliable wrappers in NetworkSync instead of calling @rpc methods directly — keeps SyncSender testable with MockNetworkSync (RefCounted cannot have @rpc methods)
 
 ### Roadmap Evolution
 
@@ -158,6 +160,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-13T01:15:09.843Z
-Stopped at: Checkpoint: 07-04 Task 1 complete — awaiting human-verify of live multiplayer session
+Last session: 2026-03-13T01:38:10.834Z
+Stopped at: Completed 07-04-PLAN.md
 Resume file: None
