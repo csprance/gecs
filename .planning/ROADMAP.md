@@ -128,7 +128,7 @@ Plans:
 **Goal:** Reduce multiplayer connection boilerplate to zero — game code calls `session.host()` or `session.join()`, session lifecycle events surface as ECS components on a persistent Session entity, and `NetworkSync` is owned and managed internally by `NetworkSession`
 **Requirements**: SESSION-01, SESSION-02, SESSION-03
 **Depends on:** Phase 6
-**Plans:** 1/4 plans executed
+**Plans:** 2/4 plans executed
 
 Plans:
 - [ ] 07-01-PLAN.md — Wave 0: event components + NetworkSession skeleton + 18 failing test stubs
