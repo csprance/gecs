@@ -403,7 +403,7 @@ func remove_entity(entity) -> void:
 	if erase_idx >= 0:
 		entities.remove_at(erase_idx)
 	else:
-		_worldLogger.warn("remove_entity: entity not found in entities array: ", entity)
+		_worldLogger.warning("remove_entity: entity not found in entities array: ", entity)
 
 	# Only disconnect signals if they're actually connected
 	if entity.component_added.is_connected(_on_entity_component_added):

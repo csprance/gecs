@@ -60,16 +60,28 @@ func before_test():
 
 func after_test():
 	if is_instance_valid(session):
-		# Clean up multiplayer peer to avoid dangling ENet warnings
-		session.multiplayer.multiplayer_peer = null
-		session.queue_free()
+		# Restore the default OfflineMultiplayerPeer so subsequent test suites see a
+		# clean singleplayer multiplayer state. Setting to null would leave the
+		# SceneTree with no peer, causing NetAdapter.get_unique_id() to return 0.
+		session.multiplayer.multiplayer_peer = OfflineMultiplayerPeer.new()
+
+	# Reset the static default adapter to avoid stale multiplayer state across tests
+	CN_NetworkIdentity.reset_default_adapter()
+
+	# Manually remove all world entities before freeing to avoid stale-entity warnings
+	if is_instance_valid(world):
+		for entity in world.entities.duplicate():
+			world.remove_entity(entity)
+			if is_instance_valid(entity):
+				entity.free()
+		world.free()
+	ECS.world = null
+	world = null
+
+	if is_instance_valid(session):
+		session.free()
 	session = null
 	mock_transport = null
-
-	ECS.world = null
-	if is_instance_valid(world):
-		world.queue_free()
-	world = null
 
 
 # ============================================================================

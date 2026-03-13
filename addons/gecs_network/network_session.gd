@@ -46,7 +46,6 @@ var network_sync: NetworkSync :
 var _network_sync: NetworkSync
 var _session_entity: Entity
 var _signals_connected: bool = false
-var _state: CN_SessionState
 
 # ---------------------------------------------------------------------------
 # Lifecycle
@@ -55,6 +54,34 @@ var _state: CN_SessionState
 func _ready() -> void:
 	if transport == null:
 		transport = ENetTransportProvider.new()
+	# Create persistent local-only Session entity (no CN_NetworkIdentity)
+	_session_entity = Entity.new()
+	_session_entity.name = "NetworkSessionEntity"
+	var world = _get_world()
+	if world != null:
+		world.add_entity(_session_entity)
+	# Initialize CN_SessionState immediately
+	_update_session_state(false, false, 0)
+
+
+func _process(_delta: float) -> void:
+	if _session_entity == null:
+		return
+	# Clear last frame's transient event components
+	_session_entity.remove_component(CN_PeerJoined)
+	_session_entity.remove_component(CN_PeerLeft)
+	_session_entity.remove_component(CN_SessionStarted)
+	_session_entity.remove_component(CN_SessionEnded)
+	# NOTE: Game code is responsible for calling world.process() — NetworkSession does NOT.
+
+
+func _exit_tree() -> void:
+	if _session_entity != null and is_instance_valid(_session_entity):
+		var world = _get_world()
+		if world != null:
+			world.remove_entity(_session_entity)
+		_session_entity.queue_free()
+		_session_entity = null
 
 
 # ---------------------------------------------------------------------------
@@ -88,7 +115,10 @@ func host(port: int = -1) -> Error:
 			_network_sync = NetworkSync.attach_to_world(world)
 			_network_sync.debug_logging = debug_logging
 
-	# Plan 03 will add CN_SessionStarted and update CN_SessionState here.
+	# Add ECS event component and update persistent state
+	if _session_entity != null:
+		_session_entity.add_component(CN_SessionStarted.new(true))
+	_update_session_state(true, true, 1)
 
 	if on_host_success.is_valid():
 		on_host_success.call()
@@ -126,38 +156,42 @@ func join(ip: String, port: int = -1) -> Error:
 
 
 ## End the active session and clean up all network resources.
-## Order per Pattern 5: hook -> entities -> signals -> sync -> peer -> reset.
+## Order: ECS event -> hook -> entities -> signals -> sync -> peer -> state reset.
 func end_session() -> void:
-	# 1. Fire the hook first so callers can react before teardown.
+	# 1. Add CN_SessionEnded event component so ECS systems can react this frame.
+	if _session_entity != null and is_instance_valid(_session_entity):
+		_session_entity.add_component(CN_SessionEnded.new())
+
+	# 2. Fire the hook so callers can react before teardown.
 	if on_session_ended.is_valid():
 		on_session_ended.call()
 
-	# Plan 03 will fire CN_SessionEnded component event here.
-
-	# 2. Remove all networked entities from the world so despawn RPCs
+	# 3. Remove all networked entities from the world so despawn RPCs
 	#    can still fire before the peer is nulled.
+	#    Preserve _session_entity — it outlives the session for state reads.
 	var world = _get_world()
 	if world != null and is_instance_valid(world):
-		var to_remove = world.entities.duplicate()
+		var to_remove: Array[Entity] = []
+		for entity in world.entities:
+			if entity != _session_entity and is_instance_valid(entity):
+				to_remove.append(entity)
 		for entity in to_remove:
-			if is_instance_valid(entity):
-				world.remove_entity(entity)
-				entity.queue_free()
+			world.remove_entity(entity)
+			entity.queue_free()
 
-	# 3. Disconnect multiplayer signals to prevent stale callbacks.
+	# 4. Disconnect multiplayer signals to prevent stale callbacks.
 	_disconnect_multiplayer_signals()
 
-	# 4. Free the NetworkSync node (disconnects world signals internally).
+	# 5. Free the NetworkSync node (disconnects world signals internally).
 	if _network_sync != null and is_instance_valid(_network_sync):
 		_network_sync.queue_free()
 		_network_sync = null
 
-	# 5. Null the peer — this triggers server_disconnected on clients.
+	# 6. Null the peer — this triggers server_disconnected on clients.
 	multiplayer.multiplayer_peer = null
 
-	# 6. Plan 03 will reset CN_SessionState here.
-	_session_entity = null
-	_state = null
+	# 7. Reset CN_SessionState to disconnected.
+	_update_session_state(false, false, 0)
 
 
 # ---------------------------------------------------------------------------
@@ -192,19 +226,29 @@ func _disconnect_multiplayer_signals() -> void:
 
 
 func _on_peer_connected_signal(peer_id: int) -> void:
-	# Plan 03 will add CN_PeerJoined component to the session entity here.
+	if _session_entity != null and is_instance_valid(_session_entity):
+		_session_entity.add_component(CN_PeerJoined.new(peer_id))
+		var state = _session_entity.get_component(CN_SessionState) as CN_SessionState
+		if state != null:
+			state.peer_count += 1
 	if on_peer_connected.is_valid():
 		on_peer_connected.call(peer_id)
 
 
 func _on_peer_disconnected_signal(peer_id: int) -> void:
-	# Plan 03 will add CN_PeerLeft component to the session entity here.
+	if _session_entity != null and is_instance_valid(_session_entity):
+		_session_entity.add_component(CN_PeerLeft.new(peer_id))
+		var state = _session_entity.get_component(CN_SessionState) as CN_SessionState
+		if state != null:
+			state.peer_count = max(0, state.peer_count - 1)
 	if on_peer_disconnected.is_valid():
 		on_peer_disconnected.call(peer_id)
 
 
 func _on_connected_to_server() -> void:
-	# Plan 03 will add CN_SessionStarted component here.
+	if _session_entity != null and is_instance_valid(_session_entity):
+		_session_entity.add_component(CN_SessionStarted.new(false))
+		_update_session_state(true, false, multiplayer.get_peers().size() + 1)
 	if on_join_success.is_valid():
 		on_join_success.call()
 
@@ -222,11 +266,15 @@ func _on_server_disconnected() -> void:
 # ---------------------------------------------------------------------------
 
 func _update_session_state(connected: bool, hosting: bool, peer_count: int) -> void:
-	if _state == null:
+	if _session_entity == null or not is_instance_valid(_session_entity):
 		return
-	_state.is_connected = connected
-	_state.is_hosting = hosting
-	_state.peer_count = peer_count
+	var state := _session_entity.get_component(CN_SessionState) as CN_SessionState
+	if state == null:
+		state = CN_SessionState.new()
+		_session_entity.add_component(state)
+	state.is_connected = connected
+	state.is_hosting = hosting
+	state.peer_count = peer_count
 
 
 func _get_world() -> World:
