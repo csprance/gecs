@@ -327,6 +327,9 @@ func _deferred_broadcast(entity: Entity, entity_id: String) -> void:
 		_spawn_manager._inject_authority_markers(entity, net_id)
 	if _native_sync_handler != null:
 		_native_sync_handler.setup_native_sync(entity)
+	var net_sync: CN_NetSync = entity.get_component(CN_NetSync)
+	if net_sync:
+		net_sync.scan_entity_components(entity)
 	var data = _spawn_manager.serialize_entity(entity)
 	_spawn_entity.rpc(data)
 

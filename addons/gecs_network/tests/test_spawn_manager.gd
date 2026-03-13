@@ -7,6 +7,15 @@ extends GdUnitTestSuite
 
 const SyncRelationshipHandler = preload("res://addons/gecs_network/sync_relationship_handler.gd")
 
+
+# Mock component with a HIGH-priority exported property (for scan tests)
+class MockSyncComp:
+	extends Component
+
+	@export_group("HIGH")
+	@export var value: int = 0
+
+
 # ============================================================================
 # MOCK OBJECTS
 # ============================================================================
@@ -251,6 +260,51 @@ func test_deferred_broadcast_not_sent_if_entity_removed_same_frame():
 
 	# No spawn RPC should have been sent
 	assert_int(mock_ns.spawn_rpc_calls.size()).is_equal(0)
+
+
+# ============================================================================
+# SYNC: CN_NetSync scan on spawn
+# ============================================================================
+
+
+func test_apply_component_data_scans_cn_net_sync():
+	## After handle_spawn_entity(), CN_NetSync._comp_refs must be populated
+	## so SyncSender can detect property changes. This was the root cause of
+	## clients being unable to send C_PlayerInput to the server — without this
+	## scan, check_changes_for_priority() always returns {} and nothing syncs.
+	manager = SpawnManager.new(mock_ns)
+
+	# Create entity with CN_NetSync + a syncable component
+	var entity = Entity.new()
+	entity.id = "e_scan_test"
+	entity.name = "ScanEntity"
+	world.add_entity(entity)
+
+	var net_id = CN_NetworkIdentity.new(2)
+	entity.add_component(net_id)
+	var net_sync = CN_NetSync.new()
+	entity.add_component(net_sync)
+	var sync_comp = MockSyncComp.new()
+	entity.add_component(sync_comp)
+
+	# Before: _comp_refs is empty (scan never called)
+	assert_int(net_sync._comp_refs.size()).is_equal(0)
+
+	# Trigger the update path in handle_spawn_entity (entity already in registry)
+	manager.handle_spawn_entity({
+		"id": "e_scan_test",
+		"name": "ScanEntity",
+		"scene_path": "",
+		"components": {},
+		"script_paths": {},
+		"session_id": 42,
+		"relationships": [],
+	})
+
+	# After: scan_entity_components() was called — MockSyncComp is not excluded
+	# (not CN_NetSync, not CN_NetworkIdentity, not CN_NativeSync), so it appears
+	# in _comp_refs and SyncSender can detect its property changes.
+	assert_int(net_sync._comp_refs.size()).is_equal(1)
 
 
 # ============================================================================

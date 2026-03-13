@@ -2,6 +2,13 @@
 
 All notable changes to the GECS Network addon will be documented in this file.
 
+## [Unreleased]
+
+### Fixed
+- `CN_NetSync.scan_entity_components()` was never called at runtime — clients could not sync `C_PlayerInput` (or any `CN_NetSync`-tracked properties) to the server because `SyncSender` always saw an empty scan table. Fix: `NetworkSync._deferred_broadcast()` now scans server-side entities after authority markers are injected; `SpawnManager._apply_component_data()` now scans client-side entities after spawn setup completes.
+- `main.gd._on_peer_disconnected_hook` was calling `world.remove_entity()` on the disconnected peer's entity, duplicating the cleanup already performed by `SpawnManager.on_peer_disconnected()`. The redundant removal could cause a double-free crash (`entity_removed` signal fired with a freed entity). Fix: removed entity cleanup from the hook — `SpawnManager` is the sole cleanup path.
+- `world.remove_entity()` called `entity.free()` (immediate) before the `GECSEditorDebuggerMessages.entity_removed()` debug assert, causing a "previously freed" type-check error when an entity was not in the scene tree. Fix: the debug assert now runs before the free call.
+
 ## [2.0.0] — feature/gecs-network-v2
 
 ### Added

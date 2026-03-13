@@ -429,13 +429,12 @@ func remove_entity(entity) -> void:
 
 	# Destroy entity normally
 	entity.on_destroy()
+	if ECS.debug:
+		assert(GECSEditorDebuggerMessages.entity_removed(entity), "")
 	if entity.is_inside_tree():
 		entity.queue_free()
 	else:
 		entity.free()
-
-	if ECS.debug:
-		assert(GECSEditorDebuggerMessages.entity_removed(entity), "")
 
 
 ## Removes an Array of [Entity] from the world.[br]

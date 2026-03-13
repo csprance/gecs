@@ -123,14 +123,9 @@ func _on_peer_connected_hook(peer_id: int) -> void:
 
 func _on_peer_disconnected_hook(peer_id: int) -> void:
 	print("[Main] Peer disconnected: %d" % peer_id)
-	# Remove player entity for disconnected peer
-	if _spawned_peer_ids.has(peer_id):
-		var entity_id = _spawned_peer_ids[peer_id]
-		var entity = world.get_entity_by_id(entity_id)
-		if entity:
-			world.remove_entity(entity)
-			entity.queue_free()
-		_spawned_peer_ids.erase(peer_id)
+	# Entity cleanup is handled automatically by SpawnManager.on_peer_disconnected
+	# (via NetworkSync's peer_disconnected handler). Only update local tracking here.
+	_spawned_peer_ids.erase(peer_id)
 
 
 func _on_session_ended_hook() -> void:

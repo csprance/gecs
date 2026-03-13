@@ -227,6 +227,11 @@ func _apply_component_data(entity: Entity, data: Dictionary) -> void:
 	if _ns.get("_native_sync_handler") != null:
 		_ns._native_sync_handler.setup_native_sync(entity)
 
+	# Scan CN_NetSync after all components are set up so SyncSender can detect changes
+	var net_sync: CN_NetSync = entity.get_component(CN_NetSync)
+	if net_sync:
+		net_sync.scan_entity_components(entity)
+
 
 ## Inject CN_LocalAuthority and CN_ServerAuthority markers onto entity.
 ## Called from _apply_component_data() after CN_NetworkIdentity is populated.
