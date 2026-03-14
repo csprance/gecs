@@ -4,12 +4,12 @@
 
 Component Queries provide a powerful way to filter entities not just based on the presence of components but also on the data within those components. This allows for precise, data-driven entity selection in your game systems.
 
-## 📋 Prerequisites
+## Prerequisites
 
 - Understanding of [Core Concepts](CORE_CONCEPTS.md)
 - Familiarity with [Basic Queries](CORE_CONCEPTS.md#query-system)
 
-## 🎯 Introduction
+## Introduction
 
 In standard ECS queries, you filter entities by which components they have or don't have. Component Queries take this further by letting you filter based on the **values** inside those components.
 
@@ -37,6 +37,17 @@ A component query is a `Dictionary` that maps a component class to a query `Dict
 - `_lte`: Less than or equal to
 - `_in`: Value is in a list
 - `_nin`: Value is not in a list
+- `func`: Custom function — `func(value) -> bool`
+
+#### Custom Callable Filter
+
+Filter entities using any predicate that returns `bool`:
+
+```gdscript
+var result = ECS.world.query.with_all([
+    { C_Health: { "current": { "func": func(v): return v < 20 } } }
+]).execute()
+```
 
 ### Examples
 
@@ -174,9 +185,3 @@ var result = QueryBuilder.new(world).with_all([
 ]).execute()
 # result will include entity1
 ```
-
-## Conclusion
-
-Component Queries extend the querying capabilities of the GECS framework by allowing you to filter entities based on component data. By utilizing the supported operators and combining component queries with traditional component filters, you can precisely target the entities you need for your game's logic.
-
-For more information on how to use the `QueryBuilder`, refer to the `query_builder.gd` documentation and the test cases in `test_query_builder.gd`.

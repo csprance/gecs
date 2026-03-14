@@ -4,19 +4,19 @@
 
 This guide covers proven patterns and practices for building robust games with GECS. Apply these patterns to keep your code clean, fast, and easy to debug.
 
-## 📋 Prerequisites
+## Prerequisites
 
 - Completed [Getting Started Guide](GETTING_STARTED.md)
 - Understanding of [Core Concepts](CORE_CONCEPTS.md)
 
-## 🧱 Component Design Patterns
+## Component Design Patterns
 
 ### Keep Components Pure Data
 
 Components should only hold data, never logic or behavior.
 
 ```gdscript
-# ✅ Good - Pure data component
+# Good - Pure data component
 class_name C_Health
 extends Component
 
@@ -30,7 +30,7 @@ func _init(max_health: float = 100.0):
 ```
 
 ```gdscript
-# ❌ Avoid - Logic in components
+# Avoid - Logic in components
 class_name C_Health
 extends Component
 
@@ -49,7 +49,7 @@ func take_damage(amount: float):
 Build entities by combining simple components rather than complex inheritance hierarchies.
 
 ```gdscript
-# ✅ Good - Composable components via define_components() or scene setup
+# Good - Composable components via define_components() or scene setup
 class_name Player
 extends Entity
 
@@ -76,7 +76,7 @@ func define_components() -> Array:
 Make components easily configurable through export properties.
 
 ```gdscript
-# ✅ Good - Configurable component
+# Good - Configurable component
 class_name C_Movement
 extends Component
 
@@ -91,14 +91,14 @@ func _init(spd: float = 100.0, can_fly_: bool = false):
     can_fly = can_fly_
 ```
 
-## ⚙️ System Design Patterns
+## System Design Patterns
 
 ### Single Responsibility Principle
 
 Each system should handle one specific concern.
 
 ```gdscript
-# ✅ Good - Focused systems
+# Good - Focused systems
 class_name MovementSystem extends System
 func query(): return q.with_all([C_Position, C_Velocity])
 
@@ -132,7 +132,7 @@ func _physics_process(delta):
 Return early from system processing when no work is needed.
 
 ```gdscript
-# ✅ Good - Early exit patterns
+# Good - Early exit patterns
 class_name HealthRegenerationSystem extends System
 
 func query():
@@ -155,7 +155,7 @@ func process(entities: Array[Entity], components: Array, delta: float):
 When adding/removing components, entities, or relationships during system processing, use the `cmd` CommandBuffer instead of direct world/entity calls. This allows safe forward iteration and deferred cache invalidation.
 
 ```gdscript
-# ✅ Good - Use CommandBuffer for safe iteration
+# Good - Use CommandBuffer for safe iteration
 class_name LifetimeSystem extends System
 
 func query():
@@ -170,7 +170,7 @@ func process(entities: Array[Entity], components: Array, delta: float):
 ```
 
 ```gdscript
-# ❌ Avoid - Direct removal during iteration requires backwards iteration
+# Avoid - Direct removal during iteration requires backwards iteration
 func process(entities: Array[Entity], components: Array, delta: float):
     for i in range(entities.size() - 1, -1, -1):
         if should_delete(entities[i]):
@@ -178,16 +178,17 @@ func process(entities: Array[Entity], components: Array, delta: float):
 ```
 
 **Flush Modes** control when queued commands execute:
+
 - **PER_SYSTEM** (default) — executes after each system completes
 - **PER_GROUP** — executes after all systems in the group complete
 - **MANUAL** — requires explicit `ECS.world.flush_command_buffers()` call
 
-## 🏗️ Code Organization Patterns
+## Code Organization Patterns
 
 ### GECS Naming Conventions
 
 ```gdscript
-# ✅ GECS Standard naming patterns:
+# GECS Standard naming patterns:
 
 # Components: C_ComponentName class, c_component_name.gd file
 class_name C_Health extends Component      # c_health.gd
@@ -238,9 +239,12 @@ project/
     └── o_transform.gd   # Reactive systems
 ```
 
-## 🎮 Common Game Patterns
+## Common Game Patterns
 
 ### Player Character Pattern
+
+> This is all just glue code to initialize, and setup entities to be used with the ECS.
+> You should avoid wanting to put gameplay stuff here, but if you must it's not a problem at all.
 
 ```gdscript
 # e_player.gd
@@ -257,6 +261,9 @@ func on_ready():
 
 ### Enemy Pattern
 
+> This is all just glue code to initialize, and setup entities to be used with the ECS.
+> You should avoid wanting to put gameplay stuff here, but if you must it's not a problem at all.
+
 ```gdscript
 # e_enemy.gd
 class_name Enemy
@@ -270,39 +277,39 @@ func on_ready():
     add_to_group("enemies")
 ```
 
-## 🚀 Performance Best Practices
+## Performance Best Practices
 
-### Choose the Right Query Method ⭐ NEW!
+### Choose the Right Query Method
 
-**Query Performance Ranking** (v5.0.0-rc4+):
+**Query Performance Ranking** (10,000 entities, Godot 4.6-dev3):
 
 ```gdscript
-# 🏆 FASTEST - Enabled/disabled queries (constant time)
+# FASTEST - Enabled/disabled queries (constant time regardless of entity count)
 class_name ActiveEntitiesOnly extends System
 func query():
-    return q.enabled(true)  # ~0.05ms for any number of entities
+    return q.enabled()  # ~0.11ms for any number of entities
 
-# 🥈 EXCELLENT - Component queries (heavily optimized)
+# EXCELLENT - Component queries (heavily optimized with indexing)
 class_name MovementSystem extends System
 func query():
-    return q.with_all([C_Position, C_Velocity])  # ~0.6ms for 10K entities
+    return q.with_all([C_Position, C_Velocity])  # ~0.24ms for 10K entities
 
-# 🥉 GOOD - Use with_any strategically
+# GOOD - Use with_any strategically
 class_name DamageableSystem extends System
 func query():
-    return q.with_any([C_Player, C_Enemy]).with_all([C_Health])  # ~5.6ms for 10K
+    return q.with_any([C_Player, C_Enemy]).with_all([C_Health])  # ~0.31ms for 10K
 
-# 🐌 AVOID - Group queries are slowest
+# AVOID - Group queries are slowest (Godot SceneTree traversal)
 class_name PlayerSystem extends System
 func query():
-    return q.with_group("player")  # ~16ms for 10K entities
+    return q.with_group(["player"])  # ~13.6ms for 10K entities
     # Better: q.with_all([C_Player])
 ```
 
 ### Use iterate() for Batch Performance
 
 ```gdscript
-# ✅ Good - Batch processing with iterate()
+# Good - Batch processing with iterate()
 class_name TransformSystem
 extends System
 
@@ -320,29 +327,29 @@ func process(entities: Array[Entity], components: Array, delta: float):
 ### Use Specific Queries
 
 ```gdscript
-# ✅ BEST - Combine enabled filter with components
+# BEST - Combine enabled filter with components
 class_name ActivePlayerInputSystem extends System
 func query():
-    return q.with_all([C_Input, C_Movement]).enabled(true)
+    return q.with_all([C_Input, C_Movement]).enabled()
     # Super fast: enabled filtering + component matching
 
-# ✅ GOOD - Specific component query
+# GOOD - Specific component query
 class_name ProjectileSystem extends System
 func query():
     return q.with_all([C_Projectile, C_Velocity])  # Fast and specific
 
-# ❌ AVOID - Group-based queries (slow)
+# AVOID - Group-based queries (slow)
 class_name PlayerSystem extends System
 func query():
-    return q.with_group("player")  # Use q.with_all([C_Player]) instead
+    return q.with_group(["player"])  # Use q.with_all([C_Player]) instead
 
-# ❌ AVOID - Overly broad queries
+# AVOID - Overly broad queries
 class_name UniversalMovementSystem extends System
 func query():
     return q.with_all([C_Transform])  # Too broad - matches everything
 ```
 
-## 🎭 Entity Prefabs (Scene Files)
+## Entity Prefabs (Scene Files)
 
 ### Using Godot Scenes as Entity Prefabs
 
@@ -503,7 +510,7 @@ static func spawn(prefab_name: String, position: Vector3) -> Entity:
     return entity
 ```
 
-## 🏗️ Main Scene Architecture
+## Main Scene Architecture
 
 ### Scene Structure Pattern
 
@@ -582,20 +589,20 @@ func _physics_process(delta):
         ECS.process(delta, "physics")   # Physics systems
 ```
 
-## 🛠️ Common Utility Patterns
+## Common Utility Patterns
 
 ### Transform Synchronization
 
 Common transform synchronization patterns:
 
 ```gdscript
-# Sync entity transform TO component (scene → component)
+# Sync entity transform TO component (scene -> component)
 static func sync_transform_to_component(entity: Entity):
     if entity.has_component(C_Transform):
         var transform_comp = entity.get_component(C_Transform)
         transform_comp.transform = entity.global_transform
 
-# Sync component transform TO entity (component → scene)
+# Sync component transform TO entity (component -> scene)
 static func sync_component_to_transform(entity: Entity):
     if entity.has_component(C_Transform):
         var transform_comp = entity.get_component(C_Transform)
@@ -625,19 +632,19 @@ static func damage_entity(entity: Entity, amount: float):
     return false
 ```
 
-## 🎛️ Relationship Management Best Practices
+## Relationship Management Best Practices
 
 ### Limited Removal Patterns
 
 **Use Descriptive Constants:**
 
 ```gdscript
-# ✅ Good - Clear intent with constants
+# Good - Clear intent with constants
 const WEAK_CLEANSE = 1
 const MEDIUM_CLEANSE = 3
 const STRONG_CLEANSE = -1  # All
 
-# ✅ Good - Stack-based constants
+# Good - Stack-based constants
 const SINGLE_STACK = 1
 const PARTIAL_STACKS = 3
 const ALL_STACKS = -1
@@ -652,7 +659,7 @@ func cleanse_debuffs(entity: Entity, power: int):
 **Validate Before Removal:**
 
 ```gdscript
-# ✅ Excellent - Safe removal with validation
+# Excellent - Safe removal with validation
 func safe_partial_heal(entity: Entity, heal_amount: int):
     var damage_rels = entity.get_relationships(Relations.any_damage())
     if damage_rels.is_empty():
@@ -663,7 +670,7 @@ func safe_partial_heal(entity: Entity, heal_amount: int):
     entity.remove_relationship(Relations.any_damage(), to_heal)
     print("Healed ", to_heal, " damage effects")
 
-# ✅ Good - Helper function with built-in safety
+# Good - Helper function with built-in safety
 func remove_poison_stacks(entity: Entity, stacks_to_remove: int):
     if stacks_to_remove <= 0:
         return
@@ -673,7 +680,7 @@ func remove_poison_stacks(entity: Entity, stacks_to_remove: int):
 **System Integration Patterns:**
 
 ```gdscript
-# ✅ Excellent - Integration with game systems
+# Excellent - Integration with game systems
 class_name StatusEffectSystem extends System
 
 func process(entities: Array[Entity], components: Array, delta: float):
@@ -721,7 +728,7 @@ func use_consumable(entity: Entity, item: Component, quantity: int = 1):
 **Performance Optimization:**
 
 ```gdscript
-# ✅ Good - Cache relationships for multiple operations
+# Good - Cache relationships for multiple operations
 func optimize_bulk_removal(entity: Entity):
     # Cache the relationship for reuse
     var poison_rel = Relations.poison_effect()
@@ -732,7 +739,7 @@ func optimize_bulk_removal(entity: Entity):
     entity.remove_relationship(damage_rel, 1)      # Remove 1 damage
     entity.remove_relationship(poison_rel, 1)      # Remove 1 more poison
 
-# ✅ Excellent - Batch removal patterns
+# Excellent - Batch removal patterns
 func batch_cleanup(entities: Array[Entity]):
     var cleanup_rel = Relations.temporary_effect()
 
@@ -741,7 +748,115 @@ func batch_cleanup(entities: Array[Entity]):
         entity.remove_relationship(cleanup_rel, 3)
 ```
 
-## 🎯 Next Steps
+## Production Patterns from Real Projects
+
+These patterns are drawn from production GECS projects and address common architectural challenges that emerge at scale.
+
+### Relationship Factory Class
+
+Rather than constructing `Relationship.new(...)` inline throughout your code, collect all common relationships in a single `Rels` static class. This gives you one place to rename or adjust relationships and keeps system code readable.
+
+Naming convention: `R_<Action>_<Target>` for the component, e.g. `R_ChildOf`, `R_Attacks`, `R_Equips`.
+
+```gdscript
+# rels.gd
+class_name Rels
+
+static var child_of: Relationship = Relationship.new(R_ChildOf.new(), null)
+static var attacks: Relationship = Relationship.new(R_Attacks.new(), null)
+static var equips: Relationship = Relationship.new(R_Equips.new(), null)
+
+static func child_of_entity(parent: Entity) -> Relationship:
+    return Relationship.new(R_ChildOf.new(), parent)
+
+static func attacks_target(target: Entity) -> Relationship:
+    return Relationship.new(R_Attacks.new(), target)
+```
+
+```gdscript
+# Usage in systems — clean, no inline Relationship construction
+func process(entities: Array[Entity], components: Array, delta: float):
+    for entity in entities:
+        if entity.has_relationship(Rels.attacks):
+            apply_attack(entity)
+        entity.remove_relationship(Rels.child_of, 1)
+```
+
+### Sub-systems for Complex Logic
+
+When a system needs multiple distinct queries — e.g. a WeaponsSystem that handles both firing and reloading — use `sub_systems()` to declare each query/process pair cleanly. This avoids stuffing multiple unrelated queries into a single `query()` method.
+
+```gdscript
+# s_weapons.gd
+class_name WeaponsSystem
+extends System
+
+func sub_systems() -> Array[Array]:
+    return [
+        [q.with_all([C_Weapon, C_Firing]), handle_firing],
+        [q.with_all([C_Weapon, C_Reloading]), handle_reloading]
+    ]
+
+func handle_firing(entities: Array[Entity], _components: Array, delta: float):
+    for entity in entities:
+        var weapon = entity.get_component(C_Weapon)
+        weapon.fire_timer -= delta
+        if weapon.fire_timer <= 0:
+            cmd.add_component(entity, C_ProjectileSpawn.new(weapon.muzzle_position))
+            weapon.fire_timer = weapon.fire_rate
+
+func handle_reloading(entities: Array[Entity], _components: Array, delta: float):
+    for entity in entities:
+        var weapon = entity.get_component(C_Weapon)
+        weapon.reload_timer -= delta
+        if weapon.reload_timer <= 0:
+            weapon.ammo = weapon.max_ammo
+            cmd.remove_component(entity, C_Reloading)
+```
+
+### PendingDelete Pattern
+
+Direct `cmd.remove_entity()` deletes entities immediately after the system. For entities that need a visible death animation, a sound effect, or just a one-frame delay, add a `C_IsPendingDelete` tag component and let a dedicated `PendingDeleteSystem` handle the actual removal.
+
+```gdscript
+# c_is_pending_delete.gd
+class_name C_IsPendingDelete
+extends Component
+
+@export var delete_delay: float = 0.0  # 0 = next frame, >0 = timed delay
+```
+
+```gdscript
+# s_pending_delete.gd — runs in "run-last" group
+class_name PendingDeleteSystem
+extends System
+
+func query():
+    return q.with_all([C_IsPendingDelete])
+
+func process(entities: Array[Entity], components: Array, delta: float):
+    for entity in entities:
+        var pending = entity.get_component(C_IsPendingDelete)
+        if pending.delete_delay <= 0.0:
+            cmd.remove_entity(entity)
+        else:
+            pending.delete_delay -= delta
+```
+
+```gdscript
+# Any system can stage an entity for deletion without immediate removal
+func process(entities: Array[Entity], components: Array, delta: float):
+    for entity in entities:
+        var health = entity.get_component(C_Health)
+        if health.current <= 0:
+            # Play death anim, then delete after 0.5s
+            cmd.add_component(entity, C_IsPendingDelete.new())
+            entity.get_component(C_IsPendingDelete).delete_delay = 0.5
+```
+
+This pattern cleanly separates "mark for deletion" from "actually remove", keeps your iteration systems simple, and gives you a single place to add cleanup logic (sound, VFX, loot drops) before the entity disappears.
+
+## Next Steps
 
 Now that you understand best practices:
 

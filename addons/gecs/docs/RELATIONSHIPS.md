@@ -4,12 +4,12 @@
 
 Relationships allow you to connect entities in meaningful ways, creating dynamic associations that go beyond simple component data. This guide shows you how to use GECS's relationship system to build complex game mechanics.
 
-## 📋 Prerequisites
+## Prerequisites
 
 - Understanding of [Core Concepts](CORE_CONCEPTS.md)
 - Familiarity with [Query System](CORE_CONCEPTS.md#query-system)
 
-## 🔗 What are Relationships?
+## What are Relationships?
 
 Think of **components** as the data that makes up an entity's state, and **relationships** as the links that connect entities to other entities, components, or types. Relationships can be simple links or carry data about the connection itself.
 
@@ -19,26 +19,32 @@ In GECS, relationships consist of three parts:
 - **Relation** - Component defining the relationship type (e.g., "Likes", "Damaged")
 - **Target** - What is being related to: Entity, Component instance, or archetype (e.g., Alice, FireDamage component, Enemy class)
 
-## 🎯 Relationship Types
+## Relationship Types
 
 GECS supports three powerful relationship patterns:
 
-### 1. **Entity Relationships** 
+### 1. **Entity Relationships**
+
 Link entities to other entities:
+
 ```gdscript
 # Bob likes Alice (entity to entity)
 e_bob.add_relationship(Relationship.new(C_Likes.new(), e_alice))
 ```
 
-### 2. **Component Relationships** 
+### 2. **Component Relationships**
+
 Link entities to component instances for type hierarchies:
+
 ```gdscript
 # Entity has fire damage (entity to component)
 entity.add_relationship(Relationship.new(C_Damaged.new(), C_FireDamage.new(50)))
 ```
 
 ### 3. **Archetype Relationships**
+
 Link entities to classes/types:
+
 ```gdscript
 # Heather likes all food (entity to type)
 e_heather.add_relationship(Relationship.new(C_Likes.new(), Food))
@@ -46,7 +52,7 @@ e_heather.add_relationship(Relationship.new(C_Likes.new(), Food))
 
 This creates powerful queries like "find all entities that like Alice", "find all entities with fire damage", or "find all entities damaged by anything".
 
-## 🎯 Core Relationship Concepts
+## Core Relationship Concepts
 
 ### Relationship Components
 
@@ -101,7 +107,7 @@ e_enemy.remove_relationship(Relationship.new(C_Buff.new(), null), 3)     # Remov
 e_hero.remove_relationship(Relationship.new(C_Damage.new(), null), -1)   # Remove all damage (default)
 ```
 
-## 🔍 Relationship Queries
+## Relationship Queries
 
 ### Basic Relationship Queries
 
@@ -188,6 +194,7 @@ var any_fire_damaged = ECS.world.query.with_relationship([
 GECS relationships support two matching modes:
 
 #### Type Matching (Default)
+
 Matches relationships by component type, ignoring property values:
 
 ```gdscript
@@ -204,6 +211,7 @@ var any_fire_damaged = ECS.world.query.with_relationship([
 ```
 
 #### Component Query Matching
+
 Match relationships by specific property criteria using dictionaries:
 
 ```gdscript
@@ -230,6 +238,7 @@ var strong_buffs = ECS.world.query.with_relationship([
 ```
 
 **When to Use Each:**
+
 - **Type Matching**: Find entities with "any fire damage", "any buff of this type"
 - **Component Queries**: Find entities with exact damage amounts, specific buff durations, or property criteria
 
@@ -284,7 +293,7 @@ ECS.world.query.with_reverse_relationship([Relationship.new(C_IsAttacking.new())
 ECS.world.query.with_reverse_relationship([Relationship.new(C_Eats.new(), ECS.wildcard)])
 ```
 
-## 🎛️ Limited Relationship Removal
+## Limited Relationship Removal
 
 > **Control exactly how many relationships to remove for fine-grained management**
 
@@ -297,6 +306,7 @@ entity.remove_relationship(relationship, limit)
 ```
 
 **Limit Values:**
+
 - `limit = -1` (default): Remove **all** matching relationships
 - `limit = 0`: Remove **no** relationships (useful for testing/validation)
 - `limit = 1`: Remove **one** matching relationship
@@ -446,11 +456,11 @@ func heal_entity(entity: Entity, healing_power: int):
     """Remove damage based on healing power"""
     if healing_power <= 0:
         return
-    
+
     # Partial healing - remove damage effects based on healing power
     var damage_to_remove = min(healing_power, get_damage_count(entity))
     entity.remove_relationship(Relationship.new(C_Damage.new(), null), damage_to_remove)
-    
+
     print("Healed ", damage_to_remove, " damage effects")
 
 func get_damage_count(entity: Entity) -> int:
@@ -463,7 +473,7 @@ func cleanse_entity(entity: Entity, cleanse_strength: int):
     match cleanse_strength:
         1:  # Weak cleanse
             entity.remove_relationship(Relationship.new(C_Debuff.new(), null), 1)
-        2:  # Medium cleanse  
+        2:  # Medium cleanse
             entity.remove_relationship(Relationship.new(C_Debuff.new(), null), 3)
         3:  # Strong cleanse
             entity.remove_relationship(Relationship.new(C_Debuff.new(), null))  # All debuffs
@@ -475,7 +485,7 @@ func consume_materials(entity: Entity, recipe: Dictionary):
     for material_type in recipe:
         var amount_needed = recipe[material_type]
         entity.remove_relationship(
-            Relationship.new(C_HasMaterial.new(), material_type), 
+            Relationship.new(C_HasMaterial.new(), material_type),
             amount_needed
         )
 ```
@@ -502,13 +512,13 @@ if damage_count > 0:
 Limited removal is optimized for efficiency:
 
 ```gdscript
-# ✅ Efficient - stops searching after finding enough matches
+# Efficient - stops searching after finding enough matches
 entity.remove_relationship(Relationship.new(C_Effect.new(), null), 5)
 
-# ✅ Still efficient - reuses the same removal logic
+# Still efficient - reuses the same removal logic
 entity.remove_relationship(Relationship.new(C_Effect.new(), null), -1)  # Remove all
 
-# ✅ Most efficient for single removals
+# Most efficient for single removals
 entity.remove_relationship(Relationship.new(C_SpecificEffect.new(exact_data), target), 1)
 ```
 
@@ -528,7 +538,7 @@ var relationships_to_remove = [
 entity.remove_relationships(relationships_to_remove, 2)
 ```
 
-## 🎮 Game Examples
+## Game Examples
 
 ### Status Effect System with Component Relationships
 
@@ -553,7 +563,7 @@ class_name C_PoisonDamage extends Component
         damage_per_tick = dpt
         ticks_remaining = ticks
 
-# Buff type components  
+# Buff type components
 class_name C_SpeedBuff extends Component
     @export var multiplier: float = 1.5
     @export var duration: float = 10.0
@@ -573,7 +583,7 @@ func apply_status_effects():
     # Player gets fire damage and speed buff
     player.add_relationship(Relationship.new(C_HasEffect.new(), C_FireDamage.new(15.0, 8.0)))
     player.add_relationship(Relationship.new(C_HasEffect.new(), C_SpeedBuff.new(2.0, 12.0)))
-    
+
     # Enemy gets poison and strength buff
     enemy.add_relationship(Relationship.new(C_HasEffect.new(), C_PoisonDamage.new(8.0, 15)))
     enemy.add_relationship(Relationship.new(C_HasEffect.new(), C_StrengthBuff.new(30.0, 10.0)))
@@ -643,7 +653,7 @@ func dispel_magic(entity: Entity, power: int):
     # Dispel magic spell removes buffs based on power level
     match power:
         1: entity.remove_relationship(Relationship.new(C_HasEffect.new(), C_SpeedBuff), 1)    # Weak dispel - 1 speed buff
-        2: entity.remove_relationship(Relationship.new(C_HasEffect.new(), null), 2)          # Medium dispel - 2 any effects  
+        2: entity.remove_relationship(Relationship.new(C_HasEffect.new(), null), 2)          # Medium dispel - 2 any effects
         3: entity.remove_relationship(Relationship.new(C_HasEffect.new(), null))             # Strong dispel - all effects
 
 func antidote_healing(entity: Entity, antidote_strength: int):
@@ -659,18 +669,18 @@ func get_entities_with_damage_effects():
     var fire_damaged = ECS.world.query.with_relationship([
         Relationship.new(C_HasEffect.new(), C_FireDamage)
     ]).execute()
-    
+
     var poison_damaged = ECS.world.query.with_relationship([
         Relationship.new(C_HasEffect.new(), C_PoisonDamage)
     ]).execute()
-    
+
     # Combine results
     var all_damaged = {}
     for entity in fire_damaged:
         all_damaged[entity] = true
     for entity in poison_damaged:
         all_damaged[entity] = true
-        
+
     return all_damaged.keys()
 ```
 
@@ -755,14 +765,14 @@ func get_parent_of_entity(entity: Entity):
     ]).execute()
 ```
 
-## 🏗️ Relationship Best Practices
+## Relationship Best Practices
 
 ### Performance Optimization
 
 **Reuse Relationship Objects:**
 
 ```gdscript
-# ✅ Good - Reuse for performance
+# Good - Reuse for performance
 var r_likes_apples = Relationship.new(C_Likes.new(), e_apple)
 var r_attacking_players = Relationship.new(C_IsAttacking.new(), Player)
 
@@ -774,7 +784,7 @@ entity2.add_relationship(r_attacking_players)
 **Static Relationship Factory (Recommended):**
 
 ```gdscript
-# ✅ Excellent - Organized relationship management
+# Excellent - Organized relationship management
 class_name Relationships
 
 static func attacking_players():
@@ -803,7 +813,7 @@ static func any_buff():
 
 # Usage in systems:
 var attackers = ECS.world.query.with_relationship([Relationships.attacking_players()]).execute()
-var chasers = ECS.world.query.with_relationship([Relationships.chasing_anything()]).execute()
+var chasers = ECS.world.query.with_relationship([Relationships.chasing_players()]).execute()
 
 # Usage with limits:
 entity.remove_relationship(Relationships.any_status_effect(), 1)  # Remove one effect
@@ -814,14 +824,14 @@ entity.remove_relationship(Relationships.any_buff())              # Remove all b
 **Limited Removal Best Practices:**
 
 ```gdscript
-# ✅ Good - Clear intent with descriptive variables
+# Good - Clear intent with descriptive variables
 var WEAK_CLEANSE = 1
 var MEDIUM_CLEANSE = 3
 var STRONG_CLEANSE = -1  # All
 
 entity.remove_relationship(Relationships.any_debuff(), WEAK_CLEANSE)
 
-# ✅ Good - Helper functions for common operations
+# Good - Helper functions for common operations
 func remove_one_poison(entity: Entity):
     entity.remove_relationship(Relationship.new(C_Poison.new(), null), 1)
 
@@ -831,7 +841,7 @@ func remove_all_fire_damage(entity: Entity):
 func partial_heal(entity: Entity, healing_power: int):
     entity.remove_relationship(Relationship.new(C_Damage.new(), null), healing_power)
 
-# ✅ Excellent - Validation before removal
+# Excellent - Validation before removal
 func safe_remove_effects(entity: Entity, count: int):
     var current_effects = entity.get_relationships(Relationship.new(C_Effect.new(), null)).size()
     var to_remove = min(count, current_effects)
@@ -853,7 +863,7 @@ func safe_remove_effects(entity: Entity, count: int):
 - Use `r_` prefix for relationship instances
 - Examples: `r_likes_alice`, `r_attacking_player`, `r_parent_of_child`
 
-## 🎯 Next Steps
+## Next Steps
 
 Now that you understand relationships, component queries, and limited removal:
 
@@ -867,27 +877,25 @@ Now that you understand relationships, component queries, and limited removal:
 8. **Learn advanced patterns** in [Best Practices Guide](BEST_PRACTICES.md)
 
 **Quick Start Checklist for Component Queries:**
-- ✅ Try basic component query: `Relationship.new({C_Damage: {'amount': {"_gt": 10}}}, null)`
-- ✅ Use query operators: `_eq`, `_ne`, `_gt`, `_lt`, `_gte`, `_lte`, `_in`, `_nin`
-- ✅ Query both relation and target properties
-- ✅ Combine queries with wildcards for flexible filtering
-- ✅ Use type matching for "any component of this type" queries
+
+- Try basic component query: `Relationship.new({C_Damage: {'amount': {"_gt": 10}}}, null)`
+- Use query operators: `_eq`, `_ne`, `_gt`, `_lt`, `_gte`, `_lte`, `_in`, `_nin`
+- Query both relation and target properties
+- Combine queries with wildcards for flexible filtering
+- Use type matching for "any component of this type" queries
 
 **Quick Start Checklist for Limited Removal:**
-- ✅ Try basic limit syntax: `entity.remove_relationship(rel, 1)`
-- ✅ Build a simple stack system (buffs, debuffs, or damage)
-- ✅ Create helper functions for common removal patterns
-- ✅ Integrate limits into your game systems (healing, cleansing, etc.)
-- ✅ Test edge cases (limit > available relationships)
-- ✅ Combine component queries with limits for precise control
 
-## 📚 Related Documentation
+- Try basic limit syntax: `entity.remove_relationship(rel, 1)`
+- Build a simple stack system (buffs, debuffs, or damage)
+- Create helper functions for common removal patterns
+- Integrate limits into your game systems (healing, cleansing, etc.)
+- Test edge cases (limit > available relationships)
+- Combine component queries with limits for precise control
+
+## Related Documentation
 
 - **[Core Concepts](CORE_CONCEPTS.md)** - Understanding the ECS fundamentals
 - **[Component Queries](COMPONENT_QUERIES.md)** - Advanced property-based filtering
 - **[Best Practices](BEST_PRACTICES.md)** - Write maintainable ECS code
 - **[Performance Optimization](PERFORMANCE_OPTIMIZATION.md)** - Optimize relationship queries
-
----
-
-_"Relationships turn a collection of entities into a living, interconnected game world where entities can react to each other in meaningful ways."_

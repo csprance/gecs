@@ -4,13 +4,13 @@
 
 Observers provide a reactive programming model where systems automatically respond to component changes, additions, and removals. This allows for decoupled, event-driven game logic.
 
-## 📋 Prerequisites
+## Prerequisites
 
 - Understanding of [Core Concepts](CORE_CONCEPTS.md)
 - Familiarity with [Systems](CORE_CONCEPTS.md#systems)
 - Observers must be added to the World to function
 
-## 🎯 What are Observers?
+## What are Observers?
 
 Observers are specialized systems that watch for changes to specific components and react immediately when those changes occur. Instead of processing entities every frame, observers only trigger when something actually changes.
 
@@ -21,7 +21,7 @@ Observers are specialized systems that watch for changes to specific components 
 - **Reactivity** - Immediate response to state changes
 - **Clean Logic** - Separate change-handling logic from regular processing
 
-## 🔧 Observer Structure
+## Observer Structure
 
 Observers extend the `Observer` class and implement key methods:
 
@@ -40,15 +40,17 @@ func watch() -> Resource:
 func on_component_added(entity: Entity, component: Resource):
     # Sync component transform to entity when added
     var transform_comp = component as C_Transform
+    # Requires entity to be Node3D
     entity.global_transform = transform_comp.transform
 
 func on_component_changed(entity: Entity, component: Resource, property: String, new_value: Variant, old_value: Variant):
     # Sync component transform to entity when changed
     var transform_comp = component as C_Transform
+    # Requires entity to be Node3D
     entity.global_transform = transform_comp.transform
 ```
 
-## 🎮 Observer Event Types
+## Observer Event Types
 
 ### on_component_added()
 
@@ -62,7 +64,7 @@ func watch() -> Resource:
     return C_Health
 
 func match():
-    return q.with_all([C_Health]).with_group("player")
+    return q.with_all([C_Health]).with_group(["player"])
 
 func on_component_added(entity: Entity, component: Resource):
     # Create health bar when player gains health component
@@ -83,7 +85,7 @@ func watch() -> Resource:
     return C_Health
 
 func match():
-    return q.with_all([C_Health]).with_group("player")
+    return q.with_all([C_Health]).with_group(["player"])
 
 func on_component_changed(entity: Entity, component: Resource, property: String, new_value: Variant, old_value: Variant):
     if property == "current":
@@ -108,7 +110,7 @@ func on_component_removed(entity: Entity, component: Resource):
     call_deferred("remove_health_bar", entity)
 ```
 
-## 💡 Common Observer Patterns
+## Common Observer Patterns
 
 ### Transform Synchronization
 
@@ -124,10 +126,12 @@ func watch() -> Resource:
 
 func on_component_added(entity: Entity, component: Resource):
     var transform_comp = component as C_Transform
+    # Requires entity to be Node3D
     entity.global_transform = transform_comp.transform
 
 func on_component_changed(entity: Entity, component: Resource, property: String, new_value: Variant, old_value: Variant):
     var transform_comp = component as C_Transform
+    # Requires entity to be Node3D
     entity.global_transform = transform_comp.transform
 ```
 
@@ -180,16 +184,16 @@ func watch() -> Resource:
 func on_component_changed(entity: Entity, component: Resource, property: String, new_value: Variant, old_value: Variant):
     if property == "current":
         var health_change = new_value - old_value
-        
+
         if health_change < 0:
             # Health decreased - play damage sound
-            call_deferred("play_damage_sound", entity.global_position)
+            call_deferred("play_damage_sound", entity)
         elif health_change > 0:
             # Health increased - play heal sound
-            call_deferred("play_heal_sound", entity.global_position)
+            call_deferred("play_heal_sound", entity)
 ```
 
-## 🏗️ Observer Best Practices
+## Observer Best Practices
 
 ### Naming Conventions
 
@@ -203,11 +207,11 @@ func on_component_changed(entity: Entity, component: Resource, property: String,
 Always use `call_deferred()` to defer work and avoid immediate execution during component updates:
 
 ```gdscript
-# ✅ Good - Defer work for later execution
+# Good - Defer work for later execution
 func on_component_changed(entity: Entity, component: Resource, property: String, new_value: Variant, old_value: Variant):
     call_deferred("update_ui_element", entity, new_value)
 
-# ❌ Avoid - Immediate execution can cause issues
+# Avoid - Immediate execution can cause issues
 func on_component_changed(entity: Entity, component: Resource, property: String, new_value: Variant, old_value: Variant):
     update_ui_element(entity, new_value)  # May cause timing issues
 ```
@@ -217,7 +221,7 @@ func on_component_changed(entity: Entity, component: Resource, property: String,
 Focus observers on single responsibilities:
 
 ```gdscript
-# ✅ Good - Single purpose observer
+# Good - Single purpose observer
 class_name HealthUIObserver
 extends Observer
 
@@ -228,7 +232,7 @@ func on_component_changed(entity: Entity, component: Resource, property: String,
     if property == "current":
         call_deferred("update_health_display", entity, new_value)
 
-# ❌ Avoid - Observer doing too much
+# Avoid - Observer doing too much
 class_name HealthObserver
 extends Observer
 
@@ -245,16 +249,16 @@ func on_component_changed(entity: Entity, component: Resource, property: String,
 Filter which entities trigger observers with `match()`:
 
 ```gdscript
-# ✅ Good - Specific query
+# Good - Specific query
 func match():
-    return q.with_all([C_Health]).with_group("player")  # Only player health
+    return q.with_all([C_Health]).with_group(["player"])  # Only player health
 
-# ❌ Avoid - Too broad
+# Avoid - Too broad
 func match():
     return q.with_all([C_Health])  # ALL entities with health
 ```
 
-## 🎯 When to Use Observers
+## When to Use Observers
 
 **Use Observers for:**
 
@@ -271,7 +275,7 @@ func match():
 - Complex logic that depends on multiple entities
 - Performance-critical processing loops
 
-## 🚀 Adding Observers to the World
+## Adding Observers to the World
 
 Observers must be registered with the World to function. There are several ways to do this:
 
@@ -282,7 +286,7 @@ Observers must be registered with the World to function. There are several ways 
 func _ready():
     var health_observer = HealthUIObserver.new()
     ECS.world.add_observer(health_observer)
-    
+
     # Or add multiple observers at once
     ECS.world.add_observers([health_observer, transform_observer, audio_observer])
 ```
@@ -303,49 +307,64 @@ Main
 ```
 
 ### Important Notes:
+
 - Observers are initialized with their own QueryBuilder (`observer.q`)
 - The `watch()` method is called during registration to validate the component
 - Observers must return a valid Component class from `watch()` or they'll crash
 
-## ⚠️ Common Issues & Troubleshooting
+## Common Issues & Troubleshooting
 
 ### Observer Not Triggering
+
 **Problem**: Observer events never fire
 **Solutions**:
+
 - Ensure the observer is added to the World with `add_observer()`
 - Check that `watch()` returns the correct component class
 - Verify entities match the `match()` query (if defined)
 - Component changes must be on properties, not just internal state
 
 ### Crash: "You must override the watch() method"
+
 **Problem**: Observer crashes on registration
 **Solution**: Override `watch()` method and return a Component class:
+
 ```gdscript
 func watch() -> Resource:
     return C_Health  # Must return actual component class
 ```
 
 ### Events Fire for Wrong Entities
+
 **Problem**: Observer triggers for entities you don't want
 **Solution**: Use `match()` to filter entities:
+
 ```gdscript
 func match():
-    return q.with_all([C_Health]).with_group("player")  # Only players
+    return q.with_all([C_Health]).with_group(["player"])  # Only players
 ```
 
 ### Property Changes Not Detected
+
 **Problem**: Observer doesn't detect component property changes
 **Causes**:
-- Direct assignment to properties should work automatically
-- Internal object modifications (like Array.append()) may not trigger signals
-- Manual signal emission required for complex property changes
 
-## 📚 Related Documentation
+- Direct property assignment (`health.current = 50`) does NOT trigger observers — Godot's Resource class does not auto-emit signals on assignment
+- The component must manually emit `property_changed` in a setter for `on_component_changed` to fire
+
+**Solution**: Add a setter to your component that emits the signal:
+
+```gdscript
+@export var current: int = 100 : set = set_current
+
+func set_current(value: int):
+    var old = current
+    current = value
+    property_changed.emit(self, "current", old, value)
+```
+
+## Related Documentation
 
 - **[Core Concepts](CORE_CONCEPTS.md)** - Understanding the ECS fundamentals
 - **[Systems](CORE_CONCEPTS.md#systems)** - Regular processing systems
 - **[Best Practices](BEST_PRACTICES.md)** - Write maintainable ECS code
-
----
-
-_"Observers turn your ECS from a polling system into a reactive system, making your game respond intelligently to state changes rather than constantly checking for them."_

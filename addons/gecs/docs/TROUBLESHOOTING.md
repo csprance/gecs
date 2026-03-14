@@ -4,7 +4,7 @@
 
 This guide helps you diagnose and fix the most common problems when working with GECS. Find your issue, apply the solution, and learn how to prevent it.
 
-## 📋 Quick Diagnosis
+## Quick Diagnosis
 
 ### My Game Isn't Working At All
 
@@ -39,13 +39,13 @@ func _process(delta):
 
 **Quick Check**:
 
-1. Enable profiling: `ECS.world.enable_profiling = true`
-2. Check entity count: `print(ECS.world.entity_count)`
+1. Check entity count: `print("Entities: ", ECS.world.entities.size())`
+2. Check query cache: `print(ECS.world.get_cache_stats())`
 3. Look for expensive queries in your systems
 
 **Need optimization?** → [Performance Issues](#performance-issues)
 
-## 🚫 Systems Not Running
+## Systems Not Running
 
 ### Problem: Systems Never Execute
 
@@ -57,7 +57,7 @@ func _process(delta):
 **Solution**:
 
 ```gdscript
-# ✅ Ensure this exists in your main scene
+# Ensure this exists in your main scene
 func _process(delta):
     ECS.process(delta)  # This processes all systems
 
@@ -91,12 +91,12 @@ func query():
 1. **Missing Components**:
 
    ```gdscript
-   # ❌ Problem - Entity missing required component
+   # Problem - Entity missing required component
    var entity = Entity.new()
    entity.add_component(C_ComponentA.new())
    # Missing C_ComponentB!
 
-   # ✅ Solution - Add all required components
+   # Solution - Add all required components
    entity.add_component(C_ComponentA.new())
    entity.add_component(C_ComponentB.new())
    ```
@@ -104,11 +104,11 @@ func query():
 2. **Wrong Component Types**:
 
    ```gdscript
-   # ❌ Problem - Using instance instead of class
+   # Problem - Using instance instead of class
    func query():
        return q.with_all([C_ComponentA.new()])  # Wrong!
 
-   # ✅ Solution - Use class reference
+   # Solution - Use class reference
    func query():
        return q.with_all([C_ComponentA])  # Correct!
    ```
@@ -116,16 +116,16 @@ func query():
 3. **Component Not Added to World**:
 
    ```gdscript
-   # ❌ Problem - Entity not in world
+   # Problem - Entity not in world
    var entity = Entity.new()
    entity.add_component(C_ComponentA.new())
    # Entity never added to world!
 
-   # ✅ Solution - Add entity to world
+   # Solution - Add entity to world
    ECS.world.add_entity(entity)
    ```
 
-## 🎭 Entity Issues
+## Entity Issues
 
 ### Problem: Entity Components Not Found
 
@@ -147,7 +147,7 @@ func debug_entity_components(entity: Entity):
 **Solution**: Ensure components are added correctly:
 
 ```gdscript
-# ✅ Correct component addition
+# Correct component addition
 var entity = Entity.new()
 entity.add_component(C_Health.new(100))
 entity.add_component(C_Position.new(Vector2(50, 50)))
@@ -167,32 +167,32 @@ if entity.has_component(C_Health):
 1. **Getting Component Reference Once**:
 
    ```gdscript
-   # ❌ Problem - Stale component reference
+   # Problem - Stale component reference
    var health = entity.get_component(C_Health)
    # ... later in code, component gets replaced ...
    health.current = 50  # Updates old component!
 
-   # ✅ Solution - Get fresh reference each time
+   # Solution - Get fresh reference each time
    entity.get_component(C_Health).current = 50
    ```
 
 2. **Modifying Wrong Entity**:
 
    ```gdscript
-   # ❌ Problem - Variable confusion
+   # Problem - Variable confusion
    var player = get_player_entity()
    var enemy = get_enemy_entity()
 
    # Accidentally modify wrong entity
    player.get_component(C_Health).current = 0  # Meant to be enemy!
 
-   # ✅ Solution - Use clear variable names
+   # Solution - Use clear variable names
    var player_health = player.get_component(C_Health)
    var enemy_health = enemy.get_component(C_Health)
    enemy_health.current = 0
    ```
 
-## 💥 Common Errors
+## Common Errors
 
 ### Error: "Cannot access property/method on null instance"
 
@@ -207,11 +207,11 @@ Invalid get index 'current' (on base: 'null instance')
 **Solution**:
 
 ```gdscript
-# ❌ Causes null error
+# Causes null error
 var health = entity.get_component(C_Health)
 health.current -= 10  # health is null!
 
-# ✅ Safe component access
+# Safe component access
 if entity.has_component(C_Health):
     var health = entity.get_component(C_Health)
     health.current -= 10
@@ -232,17 +232,16 @@ Identifier 'ComponentName' not found in current scope
 1. **Missing class_name**:
 
    ```gdscript
-   # ❌ Problem - No class_name declaration
+   # Problem - No class_name declaration
    extends Component
    # Script exists but can't be referenced by name
 
-   # ✅ Solution - Add class_name
+   # Solution - Add class_name
    class_name C_Health
    extends Component
    ```
 
 2. **File not saved or loaded**:
-
    - Save your component script files
    - Restart Godot if classes still not found
    - Check for syntax errors in the component file
@@ -250,36 +249,36 @@ Identifier 'ComponentName' not found in current scope
 3. **Wrong inheritance**:
 
    ```gdscript
-   # ❌ Problem - Wrong base class
+   # Problem - Wrong base class
    class_name C_Health
    extends Node  # Should be Component!
 
-   # ✅ Solution - Correct inheritance
+   # Solution - Correct inheritance
    class_name C_Health
    extends Component
    ```
 
-## 🐌 Performance Issues
+## Performance Issues
 
 ### Problem: Low FPS / Stuttering
 
 **Diagnosis Steps**:
 
-1. **Enable profiling**:
+1. **Check processing times**:
 
    ```gdscript
-   ECS.world.enable_profiling = true
-
    # Check processing times
    func _process(delta):
        ECS.process(delta)
-       print("Frame time: ", get_process_delta_time() * 1000, "ms")
+       # Use Godot's built-in profiler or print frame time
+       if Engine.get_process_frames() % 60 == 0:
+           print("Frame time: ", delta * 1000, "ms")
+           print("Entities: ", ECS.world.entities.size())
    ```
 
 2. **Check entity count**:
    ```gdscript
-   print("Total entities: ", ECS.world.entity_count)
-   print("System count: ", ECS.world.get_system_count())
+   print("Total entities: ", ECS.world.entities.size())
    ```
 
 **Common Fixes**:
@@ -287,11 +286,11 @@ Identifier 'ComponentName' not found in current scope
 1. **Too Many Entities in Broad Queries**:
 
    ```gdscript
-   # ❌ Problem - Overly broad query
+   # Problem - Overly broad query
    func query():
        return q.with_all([C_Position])  # Matches everything!
 
-   # ✅ Solution - More specific query
+   # Solution - More specific query
    func query():
        return q.with_all([C_Position, C_Movable])
    ```
@@ -299,11 +298,11 @@ Identifier 'ComponentName' not found in current scope
 2. **Expensive Queries Rebuilt Every Frame**:
 
    ```gdscript
-   # ❌ Problem - Rebuilding queries in process
+   # Problem - Rebuilding queries in process
    func process(entities: Array[Entity], components: Array, delta: float):
        var custom_entities = ECS.world.query.with_all([C_ComponentA]).execute()
 
-   # ✅ Solution - Use the system's query() method (automatically cached)
+   # Solution - Use the system's query() method (automatically cached)
    func query():
        return q.with_all([C_ComponentA])  # Automatically cached by GECS
 
@@ -313,7 +312,7 @@ Identifier 'ComponentName' not found in current scope
            # Process entity...
    ```
 
-## 🔧 Integration Issues
+## Integration Issues
 
 ### Problem: GECS Conflicts with Godot Features
 
@@ -322,13 +321,13 @@ Identifier 'ComponentName' not found in current scope
 **Solution**: Choose your approach consistently:
 
 ```gdscript
-# ✅ Approach 1 - Pure ECS (recommended for complex games)
+# Approach 1 - Pure ECS (recommended for complex games)
 # Entities are not nodes, use ECS for everything
 var entity = Entity.new()  # Not added to scene tree
 entity.add_component(C_Position.new())
 ECS.world.add_entity(entity)
 
-# ✅ Approach 2 - Hybrid (good for simpler games)
+# Approach 2 - Hybrid (good for simpler games)
 # Entities are nodes, use ECS for specific systems
 var entity = Entity.new()
 add_child(entity)  # Entity is in scene tree
@@ -361,22 +360,11 @@ func _ready():
 
 **Prevention**: Always initialize ECS properly in each scene that uses it.
 
-## 🛠️ Debugging Tools
+## Debugging Tools
 
 ### Enable Debug Logging
 
-Add to your project settings or main script:
-
-```gdscript
-# Enable GECS debug output
-ECS.set_debug_level(ECS.DEBUG_VERBOSE)
-
-# This will show:
-# - Entity creation/destruction
-# - Component additions/removals
-# - System processing information
-# - Query execution details
-```
+> **Note:** GECS logs internally at configurable levels via project settings (`gecs.log_level`). Enable verbose output by setting `gecs.log_level = 4` in Project -> Project Settings.
 
 ### Entity Inspector Tool
 
@@ -387,7 +375,7 @@ Create a debug tool to inspect entities at runtime:
 extends Control
 
 func _on_inspect_button_pressed():
-    var entities = ECS.world.get_all_entities()
+    var entities = ECS.world.entities
     print("=== ENTITY INSPECTOR ===")
 
     for i in range(min(10, entities.size())):  # Show first 10
@@ -402,7 +390,7 @@ func _on_inspect_button_pressed():
             print("    ", comp_path, ": ", comp)
 ```
 
-## 📚 Getting More Help
+## Getting More Help
 
 ### Community Resources
 
@@ -428,7 +416,3 @@ If this guide doesn't solve your problem:
 2. **Review best practices** in [Best Practices](BEST_PRACTICES.md)
 3. **Search GitHub issues** for similar problems
 4. **Create a minimal reproduction** and ask for help
-
----
-
-_"Every bug is a learning opportunity. The key is knowing where to look and what questions to ask."_

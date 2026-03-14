@@ -1,6 +1,6 @@
 # GECS Serialization
 
-The GECS framework provides a robust serialization system using Godot's native resource format, enabling persistent game states, save systems, and level data management.
+The GECS framework provides a serialization system using Godot's native resource format, enabling persistent game states, save systems, and level data management.
 
 ## Quick Start
 
@@ -21,7 +21,7 @@ for entity in entities:
 ### Binary Format
 
 ```gdscript
-# Save as binary for production (smaller files)
+# Save as binary for production (more compact files)
 ECS.save(data, "user://savegame.tres", true)  # Creates .res file
 
 # Load auto-detects format (tries .res first, then .tres)
@@ -30,9 +30,9 @@ var entities = ECS.deserialize("user://savegame.tres")
 
 ## API Reference
 
-### ECS.serialize(query: QueryBuilder) -> GecsData
+### ECS.serialize(query: QueryBuilder, config: GECSSerializeConfig = null) -> GecsData
 
-Converts entities matching a query into serializable data.
+Converts entities matching a query into serializable data. Pass a `GECSSerializeConfig` to control which components and relationships are included.
 
 **Example:**
 
@@ -50,13 +50,47 @@ Saves data to disk. Returns `true` on success.
 
 - `data`: Serialized entity data
 - `filepath`: Save location (use `.tres` extension)
-- `binary`: If `true`, saves as `.res` (smaller, faster loading)
+- `binary`: If `true`, saves as `.res` (more compact, faster loading)
 
 ### ECS.deserialize(filepath: String) -> Array[Entity]
 
 Loads entities from file. Returns empty array if file doesn't exist.
 
 **Auto-detection:** Tries binary `.res` first, falls back to text `.tres`.
+
+## GECSSerializeConfig
+
+`GECSSerializeConfig` controls what gets serialized. Set it on a World node as `default_serialize_config` to apply to all entities, or on individual entities as `serialize_config` to override the world default for that entity.
+
+**Fields:**
+
+| Field                      | Type    | Default | Description                                                                                   |
+| -------------------------- | ------- | ------- | --------------------------------------------------------------------------------------------- |
+| `include_all_components`   | `bool`  | `true`  | Serialize all components on each entity. Set to `false` to use the `components` list instead. |
+| `components`               | `Array` | `[]`    | Component types to include when `include_all_components` is `false`.                          |
+| `include_relationships`    | `bool`  | `true`  | Serialize entity relationships. Relationships are supported and serialized by default.        |
+| `include_related_entities` | `bool`  | `true`  | Auto-include entities that are targets of relationships, even if they don't match the query.  |
+
+**Selective serialization example:**
+
+```gdscript
+var config = GECSSerializeConfig.new()
+config.include_all_components = false
+config.components = [C_Health, C_Inventory]   # only these types
+config.include_relationships = true
+config.include_related_entities = false        # don't pull in relationship targets
+
+var q = ECS.world.query.with_all([C_Player])
+var data = ECS.serialize(q, config)
+```
+
+**World-level config:**
+
+```gdscript
+# Set default config on the World node (Inspector or code)
+ECS.world.default_serialize_config = GECSSerializeConfig.new()
+# Per-entity: entity.serialize_config overrides world default for that entity
+```
 
 ## Component Serialization
 
@@ -66,11 +100,11 @@ Only `@export` variables are serialized:
 class_name C_PlayerData
 extends Component
 
-@export var health: float = 100.0        # ✅ Saved
-@export var inventory: Array[String]     # ✅ Saved
-@export var position: Vector2            # ✅ Saved
+@export var health: float = 100.0        # Saved
+@export var inventory: Array[String]     # Saved
+@export var position: Vector2            # Saved
 
-var _cache: Dictionary = {}              # ❌ Not saved
+var _cache: Dictionary = {}              # Not saved
 ```
 
 **Supported types:** All Godot built-ins (int, float, String, Vector2/3, Color, Array, Dictionary, etc.)
@@ -80,17 +114,15 @@ var _cache: Dictionary = {}              # ❌ Not saved
 ### Save Game System
 
 ```gdscript
-func save_game(slot: String):
-    var query = ECS.world.query.with_all([C_Persistent])
-    var data = ECS.serialize(query)
+func save_game(slot: int) -> void:
+    var q = ECS.world.query.with_all([C_Persistent])
+    var data = ECS.serialize(q)
+    ECS.save(data, "user://saves/slot_%d.tres" % slot, true)
 
-    if ECS.save(data, "user://saves/slot_%s.tres" % slot, true):
-        print("Game saved!")
-
-func load_game(slot: String):
+func load_game(slot: int) -> void:
     ECS.world.purge()  # Clear current state
 
-    var entities = ECS.deserialize("user://saves/slot_%s.tres" % slot)
+    var entities = ECS.deserialize("user://saves/slot_%d.tres" % slot)
     for entity in entities:
         ECS.world.add_entity(entity)
 ```
@@ -115,7 +147,7 @@ func load_level(path: String):
 var player_query = ECS.world.query.with_all([C_Player])
 
 # Save entities in specific area
-var area_query = ECS.world.query.with_group("area_1")
+var area_query = ECS.world.query.with_group(["area_1"])
 
 # Save entities with specific components
 var combat_query = ECS.world.query.with_all([C_Health, C_Weapon])
@@ -131,7 +163,7 @@ The system uses two main resource classes:
 class_name GecsData
 extends Resource
 
-@export var version: String = "0.1"
+@export var version: String = "0.2"
 @export var entities: Array[GecsEntityData] = []
 ```
 
@@ -144,6 +176,9 @@ extends Resource
 @export var entity_name: String = ""
 @export var scene_path: String = ""      # For prefab entities
 @export var components: Array[Component] = []
+@export var relationships: Array[GecsRelationshipData] = []
+@export var auto_included: bool = false
+@export var id: String = ""
 ```
 
 ## Error Handling
@@ -165,7 +200,6 @@ if entities.is_empty():
 ## Performance
 
 - **Memory:** Creates component copies during serialization
-- **Speed:** Binary format ~60% smaller, faster loading than text
 - **Scale:** Tested with 100+ entities, sub-second performance
 
 ## Binary vs Text Format
@@ -179,7 +213,7 @@ if entities.is_empty():
 
 **Binary (.res):**
 
-- Smaller file size
+- More compact file size
 - Faster loading
 - Production builds
 - Auto-detection on load
@@ -198,7 +232,7 @@ entity_name = "Player"
 components = [SubResource("1")]
 
 [resource]
-version = "0.1"
+version = "0.2"
 entities = [SubResource("2")]
 ```
 
@@ -213,6 +247,5 @@ entities = [SubResource("2")]
 
 ## Limitations
 
-- No entity relationships (planned feature)
 - Prefab entities need scene files present
 - External resource references need manual handling
