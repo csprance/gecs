@@ -2,12 +2,12 @@
 gsd_state_version: 1.0
 milestone: v0.2
 milestone_name: Documentation Overhaul
-status: In progress — Phase 8 Plan 3 complete
-stopped_at: Completed 08-03-PLAN.md
-last_updated: "2026-03-14T03:14:00.000Z"
+status: completed
+stopped_at: Completed 08-02-PLAN.md
+last_updated: "2026-03-14T03:27:35.342Z"
 progress:
   total_phases: 5
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 3
   completed_plans: 3
   percent: 0
@@ -40,6 +40,7 @@ Progress: [----------] 0% (0/5 phases complete)
 | Plans complete | 0 |
 | Phase 08-foundation-docs P01 | 1 | 1 tasks | 1 files |
 | Phase 08-foundation-docs P03 | 2min | 1 tasks | 1 files |
+| Phase 08-foundation-docs P02 | 3min | 1 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -56,6 +57,7 @@ Progress: [----------] 0% (0/5 phases complete)
 - Phase 11 is network-only: self-contained verification pass against gecs_network v1.0.0 source
 - Phase 12 is last: READMEs should be written after all docs are accurate so they can reference them
 - [Phase 08-01]: Full rewrite of GETTING_STARTED.md: patch was unreliable given structural and accuracy problems; spatial patterns gated with Node3D context; add_entity manages tree placement; CommandBuffer section deferred to CORE_CONCEPTS
+- [Phase 08-foundation-docs]: ECS.wildcard kept in relationship query examples (valid usage) — only deps() wildcard pattern was removed as incorrect
 
 ### Roadmap Evolution
 
@@ -73,7 +75,7 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-14T03:13:43.683Z
-Stopped at: Completed 08-01-PLAN.md
+Last session: 2026-03-14T03:27:30.857Z
+Stopped at: Completed 08-02-PLAN.md
 Resume file: None
 Next action: `gsd:plan-phase 8`
