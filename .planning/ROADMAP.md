@@ -128,6 +128,6 @@ Plans:
 | 7. NetworkSession Node                       | v0.1      | 4/4            | Complete    | 2026-03-13 |
 | 8. Foundation Docs                           | v0.2      | 3/3            | Complete    | 2026-03-14 |
 | 9. Advanced Core Docs                        | v0.2      | 3/3            | Complete    | 2026-03-14 |
-| 10. Best Practices                           | 4/4 | Complete   | 2026-03-14 | -          |
+| 10. Best Practices                           | 4/4 | Complete    | 2026-03-14 | -          |
 | 11. Network Docs                             | v0.2      | 0/?            | Not started | -          |
 | 12. Entry Points                             | v0.2      | 0/?            | Not started | -          |
