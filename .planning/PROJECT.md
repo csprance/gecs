@@ -1,12 +1,22 @@
-# GECS Networking v2
+# GECS
 
 ## What This Is
 
-A complete overhaul of GECS networking that replaces the old `NetworkMiddleware` system with a declarative, component-driven networking layer. Developers mark components as networked with `CN_NetSync` + `@export_group` annotations, call `session.host()` or `session.join()`, and the framework handles all RPC dispatch, spawn/despawn replication, authority management, and reconciliation automatically.
+A lightweight, performant Entity Component System (ECS) framework for Godot 4.x with a declarative multiplayer networking addon. Developers build games using composable components, query-driven systems, and an optional networking layer that replicates entities automatically with zero manual RPC calls.
 
 ## Core Value
 
-Developers can add multiplayer to their ECS game by marking components as networked — no manual RPC calls, serialization code, or complex networking logic required.
+Developers can build ECS games in Godot with a framework that stays out of their way — clean APIs, honest docs, and patterns that actually work in real projects.
+
+## Current Milestone: v0.2 — Documentation Overhaul
+
+**Goal:** Rewrite all GECS and GECS Network docs to be trustworthy — every claim verified against actual code, real examples from production use, no AI-hallucinated patterns.
+
+**Target features:**
+- All core GECS docs (`addons/gecs/docs/`) rewritten and verified
+- BEST_PRACTICES.md rebuilt from real zamn project patterns
+- All network docs verified against v1.0.0 API
+- Root README rewritten as an accurate project homepage
 
 ## Requirements
 
@@ -28,35 +38,35 @@ Developers can add multiplayer to their ECS game by marking components as networ
 
 ### Active
 
-- [ ] Server time sync (TIME-01, TIME-02) — client can query server clock offset for authoritative cooldowns
-- [ ] Client-side prediction helpers (PRED-01, PRED-02, PRED-03) — rollback buffer, predicted components, smoothed corrections
-- [ ] Interest management (INT-01, INT-02) — visibility zones, custom relevancy filters
+- [ ] All core GECS docs verified accurate against actual code (CORE-01 through CORE-06)
+- [ ] BEST_PRACTICES.md rewritten using real zamn project patterns (BEST-01 through BEST-03)
+- [ ] All network docs verified against v1.0.0 API (NET-01 through NET-03)
+- [ ] Root README and addon READMEs rewritten (READ-01, READ-02)
 
 ### Out of Scope
 
 | Feature | Reason |
 |---------|--------|
-| Client-side prediction implementation | Override hooks provided in ADV-03 (v0.1); full implementation deferred to v3 |
-| Server time synchronization | Useful but not blocking core sync — deferred to next milestone |
-| P2P / WebRTC networking | Different topology, fundamentally changes architecture — server-client only |
-| Lobby / matchmaking | GECS Networking is a state sync layer, not session management |
-| Interest management / spatial culling | Hooks exposed (ADV-03), full policy deferred |
-| Backwards compatibility with v0.1.x | Clean break — v1→v2 migration guide provided |
-| Deterministic physics / lockstep | Different architecture; incompatible with async sync model |
+| New GECS features | v0.2 is docs only — no API changes |
+| Client-side prediction implementation | Deferred to future milestone |
+| Server time synchronization | Deferred to future milestone |
+| P2P / WebRTC networking | Different topology, fundamentally changes architecture |
+| Lobby / matchmaking | GECS Networking is a state sync layer |
+| Deterministic physics / lockstep | Incompatible with async sync model |
+| New tutorials / video content | Out of scope for this milestone |
 
 ## Context
 
-**Shipped v0.1** with 6,168 lines of GDScript across `addons/gecs_network/`.
+**Shipped v0.1** (GECS Network v1.0.0) with 6,168 lines of GDScript across `addons/gecs_network/`. GECS core is at v6.8.1.
 
-**Tech stack:** GDScript, Godot 4.x MultiplayerAPI, ENet, `MultiplayerSynchronizer`, gdUnit4.
+**Tech stack:** GDScript, Godot 4.x, ENet, `MultiplayerSynchronizer`, gdUnit4.
 
-**Architecture:** `NetworkSync` node as single RPC surface, delegating to `SpawnManager`, `SyncSender`, `SyncReceiver`, `NativeSyncHandler`, `SyncRelationshipHandler`, `SyncReconciliationHandler`. `NetworkSession` wraps connection boilerplate. Session events surface as ECS components (`CN_PeerJoined`, `CN_PeerLeft`, etc.) on a persistent session entity.
+**Docs state entering v0.2:** `addons/gecs/docs/` has 11 files (~5,000 lines), many containing hallucinated APIs, fabricated patterns, and AI-padded prose. Network docs (`addons/gecs_network/docs/`) have 10 files — newer but still need verification. Root README needs a full rewrite.
 
-**Example project:** `example_network/` demonstrates all v2 features — entity lifecycle, property sync, authority, projectile spawning, and `NetworkSession` wiring.
+**Reference project:** `D:\code\zamn` — a real production GECS game with actual systems, components, and patterns. Use to replace fabricated best practice examples.
 
 **Known issues / tech debt:**
-- `sync_state_handler.gd`, `sync_property_handler.gd`, `sync_spawn_handler.gd` are v0.1.1-era stubs that still reference the deleted `CN_SyncEntity` — they are dead code left as historical stubs, should be fully deleted in a cleanup pass
-- `MultiplayerSynchronizer` `refresh_synchronizer_visibility()` availability not verified against all Godot 4.x minor versions
+- `sync_state_handler.gd`, `sync_property_handler.gd`, `sync_spawn_handler.gd` are v0.1.1-era stubs referencing deleted `CN_SyncEntity` — dead code, should be deleted in a future cleanup pass
 - Performance under high entity count (>500 networked entities) not benchmarked
 
 ## Key Decisions
@@ -83,11 +93,10 @@ Developers can add multiplayer to their ECS game by marking components as networ
 
 ## Constraints
 
-- **Tech stack**: GDScript only — maintain GECS's simplicity
-- **Godot version**: Must work with Godot 4.x multiplayer APIs
-- **Performance**: Zero networking overhead for single-player games
-- **Migration**: New branch, v1→v2 migration guide provided
-- **Architecture**: Build on existing GECS core, replace only networking layer
+- **Accuracy**: Every code example must compile and run against GECS v6.8.1 — no invented APIs
+- **Source of truth**: Verify against actual `.gd` source files, not memory or prior docs
+- **zamn patterns**: Best practices must come from real zamn code, not invented scenarios
+- **No new features**: v0.2 is docs only — do not change any `.gd` files
 
 ---
-*Last updated: 2026-03-13 after v0.1 milestone*
+*Last updated: 2026-03-13 after v0.2 milestone started*
