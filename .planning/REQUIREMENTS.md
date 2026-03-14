@@ -17,7 +17,7 @@
 ### Best Practices (BEST)
 
 - [x] **BEST-01**: BEST_PRACTICES.md rewritten using patterns mined from zamn's actual systems and components — no fabricated examples
-- [ ] **BEST-02**: PERFORMANCE_OPTIMIZATION verified against actual benchmark data — no invented numbers or fake profiling results
+- [x] **BEST-02**: PERFORMANCE_OPTIMIZATION verified against actual benchmark data — no invented numbers or fake profiling results
 - [x] **BEST-03**: TROUBLESHOOTING reflects real failure modes that users actually hit — verified against GECS source and test suite
 
 ### Network Docs (NET) — addons/gecs_network/docs/
@@ -61,7 +61,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CORE-05 | Phase 9 | Pending |
 | CORE-06 | Phase 8 | Complete |
 | BEST-01 | Phase 10 | Complete |
-| BEST-02 | Phase 10 | Pending |
+| BEST-02 | Phase 10 | Complete |
 | BEST-03 | Phase 10 | Complete |
 | NET-01 | Phase 11 | Pending |
 | NET-02 | Phase 11 | Pending |

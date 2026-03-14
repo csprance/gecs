@@ -26,7 +26,7 @@ Full archive: `.planning/milestones/v0.1-ROADMAP.md`
 
 - [x] **Phase 8: Foundation Docs** - GETTING_STARTED, CORE_CONCEPTS, and SERIALIZATION verified and rewritten (completed 2026-03-14)
 - [x] **Phase 9: Advanced Core Docs** - COMPONENT_QUERIES, OBSERVERS, and RELATIONSHIPS verified and rewritten
-- [ ] **Phase 10: Best Practices** - BEST_PRACTICES rebuilt from zamn, PERFORMANCE_OPTIMIZATION verified, TROUBLESHOOTING rewritten
+- [x] **Phase 10: Best Practices** - BEST_PRACTICES rebuilt from zamn, PERFORMANCE_OPTIMIZATION verified, TROUBLESHOOTING rewritten (completed 2026-03-14)
 - [ ] **Phase 11: Network Docs** - All gecs_network/docs/ verified against v1.0.0 source
 - [ ] **Phase 12: Entry Points** - Root README and both addon READMEs rewritten
 
@@ -128,6 +128,6 @@ Plans:
 | 7. NetworkSession Node                       | v0.1      | 4/4            | Complete    | 2026-03-13 |
 | 8. Foundation Docs                           | v0.2      | 3/3            | Complete    | 2026-03-14 |
 | 9. Advanced Core Docs                        | v0.2      | 3/3            | Complete    | 2026-03-14 |
-| 10. Best Practices                           | 2/3 | In Progress|  | -          |
+| 10. Best Practices                           | 3/3 | Complete   | 2026-03-14 | -          |
 | 11. Network Docs                             | v0.2      | 0/?            | Not started | -          |
 | 12. Entry Points                             | v0.2      | 0/?            | Not started | -          |
