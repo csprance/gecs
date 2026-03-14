@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v0.2
 milestone_name: Documentation Overhaul
 status: completed
-stopped_at: Completed 10-best-practices-10-02-PLAN.md
-last_updated: "2026-03-14T13:20:26.638Z"
+stopped_at: Completed 10-best-practices-10-04-PLAN.md
+last_updated: "2026-03-14T13:51:53.628Z"
 progress:
   total_phases: 5
   completed_phases: 3
-  total_plans: 9
-  completed_plans: 9
+  total_plans: 10
+  completed_plans: 10
   percent: 40
 ---
 
@@ -47,6 +47,7 @@ Progress: [##--------] 40% (2/5 phases complete)
 | Phase 10-best-practices P03 | 5min | 1 tasks | 1 files |
 | Phase 10-best-practices P01 | 8min | 1 tasks | 1 files |
 | Phase 10-best-practices P02 | 5min | 1 tasks | 1 files |
+| Phase 10-best-practices P04 | 3min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -70,6 +71,7 @@ Progress: [##--------] 40% (2/5 phases complete)
 - [Phase 10-best-practices]: enabled() takes no argument; disabled() is the separate method for disabled-only queries
 - [Phase 10-best-practices]: with_group() takes Array[String]; single-string form was a documentation error
 - [Phase 10-best-practices]: Performance numbers updated to 4.6-dev3 benchmark data in PERFORMANCE_OPTIMIZATION.md: enabled ~0.1ms, with_all ~0.2ms, with_any ~0.3ms, with_group ~13.6ms
+- [Phase 10-best-practices]: sub_systems() dict example replaced with Array[Array] literal pairs matching system.gd processor; entities.values() removed from TROUBLESHOOTING.md entity inspector
 
 ### Roadmap Evolution
 
@@ -87,7 +89,7 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-14T13:20:26.634Z
-Stopped at: Completed 10-best-practices-10-02-PLAN.md
+Last session: 2026-03-14T13:51:53.624Z
+Stopped at: Completed 10-best-practices-10-04-PLAN.md
 Resume file: None
 Next action: `gsd:plan-phase 8`
