@@ -100,7 +100,11 @@ Plans:
 2. Every code example in every network doc compiles against the v1.0.0 API — no method calls to non-existent functions
 3. The network best-practices doc contains only patterns that are implementable with the actual v1.0.0 API (no invented prediction patterns, no undocumented hooks)
 4. The v1→v2 migration guide accurately reflects the real API differences between the old and new versions
-   **Plans**: TBD
+   **Plans**: 1 plan
+
+Plans:
+
+- [ ] 11-01-PLAN.md — Verify and fix all 10 network docs (targeted fixes for 4 docs + style pass over all 10)
 
 ### Phase 12: Entry Points
 
@@ -129,5 +133,5 @@ Plans:
 | 8. Foundation Docs                           | v0.2      | 3/3            | Complete    | 2026-03-14 |
 | 9. Advanced Core Docs                        | v0.2      | 3/3            | Complete    | 2026-03-14 |
 | 10. Best Practices                           | 4/4 | Complete    | 2026-03-14 | -          |
-| 11. Network Docs                             | v0.2      | 0/?            | Not started | -          |
+| 11. Network Docs                             | v0.2      | 0/1            | Not started | -          |
 | 12. Entry Points                             | v0.2      | 0/?            | Not started | -          |
