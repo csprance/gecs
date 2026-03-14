@@ -2,22 +2,22 @@
 
 > **Deep understanding of Entity Component System architecture**
 
-This guide explains the fundamental concepts that make GECS powerful. After reading this, you'll understand how to architect games using ECS principles and leverage GECS's unique features.
+This guide explains the fundamental concepts that make GECS powerful.
 
-## 📋 Prerequisites
+## Prerequisites
 
 - Completed [Getting Started Guide](GETTING_STARTED.md)
 - Basic GDScript knowledge
 - Understanding of Godot's node system
 
-## 🎯 Why ECS?
+## Why ECS?
 
 ### The Problem with Traditional OOP
 
 Traditional object-oriented approaches often bundle data and behavior together. Over time, this can become unwieldy and force complicated inheritance structures:
 
 ```gdscript
-# ❌ Traditional OOP problems
+# Traditional OOP — inheritance problems
 class BaseCharacter:
     # Lots of shared code
 
@@ -41,7 +41,7 @@ ECS keeps data (components) separate from logic (systems), providing clear organ
 
 This pattern simplifies organization, collaboration, and refactoring. Systems only act upon relevant components. Entities can freely change their makeup without breaking the overall design.
 
-## 🏗️ GECS Architecture
+## GECS Architecture
 
 GECS extends standard ECS with Godot-specific features:
 
@@ -51,7 +51,7 @@ GECS extends standard ECS with Godot-specific features:
 - **Advanced queries** - Property-based filtering and relationship support
 - **Relationship system** - Define complex associations between entities
 
-## 🎭 Entities
+## Entities
 
 ### Entity Fundamentals
 
@@ -81,11 +81,14 @@ extends Entity
 
 func on_ready():
     # Sync transform from scene to component
+    # Only valid when this entity's scene root is Node3D — Entity extends Node, not Node3D
     var c_trs = get_component(C_Transform) as C_Transform
     if not c_trs:
         return
-    transform_comp.transform = self.global_transform # This works because the TSCN base type is Node3D and we extend Node3D with Entity (Which itself extends from Node)
+    c_trs.transform = self.global_transform
 ```
+
+> **Note:** `self.global_transform` is only available when the entity's scene root is `Node3D` (or `Node2D` for 2D). Entity extends `Node` — spatial properties do not exist on a plain Node scene root.
 
 ### Entity Lifecycle
 
@@ -135,17 +138,18 @@ extends Entity
 
 func on_ready():
     # Connect scene nodes to components
-    var c_sprite = get_component(C_Sprite)
+    var c_sprite = get_component(C_Sprite) as C_Sprite
     if c_sprite:
-        sprite_comp.mesh_instance = mesh_instance
+        c_sprite.mesh_instance = mesh_instance
 
     # Sync editor-placed transform to component
-    var c_trs = get_component(C_Transform)
+    # Only valid when scene root is Node3D
+    var c_trs = get_component(C_Transform) as C_Transform
     if c_trs:
-        transform_comp.transform = self.global_transform
+        c_trs.transform = self.global_transform
 ```
 
-## 📦 Components
+## Components
 
 ### Component Fundamentals
 
@@ -173,7 +177,7 @@ func _init(max_health: float = 100.0):
 **Data Only:**
 
 ```gdscript
-# ✅ Good - Pure data
+# Good - Pure data
 class_name C_Health
 extends Component
 
@@ -185,7 +189,7 @@ extends Component
 **No Game Logic:**
 
 ```gdscript
-# ❌ Avoid - Logic in components
+# Avoid - Logic in components
 class_name C_Health
 extends Component
 
@@ -269,7 +273,7 @@ entity.add_component(C_StatusEffect.new("poison"))
 ECS.world.add_entity(entity)
 ```
 
-## ⚙️ Systems
+## Systems
 
 ### System Fundamentals
 
@@ -279,6 +283,10 @@ Systems have two main parts:
 
 - **Query** - Defines which entities to process based on components/relationships
 - **Process** - The function that runs on entities
+
+### CommandBuffer
+
+Every System exposes a `cmd: CommandBuffer` property. Use it to queue structural changes (add/remove entities, components, relationships) that execute safely after the current iteration completes — no backwards loops required.
 
 ### System Types
 
@@ -377,15 +385,6 @@ func deps() -> Dictionary[int, Array]:
         Runs.After: [MovementSystem, TransformSystem],  # Run after these
         Runs.Before: [UISystem]  # Run before this
     }
-
-# Special case: run after ALL other systems
-class_name TransformSystem
-extends System
-
-func deps() -> Dictionary[int, Array]:
-    return {
-        Runs.After: [ECS.wildcard]  # Runs after everything else
-    }
 ```
 
 ### System Naming Conventions
@@ -401,21 +400,22 @@ Systems follow Godot node lifecycle:
 - `process(entities, components, delta)` - Unified method called each frame for matching entities
 - System groups for organized processing order
 
-## 🔍 Query System
+## Query System
 
 ### Query Builder
 
 GECS uses a fluent API for building entity queries:
 
 ```gdscript
+var target = get_player_entity()  # example: look up a specific entity
 ECS.world.query
-    .with_all([C_Health, C_Position])          # Must have all these components
-    .with_any([C_Player, C_Enemy])             # Must have at least one of these
-    .with_none([C_Dead, C_Disabled])           # Must not have any of these
-    .with_relationship([r_attacking_player])    # Must have these relationships
-    .without_relationship([r_fleeing])          # Must not have these relationships
-    .with_reverse_relationship([r_parent_of])   # Must be target of these relationships
-    .iterate([C_Health])                        # Fetch these components and add to components array for quick iteration
+    .with_all([C_Health, C_Position])                                      # Must have all these components
+    .with_any([C_Player, C_Enemy])                                         # Must have at least one of these
+    .with_none([C_Dead, C_Disabled])                                       # Must not have any of these
+    .with_relationship([Relationship.new(C_IsAttacking.new(), target)])    # Must have this relationship
+    .without_relationship([Relationship.new(C_IsFleeing.new(), ECS.wildcard)])  # Must not have this
+    .with_reverse_relationship([Relationship.new(C_ChildOf.new(), ECS.wildcard)])  # Must be target of this
+    .iterate([C_Health])                                                    # Fetch for fast batch access
 ```
 
 ### Query Methods
@@ -477,7 +477,7 @@ q.with_all([{C_State: {"current_state": {"_eq": "attacking"}}}])
 - `_in` - Value in list
 - `_nin` - Value not in list
 
-## 🔗 Relationships
+## Relationships
 
 ### Relationship Fundamentals
 
@@ -561,7 +561,7 @@ static func chasing_anything():
     return Relationship.new(C_IsChasing.new(), ECS.wildcard)
 ```
 
-## 🌍 World Management
+## World Management
 
 ### World Lifecycle
 
@@ -628,14 +628,14 @@ default_systems.tscn Structure:
 - **Inspector Configuration**: Set system properties in editor
 - **Reusable Scenes**: Share system configurations between projects
 
-## 🔄 Data-Driven Architecture
+## Data-Driven Architecture
 
 ### Composition Over Inheritance
 
 Build entities by combining simple components rather than complex inheritance:
 
 ```gdscript
-# ✅ Composition approach in entity definition
+# Composition approach in entity definition
 class_name Player extends Entity
 
 func define_components() -> Array:
@@ -658,7 +658,7 @@ enemy.add_component(C_Sprite.new("enemy.png"))
 Keep systems small and focused:
 
 ```gdscript
-# ✅ Focused systems
+# Focused systems (good pattern)
 class_name MovementSystem extends System
 # Only handles position updates
 
@@ -676,7 +676,7 @@ This ensures:
 - **Simplified testing** - Each system can be tested independently
 - **Performance optimization** - Systems can be profiled and optimized individually
 
-## 🎯 Next Steps
+## Next Steps
 
 Now that you understand GECS's core concepts:
 
@@ -685,10 +685,12 @@ Now that you understand GECS's core concepts:
 3. **Design component hierarchies** that support your game's needs
 4. **Learn optimization techniques** in [Performance Guide](PERFORMANCE_OPTIMIZATION.md)
 5. **Master common patterns** in [Best Practices Guide](BEST_PRACTICES.md)
+6. **Persist game state** using the [Serialization Guide](SERIALIZATION.md)
 
-## 📚 Related Documentation
+## Related Documentation
 
 - **[Getting Started](GETTING_STARTED.md)** - Build your first ECS project
+- **[Serialization](SERIALIZATION.md)** - Persist entity and component state across sessions
 - **[Best Practices](BEST_PRACTICES.md)** - Write maintainable ECS code
 - **[Performance Optimization](PERFORMANCE_OPTIMIZATION.md)** - Make your games run fast
 - **[Troubleshooting](TROUBLESHOOTING.md)** - Solve common issues
