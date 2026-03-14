@@ -4,7 +4,7 @@
 
 Build scalable, maintainable games with clean separation of data and logic. GECS integrates seamlessly with Godot's node system while providing powerful query-based entity filtering.
 
-## ✨ Key Features
+## Key Features
 
 - 🎯 **Godot Integration** - Works with nodes, scenes, and editor
 - 🚀 **High Performance** - Optimized queries with automatic caching
@@ -12,18 +12,17 @@ Build scalable, maintainable games with clean separation of data and logic. GECS
 - 🔍 **Debug Viewer** - Real-time inspection and performance monitoring
 - 📦 **Editor Support** - Visual component editing and scene integration
 - 🎮 **Battle Tested** - Used in games being actively developed
-- 🎮🎮🎮🎮 **Multiplayer** - GECS goes Multiplayer! Check out the [GECS Network Addon](addons/gecs_network/README.md)
-
+- **Multiplayer** - GECS goes Multiplayer! Check out the [GECS Network Addon](addons/gecs_network/README.md)
 
 ```gdscript
 # Create entities with components
 var player1 = Entity.new()
 player1.add_component(C_Health.new(100))
-player1.add_component(C_Velocity.new(Vector2(5, 0)))
+player1.add_component(C_Velocity.new(Vector3(5, 0, 0)))
 
 var player2 = Entity.new()
 player2.add_component(C_Health.new(100))
-player2.add_component(C_Velocity.new(Vector2(-5, 0)))
+player2.add_component(C_Velocity.new(Vector3(-5, 0, 0)))
 
 # Add entity to the world
 ECS.world.add_entities([player1, player2])
@@ -65,14 +64,13 @@ ECS.world.add_system(VelocitySystem.new())
 ECS.world.process(delta)
 ```
 
-## ⚡ Quick Start
+## Quick Start
 
 1. **Install**: Download to `addons/gecs/` and enable in Project Settings
 2. **Follow Guide**: [Get your first ECS project running in 5 minutes →](addons/gecs/docs/GETTING_STARTED.md)
 3. **Learn More**: [Understand core ECS concepts →](addons/gecs/docs/CORE_CONCEPTS.md)
 
-
-## 📚 Complete Documentation
+## Complete Documentation
 
 **All documentation is located in the addon folder:**
 
@@ -92,24 +90,24 @@ ECS.world.process(delta)
 - **[Observers](addons/gecs/docs/OBSERVERS.md)** - Reactive systems for component changes
 - **[Performance Optimization](addons/gecs/docs/PERFORMANCE_OPTIMIZATION.md)** - Make your games run fast
 
-## 🎮 Example Games
+## Example Games
 
 - **[GECS-101](https://github.com/csprance/gecs-101)** - A simple example
 - **[Zombies Ate My Neighbors](https://github.com/csprance/gecs/tree/zombies-ate-my-neighbors/game)** - Action arcade game
 - **[Breakout Clone](https://github.com/csprance/gecs/tree/breakout/game)** - Classic brick breaker
 
-## 🌟 Community
+## Community
 
 - **Discord**: [Join our community](https://discord.gg/eB43XU2tmn)
 - **Issues**: [Report bugs or request features](https://github.com/csprance/gecs/issues)
 - **Discussions**: [Ask questions and share projects](https://github.com/csprance/gecs/discussions)
 
-## 📄 License
+## License
 
 MIT - See [LICENSE](LICENSE) for details.
 
 ---
 
-_GECS is provided as-is. If it breaks, you get to keep both pieces._ 😄
+_GECS is provided as-is. If it breaks, you get to keep both pieces._
 
 [![Star History Chart](https://api.star-history.com/svg?repos=csprance/gecs&type=Date)](https://star-history.com/#csprance/gecs&Date)

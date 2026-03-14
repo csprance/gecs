@@ -8,7 +8,7 @@
 
 ## Overview
 
-By default, GECS Network sends all CN_NetSync-tracked properties when they change (send side) and applies them verbatim with `comp.set()` when received (receive side). This works well for most properties, but certain patterns — most notably **client-side prediction** — need to intercept that pipeline.
+By default, GECS Network sends all CN_NetSync-tracked properties when they change (send side) and applies them verbatim with `comp.set()` when received (receive side). This works well for most properties, but certain patterns — most notably **server correction blending** — need to intercept that pipeline.
 
 Custom sync handlers let game systems override the default send/receive behavior per component type, without forking the framework. Handlers are registered once (typically in a System's `_ready()`) and invoked automatically on every relevant tick.
 
@@ -45,7 +45,7 @@ func my_receive_handler(entity: Entity, comp: Component, props: Dictionary) -> b
 
 ---
 
-## Player Movement Prediction: Full Walkthrough
+## Server Correction Blending: Full Walkthrough
 
 ### The Problem (Before Custom Handlers)
 
