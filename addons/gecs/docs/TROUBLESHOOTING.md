@@ -376,7 +376,7 @@ Create a debug tool to inspect entities at runtime:
 extends Control
 
 func _on_inspect_button_pressed():
-    var entities = ECS.world.entities.values()
+    var entities = ECS.world.entities
     print("=== ENTITY INSPECTOR ===")
 
     for i in range(min(10, entities.size())):  # Show first 10
