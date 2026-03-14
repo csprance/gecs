@@ -4,6 +4,7 @@ extends Component
 ## Uses "direction" to differentiate from example/'s C_Velocity.
 
 ## Movement direction and speed combined as a vector
+@export_group("HIGH")
 @export var direction: Vector3 = Vector3.ZERO
 
 

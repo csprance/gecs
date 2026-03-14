@@ -1,132 +1,123 @@
 # Architecture
 
-## Two-Tier Synchronization
+## Handler Pipeline
 
-This addon uses a **two-tier synchronization approach** that leverages Godot's native APIs where they shine:
-
-### High-Level API: Native Transform Sync
-For position, rotation, and velocity, use `CN_SyncEntity` which auto-configures Godot's `MultiplayerSynchronizer`:
-- Automatic interpolation (handled by Godot)
-- Efficient delta compression
-- No RPC overhead for transform updates
-
-### Low-Level API: Component RPC Sync
-For ECS component data (health, state, inventory), use priority-based RPC batching:
-- Property-change detection via GECS signals
-- Configurable sync rates per component type
-- Reliable/unreliable transport based on priority
+GECS Network is organized as a single `NetworkSync` node (the RPC surface) that delegates to
+focused handler objects. All `@rpc` declarations live on `NetworkSync`; handlers never call
+`.rpc()` directly.
 
 ```text
-+-------------------------------------------------------------+
-|                     NetworkSync                               |
-+-----------------------------+-------------------------------+
-|  Native Transform Sync      |  Component RPC Sync            |
-|  (CN_SyncEntity)            |  (SyncComponent)               |
-|  ---------------------------+-------------------------------  |
-|  - global_position          |  - C_Health (MEDIUM, 10Hz)     |
-|  - global_rotation          |  - C_Velocity (HIGH, 20Hz)     |
-|  - velocity                 |  - C_FiringInput (HIGH, 20Hz)  |
-|  - custom_properties        |  - Any @export property        |
-|                             |                                |
-|  Godot handles              |  Addon handles                 |
-|  interpolation              |  priority batching             |
-+-----------------------------+-------------------------------+
++------------------------------------------------------------------+
+|                        NetworkSync                                |
+|  (single RPC surface — all @rpc methods live here)               |
++----------+----------+----------+----------+----------+-----------+
+           |          |          |          |          |
+    SpawnManager  SyncSender  SyncReceiver  NativeSyncHandler
+           |                               SyncRelationshipHandler
+           |                               SyncReconciliationHandler
 ```
 
-## Handler Architecture
+| Handler                     | File                             | Responsibility                                                                                         |
+| --------------------------- | -------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `SpawnManager`              | `spawn_manager.gd`               | Entity lifecycle: spawn broadcast, despawn, late-join sync, peer disconnect cleanup                    |
+| `SyncSender`                | `sync_sender.gd`                 | Priority-tiered outbound batching: polls `CN_NetSync.check_changes_for_priority()` per tier per tick   |
+| `SyncReceiver`              | `sync_receiver.gd`               | Inbound apply: authority validation, `_applying_network_data` echo-loop guard, custom receive handlers |
+| `NativeSyncHandler`         | `native_sync_handler.gd`         | Creates `MultiplayerSynchronizer` for entities with `CN_NativeSync`; configures position/rotation sync |
+| `SyncRelationshipHandler`   | `sync_relationship_handler.gd`   | Serializes ECS relationships via creation recipes; deferred entity resolution for late-join            |
+| `SyncReconciliationHandler` | `sync_reconciliation_handler.gd` | Periodic full-state reconciliation (ADV-02): broadcasts authoritative state at configured interval     |
 
-The addon is split into focused handlers for maintainability:
+## Spawn Flow
 
-| Handler | Responsibility |
-|---|---|
-| `network_sync.gd` | Orchestrator — RPC stubs, signals, public API |
-| `sync_spawn_handler.gd` | Entity lifecycle — spawn/despawn broadcasts, world state serialization |
-| `sync_native_handler.gd` | Native sync — MultiplayerSynchronizer setup, model instantiation |
-| `sync_property_handler.gd` | Property sync — change detection, priority batching, polling |
-| `sync_relationship_handler.gd` | Relationship sync — ECS relationship serialization/deserialization across peers (Entity/Component/Script targets) with deferred resolution |
-| `sync_state_handler.gd` | State — authority markers, time sync, reconciliation |
+```text
+1. Server: ECS.world.add_entity(entity)
+2. SpawnManager detects CN_NetworkIdentity → schedules call_deferred("_deferred_broadcast")
+3. Server sets component values (runs this frame after add_entity)
+4. End of frame: _deferred_broadcast runs → serializes @export properties on all CN_NetSync components
+5. SpawnManager.rpc_broadcast_spawn() → sends serialized payload to all clients
+6. Each client: SpawnManager.handle_spawn_entity() → instantiates entity from scene, applies component data
+7. SpawnManager._inject_authority_markers() → assigns CN_LocalAuthority / CN_RemoteEntity / CN_ServerAuthority
+```
 
-All RPC methods remain on `NetworkSync` (Godot requirement) and delegate to handlers internally.
+**Why deferred?** The `_deferred_broadcast` pattern allows the caller to set component values
+(velocity, position, damage) after `add_entity()` in the same frame. The broadcast captures
+the final values at end of frame, not the defaults from `define_components()`.
+
+## Property Sync Flow
+
+```text
+SyncSender._process(delta):
+  For each priority tier (REALTIME/HIGH/MEDIUM/LOW):
+    If tick interval elapsed:
+      For each entity with CN_NetSync:
+        dirty = CN_NetSync.check_changes_for_priority(priority)
+        If dirty not empty:
+          Batch into outbound payload
+
+SyncSender → NetworkSync.rpc_sync_components_unreliable/reliable → all clients
+
+SyncReceiver.handle_sync_components(payload, sender_peer_id):
+  Validate sender has authority (get_remote_sender_id() check)
+  For each component update:
+    _applying_network_data = true    ← guard: prevents re-broadcast of received data
+    Apply props via comp.set() (or custom receive handler)
+    CN_NetSync.update_cache_silent() ← update cache without marking dirty
+    _applying_network_data = false
+```
+
+**Echo-loop prevention:** `_applying_network_data` is a flag on `CN_NetSync`. When `true`,
+`SyncSender` skips dirty-checking for that component — so received values are never
+re-broadcast back to the sender.
 
 ## Relationship Sync
 
-`sync_relationship_handler.gd` serializes ECS relationships across peers using **creation recipes** — lightweight descriptors that can reconstruct a relationship's component and target on any peer.
+`SyncRelationshipHandler` serializes ECS relationships across peers using **creation recipes** —
+lightweight dictionaries that encode a relationship's component (class + exported properties)
+and target (Entity, Component, or Script reference) so any peer can reconstruct it.
 
-Key concepts:
+Key behaviors:
 
-- **Creation recipes**: Encode a relationship's component (class + exported properties) and target (Entity, Component, or Script reference) into a dictionary that any peer can deserialize.
-- **Deferred entity resolution**: When a target entity hasn't spawned on the receiving peer yet, the handler queues a pending resolution and retries once the entity appears.
-- **Spawn payloads**: During world-state sync (late-join), relationships are bundled into the entity spawn payload so new clients reconstruct the full relationship graph in one pass.
+- **Deferred entity resolution**: If the target entity has not yet spawned on the receiving peer,
+  the handler queues a pending resolution and retries once that entity appears.
+- **Spawn payload bundling**: During late-join world-state sync, relationships are bundled into
+  the spawn payload so new clients reconstruct the full relationship graph in one pass.
+- **Path validation**: All incoming script paths are validated (`res://` prefix +
+  `ResourceLoader.exists`) before instantiation.
 
-The handler validates all incoming script paths (`res://` prefix + `ResourceLoader.exists`) before instantiation and guards against stale entity references.
-
-## Middleware Pattern
-
-The recommended approach is a **thin middleware layer** between the generic addon and your project:
+## Reconciliation Flow (ADV-02)
 
 ```text
-addons/gecs_network/     <-- Generic, reusable addon
-game/network/            <-- Project-specific middleware
-game/                    <-- Your game code
+SyncReconciliationHandler._process(delta):
+  _elapsed += delta
+  If _elapsed >= reconciliation_interval:
+    _elapsed = 0.0
+    NetworkSync.broadcast_full_state()  ← server-only; sends full entity state to all clients
+
+broadcast_full_state():
+  Serialize all live entities (same format as spawn payloads)
+  rpc_sync_full_state(payload) → all clients apply authoritatively
 ```
 
-### Example Middleware
-
-Create `game/network/network_middleware.gd`:
-
-```gdscript
-class_name NetworkMiddleware
-extends Node
-
-var network_sync: NetworkSync
-
-func _init(p_network_sync: NetworkSync) -> void:
-    network_sync = p_network_sync
-    # Connect to addon signals
-    network_sync.entity_spawned.connect(_on_entity_spawned)
-
-func _on_entity_spawned(entity: Entity) -> void:
-    # Apply project-specific visual properties
-    var projectile = entity.get_component(C_Projectile)
-    if projectile:
-        var visual = entity.get_node_or_null("Visual") as MeshInstance3D
-        if visual:
-            var material = StandardMaterial3D.new()
-            material.albedo_color = projectile.projectile_color
-            material.emission_enabled = true
-            material.emission = projectile.projectile_color
-            material.emission_energy_multiplier = 0.3
-            visual.material_override = material
-```
-
-Then in your main scene:
-
-```gdscript
-func _ready():
-    # Create addon (generic)
-    var network_sync = NetworkSync.attach_to_world(world, ProjectSyncConfig.new())
-
-    # Create middleware (project-specific)
-    var middleware = NetworkMiddleware.new(network_sync)
-```
-
-This keeps project-specific logic out of both the addon and your main game code.
+Reconciliation corrects drift accumulated from packet loss, priority downsampling, or missed
+updates. The interval is configured via `NetworkSync.reconciliation_interval` (default: 30 s,
+set via ProjectSettings).
 
 ## Signals
 
 ```gdscript
-# Emitted when local player entity spawns (clients only)
-network_sync.local_player_spawned.connect(_on_local_player_spawned)
+# Emitted on clients when any entity spawns via network (after component data applied)
+_network_sync.entity_spawned.connect(_on_entity_spawned)
 
-func _on_local_player_spawned(entity: Entity):
-    # Set up player camera, UI, etc.
+func _on_entity_spawned(entity: Entity) -> void:
+    # Apply visual properties, spawn effects, etc.
     pass
 
-# Emitted when ANY entity spawns (clients only, after component data applied)
-# Connect to this in your middleware for post-spawn setup
-network_sync.entity_spawned.connect(_on_entity_spawned)
+# Emitted on clients when the local player's entity spawns
+_network_sync.local_player_spawned.connect(_on_local_player_spawned)
 
-func _on_entity_spawned(entity: Entity):
-    # Apply visual properties, play spawn effects, etc.
+func _on_local_player_spawned(entity: Entity) -> void:
+    # Set up camera, HUD, etc.
     pass
 ```
+
+Connect these signals directly in your main scene or game manager — no middleware class is
+needed. See `docs/configuration.md` for the complete setup pattern.

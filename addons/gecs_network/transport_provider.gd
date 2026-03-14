@@ -1,5 +1,5 @@
 class_name TransportProvider
-extends RefCounted
+extends Resource
 ## TransportProvider - Abstract interface for creating multiplayer peers.
 ##
 ## Override this class to add support for different network transports

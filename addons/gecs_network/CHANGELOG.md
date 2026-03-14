@@ -2,6 +2,43 @@
 
 All notable changes to the GECS Network addon will be documented in this file.
 
+## [Unreleased]
+
+### Fixed
+- `CN_NetSync.scan_entity_components()` was never called at runtime — clients could not sync `C_PlayerInput` (or any `CN_NetSync`-tracked properties) to the server because `SyncSender` always saw an empty scan table. Fix: `NetworkSync._deferred_broadcast()` now scans server-side entities after authority markers are injected; `SpawnManager._apply_component_data()` now scans client-side entities after spawn setup completes.
+- `main.gd._on_peer_disconnected_hook` was calling `world.remove_entity()` on the disconnected peer's entity, duplicating the cleanup already performed by `SpawnManager.on_peer_disconnected()`. The redundant removal could cause a double-free crash (`entity_removed` signal fired with a freed entity). Fix: removed entity cleanup from the hook — `SpawnManager` is the sole cleanup path.
+- `world.remove_entity()` called `entity.free()` (immediate) before the `GECSEditorDebuggerMessages.entity_removed()` debug assert, causing a "previously freed" type-check error when an entity was not in the scene tree. Fix: the debug assert now runs before the free call.
+
+## [2.0.0] — feature/gecs-network-v2
+
+### Added
+- `CN_NetSync` component — declarative priority-tiered property sync via `@export_group` annotations (REALTIME/HIGH/MEDIUM/LOW/SPAWN_ONLY/LOCAL)
+- `CN_NativeSync` component — native Godot `MultiplayerSynchronizer` transform sync with interpolation
+- `CN_LocalAuthority` marker component — replaces `is_multiplayer_authority()` calls in game systems
+- `CN_ServerAuthority` marker component — server-owned entities (peer_id=0 only)
+- `CN_RemoteEntity` marker component — remote-peer entities
+- `SyncSender` — priority-tiered batched outbound RPC with dirty tracking
+- `SyncReceiver` — authority-validated inbound apply with echo-loop guard
+- `SpawnManager` — late-join full-state broadcast, deferred despawn, session ID anti-ghost
+- `NativeSyncHandler` — creates and manages `MultiplayerSynchronizer` nodes for `CN_NativeSync` entities
+- `SyncRelationshipHandler` — relationship sync with deferred resolution for non-deterministic spawn ordering
+- `SyncReconciliationHandler` — periodic full-state reconciliation broadcast (default 30s, configurable)
+- `NetworkSync.register_send_handler()` / `register_receive_handler()` — system-level sync overrides (ADV-03)
+- ProjectSettings: `gecs_network/sync/high_hz`, `medium_hz`, `low_hz`, `reconciliation_interval`
+
+### Removed
+- `SyncConfig` class and subclass pattern — replaced by `@export_group` annotations on component properties
+- `CN_SyncEntity` component — replaced by `CN_NativeSync`
+- `CN_ServerOwned` marker — replaced by `CN_ServerAuthority` (semantics changed: host peer_id=1 is no longer server-owned)
+- `SyncComponent` base class — components now extend `Component` directly
+- `NetworkMiddleware` pattern — replaced by direct signal connections to `NetworkSync`
+- `sync_spawn_handler.gd` — replaced by `spawn_manager.gd`
+- `sync_property_handler.gd` — replaced by `sync_sender.gd` + `sync_receiver.gd`
+- `sync_state_handler.gd` — replaced by authority marker injection in `spawn_manager.gd`
+
+### Migration
+See [docs/migration-v1-to-v2.md](docs/migration-v1-to-v2.md) for the full v0.1.x → v2 upgrade guide.
+
 ## [0.1.1] - Add Tests; Relationship Sync
 
 ### Added

@@ -1,6 +1,6 @@
 [gd_scene load_steps=6 format=3 uid="uid://2eahgaw88y6q"]
 
-[ext_resource type="Script" uid="uid://c1nr0ni7ydykg" path="res://addons/gdUnit4/src/update/GdUnitUpdate.gd" id="1"]
+[ext_resource type="Script" path="res://addons/gdUnit4/src/update/GdUnitUpdate.gd" id="1"]
 
 [sub_resource type="Gradient" id="Gradient_wilsr"]
 colors = PackedColorArray(0.151276, 0.151276, 0.151276, 1, 1, 1, 1, 1)
@@ -67,7 +67,7 @@ grow_horizontal = 2
 grow_vertical = 2
 localize_numeral_system = false
 min_value = 1.0
-max_value = 6.0
+max_value = 5.0
 value = 1.0
 rounded = true
 allow_greater = true

@@ -1,187 +1,285 @@
 # Complete Examples
 
+All examples below are drawn from the working `example_network/` project.
+Run it in Godot to see each pattern in action.
+
+---
+
 ## Example 1: Player Entity (Continuous Sync)
+
+`example_network/entities/e_player.gd` — demonstrates continuous property sync via
+`CN_NetSync` and transform sync via `CN_NativeSync`.
 
 ```gdscript
 class_name E_Player
 extends Entity
+## Player entity for the network example.
+## Demonstrates continuous sync via CN_NativeSync (transform) and
+## CN_NetSync with HIGH priority properties.
 
-@export var owner_peer_id: int = 1
+var peer_id: int = 0
 
-@export_category("Combat")
-@export var health: C_Health = C_Health.new(100, 100)
-@export var weapon: C_Weapon = C_Weapon.new()
+func _init(p_peer_id: int = 0) -> void:
+    peer_id = p_peer_id
 
-func define_components() -> Array:
-    return [
-        health,
-        weapon,
-        C_Velocity.new(),
-        C_Transform.new(),
-        C_FiringInput.new(),
-        C_AnimationState.new(),
-        CN_NetworkIdentity.new(owner_peer_id),
-        _create_sync_entity(),
-    ]
-
-static func _create_sync_entity() -> CN_SyncEntity:
-    var sync = CN_SyncEntity.new(true, false, false)  # Position only
-    sync.custom_properties.append("Rig:rotation")     # Sync model rotation
-    return sync
-```
-
-## Example 2: Server-Owned Enemy (Continuous Sync)
-
-```gdscript
-class_name E_Enemy
-extends Entity
-
-@export var health: C_Health = C_Health.new(30, 30)
+func _enter_tree() -> void:
+    # Extract peer_id from node name when spawned from scene (set by main.gd as str(peer_id))
+    var authority_id = str(name).to_int()
+    if authority_id > 0:
+        peer_id = authority_id
+        set_multiplayer_authority(authority_id)
 
 func define_components() -> Array:
     return [
-        health,
-        C_Velocity.new(),
-        C_EnemyAI.new(),
-        C_Transform.new(),
-        C_AnimationState.new(),
-        CN_NetworkIdentity.new(0),    # 0 = server-owned
-        _create_sync_entity(),
+        CN_NetworkIdentity.new(peer_id),
+        CN_NetSync.new(),           # Enables property sync (HIGH priority props)
+        CN_NativeSync.new(),        # Syncs position/rotation via MultiplayerSynchronizer
+        C_NetVelocity.new(),        # @export_group("HIGH") on direction property
+        C_PlayerInput.new(),        # @export_group("HIGH") on input properties
+        C_PlayerNumber.new(),       # @export_group("LOW") on player_number
     ]
-
-static func _create_sync_entity() -> CN_SyncEntity:
-    var sync = CN_SyncEntity.new(true, false, false)
-    sync.custom_properties.append("Rig:rotation")
-    return sync
 ```
 
-## Example 3: Projectile (Spawn-Only Sync)
+---
+
+## Example 2: Projectile Entity (Spawn-Only Sync)
+
+`example_network/entities/e_projectile.gd` — demonstrates spawn-only sync via
+`@export_group("SPAWN_ONLY")` on component properties. `CN_NetSync` is still required.
 
 ```gdscript
 class_name E_Projectile
 extends Entity
+## Projectile entity for the network example.
+## Demonstrates spawn-only sync via CN_NetSync with SPAWN_ONLY properties.
+## Server spawns and broadcasts component values once; clients simulate locally.
+
+var owner_peer_id: int = 0
+
+func _init(p_owner: int = 0) -> void:
+    owner_peer_id = p_owner
 
 func define_components() -> Array:
     return [
-        CN_NetworkIdentity.new(0),  # Server-owned
+        CN_NetworkIdentity.new(0),   # 0 = server-owned projectile
+        CN_NetSync.new(),            # Required — SPAWN_ONLY group lives here
+        C_NetPosition.new(),         # @export_group("SPAWN_ONLY") on position
+        C_NetVelocity.new(),         # SPAWN_ONLY properties: initial velocity
         C_Projectile.new(),
-        C_Velocity.new(),
-        C_Transform.new(),
-        C_DeathTimer.new(3.0),
-        # NO CN_SyncEntity = spawn-only
     ]
 ```
 
-## Example 4: Server-Authoritative Weapon Spawning
+---
+
+## Example 3: Components with Priority Annotations
+
+`example_network/components/c_net_velocity.gd` — HIGH priority continuous sync:
 
 ```gdscript
-class_name S_WeaponSpawning
-extends System
-# Place in "server-authoritative" system group
+class_name C_NetVelocity
+extends Component
+## Velocity component for network example.
 
-var _projectile_scene = preload("res://game/entities/e_projectile.tscn")
-
-func query():
-    # Process ALL players on server (local host + remote clients)
-    return q.with_all([C_Weapon, C_FiringInput, C_Transform])
-        .with_none([C_Dying, C_Dead])
-        .iterate([C_Weapon, C_FiringInput, C_Transform])
-
-func process(entities: Array[Entity], components: Array, delta: float):
-    # No is_server() check needed - system group gating handles it
-    var weapons = components[0]
-    var inputs = components[1]
-    var transforms = components[2]
-    var entities_node = ECS.world.get_node("Entities")
-
-    for i in entities.size():
-        var weapon = weapons[i] as C_Weapon
-        var input = inputs[i] as C_FiringInput
-        var transform = transforms[i] as C_Transform
-
-        # Server exclusively owns cooldown state
-        weapon.time_since_shot += delta
-
-        if input.is_firing and weapon.time_since_shot >= weapon.cooldown:
-            var proj = _projectile_scene.instantiate()
-            entities_node.add_child(proj)
-            cmd.add_entity(proj)
-
-            # Set values AFTER add_entity via CommandBuffer
-            cmd.add_custom(func():
-                proj.get_component(C_Velocity).direction = input.aim_direction * weapon.speed
-                proj.get_component(C_Transform).position = transform.position
-            )
-
-            weapon.time_since_shot = 0.0
+@export_group("HIGH")
+@export var direction: Vector3 = Vector3.ZERO   # Synced at 20 Hz
 ```
 
-## Example 5: Ability with Continuous Input Flag
+`example_network/components/c_player_input.gd` — HIGH priority input sync:
 
 ```gdscript
-# Component
-class_name C_NovaBlast
-extends SyncComponent
+class_name C_PlayerInput
+extends Component
+## Player input component - synced to server for authoritative game state.
+## Uses @export_group("HIGH") so CN_NetSync prioritizes at ~20 Hz.
 
-@export var is_activating: bool = false  # Client sets, server reads (HIGH priority)
-@export var damage: int = 100
-@export var radius: float = 4.0
-@export var cooldown_remaining: float = 0.0  # Server-owned state
+@export_group("HIGH")
+@export var move_direction: Vector2 = Vector2.ZERO
+@export var is_shooting: bool = false
+@export var shoot_direction: Vector3 = Vector3.FORWARD
+```
 
-# Input system (local player only)
-class_name S_NovaBlastInput
+---
+
+## Example 4: World Setup (main.gd)
+
+`example_network/main.gd` — setup with direct signal connections and reconciliation interval:
+
+```gdscript
+func _setup_network_sync() -> void:
+    if _network_sync:
+        return   # Guard against double-attach
+
+    _network_sync = NetworkSync.attach_to_world(world)
+    _network_sync.debug_logging = true
+
+    # ADV-02: configure reconciliation interval (30 s periodic state correction)
+    _network_sync.reconciliation_interval = 30.0
+
+    # Connect NetworkSync signals directly — no middleware layer
+    _network_sync.entity_spawned.connect(_on_entity_spawned)
+    _network_sync.local_player_spawned.connect(_on_local_player_spawned)
+
+func _on_entity_spawned(entity: Entity) -> void:
+    print("[Main] Entity spawned via network: %s" % entity.name)
+
+func _on_local_player_spawned(entity: Entity) -> void:
+    print("[Main] Local player spawned: %s" % entity.name)
+```
+
+---
+
+## Example 5: Custom Sync Handler (ADV-03)
+
+`example_network/systems/s_movement.gd` — registers a receive handler to blend velocity
+corrections smoothly instead of snapping.
+
+```gdscript
+class_name S_NetworkMovement
+extends System
+## ADV-03: Registers a custom receive handler for C_NetVelocity to blend corrections.
+
+func _ready() -> void:
+    var ns := ECS.world.get_node("NetworkSync") as NetworkSync
+    if ns == null:
+        return
+    ns.register_receive_handler("C_NetVelocity", _blend_velocity_correction)
+
+func _blend_velocity_correction(entity: Entity, comp: Component, props: Dictionary) -> bool:
+    # Only blend on entities we have local authority over
+    if not entity.has_component(CN_LocalAuthority):
+        return false   # Fall through to default comp.set() for remote entities
+    if props.has("direction"):
+        var c := comp as C_NetVelocity
+        c.direction = c.direction.lerp(props["direction"], 0.3)
+    return true   # Framework calls update_cache_silent() automatically
+
+func query() -> QueryBuilder:
+    return q.with_all([C_NetVelocity, C_PlayerInput, CN_LocalAuthority]).iterate([C_NetVelocity, C_PlayerInput])
+
+func process(entities: Array[Entity], components: Array, delta: float) -> void:
+    var velocities = components[0]
+    var inputs = components[1]
+    for i in entities.size():
+        var velocity = velocities[i] as C_NetVelocity
+        var player_input = inputs[i] as C_PlayerInput
+        var move_input = player_input.move_direction
+        velocity.direction = Vector3(move_input.x, 0, move_input.y) * 5.0
+        if entities[i] is Node3D:
+            entities[i].global_position += velocity.direction * delta
+```
+
+---
+
+## Example 6: Server-Only Shooting System (Spawn-Only Pattern)
+
+`example_network/systems/s_shooting.gd` — server-only entity spawning. Clients receive
+spawns via RPC; they never call `_spawn_projectile()` themselves.
+
+```gdscript
+class_name S_NetworkShooting
 extends System
 
-func query():
-    return q.with_all([C_NovaBlast, CN_LocalAuthority]).iterate([C_NovaBlast])
+var _projectile_scene: PackedScene = preload("res://example_network/entities/e_projectile.tscn")
+var _cooldown_tracker: Dictionary = {}
 
-func process(entities: Array[Entity], components: Array, delta: float):
+const FIRE_RATE := 0.3
+const PROJECTILE_SPEED := 10.0
+
+func query() -> QueryBuilder:
+    return q.with_all([C_PlayerInput, C_PlayerNumber]).iterate([C_PlayerInput, C_PlayerNumber])
+
+func process(entities: Array[Entity], components: Array, delta: float) -> void:
+    var mp = ECS.world.get_tree().get_multiplayer()
+    var is_in_multiplayer = mp.has_multiplayer_peer()
+    var is_server = mp.is_server() if is_in_multiplayer else true
+
     for i in entities.size():
-        var nova = components[0][i] as C_NovaBlast
-        if Input.is_action_pressed("nova_blast") and nova.cooldown_remaining <= 0.0:
-            nova.is_activating = true  # Syncs to server at 20Hz
+        var entity = entities[i]
+        var player_input = components[0][i] as C_PlayerInput
 
-# Spawning system (server-authoritative group)
-class_name S_NovaBlastSpawning
-extends System
+        var cooldown = _cooldown_tracker.get(entity.id, FIRE_RATE)
+        cooldown += delta
+        _cooldown_tracker[entity.id] = cooldown
 
-func query():
-    return q.with_all([C_NovaBlast, C_Transform]).iterate([C_NovaBlast, C_Transform])
-
-func process(entities: Array[Entity], components: Array, delta: float):
-    for i in entities.size():
-        var nova = components[0][i] as C_NovaBlast
-
-        # Server exclusively owns cooldown
-        if nova.cooldown_remaining > 0.0:
-            nova.cooldown_remaining -= delta
-            nova.is_activating = false
+        if not player_input.is_shooting or cooldown < FIRE_RATE:
             continue
 
-        if nova.is_activating:
-            var transform = components[1][i] as C_Transform
-            _spawn_nova_effect(transform.position, nova.damage, nova.radius)
-            nova.cooldown_remaining = 5.0
-            nova.is_activating = false
+        # Spawn-only pattern: only server spawns; clients receive via RPC
+        if is_in_multiplayer and not is_server:
+            continue
+
+        _spawn_projectile(entity, player_input.shoot_direction, components[1][i].player_number)
+        _cooldown_tracker[entity.id] = 0.0
+
+func _spawn_projectile(shooter: Entity, direction: Vector3, player_number: int) -> void:
+    var projectile = _projectile_scene.instantiate() as Entity
+    var spawn_pos = shooter.global_position + direction.normalized() * 1.0
+
+    var entities_node = ECS.world.get_node("Entities")
+    entities_node.add_child(projectile)
+    projectile.global_position = spawn_pos
+
+    # add_entity() triggers define_components() — sets defaults
+    ECS.world.add_entity(projectile)
+
+    # CRITICAL: set component values AFTER add_entity()
+    # NetworkSync captures these via call_deferred at end of frame
+    projectile.get_component(C_NetPosition).position = spawn_pos
+    projectile.get_component(C_NetVelocity).direction = direction.normalized() * PROJECTILE_SPEED
 ```
 
-## Example 6: Complete Spawn-Only Flow
+---
 
-```text
-CLIENT A (firing):
-  1. Holds fire button
-  2. S_Input sets C_FiringInput.is_firing = true (local player, CN_LocalAuthority)
-  3. C_FiringInput syncs to server via SyncComponent polling (HIGH, 20Hz)
+## Authority Query Reference
 
-SERVER:
-  4. S_WeaponSpawning reads is_firing=true on Client A's player entity
-  5. Cooldown check passes -> spawns projectile with CN_NetworkIdentity.new(0)
-  6. Sets velocity, position, damage on components AFTER add_entity()
-  7. End of frame: addon serializes @export properties, broadcasts spawn RPC
+Three common authority query patterns used throughout the example:
 
-ALL CLIENTS (including A):
-  8. Receive spawn RPC with session_id validation
-  9. Instantiate projectile, apply component data from RPC
-  10. Local movement system simulates flight (no further sync)
-  11. C_DeathTimer expires -> entity removed (despawn also synced)
+```gdscript
+# Input: only local player
+func query() -> QueryBuilder:
+    return q.with_all([C_PlayerInput, CN_LocalAuthority])
+
+# Physics: skip remote entities (their position comes from MultiplayerSynchronizer)
+func query() -> QueryBuilder:
+    return q.with_all([C_NetVelocity]).with_none([CN_RemoteEntity])
+
+# Server-owned AI: only process on server
+func query() -> QueryBuilder:
+    return q.with_all([C_EnemyAI, CN_ServerAuthority, CN_LocalAuthority])
+```
+
+---
+
+## Player Spawning Flow
+
+How `main.gd` spawns players (host spawns on `peer_connected`; client's player is spawned
+by the server for them):
+
+```gdscript
+func _spawn_player_for_peer(peer_id: int) -> void:
+    if _spawned_peer_ids.has(peer_id):
+        return
+
+    var player_number = _next_player_number
+    _next_player_number += 1
+
+    var PlayerScene: PackedScene = preload(PLAYER_SCENE_PATH)
+    var player = PlayerScene.instantiate() as Entity
+
+    # Node name = peer_id (entity reads this in _enter_tree to set authority)
+    player.name = str(peer_id)
+    entities.add_child(player)
+
+    var spawn_offset = Vector3((player_number % 4) * 2.0 - 3.0, 0, 0)
+    player.global_position = spawn_offset
+
+    # add_entity() triggers NetworkSync broadcast at end of frame
+    world.add_entity(player)
+
+    # CRITICAL: set component values AFTER add_entity()
+    var player_num_comp = player.get_component(C_PlayerNumber) as C_PlayerNumber
+    if player_num_comp:
+        player_num_comp.player_number = player_number
+
+    _spawned_peer_ids[peer_id] = player.id
 ```

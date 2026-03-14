@@ -16,12 +16,12 @@ var mock_ns: RefCounted  # Mock NetworkSync
 
 
 ## Minimal mock for NetworkSync - provides only what the handler needs
+## NOTE: NO sync_config field — removed in v2
 class MockNetworkSync:
 	extends RefCounted
 	var _world: World
 	var _applying_network_data: bool = false
 	var _game_session_id: int = 0
-	var sync_config: SyncConfig
 	var net_adapter: NetAdapter
 	var debug_logging: bool = false
 
@@ -31,12 +31,14 @@ class MockNetworkSync:
 
 	func _init(w: World) -> void:
 		_world = w
-		sync_config = SyncConfig.new()
-		sync_config.sync_relationships = true
 		net_adapter = NetAdapter.new()
 
 	func _sync_relationship_add(_payload: Dictionary) -> void:
 		last_rpc_method = "_sync_relationship_add"
+		last_rpc_payload = _payload
+
+	func _sync_relationship_remove(_payload: Dictionary) -> void:
+		last_rpc_method = "_sync_relationship_remove"
 		last_rpc_payload = _payload
 
 
@@ -140,7 +142,7 @@ func test_roundtrip_component_target():
 
 
 func test_roundtrip_script_target():
-	var target_script = load("res://tests/gecs/components/c_test_a.gd")
+	var target_script = load("res://addons/gecs/tests/components/c_test_a.gd")
 	var rel = Relationship.new(C_TestB.new(), target_script)
 	var recipe = handler.serialize_relationship(rel)
 
@@ -152,14 +154,6 @@ func test_roundtrip_script_target():
 	assert_object(restored).is_not_null()
 	assert_object(restored.relation).is_instanceof(C_TestB)
 	assert_object(restored.target).is_instanceof(Script)
-
-
-func test_serialize_returns_empty_when_disabled():
-	mock_ns.sync_config.sync_relationships = false
-	var rel = Relationship.new(C_TestA.new(), null)
-	var recipe = handler.serialize_relationship(rel)
-
-	assert_dict(recipe).is_empty()
 
 
 func test_serialize_returns_empty_for_null_relation():
@@ -211,8 +205,8 @@ func test_apply_entity_relationships():
 	world.add_entity(target)
 
 	var recipes: Array = [
-		{"r": "res://tests/gecs/components/c_test_a.gd", "tt": "E", "t": "target-1"},
-		{"r": "res://tests/gecs/components/c_test_b.gd", "tt": "N", "t": ""},
+		{"r": "res://addons/gecs/tests/components/c_test_a.gd", "tt": "E", "t": "target-1"},
+		{"r": "res://addons/gecs/tests/components/c_test_b.gd", "tt": "N", "t": ""},
 	]
 
 	handler.apply_entity_relationships(source, recipes)
@@ -233,7 +227,7 @@ func test_deferred_resolution_entity_target():
 
 	# Apply a recipe referencing an entity that doesn't exist yet
 	var recipes: Array = [
-		{"r": "res://tests/gecs/components/c_test_a.gd", "tt": "E", "t": "future-entity"},
+		{"r": "res://addons/gecs/tests/components/c_test_a.gd", "tt": "E", "t": "future-entity"},
 	]
 
 	handler.apply_entity_relationships(source, recipes)
@@ -269,7 +263,7 @@ func test_deferred_resolution_ignores_unrelated_entities():
 
 	# Queue a pending recipe for "future-entity"
 	var recipes: Array = [
-		{"r": "res://tests/gecs/components/c_test_a.gd", "tt": "E", "t": "future-entity"},
+		{"r": "res://addons/gecs/tests/components/c_test_a.gd", "tt": "E", "t": "future-entity"},
 	]
 	handler.apply_entity_relationships(source, recipes)
 
@@ -338,7 +332,7 @@ func test_reset_clears_pending():
 	world.add_entity(source)
 
 	var recipes: Array = [
-		{"r": "res://tests/gecs/components/c_test_a.gd", "tt": "E", "t": "missing-entity"},
+		{"r": "res://addons/gecs/tests/components/c_test_a.gd", "tt": "E", "t": "missing-entity"},
 	]
 	handler.apply_entity_relationships(source, recipes)
 
@@ -368,12 +362,12 @@ func test_deserialize_missing_relation_path():
 
 
 func test_deserialize_unknown_target_type():
-	var recipe = {"r": "res://tests/gecs/components/c_test_a.gd", "tt": "X", "t": ""}
+	var recipe = {"r": "res://addons/gecs/tests/components/c_test_a.gd", "tt": "X", "t": ""}
 	var result = handler.deserialize_relationship(recipe)
 	assert_object(result).is_null()
 
 
 func test_deserialize_entity_target_not_found():
-	var recipe = {"r": "res://tests/gecs/components/c_test_a.gd", "tt": "E", "t": "nonexistent"}
+	var recipe = {"r": "res://addons/gecs/tests/components/c_test_a.gd", "tt": "E", "t": "nonexistent"}
 	var result = handler.deserialize_relationship(recipe)
 	assert_object(result).is_null()

@@ -8,12 +8,16 @@
 
 config_version=5
 
+[animation]
+
+compatibility/default_parent_skeleton_in_mesh_instance_3d=true
+
 [application]
 
 config/name="GECS"
 config/description="Godot Entity Component System - Example project and testing suite"
 config/version="5.0.0"
-run/main_scene="uid://x5ubiio43y7w"
+run/main_scene="uid://cqkoebmqmtdrs"
 config/features=PackedStringArray("4.6", "Forward Plus")
 
 [audio]
@@ -28,8 +32,8 @@ manager/music/bus="Music"
 
 [autoload]
 
-DebugMenu="*res://addons/debug_menu/debug_menu.tscn"
-ECS="*res://addons/gecs/ecs/ecs.gd"
+DebugMenu="*uid://cggqb75a8w8r"
+ECS="*uid://dfqwl5njvdnmq"
 
 [editor_plugins]
 
