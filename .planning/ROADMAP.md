@@ -57,7 +57,12 @@ Plans:
   2. OBSERVERS accurately describes how observers are registered and triggered — a developer reading it can implement a reactive system without consulting the source code
   3. RELATIONSHIPS shows only real relationship matching modes — no fabricated component query syntax or invented matching behaviors
   4. Every code example in all three docs produces no errors when loaded in a project using GECS v6.8.1
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] 09-01-PLAN.md — Fix COMPONENT_QUERIES.md (add func operator, strip emoji, remove Conclusion)
+- [ ] 09-02-PLAN.md — Fix OBSERVERS.md (with_group array syntax, spatial guards, false troubleshooting claim, emoji, footer)
+- [ ] 09-03-PLAN.md — Fix RELATIONSHIPS.md (chasing_players method name, strip emoji, remove footer)
 
 ### Phase 10: Best Practices
 **Goal**: Developers receive honest guidance on patterns, performance, and troubleshooting — every example comes from real code, every number is real, every failure mode was actually observed
@@ -103,8 +108,8 @@ Plans:
 | 5. Reconciliation and Custom Sync | v0.1 | 3/3 | Complete | 2026-03-12 |
 | 6. Cleanup, Documentation, v1→v2 Migration | v0.1 | 4/4 | Complete | 2026-03-12 |
 | 7. NetworkSession Node | v0.1 | 4/4 | Complete | 2026-03-13 |
-| 8. Foundation Docs | 3/3 | Complete   | 2026-03-14 | - |
-| 9. Advanced Core Docs | v0.2 | 0/? | Not started | - |
+| 8. Foundation Docs | v0.2 | 3/3 | Complete | 2026-03-14 |
+| 9. Advanced Core Docs | v0.2 | 0/3 | Not started | - |
 | 10. Best Practices | v0.2 | 0/? | Not started | - |
 | 11. Network Docs | v0.2 | 0/? | Not started | - |
 | 12. Entry Points | v0.2 | 0/? | Not started | - |
