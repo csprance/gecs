@@ -1,0 +1,7 @@
+{
+  "workflow": {
+    "research": true,
+    "_auto_chain_active": false
+  },
+  "branching_strategy": "none"
+}
