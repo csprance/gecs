@@ -4,13 +4,13 @@
 
 This guide shows you how to optimize your GECS-based games for maximum performance. Learn to identify bottlenecks, optimize queries, and design systems that scale.
 
-## 📋 Prerequisites
+## Prerequisites
 
 - Understanding of [Core Concepts](CORE_CONCEPTS.md)
 - Familiarity with [Best Practices](BEST_PRACTICES.md)
 - A working GECS project to optimize
 
-## 🎯 Performance Fundamentals
+## Performance Fundamentals
 
 ### The ECS Performance Model
 
@@ -22,7 +22,7 @@ GECS performance depends on three key factors:
 
 Most performance gains come from optimizing these in order of impact.
 
-## 🔍 Profiling Your Game
+## Profiling Your Game
 
 ### Monitor Query Cache Performance
 
@@ -37,8 +37,8 @@ func _process(delta):
     if Engine.get_process_frames() % 60 == 0:
         var cache_stats = ECS.world.get_cache_stats()
         print("ECS Performance:")
-        print("  Query cache hits: ", cache_stats.get("hits", 0))
-        print("  Query cache misses: ", cache_stats.get("misses", 0))
+        print("  Query cache hits: ", cache_stats.get("cache_hits", 0))
+        print("  Query cache misses: ", cache_stats.get("cache_misses", 0))
         print("  Total entities: ", ECS.world.entities.size())
 
         # Reset stats for next measurement period
@@ -54,39 +54,39 @@ Monitor your game's performance in the Godot editor:
 3. **Look for ECS-related spikes** in the frame time
 4. **Identify the slowest systems** in your processing groups
 
-## ⚡ Query Optimization
+## Query Optimization
 
-### 1. Choose the Right Query Method ⭐ NEW!
+### 1. Choose the Right Query Method
 
-**As of v5.0.0-rc4**, query performance ranking (10,000 entities):
+Query performance ranking (10,000 entities, Godot 4.6):
 
-1. **`.enabled(true/false)` queries**: **~0.05ms** 🏆 **(Fastest - Use when possible!)**
-2. **`.with_all([Components])` queries**: **~0.6ms** 🥈 **(Excellent for most use cases)**
-3. **`.with_any([Components])` queries**: **~5.6ms** 🥉 **(Good for OR-style queries)**
-4. **`.with_group("name")` queries**: **~16ms** 🐌 **(Avoid for performance-critical code)**
+1. **`.enabled()` / `.disabled()` queries**: **~0.1ms** (Fastest - Use when possible!)
+2. **`.with_all([Components])` queries**: **~0.2ms** (Excellent for most use cases)
+3. **`.with_any([Components])` queries**: **~0.3ms** (Good for OR-style queries)
+4. **`.with_group(["name"])` queries**: **~13.6ms** (Avoid for performance-critical code)
 
 **Performance Recommendations:**
 
 ```gdscript
-# 🏆 FASTEST - Use enabled/disabled queries when you only need active entities
+# FASTEST - Use enabled/disabled queries when you only need active entities
 class_name ActiveSystemsOnly extends System
 func query():
-    return q.enabled(true)  # Constant-time O(1) performance!
+    return q.enabled()  # Constant-time O(1) performance!
 
-# 🥈 EXCELLENT - Component-based queries (heavily optimized cache)
+# EXCELLENT - Component-based queries (heavily optimized cache)
 class_name MovementSystem extends System
 func query():
-    return q.with_all([C_Position, C_Velocity])  # ~0.6ms for 10K entities
+    return q.with_all([C_Position, C_Velocity])  # ~0.2ms for 10K entities
 
-# 🥉 GOOD - Use with_any sparingly, split into multiple systems when possible
+# GOOD - Use with_any sparingly, split into multiple systems when possible
 class_name DamageableSystem extends System
 func query():
     return q.with_any([C_Player, C_Enemy]).with_all([C_Health])
 
-# 🐌 AVOID - Group queries are the slowest
+# AVOID - Group queries are the slowest
 class_name PlayerSystem extends System
 func query():
-    return q.with_group("player")  # Consider using components instead
+    return q.with_group(["player"])  # Consider using components instead
     # Better: q.with_all([C_Player])
 ```
 
@@ -94,12 +94,8 @@ func query():
 
 GECS automatically handles query optimization when you follow the standard pattern:
 
-### 2. Use Proper System Query Pattern
-
-GECS automatically handles query optimization when you follow the standard pattern:
-
 ```gdscript
-# ✅ Good - Standard GECS pattern (automatically optimized)
+# Good - Standard GECS pattern (automatically optimized)
 class_name MovementSystem extends System
 
 func query():
@@ -114,7 +110,7 @@ func process(entities: Array[Entity], components: Array, delta: float):
 ```
 
 ```gdscript
-# ❌ Avoid - Manual query building in process methods
+# Avoid - Manual query building in process methods
 func process(entities: Array[Entity], components: Array, delta: float):
     # Don't do this - bypasses automatic query optimization
     var custom_entities = ECS.world.query.with_all([C_Position]).execute()
@@ -126,13 +122,13 @@ func process(entities: Array[Entity], components: Array, delta: float):
 More specific queries run faster:
 
 ```gdscript
-# ✅ Fast - Use enabled filter for active entities only
+# Fast - Use enabled filter for active entities only
 class_name PlayerInputSystem extends System
 func query():
-    return q.with_all([C_Input, C_Movement]).enabled(true)
+    return q.with_all([C_Input, C_Movement]).enabled()
     # Super fast enabled filtering + component matching
 
-# ✅ Fast - Specific component query
+# Fast - Specific component query
 class_name ProjectileSystem extends System
 func query():
     return q.with_all([C_Projectile, C_Velocity])
@@ -140,7 +136,7 @@ func query():
 ```
 
 ```gdscript
-# ❌ Slow - Overly broad query
+# Slow - Overly broad query
 class_name UniversalSystem extends System
 func query():
     return q.with_all([C_Position])
@@ -161,13 +157,13 @@ func process(entities: Array[Entity], components: Array, delta: float):
 `with_any` queries are **much faster than before** but still slower than `with_all`. Use strategically:
 
 ```gdscript
-# ✅ Good - with_any for legitimate OR scenarios
+# Good - with_any for legitimate OR scenarios
 class_name DamageSystem extends System
 func query():
     return q.with_any([C_Player, C_Enemy, C_NPC]).with_all([C_Health])
     # When you truly need "any of these types with health"
 
-# ✅ Better - Split when entities have different behavior
+# Better - Split when entities have different behavior
 class_name PlayerMovementSystem extends System
 func query(): return q.with_all([C_Player, C_Movement])
 
@@ -181,25 +177,25 @@ func query(): return q.with_all([C_Enemy, C_Movement])
 Group queries are now the slowest option. Use component-based queries instead:
 
 ```gdscript
-# ❌ Slow - Group-based query (~16ms for 10K entities)
+# Slow - Group-based query (~13.6ms for 10K entities)
 class_name PlayerSystem extends System
 func query():
-    return q.with_group("player")
+    return q.with_group(["player"])
 
-# ✅ Fast - Component-based query (~0.6ms for 10K entities)
+# Fast - Component-based query (~0.2ms for 10K entities)
 class_name PlayerSystem extends System
 func query():
     return q.with_all([C_Player])
 ```
 
-## 🧱 Component Design for Performance
+## Component Design for Performance
 
 ### Keep Components Lightweight
 
 Smaller components = faster memory access:
 
 ```gdscript
-# ✅ Good - Lightweight components
+# Good - Lightweight components
 class_name C_Position extends Component
 @export var position: Vector2
 
@@ -212,7 +208,7 @@ class_name C_Health extends Component
 ```
 
 ```gdscript
-# ❌ Heavy - Bloated component
+# Heavy - Bloated component
 class_name MegaComponent extends Component
 @export var position: Vector2
 @export var velocity: Vector2
@@ -229,7 +225,7 @@ class_name MegaComponent extends Component
 Adding and removing components requires index updates. Batch component operations when possible:
 
 ```gdscript
-# ✅ Good - Batch component operations
+# Good - Batch component operations
 func setup_new_enemy(entity: Entity):
     # Add multiple components in one batch
     entity.add_components([
@@ -239,7 +235,7 @@ func setup_new_enemy(entity: Entity):
         C_Enemy.new()
     ])
 
-# ✅ Good - Single component change when needed
+# Good - Single component change when needed
 func apply_damage(entity: Entity, damage: float):
     var health = entity.get_component(C_Health)
     health.current = clamp(health.current - damage, 0, health.maximum)
@@ -257,7 +253,7 @@ The choice between boolean properties and separate components depends on how fre
 When states change often, boolean properties avoid expensive index updates:
 
 ```gdscript
-# ✅ Good for frequently-changing states (buffs, status effects, etc.)
+# Good for frequently-changing states (buffs, status effects, etc.)
 class_name C_EntityState extends Component
 @export var is_stunned: bool = false
 @export var is_invisible: bool = false
@@ -268,27 +264,28 @@ func query():
     return q.with_all([C_Position, C_Velocity, C_EntityState])
     # All entities that might need states must have this component
 
-func process(entity: Entity, delta: float):
-    var state = entity.get_component(C_EntityState)
-    if state.is_stunned:
-        return  # Just a property check - no index updates
+func process(entities: Array[Entity], components: Array, delta: float):
+    for entity in entities:
+        var state = entity.get_component(C_EntityState)
+        if state.is_stunned:
+            continue  # Just a property check - no index updates
 
-    # Process movement...
+        # Process movement...
 ```
 
 **Tradeoffs:**
 
-- ✅ Fast state changes (no index rebuilds)
-- ✅ Simple property checks in systems
-- ❌ All entities need the state component (memory overhead)
-- ❌ Less precise queries (can't easily find "only stunned entities")
+- Fast state changes (no index rebuilds)
+- Simple property checks in systems
+- All entities need the state component (memory overhead)
+- Less precise queries (can't easily find "only stunned entities")
 
 #### Use Separate Components for Rare or Permanent States
 
 When states are long-lasting or infrequent, separate components provide precise queries:
 
 ```gdscript
-# ✅ Good for rare/permanent states (player vs enemy, permanent abilities)
+# Good for rare/permanent states (player vs enemy, permanent abilities)
 class_name MovementSystem extends System
 func query():
     return q.with_all([C_Position, C_Velocity]).with_none([C_Paralyzed])
@@ -302,10 +299,10 @@ func query():
 
 **Tradeoffs:**
 
-- ✅ Memory efficient (only entities with states have components)
-- ✅ Precise queries for specific states
-- ❌ State changes trigger expensive index updates
-- ❌ Complex queries with multiple exclusions
+- Memory efficient (only entities with states have components)
+- Precise queries for specific states
+- State changes trigger expensive index updates
+- Complex queries with multiple exclusions
 
 #### Guidelines:
 
@@ -314,7 +311,7 @@ func query():
 - **Related states** (buffs/debuffs): Group into property components
 - **Distinct entity types** (player/enemy): Use separate components
 
-## ⚙️ System Performance Patterns
+## System Performance Patterns
 
 ### Early Exit Strategies
 
@@ -343,7 +340,7 @@ func process(entities: Array[Entity], components: Array, delta: float):
 Group entity operations together. Use CommandBuffer for deferred execution with single cache invalidation:
 
 ```gdscript
-# ✅ Best - Use CommandBuffer in systems for bulk operations
+# Best - Use CommandBuffer in systems for bulk operations
 class_name CleanupSystem extends System
 
 func query():
@@ -353,11 +350,11 @@ func process(entities: Array[Entity], components: Array, delta: float):
     for entity in entities:
         cmd.remove_entity(entity)  # Queued, single cache invalidation when flushed
 
-# ✅ Good - Batch creation outside of systems
+# Good - Batch creation outside of systems
 func spawn_enemy_wave():
     var enemies: Array[Entity] = []
     for i in range(50):
-        var enemy = ECS.world.create_entity()
+        var enemy = Entity.new()
         setup_enemy_components(enemy)
         enemies.append(enemy)
     ECS.world.add_entities(enemies)
@@ -368,7 +365,7 @@ func spawn_enemy_wave():
 - **PER_GROUP** — batches all systems in a group, flushes once at end
 - **MANUAL** — maximum batching, requires explicit `ECS.world.flush_command_buffers()` call
 
-## 📊 Performance Targets
+## Performance Targets
 
 ### Frame Rate Targets
 
@@ -387,7 +384,7 @@ GECS handles these entity counts well with proper optimization:
 - **Large games**: 2000-10000 entities
 - **Massive games**: 10000+ entities (requires advanced optimization)
 
-## 🎯 Next Steps
+## Next Steps
 
 1. **Profile your current game** to establish baseline performance
 2. **Apply query optimizations** from this guide
@@ -395,16 +392,7 @@ GECS handles these entity counts well with proper optimization:
 4. **Implement system improvements** like early exits and batching
 5. **Consider advanced techniques** like pooling and spatial partitioning for demanding scenarios
 
-## 🔍 Additional Performance Features
-
-### Entity Pooling
-
-GECS includes built-in entity pooling for optimal performance:
-
-```gdscript
-# Use the entity pool for frequent entity creation/destruction
-var new_entity = ECS.world.create_entity()  # Gets from pool when available
-```
+## Additional Performance Features
 
 ### Query Cache Statistics
 
@@ -413,11 +401,8 @@ Monitor query performance with built-in cache tracking:
 ```gdscript
 # Get detailed cache performance data
 var stats = ECS.world.get_cache_stats()
-print("Cache hit rate: ", stats.get("hits", 0) / (stats.get("hits", 0) + stats.get("misses", 1)))
+print("Cache hit rate: ", stats.get("cache_hits", 0) / (stats.get("cache_hits", 0) + stats.get("cache_misses", 1)))
 ```
 
 **Need more help?** Check the [Troubleshooting Guide](TROUBLESHOOTING.md) for specific performance issues.
 
----
-
-_"Fast ECS code isn't about clever tricks - it's about designing systems that naturally align with how the framework works best."_
