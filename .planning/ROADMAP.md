@@ -41,7 +41,12 @@ Full archive: `.planning/milestones/v0.1-ROADMAP.md`
   2. CORE_CONCEPTS lists only real methods and properties — every method name is verifiable against the actual `.gd` source files
   3. SERIALIZATION either demonstrates working serialization code or clearly states the feature's current state with no false claims
   4. No doc in this phase mentions a class, method, or property that does not exist in the current codebase
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] 08-01-PLAN.md — Rewrite GETTING_STARTED.md (full rewrite, emoji-free, verified API only)
+- [ ] 08-02-PLAN.md — Fix CORE_CONCEPTS.md (targeted edit: undeclared variables, with_group type, cmd intro)
+- [ ] 08-03-PLAN.md — Fix SERIALIZATION.md (remove false limitation, fix version, add GECSSerializeConfig)
 
 ### Phase 9: Advanced Core Docs
 **Goal**: Developers can use COMPONENT_QUERIES, OBSERVERS, and RELATIONSHIPS docs as accurate references — every query syntax, observer hook, and relationship matching mode shown is real
@@ -98,7 +103,7 @@ Full archive: `.planning/milestones/v0.1-ROADMAP.md`
 | 5. Reconciliation and Custom Sync | v0.1 | 3/3 | Complete | 2026-03-12 |
 | 6. Cleanup, Documentation, v1→v2 Migration | v0.1 | 4/4 | Complete | 2026-03-12 |
 | 7. NetworkSession Node | v0.1 | 4/4 | Complete | 2026-03-13 |
-| 8. Foundation Docs | v0.2 | 0/? | Not started | - |
+| 8. Foundation Docs | v0.2 | 0/3 | Not started | - |
 | 9. Advanced Core Docs | v0.2 | 0/? | Not started | - |
 | 10. Best Practices | v0.2 | 0/? | Not started | - |
 | 11. Network Docs | v0.2 | 0/? | Not started | - |
