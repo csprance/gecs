@@ -113,3 +113,7 @@ addons/gecs_network/
 ## License
 
 MIT License — see `LICENSE` file for details.
+
+## Credits
+
+Originally developed by **Code Fixxers** team during the Arena Survivors MVP project. Then modified by Quantum Tangent Games
