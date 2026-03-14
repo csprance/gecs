@@ -172,7 +172,9 @@ func end_session() -> void:
 	if world != null and is_instance_valid(world):
 		var to_remove: Array[Entity] = []
 		for entity in world.entities:
-			if entity != _session_entity and is_instance_valid(entity):
+			if entity == _session_entity or not is_instance_valid(entity):
+				continue
+			if entity.get_component(CN_NetworkIdentity) != null:
 				to_remove.append(entity)
 		for entity in to_remove:
 			world.remove_entity(entity)

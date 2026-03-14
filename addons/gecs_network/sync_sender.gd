@@ -146,30 +146,24 @@ func _poll_entities_for_priority(priority: int) -> void:
 		if not _should_broadcast(entity, net_id):
 			continue
 
-		# Determine component changes — check for custom handler first
-		var changes: Dictionary = {}
+		# Determine component changes.
+		# Compute default dirty-check once (advances internal cache), then apply
+		# custom handler overrides: null = keep default, {} = suppress, dict = replace.
+		var changes: Dictionary = net_sync.check_changes_for_priority(priority)
 		if not _custom_send_handlers.is_empty():
-			# Check each component tracked by net_sync for a custom handler
 			for inst_id in net_sync._comp_refs.keys():
 				var comp = net_sync._comp_refs[inst_id]
 				var comp_type: String = _get_comp_type_name(comp)
-				if _custom_send_handlers.has(comp_type):
-					var result = _custom_send_handlers[comp_type].call(entity, comp, priority)
-					if result == null:
-						# Null means fall through to default dirty-check for all comps
-						changes = net_sync.check_changes_for_priority(priority)
-					elif result is Dictionary:
-						if not result.is_empty():
-							changes[comp_type] = result  # Custom data to send
-						# {} means suppress — don't add to changes
-				else:
-					# No custom handler for this comp — use default dirty-check result
-					var default_changes: Dictionary = net_sync.check_changes_for_priority(priority)
-					for k in default_changes.keys():
-						if not changes.has(k):
-							changes[k] = default_changes[k]
-		else:
-			changes = net_sync.check_changes_for_priority(priority)
+				if not _custom_send_handlers.has(comp_type):
+					continue
+				var result = _custom_send_handlers[comp_type].call(entity, comp, priority)
+				if result == null:
+					pass  # Keep default dirty-check result already in changes
+				elif result is Dictionary:
+					if result.is_empty():
+						changes.erase(comp_type)  # {} means suppress
+					else:
+						changes[comp_type] = result  # Override with custom data
 
 		if changes.is_empty():
 			continue

@@ -60,7 +60,7 @@ func broadcast_full_state() -> void:
 		return
 
 	var payload := {"entities": full_state, "session_id": _ns._game_session_id}
-	_ns._sync_full_state(payload)
+	_ns.rpc("_sync_full_state", payload)
 
 
 func handle_sync_full_state(payload: Dictionary) -> void:
