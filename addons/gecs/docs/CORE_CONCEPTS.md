@@ -153,14 +153,13 @@ func on_ready():
 
 ### Component Fundamentals
 
-Components are pure data containers - they store state but contain no game logic. They can emit signals for reactive systems.
+Components are pure data containers - they store state but contain no game logic.
 
 ```gdscript
 # c_health.gd - Example component
 class_name C_Health
 extends Component
 
-signal health_changed
 
 ## How much total health this entity has
 @export var maximum := 100.0

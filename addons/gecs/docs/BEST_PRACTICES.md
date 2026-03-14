@@ -178,6 +178,7 @@ func process(entities: Array[Entity], components: Array, delta: float):
 ```
 
 **Flush Modes** control when queued commands execute:
+
 - **PER_SYSTEM** (default) — executes after each system completes
 - **PER_GROUP** — executes after all systems in the group complete
 - **MANUAL** — requires explicit `ECS.world.flush_command_buffers()` call
@@ -242,6 +243,9 @@ project/
 
 ### Player Character Pattern
 
+> This is all just glue code to initialize, and setup entities to be used with the ECS.
+> You should avoid wanting to put gameplay stuff here, but if you must it's not a problem at all.
+
 ```gdscript
 # e_player.gd
 class_name Player
@@ -256,6 +260,9 @@ func on_ready():
 ```
 
 ### Enemy Pattern
+
+> This is all just glue code to initialize, and setup entities to be used with the ECS.
+> You should avoid wanting to put gameplay stuff here, but if you must it's not a problem at all.
 
 ```gdscript
 # e_enemy.gd
