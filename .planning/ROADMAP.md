@@ -96,7 +96,7 @@ Plans:
 **Requirements**: NET-01, NET-02, NET-03
 **Success Criteria** (what must be TRUE):
 
-1. All 8 network docs have been read line-by-line against the gecs_network v1.0.0 source, with each discrepancy corrected or removed
+1. All 10 network docs have been read line-by-line against the gecs_network v1.0.0 source, with each discrepancy corrected or removed
 2. Every code example in every network doc compiles against the v1.0.0 API — no method calls to non-existent functions
 3. The network best-practices doc contains only patterns that are implementable with the actual v1.0.0 API (no invented prediction patterns, no undocumented hooks)
 4. The v1→v2 migration guide accurately reflects the real API differences between the old and new versions
