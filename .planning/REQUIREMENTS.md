@@ -12,7 +12,7 @@
 - [ ] **CORE-03**: COMPONENT_QUERIES matches the actual QueryBuilder syntax (with_all, with_any, with_none, with_relationship, with_group)
 - [ ] **CORE-04**: OBSERVERS accurately describes the observer/reactive system as it works in actual source code
 - [ ] **CORE-05**: RELATIONSHIPS doc is accurate — all examples use real API, no fabricated matching modes
-- [ ] **CORE-06**: SERIALIZATION verified against actual code or clearly marked as removed/changed
+- [x] **CORE-06**: SERIALIZATION verified against actual code or clearly marked as removed/changed
 
 ### Best Practices (BEST)
 
@@ -59,7 +59,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CORE-03 | Phase 8 | Pending |
 | CORE-04 | Phase 9 | Pending |
 | CORE-05 | Phase 9 | Pending |
-| CORE-06 | Phase 8 | Pending |
+| CORE-06 | Phase 8 | Complete |
 | BEST-01 | Phase 10 | Pending |
 | BEST-02 | Phase 10 | Pending |
 | BEST-03 | Phase 10 | Pending |
