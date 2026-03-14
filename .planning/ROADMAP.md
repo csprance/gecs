@@ -27,8 +27,8 @@ Full archive: `.planning/milestones/v0.1-ROADMAP.md`
 - [x] **Phase 8: Foundation Docs** - GETTING_STARTED, CORE_CONCEPTS, and SERIALIZATION verified and rewritten (completed 2026-03-14)
 - [x] **Phase 9: Advanced Core Docs** - COMPONENT_QUERIES, OBSERVERS, and RELATIONSHIPS verified and rewritten
 - [x] **Phase 10: Best Practices** - BEST_PRACTICES rebuilt from zamn, PERFORMANCE_OPTIMIZATION verified, TROUBLESHOOTING rewritten (completed 2026-03-14)
-- [ ] **Phase 11: Network Docs** - All gecs_network/docs/ verified against v1.0.0 source
-- [ ] **Phase 12: Entry Points** - Root README and both addon READMEs rewritten
+- [x] **Phase 11: Network Docs** - All gecs_network/docs/ verified against v1.0.0 source (completed 2026-03-14)
+- [x] **Phase 12: Entry Points** - Root README and both addon READMEs rewritten (completed 2026-03-14)
 
 ## Phase Details
 
@@ -117,21 +117,25 @@ Plans:
 2. The root README quick-start code block compiles and runs against GECS v6.8.1
 3. The gecs addon README and the gecs_network addon README are consistent with the rewritten docs from Phases 8–11 — no contradictions between README and doc content
 4. Each README accurately describes only features that exist in the current release — no mention of planned or removed features as present
-   **Plans**: TBD
+   **Plans**: 1 plan
+
+Plans:
+
+- [ ] 12-01-PLAN.md — Fix all 3 READMEs (strip emoji, fix Vector3 type, fix SyncConfig, add network_session.gd, strip prediction framing)
 
 ## Progress
 
-| Phase                                        | Milestone | Plans Complete | Status      | Completed  |
-| -------------------------------------------- | --------- | -------------- | ----------- | ---------- |
-| 1. Foundation and Entity Lifecycle           | v0.1      | 4/4            | Complete    | 2026-03-09 |
-| 2. Component Property Sync                   | v0.1      | 4/4            | Complete    | 2026-03-09 |
-| 3. Authority Model and Native Transform Sync | v0.1      | 4/4            | Complete    | 2026-03-10 |
-| 4. Relationship Sync                         | v0.1      | 3/3            | Complete    | 2026-03-11 |
-| 5. Reconciliation and Custom Sync            | v0.1      | 3/3            | Complete    | 2026-03-12 |
-| 6. Cleanup, Documentation, v1→v2 Migration   | v0.1      | 4/4            | Complete    | 2026-03-12 |
-| 7. NetworkSession Node                       | v0.1      | 4/4            | Complete    | 2026-03-13 |
-| 8. Foundation Docs                           | v0.2      | 3/3            | Complete    | 2026-03-14 |
-| 9. Advanced Core Docs                        | v0.2      | 3/3            | Complete    | 2026-03-14 |
-| 10. Best Practices                           | 4/4 | Complete    | 2026-03-14 | -          |
-| 11. Network Docs                             | v0.2      | 0/1            | Not started | -          |
-| 12. Entry Points                             | v0.2      | 0/?            | Not started | -          |
+| Phase                                        | Milestone | Plans Complete | Status     | Completed  |
+| -------------------------------------------- | --------- | -------------- | ---------- | ---------- |
+| 1. Foundation and Entity Lifecycle           | v0.1      | 4/4            | Complete   | 2026-03-09 |
+| 2. Component Property Sync                   | v0.1      | 4/4            | Complete   | 2026-03-09 |
+| 3. Authority Model and Native Transform Sync | v0.1      | 4/4            | Complete   | 2026-03-10 |
+| 4. Relationship Sync                         | v0.1      | 3/3            | Complete   | 2026-03-11 |
+| 5. Reconciliation and Custom Sync            | v0.1      | 3/3            | Complete   | 2026-03-12 |
+| 6. Cleanup, Documentation, v1→v2 Migration   | v0.1      | 4/4            | Complete   | 2026-03-12 |
+| 7. NetworkSession Node                       | v0.1      | 4/4            | Complete   | 2026-03-13 |
+| 8. Foundation Docs                           | v0.2      | 3/3            | Complete   | 2026-03-14 |
+| 9. Advanced Core Docs                        | v0.2      | 3/3            | Complete   | 2026-03-14 |
+| 10. Best Practices                           | 4/4       | Complete       | 2026-03-14 | -          |
+| 11. Network Docs                             | 1/1 | Complete   | 2026-03-14 | 2026-03-14 |
+| 12. Entry Points                             | v0.2      | 1/1            | Complete   | 2026-03-14 |

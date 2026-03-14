@@ -22,9 +22,9 @@
 
 ### Network Docs (NET) — addons/gecs_network/docs/
 
-- [ ] **NET-01**: All 8 network docs verified accurate against actual gecs_network v1.0.0 source code
-- [ ] **NET-02**: Network best-practices doc uses real patterns — no AI-hallucinated networking advice
-- [ ] **NET-03**: All example code in network docs compiles and matches the v1.0.0 API
+- [x] **NET-01**: All 8 network docs verified accurate against actual gecs_network v1.0.0 source code
+- [x] **NET-02**: Network best-practices doc uses real patterns — no AI-hallucinated networking advice
+- [x] **NET-03**: All example code in network docs compiles and matches the v1.0.0 API
 
 ### Entry Points (READ)
 
@@ -63,9 +63,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | BEST-01 | Phase 10 | Complete |
 | BEST-02 | Phase 10 | Complete |
 | BEST-03 | Phase 10 | Complete |
-| NET-01 | Phase 11 | Pending |
-| NET-02 | Phase 11 | Pending |
-| NET-03 | Phase 11 | Pending |
+| NET-01 | Phase 11 | Complete |
+| NET-02 | Phase 11 | Complete |
+| NET-03 | Phase 11 | Complete |
 | READ-01 | Phase 12 | Pending |
 | READ-02 | Phase 12 | Pending |
 
