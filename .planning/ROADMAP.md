@@ -103,7 +103,7 @@ Plans:
 | 5. Reconciliation and Custom Sync | v0.1 | 3/3 | Complete | 2026-03-12 |
 | 6. Cleanup, Documentation, v1→v2 Migration | v0.1 | 4/4 | Complete | 2026-03-12 |
 | 7. NetworkSession Node | v0.1 | 4/4 | Complete | 2026-03-13 |
-| 8. Foundation Docs | v0.2 | 0/3 | Not started | - |
+| 8. Foundation Docs | 2/3 | In Progress|  | - |
 | 9. Advanced Core Docs | v0.2 | 0/? | Not started | - |
 | 10. Best Practices | v0.2 | 0/? | Not started | - |
 | 11. Network Docs | v0.2 | 0/? | Not started | - |

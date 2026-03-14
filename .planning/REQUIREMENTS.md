@@ -7,7 +7,7 @@
 
 ### Core Docs (CORE) — addons/gecs/docs/
 
-- [ ] **CORE-01**: Developer can follow GETTING_STARTED end-to-end without hitting code that doesn't compile or APIs that don't exist
+- [x] **CORE-01**: Developer can follow GETTING_STARTED end-to-end without hitting code that doesn't compile or APIs that don't exist
 - [ ] **CORE-02**: CORE_CONCEPTS accurately reflects the real ECS singleton, World, Entity, Component, System APIs — no invented methods
 - [ ] **CORE-03**: COMPONENT_QUERIES matches the actual QueryBuilder syntax (with_all, with_any, with_none, with_relationship, with_group)
 - [ ] **CORE-04**: OBSERVERS accurately describes the observer/reactive system as it works in actual source code
@@ -54,7 +54,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| CORE-01 | Phase 8 | Pending |
+| CORE-01 | Phase 8 | Complete |
 | CORE-02 | Phase 8 | Pending |
 | CORE-03 | Phase 8 | Pending |
 | CORE-04 | Phase 9 | Pending |

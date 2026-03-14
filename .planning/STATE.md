@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v0.2
 milestone_name: Documentation Overhaul
-status: Roadmap created, awaiting first plan
-stopped_at: Phase 8 context gathered
-last_updated: "2026-03-14T02:54:57.167Z"
+status: In progress — Phase 8 Plan 3 complete
+stopped_at: Completed 08-03-PLAN.md
+last_updated: "2026-03-14T03:14:00.000Z"
 progress:
   total_phases: 5
   completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
+  total_plans: 3
+  completed_plans: 3
   percent: 0
 ---
 
@@ -24,9 +24,9 @@ See: .planning/PROJECT.md (updated 2026-03-13 after v0.2 milestone started)
 
 ## Current Position
 
-Phase: 8 (Foundation Docs) — Not started
-Plan: —
-Status: Roadmap created, awaiting first plan
+Phase: 8 (Foundation Docs) — In progress
+Plan: 3 of 3 complete
+Status: All Phase 8 plans complete
 
 Progress: [----------] 0% (0/5 phases complete)
 
@@ -38,6 +38,7 @@ Progress: [----------] 0% (0/5 phases complete)
 | Phases complete | 0 |
 | Plans total | TBD |
 | Plans complete | 0 |
+| Phase 08-foundation-docs P01 | 1 | 1 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -53,6 +54,7 @@ Progress: [----------] 0% (0/5 phases complete)
 - Phase 10 is isolated: best practices work requires reading zamn source before writing begins
 - Phase 11 is network-only: self-contained verification pass against gecs_network v1.0.0 source
 - Phase 12 is last: READMEs should be written after all docs are accurate so they can reference them
+- [Phase 08-01]: Full rewrite of GETTING_STARTED.md: patch was unreliable given structural and accuracy problems; spatial patterns gated with Node3D context; add_entity manages tree placement; CommandBuffer section deferred to CORE_CONCEPTS
 
 ### Roadmap Evolution
 
@@ -70,7 +72,7 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-14T02:54:57.162Z
-Stopped at: Phase 8 context gathered
-Resume file: .planning/phases/08-foundation-docs/08-CONTEXT.md
+Last session: 2026-03-14T03:13:43.683Z
+Stopped at: Completed 08-01-PLAN.md
+Resume file: None
 Next action: `gsd:plan-phase 8`
