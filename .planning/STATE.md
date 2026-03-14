@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v0.2
 milestone_name: Documentation Overhaul
 status: completed
-stopped_at: Phase 9 context gathered
-last_updated: "2026-03-14T03:45:00.973Z"
+stopped_at: Completed 10-best-practices-10-03-PLAN.md
+last_updated: "2026-03-14T13:18:42.253Z"
 progress:
   total_phases: 5
-  completed_phases: 1
-  total_plans: 3
-  completed_plans: 3
-  percent: 0
+  completed_phases: 2
+  total_plans: 9
+  completed_plans: 8
+  percent: 40
 ---
 
 # Project State
@@ -20,27 +20,32 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-13 after v0.2 milestone started)
 
 **Core value:** Developers can build ECS games in Godot with a framework that stays out of their way — clean APIs, honest docs, and patterns that actually work in real projects.
-**Current focus:** v0.2 Documentation Overhaul — Phase 8 ready to plan
+**Current focus:** v0.2 Documentation Overhaul — Phase 9 complete, ready for Phase 10
 
 ## Current Position
 
-Phase: 8 (Foundation Docs) — In progress
+Phase: 9 (Advanced Core Docs) — Complete
 Plan: 3 of 3 complete
-Status: All Phase 8 plans complete
+Status: All Phase 9 plans complete
 
-Progress: [----------] 0% (0/5 phases complete)
+Progress: [##--------] 40% (2/5 phases complete)
 
 ## Performance Metrics
 
-| Metric | Value |
-|--------|-------|
-| Phases total | 5 |
-| Phases complete | 0 |
-| Plans total | TBD |
-| Plans complete | 0 |
-| Phase 08-foundation-docs P01 | 1 | 1 tasks | 1 files |
-| Phase 08-foundation-docs P03 | 2min | 1 tasks | 1 files |
-| Phase 08-foundation-docs P02 | 3min | 1 tasks | 1 files |
+| Metric                          | Value |
+| ------------------------------- | ----- | ------- | ------- |
+| Phases total                    | 5     |
+| Phases complete                 | 2     |
+| Plans total                     | 6     |
+| Plans complete                  | 6     |
+| Phase 08-foundation-docs P01    | 1     | 1 tasks | 1 files |
+| Phase 08-foundation-docs P03    | 2min  | 1 tasks | 1 files |
+| Phase 08-foundation-docs P02    | 3min  | 1 tasks | 1 files |
+| Phase 09-advanced-core-docs P01 | <1min | 1 tasks | 1 files |
+| Phase 09-advanced-core-docs P02 | <2min | 1 tasks | 1 files |
+| Phase 09-advanced-core-docs P03 | <2min | 1 tasks | 1 files |
+| Phase 10-best-practices P03 | 5min | 1 tasks | 1 files |
+| Phase 10-best-practices P01 | 8min | 1 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -58,6 +63,8 @@ Progress: [----------] 0% (0/5 phases complete)
 - Phase 12 is last: READMEs should be written after all docs are accurate so they can reference them
 - [Phase 08-01]: Full rewrite of GETTING_STARTED.md: patch was unreliable given structural and accuracy problems; spatial patterns gated with Node3D context; add_entity manages tree placement; CommandBuffer section deferred to CORE_CONCEPTS
 - [Phase 08-foundation-docs]: ECS.wildcard kept in relationship query examples (valid usage) — only deps() wildcard pattern was removed as incorrect
+- [Phase 10-best-practices]: ECS.world.get_system_count() removed with no replacement — does not exist in source
+- [Phase 10-best-practices]: Debug logging guidance now references gecs.log_level project setting, not fabricated ECS.set_debug_level
 
 ### Roadmap Evolution
 
@@ -75,7 +82,7 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-14T03:45:00.968Z
-Stopped at: Phase 9 context gathered
-Resume file: .planning/phases/09-advanced-core-docs/09-CONTEXT.md
+Last session: 2026-03-14T13:18:29.244Z
+Stopped at: Completed 10-best-practices-10-03-PLAN.md
+Resume file: None
 Next action: `gsd:plan-phase 8`
