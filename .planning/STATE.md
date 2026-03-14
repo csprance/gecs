@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v0.2
 milestone_name: Documentation Overhaul
 status: completed
-stopped_at: Completed 10-best-practices-10-03-PLAN.md
-last_updated: "2026-03-14T13:18:42.253Z"
+stopped_at: Completed 10-best-practices-01-PLAN.md
+last_updated: "2026-03-14T13:18:54.020Z"
 progress:
   total_phases: 5
   completed_phases: 2
@@ -65,6 +65,9 @@ Progress: [##--------] 40% (2/5 phases complete)
 - [Phase 08-foundation-docs]: ECS.wildcard kept in relationship query examples (valid usage) — only deps() wildcard pattern was removed as incorrect
 - [Phase 10-best-practices]: ECS.world.get_system_count() removed with no replacement — does not exist in source
 - [Phase 10-best-practices]: Debug logging guidance now references gecs.log_level project setting, not fabricated ECS.set_debug_level
+- [Phase 10-best-practices]: Performance numbers updated to 4.6-dev3 benchmark data without version pinning
+- [Phase 10-best-practices]: enabled() takes no argument; disabled() is the separate method for disabled-only queries
+- [Phase 10-best-practices]: with_group() takes Array[String]; single-string form was a documentation error
 
 ### Roadmap Evolution
 
@@ -82,7 +85,7 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-14T13:18:29.244Z
-Stopped at: Completed 10-best-practices-10-03-PLAN.md
+Last session: 2026-03-14T13:18:54.016Z
+Stopped at: Completed 10-best-practices-01-PLAN.md
 Resume file: None
 Next action: `gsd:plan-phase 8`
