@@ -784,16 +784,10 @@ When a system needs multiple distinct queries — e.g. a WeaponsSystem that hand
 class_name WeaponsSystem
 extends System
 
-func sub_systems() -> Array:
+func sub_systems() -> Array[Array]:
     return [
-        {
-            "query": q.with_all([C_Weapon, C_Firing]),
-            "process": handle_firing
-        },
-        {
-            "query": q.with_all([C_Weapon, C_Reloading]),
-            "process": handle_reloading
-        }
+        [q.with_all([C_Weapon, C_Firing]), handle_firing],
+        [q.with_all([C_Weapon, C_Reloading]), handle_reloading]
     ]
 
 func handle_firing(entities: Array[Entity], _components: Array, delta: float):
