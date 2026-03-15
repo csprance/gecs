@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 01-observer-signal-chain/01-03-PLAN.md
-last_updated: "2026-03-15T19:26:51.776Z"
+stopped_at: Completed 02-01-PLAN.md — RED tests for CACHE-01/03/04
+last_updated: "2026-03-15T22:36:26.028Z"
 last_activity: "2026-03-15 — Plan 01-01 complete: RED test scaffold for OBS-01/02/03"
 progress:
   total_phases: 5
   completed_phases: 1
-  total_plans: 3
-  completed_plans: 3
+  total_plans: 5
+  completed_plans: 4
   percent: 5
 ---
 
@@ -52,6 +52,7 @@ Progress: [█░░░░░░░░░] 5%
 *Updated after each plan completion*
 | Phase 01-observer-signal-chain P02 | 17 | 2 tasks | 1 files |
 | Phase 01-observer-signal-chain P03 | 4 | 2 tasks | 2 files |
+| Phase 02-cache-invalidation-scoping P01 | 7 | 1 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -69,6 +70,8 @@ Recent decisions affecting current work:
 - [Phase 01-02]: _initialize() now uses shallow duplicate() so caller's component reference IS the live stored instance, making remove_component disconnect correct
 - [Phase 01-03]: Doc-only changes confirmed: git diff shows only comment lines added/modified, zero logic changed in observer.gd and world.gd
 - [Phase 01-03]: watch() example shows class reference (C_Health) not instance (C_Health.new()) — critical matching contract distinction documented in observer.gd
+- [Phase 02-01]: CACHE-02 test uses persistent QB because world.query returns new QB each access — single-entity disable already handled by entity._on_enabled_changed emitting cache_invalidated directly
+- [Phase 02-01]: CACHE-04 tests disable_entities batch N-vs-1 invalidation count, not single-entity correctness — bare loop fires N invalidations, depth-counter fix should collapse to 1
 
 ### Pending Todos
 
@@ -81,6 +84,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-15T19:23:16.249Z
-Stopped at: Completed 01-observer-signal-chain/01-03-PLAN.md
+Last session: 2026-03-15T22:36:26.024Z
+Stopped at: Completed 02-01-PLAN.md — RED tests for CACHE-01/03/04
 Resume file: None

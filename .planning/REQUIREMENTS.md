@@ -17,7 +17,7 @@
 - [ ] **CACHE-01**: `_query_archetype_cache` is only invalidated when the archetype set changes (archetype created or deleted), not on every entity movement between archetypes
 - [ ] **CACHE-02**: Per-QueryBuilder `_cache_valid` is invalidated when `entity.enabled` or `entity.disabled` changes, so `.enabled()` filter always returns accurate results (fix #87)
 - [ ] **CACHE-03**: The `_should_invalidate_cache = false` batch suppression flag is safely guarded so it cannot be left permanently false after an error or interruption
-- [ ] **CACHE-04**: Regression tests confirm stale results are not returned after enable/disable toggle and after entity movement
+- [x] **CACHE-04**: Regression tests confirm stale results are not returned after enable/disable toggle and after entity movement
 
 ### Archetype Edge Cache
 
@@ -77,7 +77,7 @@
 | CACHE-01 | Phase 2 | Pending |
 | CACHE-02 | Phase 2 | Pending |
 | CACHE-03 | Phase 2 | Pending |
-| CACHE-04 | Phase 2 | Pending |
+| CACHE-04 | Phase 2 | Complete |
 | ARCH-01 | Phase 3 | Pending |
 | ARCH-02 | Phase 3 | Pending |
 | ARCH-03 | Phase 3 | Pending |
