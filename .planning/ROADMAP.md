@@ -10,7 +10,7 @@ Five dependency-ordered fix phases harden GECS against all six known correctness
 - Integer phases (1, 2, 3): Planned milestone work
 - Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
 
-- [ ] **Phase 1: Observer Signal Chain** - Fix observer callbacks so every phase's regression tests are reliable
+- [x] **Phase 1: Observer Signal Chain** - Fix observer callbacks so every phase's regression tests are reliable (completed 2026-03-15)
 - [ ] **Phase 2: Cache Invalidation Scoping** - Restrict cache wipes to archetype-set changes; fix enabled/disabled staleness
 - [ ] **Phase 3: Archetype Edge Cache Hardening** - Bidirectional edge cleanup so entities never silently drop from queries
 - [ ] **Phase 4: Component Lifecycle and Relationship Queries** - Preserve non-@export properties; fix reverse relationship query
@@ -85,7 +85,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Observer Signal Chain | 2/3 | In Progress|  |
+| 1. Observer Signal Chain | 3/3 | Complete   | 2026-03-15 |
 | 2. Cache Invalidation Scoping | 0/TBD | Not started | - |
 | 3. Archetype Edge Cache Hardening | 0/TBD | Not started | - |
 | 4. Component Lifecycle and Relationship Queries | 0/TBD | Not started | - |
