@@ -14,57 +14,79 @@ Build scalable, maintainable games with clean separation of data and logic. GECS
 - 🎮 **Battle Tested** - Used in games being actively developed
 - **Multiplayer** - GECS goes Multiplayer! Check out the [GECS Network Addon](addons/gecs_network/README.md)
 
-```gdscript
-# Create entities with components
-var player1 = Entity.new()
-player1.add_component(C_Health.new(100))
-player1.add_component(C_Velocity.new(Vector3(5, 0, 0)))
+## Requirements
 
-var player2 = Entity.new()
-player2.add_component(C_Health.new(100))
-player2.add_component(C_Velocity.new(Vector3(-5, 0, 0)))
+Godot 4.x (tested with 4.6+)
 
-# Add entity to the world
-ECS.world.add_entities([player1, player2])
+## Installation
 
-# Add relationships to entities
-# Player 1 is an Ally to Player 2
-player1.add_relationship(Relationship.new(C_AllyTo.new(), player2))
-# Player 2 is a little suspicious of Player 1
-player2.add_relationship(Relationship.new(C_SuspiciousOf.new(), player1))
+### Option A: Godot Asset Library
 
-# Components define data only
-class_name C_Velocity extends Component
+Search for **"GECS"** in the Godot editor AssetLib tab and click Install.
 
-@export var velocity := Vector3.ZERO
+### Option B: Manual Copy
 
+Download the release zip, copy `addons/gecs/` into your project, then enable the plugin in **Project Settings > Plugins**.
 
-# Systems process entities with specific components
-class_name VelocitySystem extends System
+### Option C: Git Submodule
 
-# Systems define queries to select entities and iterate their components
-func query() -> QueryBuilder:
-    return q.with_all([C_Velocity, C_Transform]).iterate([C_Velocity, C_Transform])
-
-# Systems implement process to handle selected entities
-func process(entities: Array[Entity], components: Array, delta: float) -> void:
-    var c_velocities = components[0] # C_Velocity (first in iterate)
-    var c_transforms = components[1] # C_Transform (second in iterate)
-
-    # Process all velocity and transform components on entities that match query
-    for i in entities.size():
-        var c_velocity := c_velocities[i] as C_Velocity
-        var c_transform := c_transforms[i] as C_Transform
-        c_transform.transform.global_position += c_velocity.velocity * delta
-
-# Add systems to the world
-ECS.world.add_system(VelocitySystem.new())
-
-# Progress the world and call all systems
-ECS.world.process(delta)
+```bash
+git submodule add -b release-v6.8.1 https://github.com/csprance/gecs.git addons/gecs
 ```
 
+Then enable the plugin in **Project Settings > Plugins**.
+
 ## Quick Start
+
+```gdscript
+# All component properties need a default value or Godot will error on export
+
+# Pattern 1: @export var with default (no constructor needed)
+class_name C_Health extends Component
+@export var max_health: int = 100
+@export var current_health: int = 100
+
+# Pattern 2: _init() with parameter AND a default on the property
+class_name C_Velocity extends Component
+@export var direction: Vector3 = Vector3.ZERO
+func _init(v: Vector3 = Vector3.ZERO) -> void:
+    direction = v
+
+# Create entities and add components
+var player = Entity.new()
+player.add_component(C_Health.new())
+player.add_component(C_Velocity.new(Vector3(5, 0, 0)))
+
+var target = Entity.new()
+target.add_component(C_Health.new())
+target.add_component(C_Velocity.new(Vector3(-5, 0, 0)))
+
+# Add entities to the world
+ECS.world.add_entity(player)
+ECS.world.add_entity(target)
+
+# Add relationships between entities
+player.add_relationship(Relationship.new(C_AllyTo.new(), target))
+
+# Systems define which entities to process
+class_name VelocitySystem extends System
+
+func query() -> QueryBuilder:
+    return q.with_all([C_Velocity])
+
+func process(entities: Array[Entity], components: Array, delta: float) -> void:
+    for entity in entities:
+        var vel := entity.get_component(C_Velocity) as C_Velocity
+        entity.position += vel.direction * delta
+
+# Register the system and start processing
+ECS.world.add_system(VelocitySystem.new())
+
+func _process(delta: float) -> void:
+    ECS.process(delta)
+```
+
+## Quick Start Steps
 
 1. **Install**: Download to `addons/gecs/` and enable in Project Settings
 2. **Follow Guide**: [Get your first ECS project running in 5 minutes →](addons/gecs/docs/GETTING_STARTED.md)
