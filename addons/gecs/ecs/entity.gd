@@ -91,6 +91,13 @@ func _initialize(_components: Array = []) -> void:
 	# because components can be added before the entity is added to the world
 	# replay adding components here so signals pick them up and the index is updated
 	var temp_comps = components.values().duplicate_deep()
+	# Disconnect property_changed from original instances before clearing.
+	# _initialize replaces each component with a duplicate_deep() copy, so the original
+	# pre-world instances must have their signal connections removed to prevent phantom
+	# on_component_changed callbacks if the caller retains a reference to the originals.
+	for original in components.values():
+		if original.property_changed.is_connected(_on_component_property_changed):
+			original.property_changed.disconnect(_on_component_property_changed)
 	components.clear()
 	for comp in temp_comps:
 		add_component(comp)
@@ -235,6 +242,12 @@ func remove_component(component: Resource) -> void:
 
 		# Clean up cache entry for the component instance
 		_component_path_cache.erase(component_instance)
+
+		# OBS-03: Disconnect property_changed before emitting removal signal.
+		# Without this, phantom on_component_changed callbacks arrive whenever
+		# the removed component's setters emit property_changed after removal.
+		if component_instance.property_changed.is_connected(_on_component_property_changed):
+			component_instance.property_changed.disconnect(_on_component_property_changed)
 
 		component_removed.emit(self , component_instance)
 		# ARCHETYPE: Signal handler (_on_entity_component_removed) handles archetype update
