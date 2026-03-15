@@ -8,39 +8,39 @@
 
 **Discord**: [Join our community](https://discord.gg/eB43XU2tmn)
 
-## 📚 Learning Path
+## Learning Path
 
-### 🚀 Getting Started (5-10 minutes)
+### Getting Started (5-10 minutes)
 
 - **[Getting Started Guide](docs/GETTING_STARTED.md)** - Build your first ECS project in 5 minutes
 
-### 🧠 Core Understanding (20-30 minutes)
+### Core Understanding (20-30 minutes)
 
 - **[Core Concepts](docs/CORE_CONCEPTS.md)** - Deep dive into Entities, Components, Systems, and Relationships
 - **[Component Queries](docs/COMPONENT_QUERIES.md)** - Advanced property-based entity filtering
 
-### 🛠️ Practical Application (30-60 minutes)
+### Practical Application (30-60 minutes)
 
 - **[Best Practices](docs/BEST_PRACTICES.md)** - Write maintainable, performant ECS code
 - **[Relationships](docs/RELATIONSHIPS.md)** - Link entities together for complex interactions
 - **[Observers](docs/OBSERVERS.md)** - Reactive systems that respond to component changes
 - **[Serialization](docs/SERIALIZATION.md)** - Save and load game state and entities
 
-### 🔄 Deferred Execution (NEW in v6.8.0)
+### Deferred Execution
 
 - **CommandBuffer** - Queue structural changes during iteration with `cmd`. Eliminates backwards iteration and defensive snapshots. Three flush modes: PER_SYSTEM, PER_GROUP, MANUAL.
 
-### 🌐 Networking (Optional addon)
+### Networking (Optional addon)
 
 - **[GECS Network Addon](../gecs_network/README.md)** - Multiplayer synchronization for GECS entities. Supports **transport providers** (ENet, Steam, or custom backends) that can be swapped without changing game code. See the addon docs for [Configuration & NetAdapter](../gecs_network/docs/configuration.md), [Examples](../gecs_network/docs/examples.md), and [Troubleshooting](../gecs_network/docs/troubleshooting.md).
 
-### ⚡ Optimization & Advanced (As needed)
+### Optimization & Advanced (As needed)
 
 - **[Debug Viewer](docs/DEBUG_VIEWER.md)** - Real-time debugging and performance monitoring
 - **[Performance Optimization](docs/PERFORMANCE_OPTIMIZATION.md)** - Make your games run fast and smooth
 - **[Troubleshooting](docs/TROUBLESHOOTING.md)** - Solve common issues quickly
 
-### 🔬 Framework Development (For contributors)
+### Framework Development (For contributors)
 
 - **[Performance Testing](docs/PERFORMANCE_TESTING.md)** - Framework-level performance testing guide
 
@@ -65,23 +65,23 @@
 
 ### Networking (Optional addon)
 
-| Topic                  | Document                                                                  | Description                                          |
-| ---------------------- | ------------------------------------------------------------------------- | ---------------------------------------------------- |
-| **Overview**           | [GECS Network Addon](../gecs_network/README.md)                          | Multiplayer sync, transport providers (ENet/Steam)   |
-| **Configuration**      | [Configuration & NetAdapter](../gecs_network/docs/configuration.md)      | SyncConfig, priorities, transport provider setup      |
-| **Examples**           | [Examples](../gecs_network/docs/examples.md)                             | Players, enemies, projectiles, abilities              |
-| **Troubleshooting**    | [Troubleshooting](../gecs_network/docs/troubleshooting.md)               | Common networking issues and migration guide          |
+| Topic               | Document                                                            | Description                                        |
+| ------------------- | ------------------------------------------------------------------- | -------------------------------------------------- |
+| **Overview**        | [GECS Network Addon](../gecs_network/README.md)                     | Multiplayer sync, transport providers (ENet/Steam) |
+| **Configuration**   | [Configuration & NetAdapter](../gecs_network/docs/configuration.md) | NetAdapter, priority tiers, ProjectSettings        |
+| **Examples**        | [Examples](../gecs_network/docs/examples.md)                        | Players, enemies, projectiles, abilities           |
+| **Troubleshooting** | [Troubleshooting](../gecs_network/docs/troubleshooting.md)          | Common networking issues and migration guide       |
 
 ### Optimization & Debugging
 
-| Topic              | Document                                                     | Description                         |
-| ------------------ | ------------------------------------------------------------ | ----------------------------------- |
-| **Debug Viewer**   | [Debug Viewer](docs/DEBUG_VIEWER.md)                         | Real-time debugging and inspection  |
-| **Performance**    | [Performance Optimization](docs/PERFORMANCE_OPTIMIZATION.md) | Game performance optimization       |
-| **Debugging**      | [Troubleshooting](docs/TROUBLESHOOTING.md)                   | Common problems and solutions       |
-| **Testing**        | [Performance Testing](docs/PERFORMANCE_TESTING.md)           | Framework performance testing       |
+| Topic            | Document                                                     | Description                        |
+| ---------------- | ------------------------------------------------------------ | ---------------------------------- |
+| **Debug Viewer** | [Debug Viewer](docs/DEBUG_VIEWER.md)                         | Real-time debugging and inspection |
+| **Performance**  | [Performance Optimization](docs/PERFORMANCE_OPTIMIZATION.md) | Game performance optimization      |
+| **Debugging**    | [Troubleshooting](docs/TROUBLESHOOTING.md)                   | Common problems and solutions      |
+| **Testing**      | [Performance Testing](docs/PERFORMANCE_TESTING.md)           | Framework performance testing      |
 
-## 🎯 Quick References
+## Quick References
 
 ### Naming Conventions
 
@@ -123,7 +123,7 @@ ECS.save(data, "user://savegame.tres", true)  # Binary format
 var entities = ECS.deserialize("user://savegame.tres")
 ```
 
-## 🎮 Example Projects
+## Example Projects
 
 Basic examples are included in each guide. For complete game examples, see:
 
@@ -131,14 +131,14 @@ Basic examples are included in each guide. For complete game examples, see:
 - **Combat Systems** - [Relationships Guide](docs/RELATIONSHIPS.md)
 - **UI Synchronization** - [Observers Guide](docs/OBSERVERS.md)
 
-## 🆘 Getting Help
+## Getting Help
 
 1. **Check documentation** - Most questions are answered in the guides above
 2. **Review examples** - Each guide includes working code examples
 3. **Try troubleshooting** - [Troubleshooting Guide](docs/TROUBLESHOOTING.md) covers common issues
 4. **Community support** - [Join our Discord](https://discord.gg/eB43XU2tmn) for discussions and questions
 
-## 🔄 Documentation Updates
+## Documentation Updates
 
 This documentation is actively maintained. If you find errors or have suggestions:
 

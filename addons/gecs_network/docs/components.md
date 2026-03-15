@@ -49,7 +49,7 @@ Priority is declared directly on component properties using `@export_group` sent
 | `"REALTIME"`   | ~60 Hz        | Unreliable | Critical real-time data (rare)         |
 | `"HIGH"`       | 20 Hz         | Unreliable | Velocity, input flags, animation state |
 | `"MEDIUM"`     | 10 Hz         | Reliable   | Health, AI state, XP                   |
-| `"LOW"`        | 1 Hz          | Reliable   | Inventory, stats, upgrades             |
+| `"LOW"`        | 2 Hz          | Reliable   | Inventory, stats, upgrades             |
 | `"SPAWN_ONLY"` | Once at spawn | Reliable   | Projectile initial position/velocity   |
 | `"LOCAL"`      | Never         | —          | Client-only state; never transmitted   |
 

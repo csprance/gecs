@@ -52,7 +52,7 @@ Properties that should never leave the declaring peer get `@export_group("LOCAL"
 
 ```gdscript
 @export_group("LOCAL")
-@export var predicted_position: Vector3 = Vector3.ZERO   # Client prediction — never synced
+@export var predicted_position: Vector3 = Vector3.ZERO   # Local-only — never synced
 @export var ui_health_display: float = 0.0               # Cached for HUD — never synced
 ```
 

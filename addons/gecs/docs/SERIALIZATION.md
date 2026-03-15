@@ -64,12 +64,12 @@ Loads entities from file. Returns empty array if file doesn't exist.
 
 **Fields:**
 
-| Field                      | Type    | Default | Description                                                                                   |
-| -------------------------- | ------- | ------- | --------------------------------------------------------------------------------------------- |
-| `include_all_components`   | `bool`  | `true`  | Serialize all components on each entity. Set to `false` to use the `components` list instead. |
-| `components`               | `Array` | `[]`    | Component types to include when `include_all_components` is `false`.                          |
-| `include_relationships`    | `bool`  | `true`  | Serialize entity relationships. Relationships are supported and serialized by default.        |
-| `include_related_entities` | `bool`  | `true`  | Auto-include entities that are targets of relationships, even if they don't match the query.  |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `include_all_components` | `bool` | `true` | Serialize all components on each entity. Set to `false` to use the `components` list instead. |
+| `components` | `Array` | `[]` | Component types to include when `include_all_components` is `false`. |
+| `include_relationships` | `bool` | `true` | Serialize entity relationships. Relationships are supported and serialized by default. |
+| `include_related_entities` | `bool` | `true` | Auto-include entities that are targets of relationships, even if they don't match the query. |
 
 **Selective serialization example:**
 

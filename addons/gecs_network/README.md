@@ -35,6 +35,19 @@ func _setup_network_sync() -> void:
     net_sync.local_player_spawned.connect(_on_local_player_spawned)
 ```
 
+### Step 4: Start a session with NetworkSession
+
+```gdscript
+func _ready() -> void:
+    var session = NetworkSession.new()
+    add_child(session)       # _ready() sets default transport (ENet) automatically
+    session.host()           # host on port 7777 (default)
+    # or: session.join("192.168.1.10")  # join an existing session as client
+
+# Note: game code is responsible for calling ECS.process(delta) each frame.
+# NetworkSession does not call world.process() internally.
+```
+
 ## Features
 
 - **Declarative sync priorities** — annotate component properties with `@export_group("HIGH")`, `"MEDIUM"`, `"LOW"`, `"SPAWN_ONLY"`, or `"LOCAL"`; no external config class needed
@@ -42,7 +55,7 @@ func _setup_network_sync() -> void:
 - **Authority markers** — `CN_LocalAuthority`, `CN_RemoteEntity`, and `CN_ServerAuthority` are injected automatically at spawn; use them in ECS queries to gate systems by ownership
 - **Relationship sync** — entity relationships sync across peers with deferred resolution for non-deterministic spawn ordering
 - **Periodic reconciliation** — configurable full-state broadcast corrects drift without manual intervention
-- **Custom sync handler overrides** — register per-component-type send/receive handlers at the system level for prediction blending or custom serialization
+- **Custom sync handler overrides** — register per-component-type send/receive handlers at the system level for server correction blending or custom serialization
 - **Zero overhead in single-player** — `NetworkSync` detects offline mode and skips all RPC and sync work
 
 ## Requirements
@@ -63,6 +76,7 @@ addons/gecs_network/
 ├── plugin.gd                      # Editor plugin, ProjectSettings registration
 ├── plugin.cfg                     # Plugin metadata
 ├── network_sync.gd                # Main orchestrator — attach to World; all @rpc declarations
+├── network_session.gd             # Optional session node — host(), join(), end_session()
 ├── spawn_manager.gd               # Entity lifecycle: spawn, despawn, late-join, disconnect
 ├── sync_sender.gd                 # Priority-tiered outbound batching (REALTIME/HIGH/MEDIUM/LOW)
 ├── sync_receiver.gd               # Inbound apply, authority validation, echo-loop guard
