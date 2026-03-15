@@ -138,4 +138,4 @@ Plans:
 | 9. Advanced Core Docs                        | v0.2      | 3/3            | Complete   | 2026-03-14 |
 | 10. Best Practices                           | 4/4       | Complete       | 2026-03-14 | -          |
 | 11. Network Docs                             | 1/1 | Complete    | 2026-03-14 | 2026-03-14 |
-| 12. Entry Points                             | v0.2      | 1/1            | Complete   | 2026-03-14 |
+| 12. Entry Points                             | 1/1 | Complete   | 2026-03-15 | 2026-03-14 |

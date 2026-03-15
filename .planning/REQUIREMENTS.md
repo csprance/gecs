@@ -28,8 +28,8 @@
 
 ### Entry Points (READ)
 
-- [ ] **READ-01**: Root README.md rewritten as clean, accurate project homepage — correct install steps, real quick-start code
-- [ ] **READ-02**: GECS addon README and network addon README consistent with rewritten docs
+- [x] **READ-01**: Root README.md rewritten as clean, accurate project homepage — correct install steps, real quick-start code
+- [x] **READ-02**: GECS addon README and network addon README consistent with rewritten docs
 
 ## v2 Requirements
 
@@ -66,8 +66,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | NET-01 | Phase 11 | Complete |
 | NET-02 | Phase 11 | Complete |
 | NET-03 | Phase 11 | Complete |
-| READ-01 | Phase 12 | Pending |
-| READ-02 | Phase 12 | Pending |
+| READ-01 | Phase 12 | Complete |
+| READ-02 | Phase 12 | Complete |
 
 **Coverage:**
 - v1 requirements: 14 total

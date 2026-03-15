@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v0.2
 milestone_name: Documentation Overhaul
 status: completed
-stopped_at: Completed 11-network-docs 11-01-PLAN.md
-last_updated: "2026-03-14T22:02:31.117Z"
+stopped_at: Completed 12-entry-points-01-PLAN.md — awaiting human review checkpoint
+last_updated: "2026-03-15T03:35:15.535Z"
 progress:
   total_phases: 5
   completed_phases: 4
@@ -50,6 +50,7 @@ Progress: [##########] 100% (5/5 phases complete)
 | Phase 11-network-docs P01       | 5min  | 4 tasks | 4 files |
 | Phase 12-entry-points P01       | 5min  | 3 tasks | 3 files |
 | Phase 11-network-docs P01 | 5min | 2 tasks | 4 files |
+| Phase 12-entry-points P01 | 2min | 3 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -85,6 +86,8 @@ Progress: [##########] 100% (5/5 phases complete)
 - [Phase 11-network-docs]: prediction framing stripped from best-practices.md LOCAL tier comment and custom-sync-handlers.md overview + section title; replaced with 'server correction blending'
 - [Phase 11-network-docs]: migration-v1-to-v2.md deprecated notice added at top
 - [Phase 11-network-docs]: 6 clean docs (architecture, authority, configuration, examples, sync-patterns, troubleshooting) confirmed accurate and emoji-free — no changes needed
+- [Phase 12-entry-points]: addons/gecs/README.md required no changes — NetAdapter and no version stamps already present from prior phase work
+- [Phase 12-entry-points]: NetworkSession Step 4 includes world.process() responsibility note matching source behavior
 
 ### Roadmap Evolution
 
@@ -102,7 +105,7 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-14T21:58:03.118Z
-Stopped at: Completed 11-network-docs 11-01-PLAN.md
+Last session: 2026-03-15T03:35:15.530Z
+Stopped at: Completed 12-entry-points-01-PLAN.md — awaiting human review checkpoint
 Resume file: None
 Next action: Tag v0.2 release with `git tag v0.2.0 && git push origin v0.2.0`
