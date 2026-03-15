@@ -27,7 +27,12 @@ Five dependency-ordered fix phases harden GECS against all six known correctness
   2. Calling `entity.remove_component()` delivers the exact component instance that was removed — observers can match it by `resource_path`
   3. After a component is removed, no further `property_changed` notifications arrive from that component — phantom callbacks do not occur
   4. All three observer scenarios (add, remove, remove_entity teardown) have passing regression tests in `addons/gecs/tests/`
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] 01-01-PLAN.md — Write failing regression test scaffold (O_InstanceCapturingObserver + test_observer.gd, RED phase)
+- [ ] 01-02-PLAN.md — Apply OBS-01/OBS-02/OBS-03 bug fixes to entity.gd and world.gd (GREEN phase)
+- [ ] 01-03-PLAN.md — Update doc comments in observer.gd and world.gd to document guaranteed behaviors
 
 ### Phase 2: Cache Invalidation Scoping
 **Goal**: Query cache layers are invalidated at the correct granularity — no stale results, no spurious full-cache wipes
@@ -80,7 +85,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Observer Signal Chain | 0/TBD | Not started | - |
+| 1. Observer Signal Chain | 0/3 | In progress | - |
 | 2. Cache Invalidation Scoping | 0/TBD | Not started | - |
 | 3. Archetype Edge Cache Hardening | 0/TBD | Not started | - |
 | 4. Component Lifecycle and Relationship Queries | 0/TBD | Not started | - |
