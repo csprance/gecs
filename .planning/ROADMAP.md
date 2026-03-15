@@ -43,7 +43,11 @@ Plans:
   2. Moving an entity between archetypes (add/remove component) does not wipe `_query_archetype_cache` when both archetypes already exist
   3. An interrupted batch operation (early return or error) does not leave `_should_invalidate_cache` permanently false — subsequent queries return correct results
   4. Regression tests confirm no stale results after enable/disable toggle and after entity movement between existing archetypes
-**Plans**: TBD
+**Plans**: 2 plans
+
+Plans:
+- [ ] 02-01-PLAN.md — Write RED test stubs for CACHE-01/02/03/04 (test_cache_invalidation.gd, Wave 0)
+- [ ] 02-02-PLAN.md — Apply all three world.gd fixes (depth counter, archetype-count guard, enable/disable invalidation)
 
 ### Phase 3: Archetype Edge Cache Hardening
 **Goal**: Entities never silently disappear from queries after an archetype empties and is recreated
@@ -86,7 +90,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Observer Signal Chain | 3/3 | Complete   | 2026-03-15 |
-| 2. Cache Invalidation Scoping | 0/TBD | Not started | - |
+| 2. Cache Invalidation Scoping | 0/2 | Not started | - |
 | 3. Archetype Edge Cache Hardening | 0/TBD | Not started | - |
 | 4. Component Lifecycle and Relationship Queries | 0/TBD | Not started | - |
 | 5. Performance Baselines and Regression Infrastructure | 0/TBD | Not started | - |
