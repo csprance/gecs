@@ -386,7 +386,17 @@ func add_entities(_entities: Array, components = null):
 		_invalidate_cache("batch_add_entities")
 
 
-## Removes an [Entity] from the world.[br]
+## Removes an [Entity] and all its components from the world.[br]
+## [br]
+## [b]Teardown order (guaranteed):[/b][br]
+## 1. Entity signals are disconnected first to prevent re-entrancy during observer callbacks.[br]
+## 2. [signal Observer.on_component_removed] fires for each watched component — entity is still valid.[br]
+## 3. Entity is removed from the entity list and archetype.[br]
+## 4. [method Entity.on_destroy] is called, then [code]queue_free[/code].[br]
+## [br]
+## [b]Observer callback safety:[/b] It is safe to read [param entity] state inside [method Observer.on_component_removed].[br]
+## The order in which components trigger [method Observer.on_component_removed] is unspecified.[br]
+## [br]
 ## [param entity] The [Entity] to remove.[br]
 ## [b]Example:[/b]
 ##      [codeblock]world.remove_entity(player_entity)[/codeblock]
