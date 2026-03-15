@@ -242,6 +242,7 @@ Identifier 'ComponentName' not found in current scope
    ```
 
 2. **File not saved or loaded**:
+
    - Save your component script files
    - Restart Godot if classes still not found
    - Check for syntax errors in the component file
@@ -416,3 +417,4 @@ If this guide doesn't solve your problem:
 2. **Review best practices** in [Best Practices](BEST_PRACTICES.md)
 3. **Search GitHub issues** for similar problems
 4. **Create a minimal reproduction** and ask for help
+

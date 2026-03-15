@@ -361,7 +361,6 @@ func spawn_enemy_wave():
 ```
 
 **CommandBuffer flush modes** for performance tuning:
-
 - **PER_SYSTEM** (default) — safe, flushes after each system
 - **PER_GROUP** — batches all systems in a group, flushes once at end
 - **MANUAL** — maximum batching, requires explicit `ECS.world.flush_command_buffers()` call
@@ -406,3 +405,4 @@ print("Cache hit rate: ", stats.get("cache_hits", 0) / (stats.get("cache_hits", 
 ```
 
 **Need more help?** Check the [Troubleshooting Guide](TROUBLESHOOTING.md) for specific performance issues.
+

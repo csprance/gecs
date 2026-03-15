@@ -106,5 +106,3 @@ Systems can safely add or remove entities and components during iteration using 
 
 - [Core Concepts](CORE_CONCEPTS.md) — full API reference for Entity, Component, System, World, and QueryBuilder
 - [Serialization](SERIALIZATION.md) — saving and loading game state
-
-**Need help?** [Join our Discord community](https://discord.gg/eB43XU2tmn) for support and discussions.

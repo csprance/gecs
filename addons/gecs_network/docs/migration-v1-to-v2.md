@@ -1,3 +1,5 @@
+> **Note:** This guide covers upgrading from v0.1.x. If you are starting fresh with v1.0.0, ignore this file.
+
 # Migration Guide: v0.1.x to v2
 
 > This guide covers the breaking changes introduced in GECS Network v2.
