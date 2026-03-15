@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 02-01-PLAN.md — RED tests for CACHE-01/03/04
-last_updated: "2026-03-15T22:36:26.028Z"
+stopped_at: Completed 02-02-PLAN.md — all 4 CACHE tests GREEN, no regressions
+last_updated: "2026-03-15T23:05:09.739Z"
 last_activity: "2026-03-15 — Plan 01-01 complete: RED test scaffold for OBS-01/02/03"
 progress:
   total_phases: 5
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 5
-  completed_plans: 4
+  completed_plans: 5
   percent: 5
 ---
 
@@ -53,6 +53,7 @@ Progress: [█░░░░░░░░░] 5%
 | Phase 01-observer-signal-chain P02 | 17 | 2 tasks | 1 files |
 | Phase 01-observer-signal-chain P03 | 4 | 2 tasks | 2 files |
 | Phase 02-cache-invalidation-scoping P01 | 7 | 1 tasks | 1 files |
+| Phase 02-cache-invalidation-scoping P02 | 45 | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -72,6 +73,9 @@ Recent decisions affecting current work:
 - [Phase 01-03]: watch() example shows class reference (C_Health) not instance (C_Health.new()) — critical matching contract distinction documented in observer.gd
 - [Phase 02-01]: CACHE-02 test uses persistent QB because world.query returns new QB each access — single-entity disable already handled by entity._on_enabled_changed emitting cache_invalidated directly
 - [Phase 02-01]: CACHE-04 tests disable_entities batch N-vs-1 invalidation count, not single-entity correctness — bare loop fires N invalidations, depth-counter fix should collapse to 1
+- [Phase 02-cache-invalidation-scoping]: Depth-counter suppression replaces bool flag: _begin_suppress/_end_suppress enables safe nesting and deferred single-flush semantics for batch operations
+- [Phase 02-cache-invalidation-scoping]: CACHE-01: no signal emitted when entity moves between existing archetypes — archetype set unchanged means query cache is still valid
+- [Phase 02-cache-invalidation-scoping]: entity._on_enabled_changed must route through world._invalidate_cache (not direct emit) for depth-counter suppression to work
 
 ### Pending Todos
 
@@ -84,6 +88,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-15T22:36:26.024Z
-Stopped at: Completed 02-01-PLAN.md — RED tests for CACHE-01/03/04
+Last session: 2026-03-15T23:05:09.735Z
+Stopped at: Completed 02-02-PLAN.md — all 4 CACHE tests GREEN, no regressions
 Resume file: None
