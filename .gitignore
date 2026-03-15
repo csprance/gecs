@@ -59,4 +59,4 @@ htmlcov/
 *.db
 
 # Ensure perf reports remain tracked (counteract earlier blanket reports/ ignore)
-!reports/perf/**
+!reports/perf/**.planning/
