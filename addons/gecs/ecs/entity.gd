@@ -513,7 +513,9 @@ func _on_enabled_changed(old_value: bool, new_value: bool) -> void:
 	var archetype = ECS.world.entity_to_archetype[ self ]
 	archetype.update_entity_enabled_state(self , new_value)
 
-	# Invalidate query cache since archetypes changed
-	ECS.world.cache_invalidated.emit()
+	# Invalidate query cache since entity enabled state changed.
+	# Route through _invalidate_cache so batch suppression (_begin_suppress/_end_suppress)
+	# can coalesce multiple enable/disable operations into a single cache flush.
+	ECS.world._invalidate_cache("entity_enabled_changed")
 
 #endregion Lifecycle Methods

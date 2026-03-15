@@ -97,7 +97,8 @@ func test_cache02_persistent_query_stale_after_disable():
 ## This FAILS before the fix because only _should_invalidate_cache (a bool) exists.
 func test_cache03_depth_counter_field_exists():
 	# get() returns null when the property does not exist on the object.
-	assert_object(world.get("_suppress_invalidation_depth")).is_not_null()
+	# The field is an int (not an Object), so use assert_that to check for non-null.
+	assert_that(world.get("_suppress_invalidation_depth")).is_not_null()
 
 
 ## CACHE-04: disable_entities() batch must emit cache_invalidated exactly ONCE (not once

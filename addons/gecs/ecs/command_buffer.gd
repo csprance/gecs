@@ -117,17 +117,16 @@ func execute() -> void:
 
 	var start_time := Time.get_ticks_usec()
 
-	# Disable cache invalidation during batch execution
-	var old_invalidate_flag := _world._should_invalidate_cache
-	_world._should_invalidate_cache = false
+	# Suppress cache invalidation during batch execution; _end_suppress fires once at end.
+	# Force _pending_invalidation so _end_suppress always fires exactly one invalidation —
+	# commands always mutate state, so the cache must always be invalidated after execute().
+	_world._begin_suppress()
+	_world._pending_invalidation = true
 
 	for callable in _commands:
 		callable.call()
 
-	# Restore cache invalidation flag and invalidate once
-	_world._should_invalidate_cache = old_invalidate_flag
-	if old_invalidate_flag:
-		_world._invalidate_cache("command_buffer_flush")
+	_world._end_suppress()
 
 	# Update statistics
 	_stats["commands_executed"] += _commands.size()

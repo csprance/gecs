@@ -93,8 +93,10 @@ var _cache_invalidation_count: int = 0
 var _cache_invalidation_reasons: Dictionary = {}  # reason -> count
 ## Global cache: resource_path -> Script (loaded once, reused forever)
 var _component_script_cache: Dictionary = {}  # String -> Script
-## OPTIMIZATION: Flag to control cache invalidation during batch operations
-var _should_invalidate_cache: bool = true
+## OPTIMIZATION: Depth counter to suppress cache invalidation during batch operations.
+## > 0 means we are inside a batch; invalidation is deferred until _end_suppress().
+var _suppress_invalidation_depth: int = 0
+var _pending_invalidation: bool = false
 ## Frame + accumulated performance metrics (debug-only)
 var _perf_metrics := {"frame": {}, "accum": {}}  # Per-frame aggregated timings  # Long-lived totals (cleared manually)
 ## Queue of systems waiting for setup after ECS.world is assigned
@@ -332,8 +334,7 @@ func add_entity(entity: Entity, components = null, add_to_tree = true) -> void:
 	# OPTIMIZATION: Suppress cache invalidation during entity initialization.
 	# _add_entity_to_archetype and each component_added signal would each
 	# invalidate the cache individually. Defer to a single invalidation at the end.
-	var original_invalidate = _should_invalidate_cache
-	_should_invalidate_cache = false
+	_begin_suppress()
 
 	# ARCHETYPE: Add entity to archetype system BEFORE initialization
 	# Start with empty archetype, then move as components are added
@@ -345,8 +346,7 @@ func add_entity(entity: Entity, components = null, add_to_tree = true) -> void:
 		entity._initialize(components if components else [])
 
 	# Re-enable and perform a single cache invalidation for the entire add_entity operation
-	_should_invalidate_cache = original_invalidate
-	_invalidate_cache("entity_added")
+	_end_suppress()
 
 	entity_added.emit(entity)
 
@@ -365,25 +365,14 @@ func add_entity(entity: Entity, components = null, add_to_tree = true) -> void:
 ##      [codeblock]world.add_entities([player_entity, enemy_entity], [component_a])[/codeblock]
 func add_entities(_entities: Array, components = null):
 	# OPTIMIZATION: Batch processing to reduce cache invalidations
-	# Temporarily disable cache invalidation during batch, then invalidate once at the end
-	var original_invalidate = _should_invalidate_cache
-	_should_invalidate_cache = false
-
-	var new_archetypes_created = false
-	var initial_archetype_count = archetypes.size()
+	# Suppress individual invalidations during batch; _end_suppress fires one deferred call.
+	_begin_suppress()
 
 	# Process all entities
 	for _entity in _entities:
 		add_entity(_entity, components)
 
-	# Check if any new archetypes were created
-	if archetypes.size() > initial_archetype_count:
-		new_archetypes_created = true
-
-	# Re-enable cache invalidation and invalidate once if needed
-	_should_invalidate_cache = original_invalidate
-	if new_archetypes_created:
-		_invalidate_cache("batch_add_entities")
+	_end_suppress()
 
 
 ## Removes an [Entity] and all its components from the world.[br]
@@ -463,18 +452,14 @@ func remove_entity(entity: Entity) -> void:
 ##      [codeblock]world.remove_entities([player_entity, other_entity])[/codeblock]
 func remove_entities(_entities: Array) -> void:
 	# OPTIMIZATION: Batch processing to reduce cache invalidations
-	# Temporarily disable cache invalidation during batch, then invalidate once at the end
-	var original_invalidate = _should_invalidate_cache
-	_should_invalidate_cache = false
+	# Suppress individual invalidations during batch; _end_suppress fires one deferred call.
+	_begin_suppress()
 
 	# Process all entities
 	for _entity in _entities:
 		remove_entity(_entity)
 
-	# Re-enable cache invalidation and always invalidate when entities are removed
-	# QueryBuilder caches execute() results, so any entity removal requires cache invalidation
-	_should_invalidate_cache = original_invalidate
-	_invalidate_cache("batch_remove_entities")
+	_end_suppress()
 
 
 ## Disable an [Entity] from the world. Disabled entities don't run process or physics,[br]
@@ -510,8 +495,11 @@ func disable_entity(entity) -> Entity:
 ## [b]Example:[/b]
 ##      [codeblock]world.disable_entities([player_entity, other_entity])[/codeblock]
 func disable_entities(_entities: Array) -> void:
+	# CACHE-04: Suppress N individual disable_entity() invalidations; _end_suppress fires once.
+	_begin_suppress()
 	for _entity in _entities:
 		disable_entity(_entity)
+	_end_suppress()
 
 
 ## Enables a single [Entity] to the world.[br]
@@ -717,11 +705,15 @@ func _on_entity_component_added(entity: Entity, component: Resource) -> void:
 	if entity_to_archetype.has(entity):
 		var old_archetype = entity_to_archetype[entity]
 		var comp_path = component.get_script().resource_path
+		var _initial_archetype_count = archetypes.size()
 		var new_archetype = _move_entity_to_new_archetype_fast(
 			entity, old_archetype, comp_path, true
 		)
-		# Must invalidate: QueryBuilder caches execute() results, not just archetype matches
-		_invalidate_cache("entity_component_added")
+		# CACHE-01: Only wipe _query_archetype_cache when a new archetype was created/deleted.
+		# If the entity moved between two already-existing archetypes, no invalidation is
+		# needed — the archetype set is unchanged so cached query results remain correct.
+		if archetypes.size() != _initial_archetype_count:
+			_invalidate_cache("entity_component_added")
 
 	# Emit Signal
 	component_added.emit(entity, component)
@@ -766,11 +758,14 @@ func _on_entity_component_removed(entity, component: Resource) -> void:
 	if entity_to_archetype.has(entity):
 		var old_archetype = entity_to_archetype[entity]
 		var comp_path = component.resource_path
+		var _initial_archetype_count = archetypes.size()
 		var new_archetype = _move_entity_to_new_archetype_fast(
 			entity, old_archetype, comp_path, false
 		)
-		# Must invalidate: QueryBuilder caches execute() results, not just archetype matches
-		_invalidate_cache("entity_component_removed")
+		# CACHE-01: Only wipe _query_archetype_cache when an archetype was created/deleted.
+		# If the entity moved between two already-existing archetypes, no invalidation needed.
+		if archetypes.size() != _initial_archetype_count:
+			_invalidate_cache("entity_component_removed")
 
 	component_removed.emit(entity, component)
 	_handle_observer_component_removed(entity, component)
@@ -1186,10 +1181,12 @@ func reset_cache_stats() -> void:
 
 ## Internal helper to track cache invalidations (debug mode only)
 func _invalidate_cache(reason: String) -> void:
-	# OPTIMIZATION: Skip invalidation during batch operations
-	if not _should_invalidate_cache:
+	# OPTIMIZATION: Skip invalidation during batch operations; mark pending for deferred fire
+	if _suppress_invalidation_depth > 0:
+		_pending_invalidation = true
 		return
 
+	_pending_invalidation = false
 	_query_archetype_cache.clear()
 	cache_invalidated.emit()
 
@@ -1197,6 +1194,18 @@ func _invalidate_cache(reason: String) -> void:
 	if ECS.debug:
 		_cache_invalidation_count += 1
 		_cache_invalidation_reasons[reason] = _cache_invalidation_reasons.get(reason, 0) + 1
+
+
+## Begin a batch suppression window — increments depth counter.
+func _begin_suppress() -> void:
+	_suppress_invalidation_depth += 1
+
+
+## End a batch suppression window — decrements depth counter and fires deferred invalidation if pending.
+func _end_suppress() -> void:
+	_suppress_invalidation_depth -= 1
+	if _suppress_invalidation_depth == 0 and _pending_invalidation:
+		_invalidate_cache("deferred_pending")
 
 
 ## Calculate archetype signature for an entity based on its components
@@ -1253,9 +1262,9 @@ func _add_entity_to_archetype(entity: Entity) -> void:
 	# Add entity to archetype
 	archetype.add_entity(entity)
 	entity_to_archetype[entity] = archetype
-
-	# Must invalidate: QueryBuilder caches execute() results
-	_invalidate_cache("entity_added_to_archetype")
+	# NOTE: No explicit _invalidate_cache here — _get_or_create_archetype already calls
+	# _invalidate_cache("new_archetype_created") when a new archetype is created.
+	# The outer add_entity() batch (_begin_suppress/_end_suppress) handles the rest.
 
 	_worldLogger.trace("Added entity ", entity.name, " to archetype: ", archetype)
 
