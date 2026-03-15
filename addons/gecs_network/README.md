@@ -35,6 +35,19 @@ func _setup_network_sync() -> void:
     net_sync.local_player_spawned.connect(_on_local_player_spawned)
 ```
 
+### Step 4: Start a session with NetworkSession
+
+```gdscript
+func _ready() -> void:
+    var session = NetworkSession.new()
+    add_child(session)       # _ready() sets default transport (ENet) automatically
+    session.host()           # host on port 7777 (default)
+    # or: session.join("192.168.1.10")  # join an existing session as client
+
+# Note: game code is responsible for calling ECS.process(delta) each frame.
+# NetworkSession does not call world.process() internally.
+```
+
 ## Features
 
 - **Declarative sync priorities** — annotate component properties with `@export_group("HIGH")`, `"MEDIUM"`, `"LOW"`, `"SPAWN_ONLY"`, or `"LOCAL"`; no external config class needed
