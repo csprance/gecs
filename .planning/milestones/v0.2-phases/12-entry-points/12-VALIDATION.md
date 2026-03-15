@@ -2,8 +2,9 @@
 phase: 12
 slug: entry-points
 status: draft
-nyquist_compliant: false
-wave_0_complete: false
+nyquist_compliant: true
+wave_0_complete: true
+wave_0_task: "Task 0 in 12-01-PLAN.md — grep checks on all three README files"
 created: 2026-03-14
 ---
 
@@ -17,20 +18,20 @@ created: 2026-03-14
 
 | Property | Value |
 |----------|-------|
-| **Framework** | none — README content review is manual-only |
+| **Framework** | grep — lightweight string-presence checks on README files |
 | **Config file** | none |
-| **Quick run command** | `echo "Manual review required"` |
-| **Full suite command** | `echo "Manual review required"` |
-| **Estimated runtime** | ~5 minutes (human review) |
+| **Quick run command** | `grep -q "ECS.process" README.md && grep -q "Asset Library" README.md && grep -q "NetAdapter" addons/gecs/README.md && grep -q "NetworkSession" addons/gecs_network/README.md && echo "all checks passed"` |
+| **Full suite command** | same as quick run |
+| **Estimated runtime** | < 1 second (grep) + ~5 minutes (human review) |
 
 ---
 
 ## Sampling Rate
 
-- **After every task commit:** Visually verify the changed README section
-- **After every plan wave:** Read full README from top to bottom
+- **After every task commit:** Run the grep check for that task's target file
+- **After every plan wave:** Run full grep suite (all four checks)
 - **Before `/gsd:verify-work`:** Full manual review of all 3 READMEs must pass
-- **Max feedback latency:** N/A — manual review
+- **Max feedback latency:** N/A — manual review for prose accuracy
 
 ---
 
@@ -38,9 +39,10 @@ created: 2026-03-14
 
 | Task ID | Plan | Wave | Requirement | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|-----------|-------------------|-------------|--------|
-| 12-01-01 | 01 | 1 | READ-01 | manual | none | ✅ | ⬜ pending |
-| 12-01-02 | 01 | 1 | READ-01 | manual | none | ✅ | ⬜ pending |
-| 12-01-03 | 01 | 1 | READ-02 | manual | none | ✅ | ⬜ pending |
+| 12-01-00 | 01 | 1 | READ-01, READ-02 | grep | `grep -q "ECS.process" README.md && grep -q "Asset Library" README.md && grep -q "NetAdapter" addons/gecs/README.md && grep -q "NetworkSession" addons/gecs_network/README.md` | ✅ | ⬜ pending |
+| 12-01-01 | 01 | 1 | READ-01 | grep | `grep -q "ECS.process" README.md && grep -q "Asset Library" README.md` | ✅ | ⬜ pending |
+| 12-01-02 | 01 | 1 | READ-01 | grep | `grep -q "NetAdapter" addons/gecs/README.md` | ✅ | ⬜ pending |
+| 12-01-03 | 01 | 1 | READ-02 | grep | `grep -q "NetworkSession" addons/gecs_network/README.md` | ✅ | ⬜ pending |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
@@ -48,7 +50,13 @@ created: 2026-03-14
 
 ## Wave 0 Requirements
 
-*Existing infrastructure covers all phase requirements. README edits require no test scaffolding.*
+Wave 0 is satisfied by **Task 0 in 12-01-PLAN.md**. That task runs grep checks on all three README files and gates the human checkpoint. The checks confirm:
+
+- `README.md` contains `ECS.process` and `Asset Library`
+- `addons/gecs/README.md` contains `NetAdapter`
+- `addons/gecs_network/README.md` contains `NetworkSession`
+
+Tasks 1, 2, and 3 each have individual grep `<automated>` verify blocks referencing the same strings. The Wave 0 task is the aggregate gate that runs after all three content tasks complete.
 
 ---
 
@@ -65,11 +73,11 @@ created: 2026-03-14
 
 ## Validation Sign-Off
 
-- [ ] All tasks have `<automated>` verify or Wave 0 dependencies
-- [ ] Sampling continuity: no 3 consecutive tasks without automated verify
-- [ ] Wave 0 covers all MISSING references
-- [ ] No watch-mode flags
-- [ ] Feedback latency < N/A (manual-only phase)
-- [ ] `nyquist_compliant: true` set in frontmatter
+- [x] All tasks have `<automated>` verify or Wave 0 dependencies
+- [x] Sampling continuity: no 3 consecutive tasks without automated verify
+- [x] Wave 0 covers all MISSING references (Task 0 provides aggregate grep gate)
+- [x] No watch-mode flags
+- [x] Feedback latency < N/A (manual-only phase for prose accuracy)
+- [x] `nyquist_compliant: true` set in frontmatter
 
 **Approval:** pending
