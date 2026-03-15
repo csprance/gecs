@@ -90,14 +90,11 @@ func _initialize(_components: Array = []) -> void:
 
 	# because components can be added before the entity is added to the world
 	# replay adding components here so signals pick them up and the index is updated
-	var temp_comps = components.values().duplicate_deep()
-	# Disconnect property_changed from original instances before clearing.
-	# _initialize replaces each component with a duplicate_deep() copy, so the original
-	# pre-world instances must have their signal connections removed to prevent phantom
-	# on_component_changed callbacks if the caller retains a reference to the originals.
-	for original in components.values():
-		if original.property_changed.is_connected(_on_component_property_changed):
-			original.property_changed.disconnect(_on_component_property_changed)
+	# Use a shallow duplicate (same instances) so the caller's reference remains the
+	# live instance in entity.components after _initialize. deep-copying here created
+	# ghost property_changed connections on the original instances that could never be
+	# cleaned up by remove_component() (which only disconnects the stored copy).
+	var temp_comps = components.values().duplicate()
 	components.clear()
 	for comp in temp_comps:
 		add_component(comp)
