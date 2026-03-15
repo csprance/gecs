@@ -30,7 +30,7 @@ Five dependency-ordered fix phases harden GECS against all six known correctness
 **Plans**: 3 plans
 
 Plans:
-- [ ] 01-01-PLAN.md — Write failing regression test scaffold (O_InstanceCapturingObserver + test_observer.gd, RED phase)
+- [x] 01-01-PLAN.md — Write failing regression test scaffold (O_InstanceCapturingObserver + test_observer.gd, RED phase)
 - [ ] 01-02-PLAN.md — Apply OBS-01/OBS-02/OBS-03 bug fixes to entity.gd and world.gd (GREEN phase)
 - [ ] 01-03-PLAN.md — Update doc comments in observer.gd and world.gd to document guaranteed behaviors
 
@@ -85,7 +85,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Observer Signal Chain | 0/3 | In progress | - |
+| 1. Observer Signal Chain | 1/3 | In progress | - |
 | 2. Cache Invalidation Scoping | 0/TBD | Not started | - |
 | 3. Archetype Edge Cache Hardening | 0/TBD | Not started | - |
 | 4. Component Lifecycle and Relationship Queries | 0/TBD | Not started | - |

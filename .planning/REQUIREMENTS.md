@@ -10,7 +10,7 @@
 - [ ] **OBS-01**: `world.remove_entity()` fires `on_component_removed` for every watched component on the entity before it is destroyed (fix #93)
 - [ ] **OBS-02**: `entity.remove_component()` emits the correct component instance through the signal chain so observers can match by `resource_path` (fix #68)
 - [ ] **OBS-03**: `property_changed` signal is disconnected from the world when a component is removed from an entity — no phantom observer notifications after removal
-- [ ] **OBS-04**: Regression tests cover all three observer signal chain cases above
+- [x] **OBS-04**: Regression tests cover all three observer signal chain cases above
 
 ### Cache Invalidation
 
@@ -73,7 +73,7 @@
 | OBS-01 | Phase 1 | Pending |
 | OBS-02 | Phase 1 | Pending |
 | OBS-03 | Phase 1 | Pending |
-| OBS-04 | Phase 1 | Pending |
+| OBS-04 | Phase 1 | Complete |
 | CACHE-01 | Phase 2 | Pending |
 | CACHE-02 | Phase 2 | Pending |
 | CACHE-03 | Phase 2 | Pending |
