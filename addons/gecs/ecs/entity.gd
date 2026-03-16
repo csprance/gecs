@@ -110,8 +110,17 @@ func _initialize(_components: Array = []) -> void:
 	component_resources.append_array(_components)
 
 	# Initialize components
+	# Shallow-copy each component so each entity gets its own Resource instance
+	# while preserving ALL top-level property values — including non-@export vars.
+	# We cannot use res.duplicate() (only copies @export props) or res.duplicate(true)
+	# (deep-copies sub-resources, resetting non-@export vars to script defaults).
+	# Instead we create a new instance via the same script and copy every property.
 	for res in component_resources:
-		add_component(res.duplicate(true))
+		var copy: Component = res.get_script().new()
+		for prop in res.get_property_list():
+			if prop.usage & (PROPERTY_USAGE_STORAGE | PROPERTY_USAGE_SCRIPT_VARIABLE):
+				copy.set(prop.name, res.get(prop.name))
+		add_component(copy)
 
 	# Call the lifecycle method on_ready
 	on_ready()
