@@ -436,9 +436,6 @@ func remove_entity(entity: Entity) -> void:
 	# Destroy entity normally
 	entity.on_destroy()
 	if entity.is_inside_tree():
-		var parent = entity.get_parent()
-		if parent:
-			parent.remove_child(entity)  # Synchronous: releases the name slot immediately
 		entity.queue_free()
 	else:
 		entity.free()

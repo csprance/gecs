@@ -3,18 +3,17 @@ extends GdUnitTestSuite
 ## Test suite for the Entity ID system functionality
 ## Tests auto-generation, custom IDs, singleton behavior, and world-level enforcement
 
+var runner: GdUnitSceneRunner
 var world: World
 
-func before_test():
-	world = World.new()
-	world.name = "TestWorld"
-	add_child(world)
+func before():
+	runner = scene_runner("res://addons/gecs/tests/test_scene.tscn")
+	world = runner.get_property("world")
 	ECS.world = world
 
 func after_test():
-	if is_instance_valid(world):
-		world.queue_free()
-	await await_idle_frame()
+	if world:
+		world.purge(false)
 
 func test_entity_id_auto_generation():
 	# Test that entities auto-generate IDs in _enter_tree
