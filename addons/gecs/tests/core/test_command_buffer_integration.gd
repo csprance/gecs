@@ -85,7 +85,6 @@ func after_test():
 		world.entities.clear()
 		# Clear relationship indexes
 		world.relationship_entity_index.clear()
-		world.reverse_relationship_index.clear()
 		# Clear archetype system to prevent stale entity references across tests
 		for archetype in world.archetypes.values():
 			archetype.add_edges.clear()
