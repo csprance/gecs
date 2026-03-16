@@ -1,5 +1,3 @@
-class_name NetworkSession
-extends Node
 ## High-level multiplayer session manager.
 ## Wraps ENet host/join boilerplate into a declarative Node with ECS-friendly events.
 ##
@@ -8,6 +6,9 @@ extends Node
 ##   session.transport = ENetTransportProvider.new()
 ##   add_child(session)
 ##   session.host()   # or session.join("127.0.0.1")
+@icon("res://addons/gecs_network/icons/network_session.svg")
+class_name NetworkSession
+extends Node
 
 # ---------------------------------------------------------------------------
 # Exported configuration
