@@ -91,7 +91,9 @@ func test_query_finds_entities_in_edge_cached_archetype():
 	projectile1.add_component(C_TestB.new())
 
 	# Verify query finds it
+	# Connect cache invalidation so the persistent QueryBuilder sees archetype changes
 	var collision_query = QueryBuilder.new(world).with_all([C_TestA, C_TestB])
+	world.cache_invalidated.connect(collision_query.invalidate_cache)
 	assert_int(collision_query.execute().size()).is_equal(1)
 
 	# ACT 2: First projectile processed and removed (empties collision archetype)

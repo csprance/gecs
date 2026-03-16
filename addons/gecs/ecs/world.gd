@@ -1283,15 +1283,35 @@ func _remove_entity_from_archetype(entity: Entity) -> bool:
 
 	# Clean up empty archetypes (optional - can keep them for reuse)
 	if archetype.is_empty():
-		# Break circular references before removing
-		archetype.add_edges.clear()
-		archetype.remove_edges.clear()
-		archetypes.erase(archetype.signature)
-		_worldLogger.trace("Removed empty archetype: ", archetype)
-		# OPTIMIZATION: Only invalidate when archetype is actually removed from world
+		_delete_archetype(archetype)
 		_invalidate_cache("empty_archetype_removed")
 
 	return removed
+
+
+## Delete an archetype from the world, cleaning up reverse edges in all neighbor archetypes.
+## Replaces all three inline deletion sites for consistent cleanup.
+func _delete_archetype(archetype: Archetype) -> void:
+	# Clean reverse edges: iterate neighbors and remove any edge pointing to this archetype
+	for neighbor in archetype.neighbors.values():
+		var keys_to_clear: Array = []
+		for comp_path in neighbor.add_edges:
+			if neighbor.add_edges[comp_path] == archetype:
+				keys_to_clear.append(comp_path)
+		for k in keys_to_clear:
+			neighbor.add_edges.erase(k)
+		keys_to_clear.clear()
+		for comp_path in neighbor.remove_edges:
+			if neighbor.remove_edges[comp_path] == archetype:
+				keys_to_clear.append(comp_path)
+		for k in keys_to_clear:
+			neighbor.remove_edges.erase(k)
+	# Clear own state and remove from world
+	archetype.add_edges.clear()
+	archetype.remove_edges.clear()
+	archetype.neighbors.clear()
+	archetypes.erase(archetype.signature)
+	_worldLogger.trace("Deleted archetype: ", archetype)
 
 
 ## Fast path: Move entity when we already know which component was added/removed
@@ -1310,11 +1330,15 @@ func _move_entity_to_new_archetype_fast(
 		# Check if we have a cached edge for this component removal
 		new_archetype = old_archetype.get_remove_edge(comp_path)
 
-	# BUG FIX: If archetype retrieved from edge cache was removed from world.archetypes
-	# when it became empty, re-add it so queries can find it
+	# ARCH-01: Guard against stale edge cache references
+	# Archetype was deleted when empty — clear edge and fall through to find/create.
 	if new_archetype != null and not archetypes.has(new_archetype.signature):
-		archetypes[new_archetype.signature] = new_archetype
-		_worldLogger.trace("Re-added archetype from edge cache: ", new_archetype)
+		# Stale edge — archetype was deleted when empty. Clear edge and fall through to find/create.
+		if is_add:
+			old_archetype.add_edges.erase(comp_path)
+		else:
+			old_archetype.remove_edges.erase(comp_path)
+		new_archetype = null
 
 	# If no cached edge, calculate signature and find/create archetype
 	if new_archetype == null:
@@ -1341,10 +1365,7 @@ func _move_entity_to_new_archetype_fast(
 
 	# Clean up empty old archetype
 	if old_archetype.is_empty():
-		# Break circular references before removing
-		old_archetype.add_edges.clear()
-		old_archetype.remove_edges.clear()
-		archetypes.erase(old_archetype.signature)
+		_delete_archetype(old_archetype)
 
 	return new_archetype
 
@@ -1386,6 +1407,16 @@ func _move_entity_to_new_archetype(entity: Entity, old_archetype: Archetype) -> 
 		# Check if we have a cached edge for this component removal
 		new_archetype = old_archetype.get_remove_edge(removed_comp)
 
+	# ARCH-02: Guard against stale edge cache references
+	if new_archetype != null and not archetypes.has(new_archetype.signature):
+		if added_comp != "":
+			old_archetype.add_edges.erase(added_comp)
+		elif removed_comp != "":
+			old_archetype.remove_edges.erase(removed_comp)
+		new_archetype = null
+	# NOTE: _move_entity_to_new_archetype is currently dead code (no production callers).
+	# Staleness guard added per ARCH-02 for correctness if this path is ever activated.
+
 	# If no cached edge, calculate signature and find/create archetype
 	if new_archetype == null:
 		var new_signature = _calculate_entity_signature(entity)
@@ -1411,10 +1442,7 @@ func _move_entity_to_new_archetype(entity: Entity, old_archetype: Archetype) -> 
 
 	# Clean up empty old archetype
 	if old_archetype.is_empty():
-		# Break circular references before removing
-		old_archetype.add_edges.clear()
-		old_archetype.remove_edges.clear()
-		archetypes.erase(old_archetype.signature)
+		_delete_archetype(old_archetype)
 
 
 #endregion Utility Methods
