@@ -10,7 +10,7 @@ extends Component
 ##   @export_group(CN_NetSync.REALTIME)  # ~60 Hz [br]
 ##   @export_group(CN_NetSync.HIGH)      # 20 Hz (default if no group)[br]
 ##   @export_group(CN_NetSync.MEDIUM)    # 10 Hz[br]
-##   @export_group(CN_NetSync.LOW)       # 1 Hz[br]
+##   @export_group(CN_NetSync.LOW)       # 2 Hz (default, configurable via gecs_network/sync/low_hz)[br]
 ##   @export_group(CN_NetSync.SPAWN_ONLY)# sent at spawn only (SpawnManager handles it)[br]
 ##   @export_group(CN_NetSync.LOCAL)     # never synced[br]
 
@@ -40,12 +40,12 @@ enum Priority {
 ## SPAWN_ONLY and LOCAL are sentinel values — properties in these groups
 ## are excluded from the dirty cache entirely.
 const PRIORITY_MAP: Dictionary = {
-	"REALTIME": 0, # Priority.REALTIME
-	"HIGH": 1, # Priority.HIGH
-	"MEDIUM": 2, # Priority.MEDIUM
-	"LOW": 3, # Priority.LOW
-	"SPAWN_ONLY": - 2, # Sentinel: skip entirely (SpawnManager handles at spawn)
-	"LOCAL": - 1, # Sentinel: skip entirely (never synced)
+	"REALTIME": Priority.REALTIME,
+	"HIGH": Priority.HIGH,
+	"MEDIUM": Priority.MEDIUM,
+	"LOW": Priority.LOW,
+	"SPAWN_ONLY": -2,  # Sentinel — excluded from dirty cache; SpawnManager handles
+	"LOCAL": -1,       # Sentinel — never synced
 }
 
 # ============================================================================
