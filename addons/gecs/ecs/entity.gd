@@ -109,6 +109,12 @@ func _initialize(_components: Array = []) -> void:
 	# Add components passed in directly to the _initialize method to override everything else
 	component_resources.append_array(_components)
 
+	## [b]Note:[/b] Items in [code]component_resources[/code] are shallow-duplicated
+	## ([code]duplicate()[/code]) — a new [Resource] object is created and all top-level
+	## property values (including non-[code]@export[/code] vars) are copied, but nested
+	## sub-resource references are shared between entities.[br]
+	## Always return fresh [code].new()[/code] instances from [method define_components]
+	## to avoid unintentional state sharing.[br]
 	# Initialize components
 	# Shallow-copy each component so each entity gets its own Resource instance
 	# while preserving ALL top-level property values — including non-@export vars.
@@ -506,7 +512,11 @@ func on_enable() -> void:
 
 
 ## Define the default components in code to use (Instead of in the editor)[br]
-## This should return a list of components to add by default when the entity is created
+## This should return a list of components to add by default when the entity is created[br]
+## [b]Important:[/b] Always return fresh [code].new()[/code] instances from this method.[br]
+## Items returned here are shallow-duplicated during [method _initialize] —
+## returning a cached/shared instance would cause all entities of this type to
+## share the same sub-resource references.[br]
 func define_components() -> Array:
 	return []
 

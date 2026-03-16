@@ -14,6 +14,13 @@
 ##  @export var velocity: Vector2 = Vector2.ZERO
 ##[/codeblock]
 ##[br]
+## [b]Duplication contract:[/b] When an entity is added to the world via
+## [method World.add_entity], components in [code]component_resources[/code] are
+## shallow-duplicated ([code]Resource.duplicate()[/code]). This creates a new object
+## per entity and copies all top-level property values — including non-[code]@export[/code]
+## vars. Nested sub-resource references are shared; if you need independent sub-resources
+## per entity, duplicate them in your component's [method _init].[br]
+##[br]
 ## [b]Component Queries:[/b][br]
 ## Use component query dictionaries to match components by specific property criteria in queries and relationships:[br]
 ##[codeblock]
