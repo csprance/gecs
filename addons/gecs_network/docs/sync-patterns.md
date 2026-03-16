@@ -4,7 +4,7 @@
 declared by `@export_group` annotations on component properties, not by the presence or
 absence of components.
 
-> **Important:** Spawn-only is declared via `@export_group("SPAWN_ONLY")` on properties.
+> **Important:** Spawn-only is declared via `@export_group(CN_NetSync.SPAWN_ONLY)` on properties.
 > `CN_NetSync` must be present on every entity that syncs data — including spawn-only entities.
 
 ---
@@ -37,11 +37,11 @@ For entities with ongoing state that must stay synchronized every tick (players,
 class_name C_NetVelocity
 extends Component
 
-@export_group("HIGH")
+@export_group(CN_NetSync.HIGH)
 @export var direction: Vector3 = Vector3.ZERO  # Synced at 20 Hz
 @export var speed: float = 0.0                 # Synced at 20 Hz
 
-@export_group("LOCAL")
+@export_group(CN_NetSync.LOCAL)
 @export var predicted_position: Vector3 = Vector3.ZERO  # Never synced
 ```
 
@@ -66,7 +66,7 @@ to `CN_NetSync` when you want Godot's built-in transform interpolation.
 ## Spawn-Only Sync
 
 For entities with deterministic behavior after spawn (projectiles, effects, AoE zones): mark
-relevant component properties with `@export_group("SPAWN_ONLY")`. The server broadcasts all
+relevant component properties with `@export_group(CN_NetSync.SPAWN_ONLY)`. The server broadcasts all
 property values once at spawn; clients simulate locally with no further updates.
 
 **`CN_NetSync` is still required** — the SPAWN_ONLY group is a property annotation, not a
@@ -77,7 +77,7 @@ signal to skip the component entirely.
 class_name C_NetPosition
 extends Component
 
-@export_group("SPAWN_ONLY")
+@export_group(CN_NetSync.SPAWN_ONLY)
 @export var position: Vector3 = Vector3.ZERO   # Sent once at spawn, never continuous
 ```
 
@@ -127,17 +127,17 @@ defaults. The deferred broadcast captures values at end of frame, not at `add_en
 
 ## LOCAL Properties
 
-`@export_group("LOCAL")` marks properties that belong only to the declaring peer. They are
+`@export_group(CN_NetSync.LOCAL)` marks properties that belong only to the declaring peer. They are
 never included in any outbound payload:
 
 ```gdscript
 class_name C_NetVelocity
 extends Component
 
-@export_group("HIGH")
+@export_group(CN_NetSync.HIGH)
 @export var direction: Vector3 = Vector3.ZERO
 
-@export_group("LOCAL")
+@export_group(CN_NetSync.LOCAL)
 @export var predicted_position: Vector3 = Vector3.ZERO   # Client-only, not synced
 @export var smoothed_speed: float = 0.0                  # Display only, not synced
 ```
@@ -156,13 +156,13 @@ discovers all tiers at spawn and the send pipeline handles each independently:
 class_name C_PlayerInput
 extends Component
 
-@export_group("HIGH")
+@export_group(CN_NetSync.HIGH)
 @export var move_direction: Vector2 = Vector2.ZERO  # Synced at 20 Hz
 
 class_name C_PlayerNumber
 extends Component
 
-@export_group("LOW")
+@export_group(CN_NetSync.LOW)
 @export var player_number: int = 0                  # Synced at 1–2 Hz
 ```
 

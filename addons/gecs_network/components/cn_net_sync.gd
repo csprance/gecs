@@ -1,40 +1,51 @@
 class_name CN_NetSync
 extends Component
-## CN_NetSync — per-entity property scanner and dirty-tracker for network sync.
-##
-## Add one CN_NetSync to any entity you want to sync. Call scan_entity_components()
-## once after adding/removing sibling components to build the scan tables.
-## Then call check_changes_for_priority(priority) each tick to get changed props.
-##
-## Property grouping via @export_group in sibling components:
-##   @export_group("REALTIME")  # ~60 Hz
-##   @export_group("HIGH")      # 20 Hz (default if no group)
-##   @export_group("MEDIUM")    # 10 Hz
-##   @export_group("LOW")       # 1 Hz
-##   @export_group("SPAWN_ONLY")# sent at spawn only (SpawnManager handles it)
-##   @export_group("LOCAL")     # never synced
+## CN_NetSync — per-entity property scanner and dirty-tracker for network sync.[br]
+## [br]
+## Add one CN_NetSync to any entity you want to sync. Call scan_entity_components() [br]
+## once after adding/removing sibling components to build the scan tables. [br]
+## Then call check_changes_for_priority(priority) each tick to get changed props. [br]
+##[br]
+## Property grouping via @export_group in sibling components:[br]
+##   @export_group(CN_NetSync.REALTIME)  # ~60 Hz [br]
+##   @export_group(CN_NetSync.HIGH)      # 20 Hz (default if no group)[br]
+##   @export_group(CN_NetSync.MEDIUM)    # 10 Hz[br]
+##   @export_group(CN_NetSync.LOW)       # 1 Hz[br]
+##   @export_group(CN_NetSync.SPAWN_ONLY)# sent at spawn only (SpawnManager handles it)[br]
+##   @export_group(CN_NetSync.LOCAL)     # never synced[br]
+
+# ============================================================================
+# SYNC TIER CONSTANTS — use with @export_group() for autocomplete & typo safety
+# ============================================================================
+
+const REALTIME = "REALTIME" ## ~60 Hz, unreliable — critical real-time data
+const HIGH = "HIGH" ## 20 Hz, unreliable — velocity, input, animation
+const MEDIUM = "MEDIUM" ## 10 Hz, reliable — health, AI state
+const LOW = "LOW" ## 2 Hz, reliable — inventory, stats
+const SPAWN_ONLY = "SPAWN_ONLY" ## Once at spawn, reliable — initial position/velocity
+const LOCAL = "LOCAL" ## Never synced — client-only state
 
 # ============================================================================
 # PRIORITY ENUM & CONSTANTS
 # ============================================================================
 
 enum Priority {
-	REALTIME = 0,  ## Every frame (~60 FPS)
-	HIGH = 1,      ## 20 FPS
-	MEDIUM = 2,    ## 10 FPS
-	LOW = 3,       ## 1 FPS
+	REALTIME = 0, ## Every frame (~60 FPS)
+	HIGH = 1, ## 20 FPS
+	MEDIUM = 2, ## 10 FPS
+	LOW = 3, ## 1 FPS
 }
 
 ## Maps @export_group name strings to Priority int values.
 ## SPAWN_ONLY and LOCAL are sentinel values — properties in these groups
 ## are excluded from the dirty cache entirely.
 const PRIORITY_MAP: Dictionary = {
-	"REALTIME": 0,    # Priority.REALTIME
-	"HIGH": 1,        # Priority.HIGH
-	"MEDIUM": 2,      # Priority.MEDIUM
-	"LOW": 3,         # Priority.LOW
-	"SPAWN_ONLY": -2, # Sentinel: skip entirely (SpawnManager handles at spawn)
-	"LOCAL": -1,      # Sentinel: skip entirely (never synced)
+	"REALTIME": 0, # Priority.REALTIME
+	"HIGH": 1, # Priority.HIGH
+	"MEDIUM": 2, # Priority.MEDIUM
+	"LOW": 3, # Priority.LOW
+	"SPAWN_ONLY": - 2, # Sentinel: skip entirely (SpawnManager handles at spawn)
+	"LOCAL": - 1, # Sentinel: skip entirely (never synced)
 }
 
 # ============================================================================
@@ -90,14 +101,14 @@ func scan_entity_components(entity: Entity) -> void:
 		if not is_instance_valid(comp):
 			continue
 		if comp is CN_NetSync:
-			continue  # Never scan ourselves
+			continue # Never scan ourselves
 		if comp is CN_NetworkIdentity:
-			continue  # Ownership spoofing prevention — CRITICAL
+			continue # Ownership spoofing prevention — CRITICAL
 		if comp is CN_NativeSync:
-			continue  # Native sync handles its own target node — don't batch-RPC its config
+			continue # Native sync handles its own target node — don't batch-RPC its config
 		var script = comp.get_script()
 		if script == null:
-			continue  # Built-in resource, no exported script properties
+			continue # Built-in resource, no exported script properties
 
 		var inst_id: int = comp.get_instance_id()
 		_comp_refs[inst_id] = comp
@@ -120,7 +131,7 @@ func scan_entity_components(entity: Entity) -> void:
 ## Returns: { priority_int: [prop_name, ...] }
 func _scan_component(comp: Component) -> Dictionary:
 	var result: Dictionary = {}
-	var current_priority: int = Priority.HIGH  # Default when no @export_group set
+	var current_priority: int = Priority.HIGH # Default when no @export_group set
 
 	for prop_info in comp.get_script().get_script_property_list():
 		var usage: int = prop_info.usage
@@ -260,12 +271,12 @@ func _has_changed(old_value: Variant, new_value: Variant) -> bool:
 func _deep_copy(value: Variant) -> Variant:
 	match typeof(value):
 		TYPE_VECTOR2, TYPE_VECTOR3, TYPE_VECTOR4:
-			return value  # Value types in Godot — no copy needed
+			return value # Value types in Godot — no copy needed
 		TYPE_TRANSFORM2D, TYPE_TRANSFORM3D, TYPE_QUATERNION:
-			return value  # Value types
+			return value # Value types
 		TYPE_ARRAY:
 			return value.duplicate(true)
 		TYPE_DICTIONARY:
 			return value.duplicate(true)
 		_:
-			return value  # Primitives (int, float, bool, String) are value types
+			return value # Primitives (int, float, bool, String) are value types

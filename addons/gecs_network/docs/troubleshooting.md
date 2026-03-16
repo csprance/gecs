@@ -23,7 +23,7 @@ extends Component  # was: extends <old-base>
 class_name C_MyInput
 extends Component
 
-@export_group("HIGH")
+@export_group(CN_NetSync.HIGH)
 @export var is_firing: bool = false
 ```
 
@@ -106,7 +106,7 @@ projectile.get_component(C_NetVelocity).direction = shoot_dir
 
 **Cause C:** Properties are missing `@export` — only `@export` properties are serialized.
 
-**Cause D:** Spawn-only properties are declared with `@export_group("SPAWN_ONLY")`.
+**Cause D:** Spawn-only properties are declared with `@export_group(CN_NetSync.SPAWN_ONLY)`.
 If `CN_NetSync` is absent from the entity, even SPAWN_ONLY properties are not sent.
 
 ---

@@ -14,7 +14,7 @@
 | ---------------------------------------------------- | ------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------- |
 | `SyncConfig` class                                   | `@export_group` on component properties                                  | Priority declared inline; no external registry                                                  |
 | `extends SyncConfig`                                 | Delete — no base class needed                                            |                                                                                                 |
-| `component_priorities = {"C_Health": Priority.HIGH}` | `@export_group("HIGH")` before health properties                         |                                                                                                 |
+| `component_priorities = {"C_Health": Priority.HIGH}` | `@export_group(CN_NetSync.HIGH)` before health properties                |                                                                                                 |
 | `CN_SyncEntity` component                            | `CN_NativeSync` component                                                | Different properties; see docs/components.md                                                    |
 | `C_SyncEntity.new(true, true, false)`                | `CN_NativeSync.new()` (defaults: sync_position=true, sync_rotation=true) |                                                                                                 |
 | `extends SyncComponent`                              | `extends Component`                                                      | SyncComponent removed in v2                                                                     |
@@ -23,7 +23,7 @@
 | `CN_ServerOwned` marker                              | `CN_ServerAuthority` marker                                              | **Semantics changed**: host player (peer_id=1) no longer matches; server-owned = peer_id=0 only |
 | `is_server_owned()` returns true for peer_id=0 or 1  | `has_component(CN_ServerAuthority)` true for peer_id=0 only              |                                                                                                 |
 | `SyncConfig.Priority.HIGH` enum                      | `CN_NetSync.Priority.HIGH` enum                                          | Priority enum moved to CN_NetSync                                                               |
-| No `CN_SyncEntity` = spawn-only                      | `@export_group("SPAWN_ONLY")` on properties                              | CN_NetSync must be present on both continuous and spawn-only entities                           |
+| No `CN_SyncEntity` = spawn-only                      | `@export_group(CN_NetSync.SPAWN_ONLY)` on properties                     | CN_NetSync must be present on both continuous and spawn-only entities                           |
 | `sync_config.enable_reconciliation = true`           | `network_sync.reconciliation_interval = 30.0`                            | ProjectSetting default is 30.0 seconds                                                          |
 | `sync_config.model_ready_component`                  | Not needed — SpawnManager uses CN_NetworkIdentity                        |                                                                                                 |
 | `sync_config.transform_component`                    | Not needed — add CN_NativeSync component to entity                       |                                                                                                 |
@@ -103,7 +103,7 @@ extends SyncComponent
 class_name C_FiringInput
 extends Component
 
-@export_group("HIGH")
+@export_group(CN_NetSync.HIGH)
 @export var is_firing: bool = false
 ```
 
@@ -123,7 +123,7 @@ component_priorities = {
 class_name C_Velocity
 extends Component
 
-@export_group("HIGH")
+@export_group(CN_NetSync.HIGH)
 @export var direction: Vector3 = Vector3.ZERO
 
 # ---
@@ -131,7 +131,7 @@ extends Component
 class_name C_Health
 extends Component
 
-@export_group("MEDIUM")
+@export_group(CN_NetSync.MEDIUM)
 @export var current: int = 100
 @export var maximum: int = 100
 
@@ -140,7 +140,7 @@ extends Component
 class_name C_XP
 extends Component
 
-@export_group("LOW")
+@export_group(CN_NetSync.LOW)
 @export var total_xp: int = 0
 ```
 

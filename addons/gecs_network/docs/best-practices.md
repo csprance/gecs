@@ -32,13 +32,13 @@ func query() -> QueryBuilder:
 ### Use SPAWN_ONLY for Values That Do Not Change After Spawn
 
 If a component property is set at spawn time and never changes (projectile initial velocity,
-entity color, static stats), use `@export_group("SPAWN_ONLY")`:
+entity color, static stats), use `@export_group(CN_NetSync.SPAWN_ONLY)`:
 
 ```gdscript
 class_name C_Projectile
 extends Component
 
-@export_group("SPAWN_ONLY")
+@export_group(CN_NetSync.SPAWN_ONLY)
 @export var damage: int = 0
 @export var color: Color = Color.WHITE   # Cosmetic, set at spawn, never changes
 ```
@@ -48,10 +48,10 @@ reliably at spawn.
 
 ### Use LOCAL for Client-Only State
 
-Properties that should never leave the declaring peer get `@export_group("LOCAL")`:
+Properties that should never leave the declaring peer get `@export_group(CN_NetSync.LOCAL)`:
 
 ```gdscript
-@export_group("LOCAL")
+@export_group(CN_NetSync.LOCAL)
 @export var predicted_position: Vector3 = Vector3.ZERO   # Local-only — never synced
 @export var ui_health_display: float = 0.0               # Cached for HUD — never synced
 ```
@@ -64,7 +64,7 @@ Stats, inventory counts, and game state that changes rarely belong at LOW priori
 class_name C_PlayerNumber
 extends Component
 
-@export_group("LOW")
+@export_group(CN_NetSync.LOW)
 @export var player_number: int = 0    # Set once at join; synced at 1–2 Hz
 ```
 

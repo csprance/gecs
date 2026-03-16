@@ -19,6 +19,34 @@ net_id.is_local()          # True if peer_id matches local peer
 net_id.has_authority()     # True if local peer has authority over this entity
 ```
 
+### Component Bundle Factories
+
+Static factory functions that return the right set of network components for common patterns.
+Use in `define_components()` with array concatenation:
+
+```gdscript
+# Full sync: CN_NetworkIdentity + CN_NetSync + CN_NativeSync
+# Use for players and entities needing transform + property sync
+CN_NetworkIdentity.full_sync(peer_id)
+
+# Property sync only: CN_NetworkIdentity + CN_NetSync
+# Use for projectiles, items, spawn-only entities
+CN_NetworkIdentity.sync_only(peer_id)
+
+# Identity only: CN_NetworkIdentity
+# Use for entities needing ownership tracking but no automatic sync
+CN_NetworkIdentity.identity_only(peer_id)
+```
+
+**Example:**
+```gdscript
+func define_components() -> Array:
+    return CN_NetworkIdentity.full_sync() + [
+        C_NetVelocity.new(),
+        C_PlayerInput.new(),
+    ]
+```
+
 **Important:** `is_server_owned()` returns `true` for `peer_id == 0` ONLY. The host player
 (`peer_id == 1`) is NOT server-owned; it gets `CN_LocalAuthority` on the host machine.
 Use `has_component(CN_ServerAuthority)` to check server ownership in queries.
@@ -42,16 +70,16 @@ net_sync.update_cache_silent(comp, prop, val)   # Update cache without marking d
 
 ### Priority Tiers via @export_group
 
-Priority is declared directly on component properties using `@export_group` sentinel names:
+Priority is declared directly on component properties using `@export_group` with `CN_NetSync` constants:
 
-| Group name     | Rate          | Transport  | Use for                                |
-| -------------- | ------------- | ---------- | -------------------------------------- |
-| `"REALTIME"`   | ~60 Hz        | Unreliable | Critical real-time data (rare)         |
-| `"HIGH"`       | 20 Hz         | Unreliable | Velocity, input flags, animation state |
-| `"MEDIUM"`     | 10 Hz         | Reliable   | Health, AI state, XP                   |
-| `"LOW"`        | 2 Hz          | Reliable   | Inventory, stats, upgrades             |
-| `"SPAWN_ONLY"` | Once at spawn | Reliable   | Projectile initial position/velocity   |
-| `"LOCAL"`      | Never         | —          | Client-only state; never transmitted   |
+| Constant                | Rate          | Transport  | Use for                                |
+| ----------------------- | ------------- | ---------- | -------------------------------------- |
+| `CN_NetSync.REALTIME`   | ~60 Hz        | Unreliable | Critical real-time data (rare)         |
+| `CN_NetSync.HIGH`       | 20 Hz         | Unreliable | Velocity, input flags, animation state |
+| `CN_NetSync.MEDIUM`     | 10 Hz         | Reliable   | Health, AI state, XP                   |
+| `CN_NetSync.LOW`        | 2 Hz          | Reliable   | Inventory, stats, upgrades             |
+| `CN_NetSync.SPAWN_ONLY` | Once at spawn | Reliable   | Projectile initial position/velocity   |
+| `CN_NetSync.LOCAL`      | Never         | —          | Client-only state; never transmitted   |
 
 All properties under an `@export_group` sentinel inherit that tier until the next group is declared.
 
@@ -61,11 +89,11 @@ All properties under an `@export_group` sentinel inherit that tier until the nex
 class_name C_NetVelocity
 extends Component
 
-@export_group("HIGH")
+@export_group(CN_NetSync.HIGH)
 @export var direction: Vector3 = Vector3.ZERO  # Synced at 20 Hz
 @export var speed: float = 0.0                 # Synced at 20 Hz
 
-@export_group("LOCAL")
+@export_group(CN_NetSync.LOCAL)
 @export var predicted_position: Vector3 = Vector3.ZERO  # Never synced
 ```
 

@@ -17,26 +17,11 @@ extends Entity
 ## Demonstrates continuous sync via CN_NativeSync (transform) and
 ## CN_NetSync with HIGH priority properties.
 
-var peer_id: int = 0
-
-func _init(p_peer_id: int = 0) -> void:
-    peer_id = p_peer_id
-
-func _enter_tree() -> void:
-    # Extract peer_id from node name when spawned from scene (set by main.gd as str(peer_id))
-    var authority_id = str(name).to_int()
-    if authority_id > 0:
-        peer_id = authority_id
-        set_multiplayer_authority(authority_id)
-
 func define_components() -> Array:
-    return [
-        CN_NetworkIdentity.new(peer_id),
-        CN_NetSync.new(),           # Enables property sync (HIGH priority props)
-        CN_NativeSync.new(),        # Syncs position/rotation via MultiplayerSynchronizer
-        C_NetVelocity.new(),        # @export_group("HIGH") on direction property
-        C_PlayerInput.new(),        # @export_group("HIGH") on input properties
-        C_PlayerNumber.new(),       # @export_group("LOW") on player_number
+    return CN_NetworkIdentity.full_sync() + [
+        C_NetVelocity.new(),
+        C_PlayerInput.new(),
+        C_PlayerNumber.new(),
     ]
 ```
 
@@ -45,7 +30,7 @@ func define_components() -> Array:
 ## Example 2: Projectile Entity (Spawn-Only Sync)
 
 `example_network/entities/e_projectile.gd` — demonstrates spawn-only sync via
-`@export_group("SPAWN_ONLY")` on component properties. `CN_NetSync` is still required.
+`@export_group(CN_NetSync.SPAWN_ONLY)` on component properties.
 
 ```gdscript
 class_name E_Projectile
@@ -54,17 +39,10 @@ extends Entity
 ## Demonstrates spawn-only sync via CN_NetSync with SPAWN_ONLY properties.
 ## Server spawns and broadcasts component values once; clients simulate locally.
 
-var owner_peer_id: int = 0
-
-func _init(p_owner: int = 0) -> void:
-    owner_peer_id = p_owner
-
 func define_components() -> Array:
-    return [
-        CN_NetworkIdentity.new(0),   # 0 = server-owned projectile
-        CN_NetSync.new(),            # Required — SPAWN_ONLY group lives here
-        C_NetPosition.new(),         # @export_group("SPAWN_ONLY") on position
-        C_NetVelocity.new(),         # SPAWN_ONLY properties: initial velocity
+    return CN_NetworkIdentity.sync_only() + [
+        C_NetPosition.new(),
+        C_NetVelocity.new(),
         C_Projectile.new(),
     ]
 ```
@@ -80,7 +58,7 @@ class_name C_NetVelocity
 extends Component
 ## Velocity component for network example.
 
-@export_group("HIGH")
+@export_group(CN_NetSync.HIGH)
 @export var direction: Vector3 = Vector3.ZERO   # Synced at 20 Hz
 ```
 
@@ -90,9 +68,9 @@ extends Component
 class_name C_PlayerInput
 extends Component
 ## Player input component - synced to server for authoritative game state.
-## Uses @export_group("HIGH") so CN_NetSync prioritizes at ~20 Hz.
+## Uses @export_group(CN_NetSync.HIGH) so CN_NetSync prioritizes at ~20 Hz.
 
-@export_group("HIGH")
+@export_group(CN_NetSync.HIGH)
 @export var move_direction: Vector2 = Vector2.ZERO
 @export var is_shooting: bool = false
 @export var shoot_direction: Vector3 = Vector3.FORWARD
@@ -222,7 +200,7 @@ func _spawn_projectile(shooter: Entity, direction: Vector3, player_number: int) 
     # add_entity() triggers define_components() — sets defaults
     ECS.world.add_entity(projectile)
 
-    # CRITICAL: set component values AFTER add_entity()
+    # Set component values after add_entity() (components are created during add_entity)
     # NetworkSync captures these via call_deferred at end of frame
     projectile.get_component(C_NetPosition).position = spawn_pos
     projectile.get_component(C_NetVelocity).direction = direction.normalized() * PROJECTILE_SPEED
@@ -265,21 +243,16 @@ func _spawn_player_for_peer(peer_id: int) -> void:
 
     var PlayerScene: PackedScene = preload(PLAYER_SCENE_PATH)
     var player = PlayerScene.instantiate() as Entity
-
-    # Node name = peer_id (entity reads this in _enter_tree to set authority)
     player.name = str(peer_id)
-    entities.add_child(player)
 
+    # Add to ECS world with component overrides
+    var player_num = C_PlayerNumber.new()
+    player_num.player_number = player_number
+    world.add_entity(player, [CN_NetworkIdentity.new(peer_id), player_num])
+
+    # Set spawn position (must be after add_entity since that adds to tree)
     var spawn_offset = Vector3((player_number % 4) * 2.0 - 3.0, 0, 0)
     player.global_position = spawn_offset
-
-    # add_entity() triggers NetworkSync broadcast at end of frame
-    world.add_entity(player)
-
-    # CRITICAL: set component values AFTER add_entity()
-    var player_num_comp = player.get_component(C_PlayerNumber) as C_PlayerNumber
-    if player_num_comp:
-        player_num_comp.player_number = player_number
 
     _spawned_peer_ids[peer_id] = player.id
 ```
