@@ -61,6 +61,10 @@ var columns: Dictionary = {} # String (component_path) -> Array of components
 var add_edges: Dictionary = {} # String -> Archetype
 var remove_edges: Dictionary = {} # String -> Archetype
 
+## Reverse-edge tracking: which archetypes hold an add_edge or remove_edge pointing to this one.
+## Keyed by source archetype instance_id for O(1) operations.
+var neighbors: Dictionary = {} # int (get_instance_id()) -> Archetype
+
 
 ## Initialize archetype with signature and component types
 func _init(p_signature: int, p_component_types: Array):
@@ -210,12 +214,14 @@ func _to_string() -> String:
 ## Enables O(1) archetype transitions when components change
 func set_add_edge(component_path: String, target_archetype: Archetype) -> void:
 	add_edges[component_path] = target_archetype
+	target_archetype.neighbors[get_instance_id()] = self
 
 
 ## Set up an edge to another archetype when a component is removed
 ## Enables O(1) archetype transitions when components change
 func set_remove_edge(component_path: String, target_archetype: Archetype) -> void:
 	remove_edges[component_path] = target_archetype
+	target_archetype.neighbors[get_instance_id()] = self
 
 
 ## Get the target archetype when adding a component (if edge exists)
