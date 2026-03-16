@@ -129,17 +129,6 @@ C_NetworkIdentity.new(N)   # Client player (peer_id > 1)
 - Transform batching (position + rotation)
 - Spawn-only sync for deterministic entities
 
-## Use Cases
-
-This addon has been battle-tested in a multiplayer wave survival ARPG with:
-
-- ✅ Client-server architecture
-- ✅ Player input synchronization
-- ✅ Enemy spawning and AI sync
-- ✅ Projectile networking (spawn-only sync)
-- ✅ Health/XP state synchronization
-- ✅ Real-time player movement
-
 ## Integration Example
 
 ```gdscript
@@ -156,7 +145,7 @@ That's it! The addon handles all entity and component synchronization automatica
 1. **Completes the ECS Framework** - GECS provides local game logic; gecs_network adds multiplayer
 2. **Zero-Configuration Networking** - Projects just attach NetworkSync and define their SyncConfig
 3. **Godot-Native** - Uses built-in MultiplayerAPI, no external dependencies
-4. **Production Ready** - Clean, documented, tested in real games
+4. **Production Ready** - Clean, documented
 5. **Community Value** - Multiplayer is a common need for GECS users
 
 ## License
@@ -166,6 +155,8 @@ This addon is contributed under the same CC0-1.0 license as GECS (public domain)
 ## Credits
 
 Developed by **Code Fixxers** team during the Arena Survivors MVP project.
+
+Additional Dev work by @csprance
 
 ## [6.8.0] - CommandBuffer System
 
