@@ -10,7 +10,8 @@ func process(entities: Array[Entity], components: Array, delta: float) -> void:
 	var colors = components[0]
 
 	for i in entities.size():
-		var entity = entities[i] as Player
-		entity.set_visual_color(colors[i].color)
-
-		entity.remove_component(C_NewPlayer) # Remove flag component so we don't re-process
+		var player = entities[i] as Player
+		if player == null:
+			continue
+		player.set_visual_color(colors[i].color)
+		cmd.remove_component(entities[i], C_NewPlayer)  # Deferred via CommandBuffer — safe during forward iteration

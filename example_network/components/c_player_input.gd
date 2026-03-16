@@ -5,7 +5,7 @@ extends Component
 
 @export_group(CN_NetSync.HIGH)
 ## Movement input direction (WASD/Arrow keys normalized)
-var move_direction: Vector2 = Vector2.ZERO
+@export var move_direction: Vector2 = Vector2.ZERO
 
 ## Whether shoot key is pressed (Space)
 @export var is_shooting: bool = false
