@@ -90,7 +90,7 @@ var _world: World = null
 ## Convenience property for accessing query builder (returns _world.query or ECS.world.query)
 var q: QueryBuilder:
 	get:
-		return _world.query if _world else ECS.world.query
+		return _world.query if _world else (ECS.world.query if ECS.world else null)
 ## Command buffer for queuing structural changes (add/remove components, entities, relationships)
 ## Commands are executed after the system completes based on command_buffer_flush_mode
 var cmd: CommandBuffer = null:
