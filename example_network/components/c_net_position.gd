@@ -1,10 +1,10 @@
 class_name C_NetPosition
 extends Component
 ## Position component for network example.
-## Uses @export_group("SPAWN_ONLY") so CN_NetSync sends this value once at spawn
+## Uses @export_group(CN_NetSync.SPAWN_ONLY) so CN_NetSync sends this value once at spawn
 ## and never replicates it again — clients simulate locally after that.
 
-@export_group("SPAWN_ONLY")
+@export_group(CN_NetSync.SPAWN_ONLY)
 @export var position: Vector3 = Vector3.ZERO
 
 

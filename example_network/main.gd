@@ -5,11 +5,10 @@ extends Node3D
 
 const PLAYER_SCENE_PATH := "res://example_network/entities/e_player.tscn"
 
-var _spawned_peer_ids: Dictionary = {}  # peer_id -> entity_id
-var _next_player_number: int = 1  # Track join order (1-4) for color assignment
+var _spawned_peer_ids: Dictionary = {} # peer_id -> entity_id
+var _next_player_number: int = 1 # Track join order (1-4) for color assignment
 
 @onready var world: World = $World
-@onready var entities: Node = $World/Entities
 @onready var session: NetworkSession = $NetworkSession
 
 # UI references
@@ -166,24 +165,16 @@ func _spawn_player_for_peer(peer_id: int) -> void:
 
 	var PlayerScene: PackedScene = preload(PLAYER_SCENE_PATH)
 	var player = PlayerScene.instantiate() as Entity
-
-	# Set node name to peer_id (used by entity to set authority)
 	player.name = str(peer_id)
 
-	# Add to scene tree first
-	entities.add_child(player)
+	# Add to ECS world with component overrides
+	var player_num = C_PlayerNumber.new()
+	player_num.player_number = player_number
+	world.add_entity(player, [CN_NetworkIdentity.new(peer_id), player_num])
 
-	# Set spawn position (spread players out)
+	# Set spawn position (must be after add_entity since that adds to tree)
 	var spawn_offset = Vector3((player_number % 4) * 2.0 - 3.0, 0, (player_number / 4) * 2.0 - 1.0)
 	player.global_position = spawn_offset
-
-	# Add to ECS world - triggers NetworkSync broadcast
-	world.add_entity(player)
-
-	# CRITICAL: Set player number AFTER add_entity() so it syncs with spawn RPC
-	var player_num_comp = player.get_component(C_PlayerNumber) as C_PlayerNumber
-	if player_num_comp:
-		player_num_comp.player_number = player_number
 
 	# Track spawned peer
 	_spawned_peer_ids[peer_id] = player.id

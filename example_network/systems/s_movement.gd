@@ -3,14 +3,14 @@ extends System
 ## Movement system - applies velocity to entity position.
 ## Processes entities with CN_LocalAuthority (local simulation).
 ## Remote entities receive position updates via native MultiplayerSynchronizer.
-## ADV-03: Registers a custom receive handler for C_NetVelocity to blend corrections.
+## Registers a custom receive handler for C_NetVelocity to blend corrections.
 
 const MOVE_SPEED := 5.0
-const ARENA_BOUND := 4.5  # Half of 10x10 arena minus player size
+const ARENA_BOUND := 4.5 # Half of 10x10 arena minus player size
 
 
 func setup() -> void:
-	# ADV-03: Register a blend-correction receive handler for C_NetVelocity.
+	# Register a blend-correction receive handler for C_NetVelocity.
 	# When the server sends a velocity correction, we lerp instead of snapping
 	# so local movement feels smooth even under reconciliation.
 	# setup() is deferred until ECS.world is assigned, so get_node() is safe here.
