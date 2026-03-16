@@ -884,7 +884,7 @@ func _handle_observer_component_added(entity: Entity, component: Resource) -> vo
 					query_builder._exclude_components
 				)
 				# Check if our entity is in the result set
-				matches = entity_to_archetype.has(entity)  # PERF-01: O(1) dict check vs O(N) Array.has(); _query() above ensures component-match semantics
+				matches = entities_matching.has(entity)
 
 			if matches:
 				reactive_system.on_component_added(entity, component)
@@ -931,7 +931,7 @@ func _handle_observer_component_changed(
 					query_builder._exclude_components
 				)
 				# Check if our entity is in the result set
-				matches = entity_to_archetype.has(entity)  # PERF-01: O(1) dict check vs O(N) Array.has(); _query() above ensures component-match semantics
+				matches = entities_matching.has(entity)
 
 			if matches:
 				reactive_system.on_component_changed(
