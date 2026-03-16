@@ -1,12 +1,13 @@
-class_name S_NetworkProjectile
-extends System
 ## Projectile movement system - moves projectiles and handles cleanup.
 ## Runs on ALL clients (local simulation after spawn-only sync).
+class_name S_NetworkProjectile
+extends System
 
-const LIFETIME := 3.0  # Seconds before projectile is removed
-const ARENA_BOUND := 10.0  # Remove if outside this bound
 
-var _lifetime_tracker: Dictionary = {}  # entity_id -> time_alive
+const LIFETIME := 3.0 # Seconds before projectile is removed
+const ARENA_BOUND := 10.0 # Remove if outside this bound
+
+var _lifetime_tracker: Dictionary = {} # entity_id -> time_alive
 
 
 func query() -> QueryBuilder:
@@ -21,7 +22,7 @@ func process(entities: Array[Entity], components: Array, delta: float) -> void:
 		var velocity = velocities[i] as C_NetVelocity
 
 		# Move projectile
-		if entity is Node3D:
+		if entity is Projectile:
 			entity.global_position += velocity.direction * delta
 
 		# Track lifetime

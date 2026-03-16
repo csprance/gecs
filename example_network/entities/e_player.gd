@@ -1,8 +1,10 @@
-class_name E_Player
-extends Entity
 ## Player entity for the network example.
 ## Demonstrates continuous sync via CN_NativeSync (transform) and
 ## CN_NetSync with HIGH priority properties.
+class_name Player
+extends Entity
+
+@onready var visual: CSGBox3D = %Visual
 
 
 func define_components() -> Array:
@@ -13,4 +15,12 @@ func define_components() -> Array:
 		C_NetVelocity.new(),
 		C_PlayerInput.new(),
 		C_PlayerNumber.new(),
+		C_NewPlayer.new(),
 	]
+
+
+# Help function to set visual color based on player number (called from PlayerInitSystem)
+func set_visual_color(color: Color) -> void:
+	if visual.material_override == null:
+		visual.material_override = StandardMaterial3D.new()
+	visual.material_override.albedo_color = color

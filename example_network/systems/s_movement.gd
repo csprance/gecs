@@ -1,9 +1,10 @@
-class_name S_NetworkMovement
-extends System
 ## Movement system - applies velocity to entity position.
 ## Processes entities with CN_LocalAuthority (local simulation).
 ## Remote entities receive position updates via native MultiplayerSynchronizer.
 ## Registers a custom receive handler for C_NetVelocity to blend corrections.
+class_name S_NetworkMovement
+extends System
+
 
 const MOVE_SPEED := 5.0
 const ARENA_BOUND := 4.5 # Half of 10x10 arena minus player size

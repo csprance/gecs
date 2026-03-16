@@ -1,13 +1,14 @@
-class_name S_NetworkShooting
-extends System
 ## Shooting system - spawns projectiles when player shoots.
 ## SERVER-ONLY spawning for spawn-only sync pattern.
 ## Clients do NOT spawn projectiles - they receive spawn RPCs from server.
+class_name S_NetworkShooting
+extends System
+
 
 var _projectile_scene: PackedScene = preload("res://example_network/entities/e_projectile.tscn")
-var _cooldown_tracker: Dictionary = {}  # entity_id -> time_since_shot
+var _cooldown_tracker: Dictionary = {} # entity_id -> time_since_shot
 
-const FIRE_RATE := 0.3  # Seconds between shots
+const FIRE_RATE := 0.3 # Seconds between shots
 const PROJECTILE_SPEED := 10.0
 
 

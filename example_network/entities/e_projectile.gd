@@ -1,8 +1,8 @@
-class_name E_Projectile
-extends Entity
 ## Projectile entity for the network example.
 ## Demonstrates spawn-only sync via CN_NetSync with SPAWN_ONLY properties.
 ## Server spawns and broadcasts component values once; clients simulate locally.
+class_name Projectile
+extends Entity
 
 
 func define_components() -> Array:
