@@ -51,6 +51,8 @@ signal cache_invalidated
 var entities: Array[Entity] = []
 ## All the [Observer]s in the world.
 var observers: Array[Observer] = []
+## PERF-02: Cache for observer watch() results — populated at add_observer() time, cleared at remove_observer()
+var _observer_watch_cache: Dictionary = {}  # Observer -> Resource (component script reference)
 ## All the [System]s by group Dictionary[String, Array[System]]
 var systems_by_group: Dictionary[String, Array] = {}
 ## All the [System]s in the world flattened into a single array
@@ -816,8 +818,8 @@ func add_observer(_observer: Observer) -> void:
 	# Initialize the query builder for the observer
 	_observer.q = QueryBuilder.new(self)
 
-	# Verify the system has a valid watch component
-	_observer.watch()  # Just call to validate it returns a component
+	# Cache watch() result — called once at registration, not on every notification
+	_observer_watch_cache[_observer] = _observer.watch()
 
 
 ## Adds multiple [Observer]s to the [World].
@@ -839,6 +841,7 @@ func remove_observer(observer: Observer) -> void:
 	# if ECS.debug:
 	# 	# Don't use system_removed as it expects a System not ReactiveSystem
 	# 	GECSEditorDebuggerMessages.exit_world()  # Just send a general update
+	_observer_watch_cache.erase(observer)  # Prevent memory leak on observer churn
 	observer.queue_free()
 
 
@@ -862,7 +865,7 @@ func handle_component_changed(
 func _handle_observer_component_added(entity: Entity, component: Resource) -> void:
 	for reactive_system in observers:
 		# Get the component that this system is watching
-		var watch_component = reactive_system.watch()
+		var watch_component = _observer_watch_cache.get(reactive_system)
 		if (
 			watch_component
 			and component
@@ -891,7 +894,7 @@ func _handle_observer_component_added(entity: Entity, component: Resource) -> vo
 func _handle_observer_component_removed(entity: Entity, component: Resource) -> void:
 	for reactive_system in observers:
 		# Get the component that this system is watching
-		var watch_component = reactive_system.watch()
+		var watch_component = _observer_watch_cache.get(reactive_system)
 		if (
 			watch_component
 			and component
@@ -909,7 +912,7 @@ func _handle_observer_component_changed(
 ) -> void:
 	for reactive_system in observers:
 		# Get the component that this system is watching
-		var watch_component = reactive_system.watch()
+		var watch_component = _observer_watch_cache.get(reactive_system)
 		if (
 			watch_component
 			and component
