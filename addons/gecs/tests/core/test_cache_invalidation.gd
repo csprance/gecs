@@ -138,3 +138,56 @@ func test_cache04_disable_entities_batch_single_invalidation():
 	# Without CACHE-03/04 fix: each entity fires individually = 3 invalidations.
 	# With fix: depth counter suppresses individual fires, single invalidation at end = 1.
 	assert_int(invalidations).is_equal(1)
+
+
+## FIX-1A regression: When an entity moves from archetype-AB to archetype-A by having
+## C_TestB removed, and BOTH archetypes already existed before the move, world.cache_invalidated
+## must NOT fire.
+## RED condition: if any code path during remove_component calls _remove_entity_from_archetype
+## rather than going through _move_entity_to_new_archetype_fast directly, the signal fires
+## unconditionally at line 1270 -> delta is 1, not 0 -> FAILS before fix.
+func test_cache01b_no_invalidation_on_move_between_existing_archetypes():
+	# Seed archetype-A with two entities so it persists across the whole test.
+	var seed_a1 = Entity.new()
+	seed_a1.add_component(C_TestA.new())
+	world.add_entity(seed_a1)
+
+	var seed_a2 = Entity.new()
+	seed_a2.add_component(C_TestA.new())
+	world.add_entity(seed_a2)
+
+	# Seed archetype-AB with two entities so it also persists across the whole test.
+	var seed_ab1 = Entity.new()
+	seed_ab1.add_component(C_TestA.new())
+	seed_ab1.add_component(C_TestB.new())
+	world.add_entity(seed_ab1)
+
+	var seed_ab2 = Entity.new()
+	seed_ab2.add_component(C_TestA.new())
+	seed_ab2.add_component(C_TestB.new())
+	world.add_entity(seed_ab2)
+
+	# entity_move starts in archetype-AB and will move to archetype-A.
+	var entity_move = Entity.new()
+	entity_move.add_component(C_TestA.new())
+	entity_move.add_component(C_TestB.new())
+	world.add_entity(entity_move)
+
+	# Wire signal counter AFTER setup so we only capture the move below.
+	var signal_count = [0]
+	var _handler = func(): signal_count[0] += 1
+	world.cache_invalidated.connect(_handler)
+	var initial_count = signal_count[0]
+
+	# Move entity from archetype-AB to archetype-A by removing C_TestB.
+	# Both archetypes already exist and will continue to exist after the move
+	# (seed entities keep them alive). No new archetype is created or destroyed.
+	entity_move.remove_component(C_TestB)
+
+	# Disconnect to avoid leaking into subsequent tests.
+	if world.cache_invalidated.is_connected(_handler):
+		world.cache_invalidated.disconnect(_handler)
+
+	# Expect zero cache wipes: both archetypes existed before and after, so
+	# the archetype set is unchanged and cached query results remain correct.
+	assert_int(signal_count[0] - initial_count).is_equal(0)
