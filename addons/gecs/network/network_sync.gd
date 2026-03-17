@@ -97,9 +97,9 @@ func _ready() -> void:
 	_sender = SyncSender.new(self)
 	_receiver = SyncReceiver.new(self)
 	_native_sync_handler = NativeSyncHandler.new(self)
-	var SyncRelationshipHandlerScript = load("res://addons/gecs_network/sync_relationship_handler.gd")
+	var SyncRelationshipHandlerScript = load("res://addons/gecs/network/sync_relationship_handler.gd")
 	_relationship_handler = SyncRelationshipHandlerScript.new(self)
-	var SyncReconciliationHandlerScript = load("res://addons/gecs_network/sync_reconciliation_handler.gd")
+	var SyncReconciliationHandlerScript = load("res://addons/gecs/network/sync_reconciliation_handler.gd")
 	_reconciliation_handler = SyncReconciliationHandlerScript.new(self)
 
 	_world.entity_added.connect(_on_entity_added)
@@ -189,7 +189,7 @@ func broadcast_full_state() -> void:
 ##           return {"move_dir": comp.move_dir, "jump_pressed": comp.jump_pressed}
 ##       return {}  # Suppress for non-local entities
 ##
-## See also: addons/gecs_network/docs/custom-sync-handlers.md
+## See also: addons/gecs/network/docs/custom-sync-handlers.md
 func register_send_handler(comp_type_name: String, handler: Callable) -> void:
 	if _sender == null:
 		push_error("NetworkSync: register_send_handler called before _ready()")
@@ -215,7 +215,7 @@ func register_send_handler(comp_type_name: String, handler: Callable) -> void:
 ##           comp.position = comp.position.lerp(props["position"], 0.3)
 ##       return true  # Handled — update_cache_silent will be called by framework
 ##
-## See also: addons/gecs_network/docs/custom-sync-handlers.md
+## See also: addons/gecs/network/docs/custom-sync-handlers.md
 func register_receive_handler(comp_type_name: String, handler: Callable) -> void:
 	if _receiver == null:
 		push_error("NetworkSync: register_receive_handler called before _ready()")

@@ -4,7 +4,7 @@ extends GdUnitTestSuite
 ## Tests round-trip serialization/deserialization of relationship creation recipes,
 ## deferred Entity target resolution, sync loop prevention, and authority filtering.
 
-const SyncRelationshipHandler = preload("res://addons/gecs_network/sync_relationship_handler.gd")
+const SyncRelationshipHandler = preload("res://addons/gecs/network/sync_relationship_handler.gd")
 
 var world: World
 var handler: RefCounted  # SyncRelationshipHandler

@@ -3,7 +3,7 @@ extends GdUnitTestSuite
 ## Test suite for SyncReconciliationHandler (ADV-02).
 ## Plan 02: RED stubs replaced with real assertions.
 
-const SyncReconciliationHandler = preload("res://addons/gecs_network/sync_reconciliation_handler.gd")
+const SyncReconciliationHandler = preload("res://addons/gecs/network/sync_reconciliation_handler.gd")
 
 # ============================================================================
 # MOCK OBJECTS

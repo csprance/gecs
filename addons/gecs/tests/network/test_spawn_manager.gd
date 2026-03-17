@@ -5,7 +5,7 @@ extends GdUnitTestSuite
 ##
 ## MockNetworkSync has NO sync_config field (removed in v2).
 
-const SyncRelationshipHandler = preload("res://addons/gecs_network/sync_relationship_handler.gd")
+const SyncRelationshipHandler = preload("res://addons/gecs/network/sync_relationship_handler.gd")
 
 
 # Mock component with a HIGH-priority exported property (for scan tests)

@@ -6,7 +6,7 @@
 ##   session.transport = ENetTransportProvider.new()
 ##   add_child(session)
 ##   session.host()   # or session.join("127.0.0.1")
-@icon("res://addons/gecs_network/icons/network_session.svg")
+@icon("res://addons/gecs/network/icons/network_session.svg")
 class_name NetworkSession
 extends Node
 

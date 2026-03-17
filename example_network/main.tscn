@@ -8,7 +8,7 @@
 [ext_resource type="Script" uid="uid://b30rleaob260h" path="res://example_network/systems/s_movement.gd" id="5_movement"]
 [ext_resource type="Script" uid="uid://cqb7ug3cw1vbh" path="res://example_network/systems/s_shooting.gd" id="6_shooting"]
 [ext_resource type="Script" uid="uid://bn41hwmgw5iix" path="res://example_network/systems/s_projectile.gd" id="7_projectile"]
-[ext_resource type="Script" uid="uid://bgl2sgcf5f1rj" path="res://addons/gecs_network/network_session.gd" id="8_network_session"]
+[ext_resource type="Script" uid="uid://bgl2sgcf5f1rj" path="res://addons/gecs/network/network_session.gd" id="8_network_session"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_floor"]
 albedo_color = Color(0.4, 0.4, 0.4, 1)
