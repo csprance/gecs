@@ -299,6 +299,12 @@ func remove_components(_components: Array):
 			var component_path = comp_to_remove.get_script().resource_path
 			if components.has(component_path):
 				components.erase(component_path)
+				# Clean up cache entries for both the class and instance
+				_component_path_cache.erase(_component)
+				_component_path_cache.erase(comp_to_remove)
+				# OBS-03: Disconnect property_changed before emitting removal signal.
+				if comp_to_remove.property_changed.is_connected(_on_component_property_changed):
+					comp_to_remove.property_changed.disconnect(_on_component_property_changed)
 				removed_components.append(comp_to_remove)
 
 	# If no components were actually removed, return early
