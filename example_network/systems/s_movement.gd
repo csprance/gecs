@@ -15,15 +15,18 @@ const CORRECTION_SPEED := 10.0
 ## Higher = snappier correction, lower = smoother local movement.
 const VELOCITY_BLEND_FACTOR := 0.3
 
+var _handlers_registered := false
 
-func setup() -> void:
-	# Register receive handlers for smooth remote entity interpolation.
-	# setup() is deferred until ECS.world is assigned, so get_node() is safe here.
+
+func _try_register_receive_handlers() -> void:
+	if _handlers_registered:
+		return
 	var ns := ECS.world.get_node("NetworkSync") as NetworkSync
 	if ns == null:
 		return
 	ns.register_receive_handler("C_NetVelocity", _on_receive_velocity)
 	ns.register_receive_handler("C_NetPosition", _on_receive_position)
+	_handlers_registered = true
 
 
 func _on_receive_velocity(entity: Entity, comp: Component, props: Dictionary) -> bool:
@@ -54,6 +57,7 @@ func query() -> QueryBuilder:
 
 
 func process(entities: Array[Entity], components: Array, delta: float) -> void:
+	_try_register_receive_handlers()
 	var velocities = components[0]
 	var inputs = components[1]
 	var positions = components[2]
