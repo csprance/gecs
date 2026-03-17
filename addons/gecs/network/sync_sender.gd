@@ -116,11 +116,11 @@ func _get_interval(priority: int) -> float:
 		CN_NetSync.Priority.REALTIME:
 			return 0.0
 		CN_NetSync.Priority.HIGH:
-			return 1.0 / ProjectSettings.get_setting("gecs_network/sync/high_hz", 20)
+			return 1.0 / ProjectSettings.get_setting("gecs/network/sync/high_hz", 20)
 		CN_NetSync.Priority.MEDIUM:
-			return 1.0 / ProjectSettings.get_setting("gecs_network/sync/medium_hz", 10)
+			return 1.0 / ProjectSettings.get_setting("gecs/network/sync/medium_hz", 10)
 		CN_NetSync.Priority.LOW:
-			return 1.0 / ProjectSettings.get_setting("gecs_network/sync/low_hz", 2)
+			return 1.0 / ProjectSettings.get_setting("gecs/network/sync/low_hz", 2)
 	return 0.0
 
 

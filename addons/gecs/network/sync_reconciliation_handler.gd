@@ -34,7 +34,7 @@ func tick(delta: float) -> void:
 	else:
 		# _override_interval < 0.0: use ProjectSettings default
 		interval = ProjectSettings.get_setting(
-			"gecs_network/sync/reconciliation_interval", 30.0
+			"gecs/network/sync/reconciliation_interval", 30.0
 		)
 
 	_timer += delta

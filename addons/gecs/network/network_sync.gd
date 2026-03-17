@@ -141,12 +141,12 @@ func reset_for_new_game() -> void:
 ## Runtime override for the reconciliation interval (seconds).
 ## Overrides the ProjectSettings value for the current session.
 ## Set to 0.0 or negative to disable automatic reconciliation.
-## Default: -1.0 (uses gecs_network/sync/reconciliation_interval ProjectSetting = 30.0).
+## Default: -1.0 (uses gecs/network/sync/reconciliation_interval ProjectSetting = 30.0).
 var reconciliation_interval: float:
 	get:
 		if _reconciliation_handler == null:
 			return ProjectSettings.get_setting(
-				"gecs_network/sync/reconciliation_interval", 30.0
+				"gecs/network/sync/reconciliation_interval", 30.0
 			)
 		return _reconciliation_handler._override_interval
 	set(value):

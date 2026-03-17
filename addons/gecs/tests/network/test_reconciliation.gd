@@ -124,8 +124,8 @@ func after_test() -> void:
 
 func test_reconciliation_fires_at_interval() -> void:
 	# Set a short interval via ProjectSettings override
-	ProjectSettings.set_setting("gecs_network/sync/reconciliation_interval", 1.0)
-	ProjectSettings.set_initial_value("gecs_network/sync/reconciliation_interval", 1.0)
+	ProjectSettings.set_setting("gecs/network/sync/reconciliation_interval", 1.0)
+	ProjectSettings.set_initial_value("gecs/network/sync/reconciliation_interval", 1.0)
 
 	# Add a networked entity so broadcast_full_state() doesn't no-op
 	var entity = Entity.new()
@@ -143,8 +143,8 @@ func test_reconciliation_fires_at_interval() -> void:
 	assert_bool(mock_ns.full_state_rpc_calls.size() >= 1).is_true()
 
 	# Restore default
-	ProjectSettings.set_setting("gecs_network/sync/reconciliation_interval", 30.0)
-	ProjectSettings.set_initial_value("gecs_network/sync/reconciliation_interval", 30.0)
+	ProjectSettings.set_setting("gecs/network/sync/reconciliation_interval", 30.0)
+	ProjectSettings.set_initial_value("gecs/network/sync/reconciliation_interval", 30.0)
 
 
 func test_broadcast_full_state_serializes_networked_entities() -> void:
@@ -234,10 +234,10 @@ func test_handle_full_state_removes_ghost_entities() -> void:
 
 func test_reconciliation_interval_project_setting() -> void:
 	# Replicate plugin._register_project_settings() inline for headless runner
-	if not ProjectSettings.has_setting("gecs_network/sync/reconciliation_interval"):
-		ProjectSettings.set_setting("gecs_network/sync/reconciliation_interval", 30.0)
-	ProjectSettings.set_initial_value("gecs_network/sync/reconciliation_interval", 30.0)
+	if not ProjectSettings.has_setting("gecs/network/sync/reconciliation_interval"):
+		ProjectSettings.set_setting("gecs/network/sync/reconciliation_interval", 30.0)
+	ProjectSettings.set_initial_value("gecs/network/sync/reconciliation_interval", 30.0)
 
 	assert_float(
-		ProjectSettings.get_setting("gecs_network/sync/reconciliation_interval", 0.0)
+		ProjectSettings.get_setting("gecs/network/sync/reconciliation_interval", 0.0)
 	).is_equal(30.0)

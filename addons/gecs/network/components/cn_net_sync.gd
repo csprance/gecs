@@ -10,7 +10,7 @@ extends Component
 ##   @export_group(CN_NetSync.REALTIME)  # ~60 Hz [br]
 ##   @export_group(CN_NetSync.HIGH)      # 20 Hz (default if no group)[br]
 ##   @export_group(CN_NetSync.MEDIUM)    # 10 Hz[br]
-##   @export_group(CN_NetSync.LOW)       # 2 Hz (default, configurable via gecs_network/sync/low_hz)[br]
+##   @export_group(CN_NetSync.LOW)       # 2 Hz (default, configurable via gecs/network/sync/low_hz)[br]
 ##   @export_group(CN_NetSync.SPAWN_ONLY)# sent at spawn only (SpawnManager handles it)[br]
 ##   @export_group(CN_NetSync.LOCAL)     # never synced[br]
 
@@ -76,9 +76,9 @@ var _intervals: Dictionary = {}
 func _init() -> void:
 	_intervals = {
 		Priority.REALTIME: 0.0,
-		Priority.HIGH: 1.0 / ProjectSettings.get_setting("gecs_network/sync/high_hz", 20),
-		Priority.MEDIUM: 1.0 / ProjectSettings.get_setting("gecs_network/sync/medium_hz", 10),
-		Priority.LOW: 1.0 / ProjectSettings.get_setting("gecs_network/sync/low_hz", 2),
+		Priority.HIGH: 1.0 / ProjectSettings.get_setting("gecs/network/sync/high_hz", 20),
+		Priority.MEDIUM: 1.0 / ProjectSettings.get_setting("gecs/network/sync/medium_hz", 10),
+		Priority.LOW: 1.0 / ProjectSettings.get_setting("gecs/network/sync/low_hz", 2),
 	}
 
 
