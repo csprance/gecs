@@ -76,9 +76,9 @@ var _intervals: Dictionary = {}
 func _init() -> void:
 	_intervals = {
 		Priority.REALTIME: 0.0,
-		Priority.HIGH: 1.0 / maxf(ProjectSettings.get_setting("gecs/network/sync/high_hz", 20), 1),
-		Priority.MEDIUM: 1.0 / maxf(ProjectSettings.get_setting("gecs/network/sync/medium_hz", 10), 1),
-		Priority.LOW: 1.0 / maxf(ProjectSettings.get_setting("gecs/network/sync/low_hz", 2), 1),
+		Priority.HIGH: 1.0 / maxf(ProjectSettings.get_setting(GECSNetworkSettings.HIGH_HZ, 20), 1),
+		Priority.MEDIUM: 1.0 / maxf(ProjectSettings.get_setting(GECSNetworkSettings.MEDIUM_HZ, 10), 1),
+		Priority.LOW: 1.0 / maxf(ProjectSettings.get_setting(GECSNetworkSettings.LOW_HZ, 2), 1),
 	}
 
 

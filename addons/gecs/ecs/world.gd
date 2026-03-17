@@ -1159,6 +1159,12 @@ func reset_cache_stats() -> void:
 
 
 ## Internal helper to track cache invalidations (debug mode only)
+## KNOWN ISSUE: During suppression, observer queries (via _handle_observer_component_added)
+## may hit stale archetype cache entries if new archetypes are created mid-batch.
+## This can occur when: (1) observers are registered, (2) add_entities() batches entities
+## with different component compositions, and (3) a new archetype created mid-batch
+## matches an observer's match() query that was already cached from an earlier entity.
+## Clearing the cache here would fix it but defeats suppression (N*M clears vs 1).
 func _invalidate_cache(reason: String) -> void:
 	# OPTIMIZATION: Skip invalidation during batch operations; mark pending for deferred fire
 	if _suppress_invalidation_depth > 0:
