@@ -192,3 +192,104 @@ func test_cache01b_single_invalidation_on_move_between_existing_archetypes():
 	# Expect exactly one invalidation: entity membership changed between archetypes,
 	# so QueryBuilder result caches must be refreshed.
 	assert_int(signal_count[0] - initial_count).is_equal(1)
+
+
+## GitHub #87: .enabled().with_all([...]) must NOT return disabled entities.
+## Reproduces the exact user scenario: a system queries with .enabled(), disables
+## an entity mid-frame, and subsequent queries must exclude the disabled entity.
+func test_issue87_enabled_query_excludes_disabled_entities():
+	# Setup: 3 entities with C_TestA, all enabled
+	var e1 = Entity.new()
+	e1.add_component(C_TestA.new())
+	world.add_entity(e1)
+
+	var e2 = Entity.new()
+	e2.add_component(C_TestA.new())
+	world.add_entity(e2)
+
+	var e3 = Entity.new()
+	e3.add_component(C_TestA.new())
+	world.add_entity(e3)
+
+	# Query with .enabled() — should return all 3
+	var result_before = world.query.with_all([C_TestA]).enabled().execute()
+	assert_int(result_before.size()).is_equal(3)
+
+	# Disable one entity (the exact pattern from #87: system disables entities)
+	world.disable_entity(e2)
+
+	# Query again with .enabled() — must return only the 2 enabled entities
+	var result_after = world.query.with_all([C_TestA]).enabled().execute()
+	assert_int(result_after.size()).is_equal(2)
+	assert_bool(result_after.has(e1)).is_true()
+	assert_bool(result_after.has(e2)).is_false()
+	assert_bool(result_after.has(e3)).is_true()
+
+
+## GitHub #87 extended: .enabled() query via persistent QueryBuilder (System pattern).
+## Systems reuse the same QB instance across frames. After disable_entity(), the
+## persistent QB must return fresh (filtered) results, not stale cached ones.
+func test_issue87_persistent_qb_enabled_excludes_disabled():
+	var e1 = Entity.new()
+	e1.add_component(C_TestA.new())
+	world.add_entity(e1)
+
+	var e2 = Entity.new()
+	e2.add_component(C_TestA.new())
+	world.add_entity(e2)
+
+	# Persistent QB with .enabled() — simulates what a System does
+	var persistent_qb = QueryBuilder.new(world)
+	persistent_qb.with_all([C_TestA]).enabled()
+	world.cache_invalidated.connect(persistent_qb.invalidate_cache)
+
+	# Prime the cache
+	var result1 = persistent_qb.execute()
+	assert_int(result1.size()).is_equal(2)
+
+	# Disable e2
+	world.disable_entity(e2)
+
+	# Persistent QB must return only e1
+	var result2 = persistent_qb.execute()
+	assert_int(result2.size()).is_equal(1)
+	assert_bool(result2.has(e1)).is_true()
+	assert_bool(result2.has(e2)).is_false()
+
+	# Cleanup
+	if world.cache_invalidated.is_connected(persistent_qb.invalidate_cache):
+		world.cache_invalidated.disconnect(persistent_qb.invalidate_cache)
+
+
+## GitHub #87 extended: disable_entities() batch must also properly exclude
+## from subsequent .enabled() queries.
+func test_issue87_batch_disable_entities_enabled_query():
+	var e1 = Entity.new()
+	e1.add_component(C_TestA.new())
+	world.add_entity(e1)
+
+	var e2 = Entity.new()
+	e2.add_component(C_TestA.new())
+	world.add_entity(e2)
+
+	var e3 = Entity.new()
+	e3.add_component(C_TestA.new())
+	world.add_entity(e3)
+
+	# Confirm all 3 enabled
+	var result_before = world.query.with_all([C_TestA]).enabled().execute()
+	assert_int(result_before.size()).is_equal(3)
+
+	# Batch disable e1 and e3
+	world.disable_entities([e1, e3])
+
+	# Only e2 should remain in enabled query
+	var result_after = world.query.with_all([C_TestA]).enabled().execute()
+	assert_int(result_after.size()).is_equal(1)
+	assert_bool(result_after.has(e2)).is_true()
+
+	# .disabled() query should return the 2 disabled entities
+	var disabled_result = world.query.with_all([C_TestA]).disabled().execute()
+	assert_int(disabled_result.size()).is_equal(2)
+	assert_bool(disabled_result.has(e1)).is_true()
+	assert_bool(disabled_result.has(e3)).is_true()
