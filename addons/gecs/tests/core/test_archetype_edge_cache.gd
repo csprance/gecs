@@ -237,3 +237,78 @@ func test_rapid_archetype_cycling():
 	entities[0].add_component(C_TestB.new())
 	var final_query = QueryBuilder.new(world).with_all([C_TestA, C_TestB])
 	assert_int(final_query.execute().size()).is_equal(1)
+
+
+## FIX-1B regression: After an edge reassignment in _move_entity_to_new_archetype_fast,
+## the previously-pointed-at archetype must NOT have a stale forward edge (via its neighbors
+## back-pointer) to new_archetype that causes incorrect cleanup or navigation.
+##
+## Scenario: Archetype-AB (new_arch) gets its remove_edge[b_path] set twice via two successive
+## "add B" cycles through different old_archetype objects. After the second assignment, the
+## first old_archetype (archetype-X) must NOT still have a forward edge pointing back to AB.
+##
+## RED condition: _move_entity_to_new_archetype_fast at lines 1338-1343 sets
+## new_archetype.set_remove_edge(comp_path, old_archetype) without first clearing the reverse
+## edge that new_archetype's OLD target had pointing back to new_archetype.
+## After the second edge assignment, archetype-X.neighbors[new_arch.id] is stale ->
+## _delete_archetype(archetype-X) would sweep new_archetype's edges incorrectly.
+func test_no_stale_reverse_edge_after_edge_reassignment():
+	## ARRANGE: Create archetype-A (with entity_keeper so it persists across the test).
+	var entity_keeper = Entity.new()
+	entity_keeper.add_component(C_TestA.new())
+	world.add_entities([entity_keeper])
+
+	## ACT 1: entity1 in A-only adds B -> creates A+B (new_arch).
+	## Sets: A.add_edges[b] = AB, AB.remove_edges[b] = A, AB.neighbors[A.id] = A, A.neighbors[AB.id] = AB
+	var entity1 = Entity.new()
+	entity1.add_component(C_TestA.new())
+	world.add_entities([entity1])
+	var b_comp = C_TestB.new()
+	entity1.add_component(b_comp)
+	var ab_archetype = world.entity_to_archetype[entity1]
+	## AB exists, remove_edges[b] = A-only archetype
+	assert_bool(world.archetypes.has(ab_archetype.signature)).is_true()
+
+	## ACT 2: Remove entity1 -> A+B (ab_archetype) becomes empty -> _delete_archetype clears A.add_edges[b].
+	## A-only survives (entity_keeper). ab_archetype is now a ghost.
+	world.remove_entity(entity1)
+	assert_bool(world.archetypes.has(ab_archetype.signature)).is_false()
+
+	## ARRANGE: Add entity2 to A-only (before entity3 creates a new AB cycle).
+	var entity2 = Entity.new()
+	entity2.add_component(C_TestA.new())
+	world.add_entities([entity2])
+
+	## ACT 3: entity2 in A-only adds B -> fast path has no edge (was cleared in ACT 2).
+	## Falls through to _get_or_create_archetype -> creates a fresh AB2 archetype.
+	## Sets: A.add_edges[b] = AB2, AB2.remove_edges[b] = A, AB2.neighbors[A.id] = A
+	entity2.add_component(C_TestB.new())
+	var ab2_archetype = world.entity_to_archetype[entity2]
+	## AB2 is a fresh archetype (different object from the deleted ab_archetype)
+	assert_object(ab2_archetype).is_not_same(ab_archetype)
+	assert_bool(world.archetypes.has(ab2_archetype.signature)).is_true()
+
+	## Now entity_keeper is in A-only and entity2 is in AB2.
+	## A-only should have add_edges[b] = AB2, and AB2.remove_edges[b] = A-only.
+	var a_archetype = world.entity_to_archetype[entity_keeper]
+	var b_path = C_TestB.new().get_script().resource_path
+	## AB2's remove_edge[b] should point to a_archetype (the CURRENT a-only), not a ghost.
+	var reverse_edge_target = ab2_archetype.get_remove_edge(b_path)
+	assert_object(reverse_edge_target).is_same(a_archetype)
+
+	## ASSERT: The old (deleted) ab_archetype must NOT have a stale neighbors entry
+	## pointing back to AB2. If ab_archetype.neighbors still contains ab2_archetype,
+	## then when ab_archetype is used as old-target reference its cleanup would
+	## incorrectly sweep ab2_archetype's edges.
+	## With current code (no fix): the neighbors dict may retain stale back-pointers.
+	## After fix: stale back-pointer is cleared during the second edge assignment.
+	## We check that ab2_archetype.remove_edges[b_path] == a_archetype (not a ghost).
+	assert_object(ab2_archetype.get_remove_edge(b_path)).is_same(a_archetype)
+	assert_bool(world.archetypes.has(ab2_archetype.get_remove_edge(b_path).signature)).is_true()
+
+	## CRITICAL ASSERT: After the second "add B" cycle completes,
+	## verify that NO live archetype has a stale edge pointing to the deleted ab_archetype.
+	## The a_archetype's add_edges[b] must point to AB2 (not the ghost ab_archetype).
+	var forward_edge = a_archetype.get_add_edge(b_path)
+	assert_object(forward_edge).is_not_same(ab_archetype)
+	assert_object(forward_edge).is_same(ab2_archetype)
