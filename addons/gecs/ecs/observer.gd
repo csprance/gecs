@@ -34,24 +34,48 @@ func match() -> QueryBuilder:
 	return q
 
 
-## Override this method and provide a single component to watch for events.[br]
-## This means that the observer will only react to events on this component (add/remove/change)[br]
-## assuming the entity matches the query defined in the [method match] method
+## Override this method and return a single [Component] script class to watch for events.[br]
+## The observer reacts to add/remove/change events on this component type, for entities matching [method match].[br]
+## [br]
+## [b]Matching contract:[/b] The returned value's [code]resource_path[/code] is compared against
+## [code]component.get_script().resource_path[/code] on each event. Return the script class reference
+## (e.g. [code]return C_Health[/code]), not an instance ([code]return C_Health.new()[/code]).[br]
+## [br]
+## [b]Example:[/b]
+## [codeblock]
+## func watch() -> Resource:
+##     return C_Health  # Script class reference, not an instance
+## [/codeblock]
 func watch() -> Resource:
 	assert(false, "You must override the watch() method in your system")
 	return
 
 
 ## Override this method to define the main processing function for the observer when a component is added to an [Entity].[br]
-## [param entity] The [Entity] the component was added to.[br]
-## [param component] The [Component] that was added. Guaranteed to be the component defined in [method watch].[br]
+## [param entity] The [Entity] the component was added to. Entity is valid and fully initialized.[br]
+## [param component] The [Component] that was added. Guaranteed to be an instance of the component defined in [method watch].[br]
 func on_component_added(entity: Entity, component: Resource) -> void:
 	pass
 
 
 ## Override this method to define the main processing function for the observer when a component is removed from an [Entity].[br]
+## [br]
+## [b]Guarantees:[/b][br]
+## [param entity] is valid (not freed) when this callback executes — safe to read entity properties and components.[br]
+## [param component] is the exact instance that was removed — match by identity, [code]resource_path[/code], or any property.[br]
+## After this callback, no further [signal Component.property_changed] signals will arrive from the removed component.[br]
+## [br]
+## [b]Example:[/b]
+## [codeblock]
+## func on_component_removed(entity: Entity, component: Resource) -> void:
+##     # Match by script resource_path (same as watch() returns)
+##     if component.get_script().resource_path == C_Health.resource_path:
+##         print("Health removed from: ", entity.name)
+##         # entity is still valid here — safe to read its other components
+##         var name_comp = entity.get_component(C_Name)
+## [/codeblock]
 ## [param entity] The [Entity] the component was removed from.[br]
-## [param component] The [Component] that was removed. Guaranteed to be the component defined in [method watch].[br]
+## [param component] The [Component] that was removed. Guaranteed to be an instance of the component defined in [method watch].[br]
 func on_component_removed(entity: Entity, component: Resource) -> void:
 	pass
 

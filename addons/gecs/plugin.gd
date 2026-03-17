@@ -59,6 +59,15 @@ func add_gecs_project_settings():
 			setting["hint_string"],
 			setting["doc"]
 		)
+	add_gecs_network_project_settings()
+
+
+## Adds GECS Network related ProjectSettings to Godot.
+func add_gecs_network_project_settings():
+	add_project_setting("gecs/network/sync/high_hz", 20, TYPE_INT)
+	add_project_setting("gecs/network/sync/medium_hz", 10, TYPE_INT)
+	add_project_setting("gecs/network/sync/low_hz", 2, TYPE_INT)
+	add_project_setting("gecs/network/sync/reconciliation_interval", 30.0, TYPE_FLOAT)
 
 
 ## Removes GECS related ProjectSettings from Godot.

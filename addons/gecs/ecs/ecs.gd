@@ -55,8 +55,17 @@ var world: World:
 		world_changed.emit(world)
 		assert(GECSEditorDebuggerMessages.set_world(world) if debug else true, 'Debug Data')
 
-## Are we in debug mode? Controlled by project setting gecs/debug_mode
-var debug := ProjectSettings.get_setting(GecsSettings.SETTINGS_DEBUG_MODE, false)
+## Are we in debug mode? Controlled by project setting gecs/debug_mode.
+## Can be overridden per-instance with CLI args: --gecs-debug / --no-gecs-debug
+var debug := _resolve_debug_mode()
+
+static func _resolve_debug_mode() -> bool:
+	var args = OS.get_cmdline_args() + OS.get_cmdline_user_args()
+	if "--no-gecs-debug" in args:
+		return false
+	if "--gecs-debug" in args:
+		return true
+	return ProjectSettings.get_setting(GecsSettings.SETTINGS_DEBUG_MODE, false)
 ## This is an array of functions that get called on the entities when they get added to the world (after they are ready)
 var entity_preprocessors: Array[Callable] = []
 ## This is an array of functions that get called on the entities right before they get removed from the world

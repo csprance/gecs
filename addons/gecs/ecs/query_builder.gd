@@ -137,17 +137,6 @@ func without_relationship(relationships: Array = []) -> QueryBuilder:
 	return self
 
 
-## Query for entities that are targets of specific relationships
-func with_reverse_relationship(relationships: Array = []) -> QueryBuilder:
-	for rel in relationships:
-		if rel.relation != null:
-			var rev_key = "reverse_" + rel.relation.get_script().resource_path
-			if _world.reverse_relationship_index.has(rev_key):
-				return self.with_all(_world.reverse_relationship_index[rev_key])
-	_cache_valid = false
-	return self
-
-
 ## Finds entities with specific groups.
 func with_group(groups: Array[String] = []) -> QueryBuilder:
 	_groups.append_array(groups)

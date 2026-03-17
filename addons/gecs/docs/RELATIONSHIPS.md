@@ -278,21 +278,6 @@ var critical_effects = ECS.world.query.with_relationship([
 ]).execute()
 ```
 
-### Reverse Relationships
-
-Find entities that are the **target** of relationships:
-
-```gdscript
-# Find entities that are being liked by someone
-ECS.world.query.with_reverse_relationship([Relationship.new(C_Likes.new(), ECS.wildcard)])
-
-# Find entities being attacked
-ECS.world.query.with_reverse_relationship([Relationship.new(C_IsAttacking.new())])
-
-# Find food being eaten
-ECS.world.query.with_reverse_relationship([Relationship.new(C_Eats.new(), ECS.wildcard)])
-```
-
 ## Limited Relationship Removal
 
 > **Control exactly how many relationships to remove for fine-grained management**
@@ -721,11 +706,6 @@ func get_high_damage_attackers():
         Relationship.new({C_IsAttacking: {'damage': {"_gte": 20.0}}}, player)
     ]).execute()
 
-func get_player_allies():
-    var player = get_player_entity()
-    return ECS.world.query.with_reverse_relationship([
-        Relationship.new(C_IsAlliedWith.new(), player)
-    ]).execute()
 ```
 
 ### Hierarchical Entity System
@@ -759,10 +739,6 @@ func get_children_of_entity(entity: Entity):
         Relationship.new(C_ParentOf.new(), entity)
     ]).execute()
 
-func get_parent_of_entity(entity: Entity):
-    return ECS.world.query.with_reverse_relationship([
-        Relationship.new(C_ParentOf.new(), entity)
-    ]).execute()
 ```
 
 ## Relationship Best Practices

@@ -413,7 +413,6 @@ ECS.world.query
     .with_none([C_Dead, C_Disabled])                                       # Must not have any of these
     .with_relationship([Relationship.new(C_IsAttacking.new(), target)])    # Must have this relationship
     .without_relationship([Relationship.new(C_IsFleeing.new(), ECS.wildcard)])  # Must not have this
-    .with_reverse_relationship([Relationship.new(C_ChildOf.new(), ECS.wildcard)])  # Must be target of this
     .iterate([C_Health])                                                    # Fetch for fast batch access
 ```
 
@@ -532,13 +531,6 @@ ECS.world.query.with_relationship([Relationship.new(C_Likes.new(), ECS.wildcard)
 
 # Any entity with any relation to Enemy type
 ECS.world.query.with_relationship([Relationship.new(ECS.wildcard, Enemy)])
-```
-
-**Reverse Relationships:**
-
-```gdscript
-# Find entities that are being liked by someone
-ECS.world.query.with_reverse_relationship([Relationship.new(C_Likes.new(), ECS.wildcard)])
 ```
 
 ### Relationship Best Practices

@@ -78,8 +78,8 @@ func test_deserialize_entity_with_basic_relationship():
 	# Validate deserialization
 	assert_that(deserialized_entities).has_size(2)
 	
-	var des_entity_a = deserialized_entities.filter(func(e): return e.name == "EntityA")[0]
-	var des_entity_b = deserialized_entities.filter(func(e): return e.name == "EntityB")[0]
+	var des_entity_a = deserialized_entities.filter(func(e): return e.has_component(C_TestA))[0]
+	var des_entity_b = deserialized_entities.filter(func(e): return e.has_component(C_TestB))[0]
 	
 	# Check that relationships are restored
 	assert_that(des_entity_a.relationships).has_size(1)
@@ -124,8 +124,8 @@ func test_circular_relationships():
 	
 	assert_that(deserialized_entities).has_size(2)
 	
-	var des_a = deserialized_entities.filter(func(e): return e.name == "EntityA")[0]
-	var des_b = deserialized_entities.filter(func(e): return e.name == "EntityB")[0]
+	var des_a = deserialized_entities.filter(func(e): return e.has_component(C_TestA))[0]
+	var des_b = deserialized_entities.filter(func(e): return e.has_component(C_TestB))[0]
 	
 	# Validate circular relationships are restored
 	assert_that(des_a.relationships).has_size(1)

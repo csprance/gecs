@@ -1,15 +1,15 @@
-extends Node3D
 ## Main entry point for the GECS Network Example.
 ## Demonstrates multiplayer with continuous sync (players) and spawn-only sync (projectiles).
 ## Uses NetworkSession to eliminate manual ENet/signal/NetworkSync boilerplate.
+extends Node3D
+
 
 const PLAYER_SCENE_PATH := "res://example_network/entities/e_player.tscn"
 
-var _spawned_peer_ids: Dictionary = {}  # peer_id -> entity_id
-var _next_player_number: int = 1  # Track join order (1-4) for color assignment
+var _spawned_peer_ids: Dictionary = {} # peer_id -> entity_id
+var _next_player_number: int = 1 # Track join order (1-4) for color assignment
 
 @onready var world: World = $World
-@onready var entities: Node = $World/Entities
 @onready var session: NetworkSession = $NetworkSession
 
 # UI references
@@ -44,6 +44,7 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
+	# Don't do any ECS stuff until we connect
 	if session.network_sync == null:
 		return
 
@@ -57,13 +58,15 @@ func _process(delta: float) -> void:
 # LOBBY UI HANDLERS
 # =============================================================================
 
-
+## This function kicks off the hosting of a server for clients to join and
+## What to do if that fails.
 func _on_host_pressed() -> void:
 	var error = session.host()
 	if error != OK:
 		status_label.text = "Failed to host: %s" % error_string(error)
 
-
+## This function runs when a client clicks Join to join a server someone is
+## hosting as well as what happens if that fails
 func _on_join_pressed() -> void:
 	var ip = ip_input.text if ip_input.text != "" else "127.0.0.1"
 	var error = session.join(ip)
@@ -72,7 +75,7 @@ func _on_join_pressed() -> void:
 	else:
 		status_label.text = "Connecting to %s..." % ip
 
-
+## What do you do when you disconnect from the server
 func _on_disconnect_pressed() -> void:
 	session.end_session()
 
@@ -152,7 +155,7 @@ func _on_local_player_spawned(entity: Entity) -> void:
 # PLAYER SPAWNING
 # =============================================================================
 
-
+## This spawns the player for a specific peer. 
 func _spawn_player_for_peer(peer_id: int) -> void:
 	if _spawned_peer_ids.has(peer_id):
 		print("[Main] Player already spawned for peer %d" % peer_id)
@@ -166,24 +169,32 @@ func _spawn_player_for_peer(peer_id: int) -> void:
 
 	var PlayerScene: PackedScene = preload(PLAYER_SCENE_PATH)
 	var player = PlayerScene.instantiate() as Entity
-
-	# Set node name to peer_id (used by entity to set authority)
 	player.name = str(peer_id)
 
-	# Add to scene tree first
-	entities.add_child(player)
+	# Add to ECS world with component overrides
+	world.add_entity(player, [
+		CN_NetworkIdentity.new(peer_id),
+		C_PlayerNumber.new(player_number),
+		C_PlayerColor.new(_get_color_for_player_number(player_number))
+	])
 
-	# Set spawn position (spread players out)
-	var spawn_offset = Vector3((player_number % 4) * 2.0 - 3.0, 0, (player_number / 4) * 2.0 - 1.0)
+	# Set spawn position (must be after add_entity since that adds to tree)
+	# We could do this in an init system, or just do it here for the example
+	var spawn_offset = Vector3((player_number % 4) * 2.0 - 3.0, 0, (float(player_number) / 4.0) * 2.0 - 1.0)
 	player.global_position = spawn_offset
+	# Also write to the sync component so remote clients receive it
+	var net_pos = player.get_component(C_NetPosition) as C_NetPosition
+	if net_pos:
+		net_pos.position = spawn_offset
 
-	# Add to ECS world - triggers NetworkSync broadcast
-	world.add_entity(player)
-
-	# CRITICAL: Set player number AFTER add_entity() so it syncs with spawn RPC
-	var player_num_comp = player.get_component(C_PlayerNumber) as C_PlayerNumber
-	if player_num_comp:
-		player_num_comp.player_number = player_number
-
-	# Track spawned peer
+	# Track spawned peers
 	_spawned_peer_ids[peer_id] = player.id
+
+## Based on a player number get the color that player should be
+func _get_color_for_player_number(player_number: int) -> Color:
+	match player_number:
+		1: return Color(0.2, 0.6, 1.0) # Blue
+		2: return Color(1.0, 0.4, 0.4) # Red
+		3: return Color(0.4, 1.0, 0.4) # Green
+		4: return Color(1.0, 1.0, 0.4) # Yellow
+		_: return Color.WHITE
