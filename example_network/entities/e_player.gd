@@ -1,6 +1,6 @@
 ## Player entity for the network example.
-## Demonstrates continuous sync via CN_NativeSync (transform) and
-## CN_NetSync with HIGH priority properties.
+## Demonstrates smooth network sync via CN_NetSync with velocity dead-reckoning
+## and position correction for remote entities (see S_NetworkMovement).
 class_name Player
 extends Entity
 
@@ -11,7 +11,7 @@ func define_components() -> Array:
 	return [
 		CN_NetworkIdentity.new(), # Required: marks entity as networked, stores owning peer_id
 		CN_NetSync.new(), # Required: enables property sync using @export_group priority tiers
-		CN_NativeSync.new(), # Optional: syncs position/rotation via Godot's MultiplayerSynchronizer
+		C_NetPosition.new(), # Position synced at HIGH (~20 Hz); remote clients interpolate
 		C_NetVelocity.new(),
 		C_PlayerInput.new(),
 		C_PlayerNumber.new(),

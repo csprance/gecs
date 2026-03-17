@@ -180,8 +180,12 @@ func _spawn_player_for_peer(peer_id: int) -> void:
 
 	# Set spawn position (must be after add_entity since that adds to tree)
 	# We could do this in an init system, or just do it here for the example
-	var spawn_offset = Vector3((player_number % 4) * 2.0 - 3.0, 0, (player_number / 4) * 2.0 - 1.0)
+	var spawn_offset = Vector3((player_number % 4) * 2.0 - 3.0, 0, (float(player_number) / 4.0) * 2.0 - 1.0)
 	player.global_position = spawn_offset
+	# Also write to the sync component so remote clients receive it
+	var net_pos = player.get_component(C_NetPosition) as C_NetPosition
+	if net_pos:
+		net_pos.position = spawn_offset
 
 	# Track spawned peers
 	_spawned_peer_ids[peer_id] = player.id
