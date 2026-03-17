@@ -36,7 +36,7 @@ var on_session_ended: Callable = Callable()
 # Read-only access to internal NetworkSync (null until host/join)
 # ---------------------------------------------------------------------------
 
-var network_sync: NetworkSync :
+var network_sync: NetworkSync:
 	get:
 		return _network_sync
 
@@ -281,6 +281,5 @@ func _update_session_state(connected: bool, hosting: bool, peer_count: int) -> v
 
 func _get_world() -> World:
 	if ECS.world == null:
-		push_error("[NetworkSession] ECS.world is null — ensure World is initialized before host()/join()")
 		return null
 	return ECS.world
