@@ -219,9 +219,7 @@ func add_components(_components: Array):
 
 			# Clean up empty old archetype
 			if old_archetype.is_empty():
-				old_archetype.add_edges.clear()
-				old_archetype.remove_edges.clear()
-				ECS.world.archetypes.erase(old_archetype.signature)
+				ECS.world._delete_archetype(old_archetype)
 		else:
 			# Same archetype - just update the column data for new components
 			for component in added_components:
@@ -328,9 +326,7 @@ func remove_components(_components: Array):
 
 			# Clean up empty old archetype
 			if old_archetype.is_empty():
-				old_archetype.add_edges.clear()
-				old_archetype.remove_edges.clear()
-				ECS.world.archetypes.erase(old_archetype.signature)
+				ECS.world._delete_archetype(old_archetype)
 
 	# Emit signals for all removed components
 	for component in removed_components:

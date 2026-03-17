@@ -8,7 +8,7 @@ extends RefCounted
 ## Routes application through _ns._receiver._apply_component_data() to
 ## preserve _applying_network_data guard and update_cache_silent() calls.
 
-var _ns       # NetworkSync reference (untyped)
+var _ns # NetworkSync reference (untyped)
 var _timer: float = 0.0
 
 ## When > 0.0, overrides ProjectSettings reconciliation_interval for this session.
@@ -30,11 +30,11 @@ func tick(delta: float) -> void:
 	if _override_interval > 0.0:
 		interval = _override_interval
 	elif _override_interval == 0.0:
-		return  # Explicitly disabled
+		return # Explicitly disabled
 	else:
 		# _override_interval < 0.0: use ProjectSettings default
 		interval = ProjectSettings.get_setting(
-			"gecs/network/sync/reconciliation_interval", 30.0
+			GECSNetworkSettings.RECONCILIATION_INTERVAL, 30.0
 		)
 
 	_timer += delta
@@ -65,7 +65,7 @@ func broadcast_full_state() -> void:
 
 func handle_sync_full_state(payload: Dictionary) -> void:
 	if payload.get("session_id", -1) != _ns._game_session_id:
-		return  # Stale session — reject
+		return # Stale session — reject
 
 	var server_entities: Array = payload.get("entities", [])
 
@@ -80,12 +80,12 @@ func handle_sync_full_state(payload: Dictionary) -> void:
 		var entity_id: String = entity_data.get("id", "")
 		var entity = _ns._world.entity_id_registry.get(entity_id)
 		if entity == null:
-			continue  # Entity not yet spawned; spawn path handles this
+			continue # Entity not yet spawned; spawn path handles this
 		var net_id = entity.get_component(CN_NetworkIdentity)
 		if net_id == null:
 			continue
 		if net_id.peer_id == my_peer_id:
-			continue  # Never overwrite own entity — CRITICAL
+			continue # Never overwrite own entity — CRITICAL
 		var comp_data: Dictionary = entity_data.get("components", {})
 		if not comp_data.is_empty():
 			_ns._receiver._apply_component_data(entity, comp_data)
@@ -100,7 +100,7 @@ func handle_sync_full_state(payload: Dictionary) -> void:
 		if net_id == null:
 			continue
 		if net_id.peer_id == my_peer_id:
-			continue  # Never remove own entity
+			continue # Never remove own entity
 		if not server_ids.has(entity.id):
 			ghosts.append(entity)
 

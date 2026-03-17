@@ -171,5 +171,5 @@ the entity, and `SyncReceiver` has no cache to update.
    _network_sync.reconciliation_interval = 30.0   # -1.0 means "use ProjectSetting default"
    ```
 2. `broadcast_full_state()` only runs on server. Verify the call is server-side.
-3. Check `gecs_network/sync/reconciliation_interval` in ProjectSettings — if the plugin
+3. Check `gecs/network/sync/reconciliation_interval` in ProjectSettings — if the plugin
    registration failed, it defaults to 30.0 s, which may be acceptable.

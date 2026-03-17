@@ -40,12 +40,12 @@ enum Priority {
 ## SPAWN_ONLY and LOCAL are sentinel values — properties in these groups
 ## are excluded from the dirty cache entirely.
 const PRIORITY_MAP: Dictionary = {
-	"REALTIME": Priority.REALTIME,
-	"HIGH": Priority.HIGH,
-	"MEDIUM": Priority.MEDIUM,
-	"LOW": Priority.LOW,
-	"SPAWN_ONLY": - 2, # Sentinel — excluded from dirty cache; SpawnManager handles
-	"LOCAL": - 1, # Sentinel — never synced
+	REALTIME: Priority.REALTIME,
+	HIGH: Priority.HIGH,
+	MEDIUM: Priority.MEDIUM,
+	LOW: Priority.LOW,
+	SPAWN_ONLY: - 2, # Sentinel — excluded from dirty cache; SpawnManager handles
+	LOCAL: - 1, # Sentinel — never synced
 }
 
 # ============================================================================

@@ -32,7 +32,7 @@ func process(entities: Array[Entity], components: Array, delta: float) -> void:
 
 		# Check if should be removed
 		var should_remove = lifetime > LIFETIME
-		if entity is Node3D:
+		if entity is Projectile:
 			var pos = entity.global_position
 			should_remove = should_remove or abs(pos.x) > ARENA_BOUND or abs(pos.z) > ARENA_BOUND
 

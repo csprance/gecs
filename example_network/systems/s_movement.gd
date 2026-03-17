@@ -11,6 +11,9 @@ const ARENA_BOUND := 4.5 # Half of 10x10 arena minus player size
 ## How fast remote entities correct toward the authoritative network position.
 ## Higher = snappier correction, lower = smoother but more drift.
 const CORRECTION_SPEED := 10.0
+## Blend factor for local velocity corrections from server.
+## Higher = snappier correction, lower = smoother local movement.
+const VELOCITY_BLEND_FACTOR := 0.3
 
 
 func setup() -> void:
@@ -29,7 +32,7 @@ func _on_receive_velocity(entity: Entity, comp: Component, props: Dictionary) ->
 	if entity.has_component(CN_LocalAuthority):
 		if props.has("direction"):
 			var c := comp as C_NetVelocity
-			c.direction = c.direction.lerp(props["direction"], 0.3)
+			c.direction = c.direction.lerp(props["direction"], VELOCITY_BLEND_FACTOR)
 		return true
 	# Remote: let default handler apply directly (velocity drives dead-reckoning)
 	return false

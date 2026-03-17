@@ -11,17 +11,17 @@ absence of components.
 
 ## Priority Tiers
 
-| Group name     | Rate          | Transport  | Use for                                |
-| -------------- | ------------- | ---------- | -------------------------------------- |
-| `"REALTIME"`   | ~60 Hz        | Unreliable | Critical real-time data (rare)         |
-| `"HIGH"`       | 20 Hz         | Unreliable | Velocity, input flags, animation state |
-| `"MEDIUM"`     | 10 Hz         | Reliable   | Health, AI state, XP                   |
+| Group name     | Rate           | Transport  | Use for                                |
+| -------------- | -------------- | ---------- | -------------------------------------- |
+| `"REALTIME"`   | ~60 Hz         | Unreliable | Critical real-time data (rare)         |
+| `"HIGH"`       | 20 Hz          | Unreliable | Velocity, input flags, animation state |
+| `"MEDIUM"`     | 10 Hz          | Reliable   | Health, AI state, XP                   |
 | `"LOW"`        | 2 Hz (default) | Reliable   | Inventory, stats, upgrades             |
-| `"SPAWN_ONLY"` | Once at spawn | Reliable   | Projectile initial position/velocity   |
-| `"LOCAL"`      | Never         | —          | Client-only state; never transmitted   |
+| `"SPAWN_ONLY"` | Once at spawn  | Reliable   | Projectile initial position/velocity   |
+| `"LOCAL"`      | Never          | —          | Client-only state; never transmitted   |
 
 Rates above 20 Hz use unreliable UDP (speed over reliability). 10 Hz and below use reliable
-delivery. Adjust rates via ProjectSettings (`gecs_network/sync/high_hz`, etc.).
+delivery. Adjust rates via ProjectSettings (`gecs/network/sync/high_hz`, etc.).
 
 ---
 
