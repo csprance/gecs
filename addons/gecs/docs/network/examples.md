@@ -11,17 +11,21 @@ Run it in Godot to see each pattern in action.
 `CN_NetSync` and transform sync via `CN_NativeSync`.
 
 ```gdscript
-class_name E_Player
+class_name Player
 extends Entity
 ## Player entity for the network example.
-## Demonstrates continuous sync via CN_NativeSync (transform) and
-## CN_NetSync with HIGH priority properties.
+## Demonstrates smooth network sync via CN_NetSync with velocity dead-reckoning
+## and position correction for remote entities (see S_NetworkMovement).
 
 func define_components() -> Array:
-    return CN_NetworkIdentity.full_sync() + [
+    return [
+        CN_NetworkIdentity.new(),
+        CN_NetSync.new(),
+        C_NetPosition.new(),
         C_NetVelocity.new(),
         C_PlayerInput.new(),
         C_PlayerNumber.new(),
+        C_NewPlayer.new(),
     ]
 ```
 
