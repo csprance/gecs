@@ -2,6 +2,26 @@
 
 ## [Unreleased]
 
+### Breaking Changes
+
+- **Project Settings namespace migration**: `gecs_network/sync/*` renamed to `gecs/network/sync/*`.
+  All four settings are affected:
+  - `gecs_network/sync/high_hz` → `gecs/network/sync/high_hz`
+  - `gecs_network/sync/medium_hz` → `gecs/network/sync/medium_hz`
+  - `gecs_network/sync/low_hz` → `gecs/network/sync/low_hz`
+  - `gecs_network/sync/reconciliation_interval` → `gecs/network/sync/reconciliation_interval`
+
+  **Migration**: Open Project Settings and update any overrides from the old paths to the new ones.
+  Default values are unchanged.
+
+### Changed
+
+- **Addon merge**: `addons/gecs_network/` has been merged into `addons/gecs/network/`.
+  The GECS Network module is now included in the main GECS addon — no separate plugin install needed.
+  Enable the `gecs` plugin only; all networking classes are available immediately.
+- Network test files moved from `addons/gecs_network/tests/` to `addons/gecs/tests/network/`.
+- New `GECSNetworkSettings` class with typed constants for all `gecs/network/sync/*` setting paths.
+
 ## [6.9.0] - 2026-03-16 - GECS Network + Core Reliability Audit
 
 ## Summary

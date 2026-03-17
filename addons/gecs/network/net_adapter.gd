@@ -3,7 +3,7 @@ extends Resource
 ## NetAdapter - Abstract interface for network operations.
 ##
 ## This adapter pattern decouples NetworkSync from any specific network implementation,
-## allowing the gecs_network addon to work standalone without dependencies on
+## allowing the GECS network module to work without hard dependencies on
 ## game-specific singletons like "Net".
 ##
 ## Default Implementation:

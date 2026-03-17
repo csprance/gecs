@@ -4,7 +4,7 @@ extends Component
 ## Stores the peer ID that controls this entity.
 ##
 ## This is a pure data component with no external dependencies,
-## making it usable as part of the standalone gecs_network addon.
+## making it usable as part of the GECS network module.
 ##
 ## Authority Model:
 ## - peer_id = 0: Server-owned (enemies, projectiles, world entities)

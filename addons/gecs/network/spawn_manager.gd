@@ -2,7 +2,7 @@ class_name SpawnManager
 extends RefCounted
 ## Entity spawn/despawn manager: serialization, world state sync, and session-validated handlers.
 ##
-## Encapsulates entity lifecycle logic for the gecs_network addon.
+## Encapsulates entity lifecycle logic for the GECS network module.
 ## Replaces sync_spawn_handler.gd with a clean v2 API (no SyncConfig, no RelationshipSync).
 ##
 ## Session safety: All spawn/despawn handlers reject data whose session_id does not
