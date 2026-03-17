@@ -33,7 +33,7 @@ enum Priority {
 	REALTIME = 0, ## Every frame (~60 FPS)
 	HIGH = 1, ## 20 FPS
 	MEDIUM = 2, ## 10 FPS
-	LOW = 3, ## 1 FPS
+	LOW = 3, ## 2 FPS
 }
 
 ## Maps @export_group name strings to Priority int values.
@@ -44,8 +44,8 @@ const PRIORITY_MAP: Dictionary = {
 	"HIGH": Priority.HIGH,
 	"MEDIUM": Priority.MEDIUM,
 	"LOW": Priority.LOW,
-	"SPAWN_ONLY": -2,  # Sentinel — excluded from dirty cache; SpawnManager handles
-	"LOCAL": -1,       # Sentinel — never synced
+	"SPAWN_ONLY": - 2, # Sentinel — excluded from dirty cache; SpawnManager handles
+	"LOCAL": - 1, # Sentinel — never synced
 }
 
 # ============================================================================
