@@ -20,11 +20,12 @@ func after_test():
 	world.purge(false)
 
 
-## CACHE-01: When an entity moves between two archetypes that ALREADY EXIST, the
-## query archetype cache should NOT be wiped (cache_invalidated signal delta == 0).
-## This FAILS before the fix because _on_entity_component_added unconditionally calls
-## _invalidate_cache(), even when no new archetype is created.
-func test_cache01_archetype_cache_not_cleared_on_entity_move():
+## CACHE-01: When an entity moves between two archetypes that ALREADY EXIST,
+## cache_invalidated must still fire exactly once so that QueryBuilder result caches
+## (_cached_result) are invalidated — even though no new archetype was created.
+## The _query_archetype_cache technically doesn't need clearing, but the signal is
+## necessary for correctness (e.g. with_none queries would return stale results).
+func test_cache01_single_invalidation_on_entity_move():
 	# Seed both archetypes so they already exist before we start measuring.
 	var seed_a = Entity.new()
 	seed_a.add_component(C_TestA.new())
@@ -53,8 +54,9 @@ func test_cache01_archetype_cache_not_cleared_on_entity_move():
 	if world.cache_invalidated.is_connected(_handler):
 		world.cache_invalidated.disconnect(_handler)
 
-	# Expect zero full-cache wipes since both archetypes already existed.
-	assert_int(signal_count[0] - initial_count).is_equal(0)
+	# Expect exactly one invalidation: entity membership changed between archetypes,
+	# so QueryBuilder result caches must be refreshed (e.g. with_none queries).
+	assert_int(signal_count[0] - initial_count).is_equal(1)
 
 
 ## CACHE-02: disable_entity() must emit cache_invalidated so that a persistent
@@ -140,13 +142,12 @@ func test_cache04_disable_entities_batch_single_invalidation():
 	assert_int(invalidations).is_equal(1)
 
 
-## FIX-1A regression: When an entity moves from archetype-AB to archetype-A by having
-## C_TestB removed, and BOTH archetypes already existed before the move, world.cache_invalidated
-## must NOT fire.
-## RED condition: if any code path during remove_component calls _remove_entity_from_archetype
-## rather than going through _move_entity_to_new_archetype_fast directly, the signal fires
-## unconditionally at line 1270 -> delta is 1, not 0 -> FAILS before fix.
-func test_cache01b_no_invalidation_on_move_between_existing_archetypes():
+## FIX-1A: When an entity moves from archetype-AB to archetype-A by having C_TestB
+## removed, and BOTH archetypes already existed before the move, cache_invalidated
+## must fire exactly once so QueryBuilder result caches are invalidated.
+## Entity membership within archetypes changed, so cached query results are stale
+## (e.g. a with_all([C_TestB]) query no longer includes this entity).
+func test_cache01b_single_invalidation_on_move_between_existing_archetypes():
 	# Seed archetype-A with two entities so it persists across the whole test.
 	var seed_a1 = Entity.new()
 	seed_a1.add_component(C_TestA.new())
@@ -188,6 +189,6 @@ func test_cache01b_no_invalidation_on_move_between_existing_archetypes():
 	if world.cache_invalidated.is_connected(_handler):
 		world.cache_invalidated.disconnect(_handler)
 
-	# Expect zero cache wipes: both archetypes existed before and after, so
-	# the archetype set is unchanged and cached query results remain correct.
-	assert_int(signal_count[0] - initial_count).is_equal(0)
+	# Expect exactly one invalidation: entity membership changed between archetypes,
+	# so QueryBuilder result caches must be refreshed.
+	assert_int(signal_count[0] - initial_count).is_equal(1)
