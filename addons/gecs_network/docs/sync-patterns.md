@@ -16,7 +16,7 @@ absence of components.
 | `"REALTIME"`   | ~60 Hz        | Unreliable | Critical real-time data (rare)         |
 | `"HIGH"`       | 20 Hz         | Unreliable | Velocity, input flags, animation state |
 | `"MEDIUM"`     | 10 Hz         | Reliable   | Health, AI state, XP                   |
-| `"LOW"`        | 1–2 Hz        | Reliable   | Inventory, stats, upgrades             |
+| `"LOW"`        | 2 Hz (default) | Reliable   | Inventory, stats, upgrades             |
 | `"SPAWN_ONLY"` | Once at spawn | Reliable   | Projectile initial position/velocity   |
 | `"LOCAL"`      | Never         | —          | Client-only state; never transmitted   |
 
@@ -163,7 +163,7 @@ class_name C_PlayerNumber
 extends Component
 
 @export_group(CN_NetSync.LOW)
-@export var player_number: int = 0                  # Synced at 1–2 Hz
+@export var player_number: int = 0                  # Synced at 2 Hz (default)
 ```
 
 Both components on the same player entity sync independently. `SyncSender` checks HIGH every

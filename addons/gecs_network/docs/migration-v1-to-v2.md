@@ -1,9 +1,10 @@
 > **Note:** This guide covers upgrading from v0.1.x. If you are starting fresh with v1.0.0, ignore this file.
 
-# Migration Guide: v0.1.x to v2
+# Migration Guide: v0.1.x to v1.0.0
 
-> This guide covers the breaking changes introduced in GECS Network v2.
-> The v2 branch is a clean break — no backward compatibility shims are provided.
+> This guide covers the breaking changes introduced in GECS Network v1.0.0 (the second major
+> network implementation — referred to as "v2" during development).
+> This release is a clean break — no backward compatibility shims are provided.
 > Use git history on the v0.1.x tags if you need the old code.
 
 ---

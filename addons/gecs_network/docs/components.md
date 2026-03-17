@@ -19,29 +19,29 @@ net_id.is_local()          # True if peer_id matches local peer
 net_id.has_authority()     # True if local peer has authority over this entity
 ```
 
-### Component Bundle Factories
+### Component Bundle Patterns
 
-Static factory functions that return the right set of network components for common patterns.
+Common combinations of network components for standard patterns.
 Use in `define_components()` with array concatenation:
 
 ```gdscript
 # Full sync: CN_NetworkIdentity + CN_NetSync + CN_NativeSync
 # Use for players and entities needing transform + property sync
-CN_NetworkIdentity.full_sync(peer_id)
+[CN_NetworkIdentity.new(peer_id), CN_NetSync.new(), CN_NativeSync.new()]
 
 # Property sync only: CN_NetworkIdentity + CN_NetSync
 # Use for projectiles, items, spawn-only entities
-CN_NetworkIdentity.sync_only(peer_id)
+[CN_NetworkIdentity.new(peer_id), CN_NetSync.new()]
 
 # Identity only: CN_NetworkIdentity
 # Use for entities needing ownership tracking but no automatic sync
-CN_NetworkIdentity.identity_only(peer_id)
+[CN_NetworkIdentity.new(peer_id)]
 ```
 
 **Example:**
 ```gdscript
 func define_components() -> Array:
-    return CN_NetworkIdentity.full_sync() + [
+    return [CN_NetworkIdentity.new(peer_id), CN_NetSync.new(), CN_NativeSync.new()] + [
         C_NetVelocity.new(),
         C_PlayerInput.new(),
     ]

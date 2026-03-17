@@ -65,7 +65,7 @@ class_name C_PlayerNumber
 extends Component
 
 @export_group(CN_NetSync.LOW)
-@export var player_number: int = 0    # Set once at join; synced at 1–2 Hz
+@export var player_number: int = 0    # Set once at join; synced at 2 Hz (default)
 ```
 
 ---
