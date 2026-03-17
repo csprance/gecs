@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dgq1c4g0oiinx"
-path="res://.godot/imported/network_sync.svg-5246ab59de4e5c703067e01dc14fbc32.ctex"
+uid="uid://qj0c6vguus08"
+path="res://.godot/imported/sync_config.svg-58bdb485a164913aa6ce9255fc4d6abd.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://addons/gecs_network/icons/network_sync.svg"
-dest_files=["res://.godot/imported/network_sync.svg-5246ab59de4e5c703067e01dc14fbc32.ctex"]
+source_file="res://addons/gecs/assets/sync_config.svg"
+dest_files=["res://.godot/imported/sync_config.svg-58bdb485a164913aa6ce9255fc4d6abd.ctex"]
 
 [params]
 
