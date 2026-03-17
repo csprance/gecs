@@ -1271,7 +1271,8 @@ func _remove_entity_from_archetype(entity: Entity) -> bool:
 ## Delete an archetype from the world, cleaning up reverse edges in all neighbor archetypes.
 ## Replaces all three inline deletion sites for consistent cleanup.
 func _delete_archetype(archetype: Archetype) -> void:
-	# Clean reverse edges: iterate neighbors and remove any edge pointing to this archetype
+	# Clean incoming edges: iterate neighbors (archetypes that point TO this one)
+	# and remove any edge they have pointing to this archetype
 	for neighbor in archetype.neighbors.values():
 		var keys_to_clear: Array = []
 		for comp_path in neighbor.add_edges:
@@ -1285,6 +1286,14 @@ func _delete_archetype(archetype: Archetype) -> void:
 				keys_to_clear.append(comp_path)
 		for k in keys_to_clear:
 			neighbor.remove_edges.erase(k)
+
+	# Clean outgoing edges: remove this archetype from each target's neighbors
+	var my_id := archetype.get_instance_id()
+	for target in archetype.add_edges.values():
+		target.neighbors.erase(my_id)
+	for target in archetype.remove_edges.values():
+		target.neighbors.erase(my_id)
+
 	# Clear own state and remove from world
 	archetype.add_edges.clear()
 	archetype.remove_edges.clear()
