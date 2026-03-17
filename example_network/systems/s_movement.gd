@@ -21,7 +21,7 @@ var _handlers_registered := false
 func _try_register_receive_handlers() -> void:
 	if _handlers_registered:
 		return
-	var ns := ECS.world.get_node("NetworkSync") as NetworkSync
+	var ns := ECS.world.get_node_or_null("NetworkSync") as NetworkSync
 	if ns == null:
 		return
 	ns.register_receive_handler("C_NetVelocity", _on_receive_velocity)
