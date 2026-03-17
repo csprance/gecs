@@ -34,7 +34,8 @@ func define_components() -> Array:
 ## Example 2: Projectile Entity (Spawn-Only Sync)
 
 `example_network/entities/e_projectile.gd` — demonstrates spawn-only sync via
-`@export_group(CN_NetSync.SPAWN_ONLY)` on component properties.
+`@export_group(CN_NetSync.SPAWN_ONLY)` on component properties. Uses
+`CN_NetworkIdentity` and `CN_NetSync` like any other synced entity.
 
 ```gdscript
 class_name E_Projectile
@@ -44,7 +45,9 @@ extends Entity
 ## Server spawns and broadcasts component values once; clients simulate locally.
 
 func define_components() -> Array:
-    return CN_NetworkIdentity.sync_only() + [
+    return [
+        CN_NetworkIdentity.new(),
+        CN_NetSync.new(),
         C_NetPosition.new(),
         C_NetVelocity.new(),
         C_Projectile.new(),
