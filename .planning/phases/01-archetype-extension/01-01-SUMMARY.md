@@ -14,7 +14,8 @@ provides:
   - matches_relationship_query() structural matching method
   - SoA column exclusion for relationship slot keys
 
-affects: [02-signature-computation, 03-structural-transitions, 04-query-integration]
+affects:
+  [02-signature-computation, 03-structural-transitions, 04-query-integration]
 
 tech-stack:
   added: []
@@ -53,7 +54,8 @@ completed: 2026-03-18
 - **Files modified:** 2
 
 ## Accomplishments
-- Archetype._init() separates rel:// keys from component paths, creating columns only for components
+
+- Archetype.\_init() separates rel:// keys from component paths, creating columns only for components
 - New relationship_types property provides efficient rel:// subset access
 - matches_relationship_query() enables structural pair matching for query resolution
 - All 9 new tests pass; all 12 existing archetype tests pass unchanged (zero regression)
@@ -66,5 +68,6 @@ Each task was committed atomically:
 2. **Task 2: Implement archetype rel:// slot key support** - `e04c8c2` (feat)
 
 ## Files Created/Modified
+
 - `addons/gecs/tests/core/test_archetype_relationships.gd` - 9 test methods covering ARCH-01 through ARCH-05 plus regression
 - `addons/gecs/ecs/archetype.gd` - Extended with relationship_types, matches_relationship_query(), rel:// column exclusion
