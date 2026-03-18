@@ -1,153 +1,135 @@
-# GECS Documentation
+# GECS
 
-> **Complete documentation for the Godot Entity Component System**
+> **Entity Component System for Godot 4.x**
 
-<img src="./assets/logo.png" height="128" align="center">
+Build scalable, maintainable games with clean separation of data and logic. GECS integrates seamlessly with Godot's node system while providing powerful query-based entity filtering.
 
-**Lightning-fast Entity Component System for Godot 4.x** - Build scalable, maintainable games with clean separation of data and logic.
+## Key Features
 
-**Discord**: [Join our community](https://discord.gg/eB43XU2tmn)
+- 🎯 **Godot Integration** - Works with nodes, scenes, and editor
+- 🚀 **High Performance** - Optimized queries with automatic caching
+- 🔧 **Flexible Queries** - Find entities by components, relationships, or properties
+- 🔍 **Debug Viewer** - Real-time inspection and performance monitoring
+- 📦 **Editor Support** - Visual component editing and scene integration
+- 🎮 **Battle Tested** - Used in games being actively developed
+- 🌐 **Multiplayer** - GECS goes Multiplayer! Check out the [GECS Network Module](addons/gecs/network/README.md)
 
-## Learning Path
+## Requirements
 
-### Getting Started (5-10 minutes)
+Godot 4.x (tested with 4.6+)
 
-- **[Getting Started Guide](docs/GETTING_STARTED.md)** - Build your first ECS project in 5 minutes
+## Installation
 
-### Core Understanding (20-30 minutes)
+### Option A: Godot Asset Library
 
-- **[Core Concepts](docs/CORE_CONCEPTS.md)** - Deep dive into Entities, Components, Systems, and Relationships
-- **[Component Queries](docs/COMPONENT_QUERIES.md)** - Advanced property-based entity filtering
+Search for **"GECS"** in the Godot editor AssetLib tab and click Install.
 
-### Practical Application (30-60 minutes)
+### Option B: Manual Copy
 
-- **[Best Practices](docs/BEST_PRACTICES.md)** - Write maintainable, performant ECS code
-- **[Relationships](docs/RELATIONSHIPS.md)** - Link entities together for complex interactions
-- **[Observers](docs/OBSERVERS.md)** - Reactive systems that respond to component changes
-- **[Serialization](docs/SERIALIZATION.md)** - Save and load game state and entities
+Download the release zip, copy `addons/gecs/` into your project, then enable the plugin in **Project Settings > Plugins**.
 
-### Deferred Execution
+### Option C: Git Submodule
 
-- **CommandBuffer** - Queue structural changes during iteration with `cmd`. Eliminates backwards iteration and defensive snapshots. Three flush modes: PER_SYSTEM, PER_GROUP, MANUAL.
+```bash
+git submodule add -b release-v6.8.1 https://github.com/csprance/gecs.git addons/gecs
+```
 
-### Networking (Optional addon)
+Then enable the plugin in **Project Settings > Plugins**.
 
-- **[GECS Network Addon](../gecs_network/README.md)** - Multiplayer synchronization for GECS entities. Supports **transport providers** (ENet, Steam, or custom backends) that can be swapped without changing game code. See the addon docs for [Configuration & NetAdapter](../gecs_network/docs/configuration.md), [Examples](../gecs_network/docs/examples.md), and [Troubleshooting](../gecs_network/docs/troubleshooting.md).
+## Quick Start
 
-### Optimization & Advanced (As needed)
+```gdscript
+# All component properties need a default value or Godot will error on export
 
-- **[Debug Viewer](docs/DEBUG_VIEWER.md)** - Real-time debugging and performance monitoring
-- **[Performance Optimization](docs/PERFORMANCE_OPTIMIZATION.md)** - Make your games run fast and smooth
-- **[Troubleshooting](docs/TROUBLESHOOTING.md)** - Solve common issues quickly
+# Pattern 1: @export var with default (no constructor needed)
+class_name C_Health extends Component
+@export var max_health: int = 100
+@export var current_health: int = 100
 
-### Framework Development (For contributors)
+# Pattern 2: _init() with parameter AND a default on the property
+class_name C_Velocity extends Component
+@export var direction: Vector3 = Vector3.ZERO
+func _init(v: Vector3 = Vector3.ZERO) -> void:
+    direction = v
 
-- **[Performance Testing](docs/PERFORMANCE_TESTING.md)** - Framework-level performance testing guide
+# Create entities and add components
+var player = Entity.new()
+player.add_component(C_Health.new())
+player.add_component(C_Velocity.new(Vector3(5, 0, 0)))
 
-## 📖 Documentation by Topic
+var target = Entity.new()
+target.add_component(C_Health.new())
+target.add_component(C_Velocity.new(Vector3(-5, 0, 0)))
 
-### Entity Component System Basics
+# Add entities to the world
+ECS.world.add_entity(player)
+ECS.world.add_entity(target)
 
-| Topic             | Document                                   | Description                          |
-| ----------------- | ------------------------------------------ | ------------------------------------ |
-| **Introduction**  | [Getting Started](docs/GETTING_STARTED.md) | First ECS project tutorial           |
-| **Architecture**  | [Core Concepts](docs/CORE_CONCEPTS.md)     | Complete ECS architecture overview   |
-| **Data Patterns** | [Best Practices](docs/BEST_PRACTICES.md)   | Component and system design patterns |
+# Add relationships between entities
+player.add_relationship(Relationship.new(C_AllyTo.new(), target))
+
+# Systems define which entities to process
+class_name VelocitySystem extends System
+
+func query() -> QueryBuilder:
+    return q.with_all([C_Velocity])
+
+func process(entities: Array[Entity], components: Array, delta: float) -> void:
+    for entity in entities:
+        var vel := entity.get_component(C_Velocity) as C_Velocity
+        entity.position += vel.direction * delta
+
+# Register the system and start processing
+ECS.world.add_system(VelocitySystem.new())
+
+func _process(delta: float) -> void:
+    ECS.process(delta)
+```
+
+## Quick Start Steps
+
+1. **Install**: Download to `addons/gecs/` and enable in Project Settings
+2. **Follow Guide**: [Get your first ECS project running in 5 minutes →](addons/gecs/docs/GETTING_STARTED.md)
+3. **Learn More**: [Understand core ECS concepts →](addons/gecs/docs/CORE_CONCEPTS.md)
+
+## Complete Documentation
+
+**All documentation is located in the addon folder:**
+
+**→ [Complete Documentation Index](addons/gecs/README.md)**
+
+### Quick Navigation
+
+- **[Getting Started](addons/gecs/docs/GETTING_STARTED.md)** - Build your first ECS project (5 min)
+- **[Core Concepts](addons/gecs/docs/CORE_CONCEPTS.md)** - Understand Entities, Components, Systems, Relationships (20 min)
+- **[Best Practices](addons/gecs/docs/BEST_PRACTICES.md)** - Write maintainable ECS code (15 min)
+- **[Troubleshooting](addons/gecs/docs/TROUBLESHOOTING.md)** - Solve common issues quickly
 
 ### Advanced Features
 
-| Topic                  | Document                                       | Description                         |
-| ---------------------- | ---------------------------------------------- | ----------------------------------- |
-| **Entity Linking**     | [Relationships](docs/RELATIONSHIPS.md)         | Connect entities with relationships |
-| **Property Filtering** | [Component Queries](docs/COMPONENT_QUERIES.md) | Query entities by component data    |
-| **Event Systems**      | [Observers](docs/OBSERVERS.md)                 | React to component changes          |
-| **Data Persistence**   | [Serialization](docs/SERIALIZATION.md)         | Save/load entities and game state   |
+- **[Component Queries](addons/gecs/docs/COMPONENT_QUERIES.md)** - Advanced property-based filtering
+- **[Relationships](addons/gecs/docs/RELATIONSHIPS.md)** - Entity linking and associations
+- **[Observers](addons/gecs/docs/OBSERVERS.md)** - Reactive systems for component changes
+- **[Performance Optimization](addons/gecs/docs/PERFORMANCE_OPTIMIZATION.md)** - Make your games run fast
 
-### Networking (Optional addon)
+## Example Games
 
-| Topic               | Document                                                            | Description                                        |
-| ------------------- | ------------------------------------------------------------------- | -------------------------------------------------- |
-| **Overview**        | [GECS Network Addon](../gecs_network/README.md)                     | Multiplayer sync, transport providers (ENet/Steam) |
-| **Configuration**   | [Configuration & NetAdapter](../gecs_network/docs/configuration.md) | NetAdapter, priority tiers, ProjectSettings        |
-| **Examples**        | [Examples](../gecs_network/docs/examples.md)                        | Players, enemies, projectiles, abilities           |
-| **Troubleshooting** | [Troubleshooting](../gecs_network/docs/troubleshooting.md)          | Common networking issues and migration guide       |
+- **[GECS-101](https://github.com/csprance/gecs-101)** - A simple example
+- **[Zombies Ate My Neighbors](https://github.com/csprance/gecs/tree/zombies-ate-my-neighbors/game)** - Action arcade game
+- **[Breakout Clone](https://github.com/csprance/gecs/tree/breakout/game)** - Classic brick breaker
 
-### Optimization & Debugging
+## Community
 
-| Topic            | Document                                                     | Description                        |
-| ---------------- | ------------------------------------------------------------ | ---------------------------------- |
-| **Debug Viewer** | [Debug Viewer](docs/DEBUG_VIEWER.md)                         | Real-time debugging and inspection |
-| **Performance**  | [Performance Optimization](docs/PERFORMANCE_OPTIMIZATION.md) | Game performance optimization      |
-| **Debugging**    | [Troubleshooting](docs/TROUBLESHOOTING.md)                   | Common problems and solutions      |
-| **Testing**      | [Performance Testing](docs/PERFORMANCE_TESTING.md)           | Framework performance testing      |
+- **Discord**: [Join our community](https://discord.gg/eB43XU2tmn)
+- **Issues**: [Report bugs or request features](https://github.com/csprance/gecs/issues)
+- **Discussions**: [Ask questions and share projects](https://github.com/csprance/gecs/discussions)
 
-## Quick References
+## License
 
-### Naming Conventions
-
-- **Entities**: `ClassCase` class, `e_entity_name.gd` file
-- **Components**: `C_ComponentName` class, `c_component_name.gd` file
-- **Systems**: `SystemNameSystem` class, `s_system_name.gd` file
-- **Observers**: `ObserverNameObserver` class, `o_observer_name.gd` file
-
-### Essential Patterns
-
-```gdscript
-# Entity creation
-var player = Player.new()
-player.add_component(C_Health.new(100))
-player.add_component(C_Position.new(Vector2.ZERO))
-ECS.world.add_entity(player)
-
-# System queries
-func query(): return q.with_all([C_Health, C_Position])
-func process(entities: Array[Entity], components: Array, delta: float): # Unified signature
-# Use .iterate([Components]) for batch component array access
-
-# Relationships
-entity.add_relationship(Relationship.new(C_Likes.new(), target_entity))
-var likers = ECS.world.query.with_relationship([Relationship.new(C_Likes.new(), entity)]).execute()
-
-# Component queries
-var low_health = ECS.world.query.with_all([{C_Health: {"current": {"_lt": 20}}}]).execute()
-
-# Order Independence: with_all/with_any/with_node component order does not affect matching or caching.
-# The framework normalizes component sets internally so these yield identical results:
-# ECS.world.query.with_all([C_Health, C_Position])
-# ECS.world.query.with_all([C_Position, C_Health])
-# Cache keys and archetype matching are order-insensitive.
-
-# Serialization
-var data = ECS.serialize(ECS.world.query.with_all([C_Persistent]))
-ECS.save(data, "user://savegame.tres", true)  # Binary format
-var entities = ECS.deserialize("user://savegame.tres")
-```
-
-## Example Projects
-
-Basic examples are included in each guide. For complete game examples, see:
-
-- **Simple Ball Movement** - [Getting Started Guide](docs/GETTING_STARTED.md)
-- **Combat Systems** - [Relationships Guide](docs/RELATIONSHIPS.md)
-- **UI Synchronization** - [Observers Guide](docs/OBSERVERS.md)
-
-## Getting Help
-
-1. **Check documentation** - Most questions are answered in the guides above
-2. **Review examples** - Each guide includes working code examples
-3. **Try troubleshooting** - [Troubleshooting Guide](docs/TROUBLESHOOTING.md) covers common issues
-4. **Community support** - [Join our Discord](https://discord.gg/eB43XU2tmn) for discussions and questions
-
-## Documentation Updates
-
-This documentation is actively maintained. If you find errors or have suggestions:
-
-- **Report issues** for bugs or unclear documentation
-- **Suggest improvements** for better examples or explanations
-- **Contribute examples** showing real-world usage patterns
+MIT - See [LICENSE](LICENSE) for details.
 
 ---
 
-**Ready to start?** Begin with the [Getting Started Guide](docs/GETTING_STARTED.md) and build your first ECS project in just 5 minutes!
+_GECS is provided as-is. If it breaks, you get to keep both pieces._
 
-_GECS makes building scalable, maintainable games easier by separating data from logic and providing powerful query systems for entity management._
+[![Star History Chart](https://api.star-history.com/svg?repos=csprance/gecs&type=Date)](https://star-history.com/#csprance/gecs&Date)
