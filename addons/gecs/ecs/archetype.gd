@@ -37,6 +37,9 @@ var signature: int = 0
 ## Used for debugging and archetype matching logic
 var component_types: Array = []
 
+## Subset of component_types containing only rel:// prefixed relationship slot keys
+var relationship_types: Array = []
+
 ## Flat array of entities with this exact component combination
 ## Provides excellent cache locality when iterating in systems
 var entities: Array[Entity] = []
@@ -72,9 +75,13 @@ func _init(p_signature: int, p_component_types: Array):
 	component_types = p_component_types.duplicate()
 	component_types.sort() # Ensure sorted for consistent matching
 
-	# Initialize column arrays for each component type
+	# Separate relationship slot keys from component paths
 	for comp_type in component_types:
-		columns[comp_type] = []
+		if (comp_type as String).begins_with("rel://"):
+			relationship_types.append(comp_type)
+		else:
+			# Only create columns for component paths, NOT relationship slots
+			columns[comp_type] = []
 
 
 ## Add an entity to this archetype
@@ -90,7 +97,8 @@ func add_entity(entity: Entity) -> void:
 	_set_enabled_bit(index, entity.enabled)
 
 	# OPTIMIZATION: Populate column arrays from entity.components
-	for comp_path in component_types:
+	# Iterate columns keys (skips rel:// keys which have no columns)
+	for comp_path in columns:
 		if entity.components.has(comp_path):
 			(columns[comp_path]
 				.append(entity.components[comp_path]))
@@ -117,7 +125,7 @@ func remove_entity(entity: Entity) -> bool:
 		entity_to_index[last_entity] = index
 
 		# OPTIMIZATION: Swap in column arrays too (maintain same ordering)
-		for comp_path in component_types:
+		for comp_path in columns:
 			columns[comp_path][index] = columns[comp_path][last_index]
 
 		# OPTIMIZATION: Swap enabled bit
@@ -129,7 +137,7 @@ func remove_entity(entity: Entity) -> bool:
 	entity_to_index.erase(entity)
 
 	# OPTIMIZATION: Remove last element from all columns
-	for comp_path in component_types:
+	for comp_path in columns:
 		columns[comp_path].pop_back()
 
 	# OPTIMIZATION: Update bitset size (no need to clear the bit, just reduce logical size)
@@ -159,7 +167,7 @@ func clear() -> void:
 	entity_to_index.clear()
 
 	# OPTIMIZATION: Clear column arrays
-	for comp_path in component_types:
+	for comp_path in columns:
 		columns[comp_path].clear()
 
 	# OPTIMIZATION: Clear bitset
@@ -191,6 +199,21 @@ func matches_query(all_comp_types: Array, any_comp_types: Array, exclude_comp_ty
 		if component_types.has(comp_type):
 			return false
 
+	return true
+
+
+## Check if this archetype matches a relationship query with required/excluded rel keys
+## [param required_rel_keys] Relationship slot keys that must all be present
+## [param excluded_rel_keys] Relationship slot keys that must not be present
+func matches_relationship_query(required_rel_keys: Array, excluded_rel_keys: Array) -> bool:
+	# Check required: archetype must contain ALL required relationship keys
+	for rel_key in required_rel_keys:
+		if not relationship_types.has(rel_key):
+			return false
+	# Check excluded: archetype must contain NONE of excluded relationship keys
+	for rel_key in excluded_rel_keys:
+		if relationship_types.has(rel_key):
+			return false
 	return true
 
 
