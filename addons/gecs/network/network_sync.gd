@@ -47,16 +47,16 @@ signal local_player_spawned(entity: Entity)
 # ============================================================================
 
 var _world: World
-var _applying_network_data: bool = false  # Prevents sync loops — CRITICAL
-var _broadcast_pending: Dictionary = {}   # Deferred spawn guard — CRITICAL
+var _applying_network_data: bool = false # Prevents sync loops — CRITICAL
+var _broadcast_pending: Dictionary = {} # Deferred spawn guard — CRITICAL
 var _spawn_counter: int = 0
-var _game_session_id: int = 0             # Session anti-ghost — CRITICAL
+var _game_session_id: int = 0 # Session anti-ghost — CRITICAL
 var _spawn_manager: SpawnManager
 var _sender: SyncSender
 var _receiver: SyncReceiver
 var _native_sync_handler: NativeSyncHandler
-var _relationship_handler  # SyncRelationshipHandler (untyped — no class_name)
-var _reconciliation_handler  # SyncReconciliationHandler (untyped — no class_name)
+var _relationship_handler # SyncRelationshipHandler (untyped — no class_name)
+var _reconciliation_handler # SyncReconciliationHandler (untyped — no class_name)
 var _is_ready: bool = false
 
 # ============================================================================
@@ -68,7 +68,7 @@ var _is_ready: bool = false
 ## CRITICAL: sets name before add_child() so RPC routing is consistent across peers.
 static func attach_to_world(world: World, net_adapter: NetAdapter = null) -> NetworkSync:
 	var net_sync = NetworkSync.new()
-	net_sync.name = "NetworkSync"  # CRITICAL for RPC routing
+	net_sync.name = "NetworkSync" # CRITICAL for RPC routing
 	if net_adapter != null:
 		net_sync.net_adapter = net_adapter
 	world.add_child(net_sync)
@@ -83,7 +83,7 @@ static func attach_to_world(world: World, net_adapter: NetAdapter = null) -> Net
 func _ready() -> void:
 	# Fallback name guard — ensures RPC routing works even when not using factory
 	if name.begins_with("@"):
-		name = "NetworkSync"  # CRITICAL
+		name = "NetworkSync" # CRITICAL
 
 	if net_adapter == null:
 		net_adapter = NetAdapter.new()
@@ -93,14 +93,14 @@ func _ready() -> void:
 		push_error("NetworkSync: parent must be a World node")
 		return
 
-	_spawn_manager = SpawnManager.new(self)
-	_sender = SyncSender.new(self)
-	_receiver = SyncReceiver.new(self)
-	_native_sync_handler = NativeSyncHandler.new(self)
+	_spawn_manager = SpawnManager.new(self )
+	_sender = SyncSender.new(self )
+	_receiver = SyncReceiver.new(self )
+	_native_sync_handler = NativeSyncHandler.new(self )
 	var SyncRelationshipHandlerScript = load("res://addons/gecs/network/sync_relationship_handler.gd")
-	_relationship_handler = SyncRelationshipHandlerScript.new(self)
+	_relationship_handler = SyncRelationshipHandlerScript.new(self )
 	var SyncReconciliationHandlerScript = load("res://addons/gecs/network/sync_reconciliation_handler.gd")
-	_reconciliation_handler = SyncReconciliationHandlerScript.new(self)
+	_reconciliation_handler = SyncReconciliationHandlerScript.new(self )
 
 	_world.entity_added.connect(_on_entity_added)
 	_world.entity_removed.connect(_on_entity_removed)
@@ -124,7 +124,7 @@ func _exit_tree() -> void:
 ## Reset NetworkSync state for a new game instance.
 ## Call this when returning to lobby/menu to ensure clean state for next game.
 func reset_for_new_game() -> void:
-	_game_session_id += 1  # Monotonic increment invalidates all in-flight RPCs
+	_game_session_id += 1 # Monotonic increment invalidates all in-flight RPCs
 	_broadcast_pending.clear()
 	_spawn_counter = 0
 	if _relationship_handler != null:
@@ -225,8 +225,8 @@ func register_receive_handler(comp_type_name: String, handler: Callable) -> void
 
 func _process(delta: float) -> void:
 	if _world == null or not net_adapter.is_in_game():
-		return  # Zero overhead in single-player — FOUND-03
-	_sender.tick(delta)  # Phase 2: priority-tiered property sync
+		return # Zero overhead in single-player — FOUND-03
+	_sender.tick(delta) # Phase 2: priority-tiered property sync
 	if _reconciliation_handler != null:
 		_reconciliation_handler.tick(delta)
 
@@ -277,7 +277,9 @@ func _on_entity_added(entity: Entity) -> void:
 func _on_entity_removed(entity: Entity) -> void:
 	if not net_adapter.is_in_game():
 		return
-	_spawn_manager.on_entity_removed(entity)
+	# Server-only: broadcast despawn to clients (mirrors _on_entity_added guard)
+	if net_adapter.is_server():
+		_spawn_manager.on_entity_removed(entity)
 
 
 # ============================================================================
@@ -317,7 +319,7 @@ func _deferred_broadcast(entity: Entity, entity_id: String) -> void:
 		_broadcast_pending.erase(entity_id)
 		return
 	if not _broadcast_pending.has(entity_id):
-		return  # Cancelled by on_entity_removed before deferred call fired
+		return # Cancelled by on_entity_removed before deferred call fired
 	_broadcast_pending.erase(entity_id)
 	# Server-side setup: inject authority markers and native sync.
 	# Clients receive these via _apply_component_data in handle_spawn_entity.
