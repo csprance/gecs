@@ -47,7 +47,7 @@ Plans:
 **Plans**: 1 plan
 
 Plans:
-- [ ] 02-01: TBD
+- [x] 02-01: Extend entity signatures with relationship pairs, stable entity IDs, pair encoding fix, and wildcard index
 
 ### Phase 3: Structural Transitions
 **Goal**: Relationship mutations trigger archetype moves identical to component mutations, with batch optimization and safe cleanup of freed targets
