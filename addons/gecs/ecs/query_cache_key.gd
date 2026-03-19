@@ -66,14 +66,14 @@ static func build(
 	ex_ids.sort()
 
 	# Collect & sort relationship pair hashes (preserve pair identity, prevent cross-pair collisions)
-	# Each (relation, target) pair is pre-hashed as a unit via PackedInt64Array.hash()
+	# Each (relation, target) pair is pre-hashed as a unit via Array.hash()
 	var rel_ids: Array[int] = []
 	for rel in relationships:
 		# Skip property-query relationships — they don't participate in structural hash
 		if rel is Relationship and rel._is_query_relationship:
 			continue
 
-		var pair = PackedInt64Array()
+		var pair: Array = []
 
 		# Relation ID
 		if rel.relation:
@@ -102,7 +102,7 @@ static func build(
 		if rel is Relationship and rel._is_query_relationship:
 			continue
 
-		var pair = PackedInt64Array()
+		var pair: Array = []
 		if rel.relation:
 			pair.append(rel.relation.get_script().get_instance_id())
 		else:

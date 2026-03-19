@@ -160,7 +160,7 @@ func test_query_cache_key_excludes_property_queries():
 func test_wildcard_index_populated_on_archetype_creation():
 	var rel_key = "rel://res://addons/gecs/tests/components/c_test_a.gd::entity#1"
 	var comp_types = ["res://addons/gecs/tests/components/c_test_a.gd", rel_key]
-	var sig = QueryCacheKey.build([C_TestA], [], [])  # Simplified sig for testing
+	var sig = QueryCacheKey.build([C_TestA], [], []) # Simplified sig for testing
 
 	var archetype = world._get_or_create_archetype(sig, comp_types)
 
@@ -176,7 +176,7 @@ func test_wildcard_index_populated_on_archetype_creation():
 func test_wildcard_index_cleaned_on_archetype_deletion():
 	var rel_key = "rel://res://addons/gecs/tests/components/c_test_b.gd::entity#2"
 	var comp_types = ["res://addons/gecs/tests/components/c_test_b.gd", rel_key]
-	var sig = QueryCacheKey.build([C_TestB], [], [])  # Simplified sig for testing
+	var sig = QueryCacheKey.build([C_TestB], [], []) # Simplified sig for testing
 
 	var archetype = world._get_or_create_archetype(sig, comp_types)
 	var rel_path = "res://addons/gecs/tests/components/c_test_b.gd"

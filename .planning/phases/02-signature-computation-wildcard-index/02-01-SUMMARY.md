@@ -18,8 +18,7 @@ provides:
   - _relation_type_archetype_index wildcard index on World
   - Wildcard index lifecycle: populated on archetype creation, cleaned on deletion, reset on purge
 
-affects:
-  [03-structural-transitions, 04-query-integration]
+affects: [03-structural-transitions, 04-query-integration]
 
 tech-stack:
   added: []
@@ -64,9 +63,9 @@ completed: 2026-03-18
 ## Accomplishments
 
 - Entity.ecs_id provides stable integer IDs for deterministic slot key generation
-- _calculate_entity_signature() includes structural relationships in the hash (excludes property-query relationships)
+- \_calculate_entity_signature() includes structural relationships in the hash (excludes property-query relationships)
 - QueryCacheKey.build() pre-hashes each (relation, target) pair as a unit, preventing cross-pair collisions
-- _relation_type_archetype_index maps relation resource paths to archetypes for O(1) wildcard lookup
+- \_relation_type_archetype_index maps relation resource paths to archetypes for O(1) wildcard lookup
 - Wildcard index automatically maintained: populated on archetype creation, cleaned on deletion, reset on purge
 
 ## Task Commits
@@ -78,13 +77,13 @@ Each task was committed atomically:
 
 ## Regression Results
 
-| Suite | Tests | Status |
-|-------|-------|--------|
-| test_signature_wildcard.gd | 10/10 | ✓ PASSED |
-| test_archetype_relationships.gd | 9/9 | ✓ PASSED |
-| test_world.gd | 3/3 | ✓ PASSED |
-| test_relationships.gd | 29/29 | ✓ PASSED |
-| test_query_builder.gd | 28/28 | ✓ PASSED |
+| Suite                           | Tests | Status   |
+| ------------------------------- | ----- | -------- |
+| test_signature_wildcard.gd      | 10/10 | ✓ PASSED |
+| test_archetype_relationships.gd | 9/9   | ✓ PASSED |
+| test_world.gd                   | 3/3   | ✓ PASSED |
+| test_relationships.gd           | 29/29 | ✓ PASSED |
+| test_query_builder.gd           | 28/28 | ✓ PASSED |
 
 **Zero regressions** — all 79 tests pass.
 
@@ -92,5 +91,5 @@ Each task was committed atomically:
 
 - `addons/gecs/tests/core/test_signature_wildcard.gd` — 10 test methods covering SIGX-01 through SIGX-04 plus stable entity ID and slot key format
 - `addons/gecs/ecs/entity.gd` — Added ecs_id property (stable integer ID)
-- `addons/gecs/ecs/world.gd` — Added _next_entity_id, _relation_type_archetype_index, _relationship_slot_key(), _get_entity_archetype_keys(), _extract_relation_path_from_slot_key(); modified _calculate_entity_signature(), _get_or_create_archetype(), _add_entity_to_archetype(), _move_entity_to_new_archetype_fast(), _delete_archetype(), purge(), add_entity()
-- `addons/gecs/ecs/query_cache_key.gd` — Replaced flat ID collection with pre-hashed pair encoding; added _is_query_relationship skip
+- `addons/gecs/ecs/world.gd` — Added \_next_entity_id, \_relation_type_archetype_index, \_relationship_slot_key(), \_get_entity_archetype_keys(), \_extract_relation_path_from_slot_key(); modified \_calculate_entity_signature(), \_get_or_create_archetype(), \_add_entity_to_archetype(), \_move_entity_to_new_archetype_fast(), \_delete_archetype(), purge(), add_entity()
+- `addons/gecs/ecs/query_cache_key.gd` — Replaced flat ID collection with pre-hashed pair encoding; added \_is_query_relationship skip
