@@ -72,7 +72,7 @@ Plans:
 
 Plans:
 
-- [ ] 03-01: TBD
+- [ ] 03-01-PLAN.md — Implement structural relationship transitions: archetype moves on add/remove, batch signals, REMOVE policy cleanup
 
 ### Phase 4: Query System Integration
 
