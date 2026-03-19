@@ -78,6 +78,11 @@ var _entityLogger = GECSLogger.new().domain("Entity")
 ## We can store ephemeral state on the entity
 var _state = {}
 
+## Stable integer ID assigned by World during registration.
+## Used for deterministic relationship slot key generation (not the same as the string UUID `id`).
+## Value is 0 until the entity is registered with a World.
+var ecs_id: int = 0
+
 #endregion Public Variables
 
 #region Built-in Virtual Methods

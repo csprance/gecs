@@ -80,6 +80,13 @@ var query: QueryBuilder:
 		return q
 ## Index for relationships to entities (Optional for optimization)
 var relationship_entity_index: Dictionary = {}
+
+## Incrementing counter for stable entity IDs (assigned in add_entity)
+var _next_entity_id: int = 1
+
+## Relation-type archetype index: maps relation resource_path -> { archetype_signature -> Archetype }
+## Enables O(1) wildcard relationship queries (find all archetypes with any (RelationType, *) pair)
+var _relation_type_archetype_index: Dictionary = {} # String -> Dictionary[int, Archetype]
 ## Logger for the world to only log to a specific domain
 var _worldLogger = GECSLogger.new().domain("World")
 ## Cache for commonly used query results - stores matching archetypes, not entities
@@ -305,6 +312,11 @@ func add_entity(entity: Entity, components = null, add_to_tree = true) -> void:
 
 	# Register this entity's ID
 	entity_id_registry[entity_id] = entity
+
+	# Assign stable numeric entity ID for relationship slot key generation
+	if entity.ecs_id == 0:
+		entity.ecs_id = _next_entity_id
+		_next_entity_id += 1
 
 	# ID will auto-generate in _enter_tree if empty, or via property getter on first access
 
@@ -649,6 +661,8 @@ func purge(should_free = true, keep := []) -> void:
 
 	# Clear relationship indexes after purging entities
 	relationship_entity_index.clear()
+	_relation_type_archetype_index.clear()
+	_next_entity_id = 1
 	_worldLogger.debug("Cleared relationship indexes after purge")
 
 	# ARCHETYPE: Clear archetype system
@@ -1211,11 +1225,54 @@ func _calculate_entity_signature(entity: Entity) -> int:
 			_component_script_cache[comp_path] = component.get_script()
 		comp_scripts.append(_component_script_cache[comp_path])
 
+	# Collect structural relationships for signature hash
+	# Property-query relationships are excluded (they remain post-filter only)
+	var structural_rels: Array = []
+	for rel in entity.relationships:
+		if not rel._is_query_relationship:
+			structural_rels.append(rel)
+
 	# Use the SAME hash function as queries - entity is just "all components, no any/exclude"
 	# OPTIMIZATION: Removed enabled_marker from signature - now handled by bitset in archetype
-	var signature = QueryCacheKey.build(comp_scripts, [], [])
+	var signature = QueryCacheKey.build(comp_scripts, [], [], structural_rels)
 
 	return signature
+
+
+## Compute the archetype slot key string for a relationship pair.
+## Format: "rel://<relation_resource_path>::<target_key>"
+func _relationship_slot_key(rel: Relationship) -> String:
+	var rel_path = rel.relation.get_script().resource_path
+	var target_key: String
+	if rel.target is Entity:
+		target_key = "entity#" + str(rel.target.ecs_id)
+	elif rel.target is Component:
+		target_key = "comp://" + rel.target.get_script().resource_path
+	elif rel.target is Script:
+		target_key = "script://" + rel.target.resource_path
+	else:
+		target_key = "*"
+	return "rel://" + rel_path + "::" + target_key
+
+
+## Get the full set of archetype keys for an entity (component paths + relationship slot keys)
+func _get_entity_archetype_keys(entity: Entity) -> Array:
+	var keys = entity.components.keys().duplicate()
+	for rel in entity.relationships:
+		if not rel._is_query_relationship:
+			keys.append(_relationship_slot_key(rel))
+	return keys
+
+
+## Extract the relation resource path from a rel:// slot key.
+## Input: "rel://res://path/to/component.gd::entity#42"
+## Output: "res://path/to/component.gd"
+func _extract_relation_path_from_slot_key(slot_key: String) -> String:
+	var content = slot_key.substr(6) # everything after "rel://"
+	var sep_pos = content.find("::")
+	if sep_pos == -1:
+		return ""
+	return content.substr(0, sep_pos)
 
 
 ## Get or create an archetype for the given signature and component types
@@ -1225,6 +1282,14 @@ func _get_or_create_archetype(signature: int, component_types: Array) -> Archety
 		var archetype = Archetype.new(signature, component_types)
 		archetypes[signature] = archetype
 		_worldLogger.trace("Created new archetype: ", archetype)
+
+		# Register in wildcard index: for each rel:// key, extract relation path
+		for rel_key in archetype.relationship_types:
+			var rel_path = _extract_relation_path_from_slot_key(rel_key)
+			if rel_path != "":
+				if not _relation_type_archetype_index.has(rel_path):
+					_relation_type_archetype_index[rel_path] = {}
+				_relation_type_archetype_index[rel_path][archetype.signature] = archetype
 
 		# ARCHETYPE OPTIMIZATION: Only invalidate cache when NEW archetype is created
 		# This is rare compared to entities moving between existing archetypes
@@ -1238,8 +1303,8 @@ func _add_entity_to_archetype(entity: Entity) -> void:
 	# Calculate signature based on entity's components (enabled state now handled by bitset)
 	var signature = _calculate_entity_signature(entity)
 
-	# Get component type paths for this entity
-	var comp_types = entity.components.keys()
+	# Get component type paths for this entity (includes relationship slot keys)
+	var comp_types = _get_entity_archetype_keys(entity)
 
 	# Get or create archetype (no longer needs enabled filter value)
 	var archetype = _get_or_create_archetype(signature, comp_types)
@@ -1277,6 +1342,14 @@ func _remove_entity_from_archetype(entity: Entity) -> bool:
 ## Delete an archetype from the world, cleaning up reverse edges in all neighbor archetypes.
 ## Replaces all three inline deletion sites for consistent cleanup.
 func _delete_archetype(archetype: Archetype) -> void:
+	# Clean up wildcard index entries for this archetype's relationship types
+	for rel_key in archetype.relationship_types:
+		var rel_path = _extract_relation_path_from_slot_key(rel_key)
+		if rel_path != "" and _relation_type_archetype_index.has(rel_path):
+			_relation_type_archetype_index[rel_path].erase(archetype.signature)
+			if _relation_type_archetype_index[rel_path].is_empty():
+				_relation_type_archetype_index.erase(rel_path)
+
 	# Clean incoming edges: iterate neighbors (archetypes that point TO this one)
 	# and remove any edge they have pointing to this archetype
 	for neighbor in archetype.neighbors.values():
@@ -1337,7 +1410,7 @@ func _move_entity_to_new_archetype_fast(
 	# If no cached edge, calculate signature and find/create archetype
 	if new_archetype == null:
 		var new_signature = _calculate_entity_signature(entity)
-		var comp_types = entity.components.keys()
+		var comp_types = _get_entity_archetype_keys(entity)
 		new_archetype = _get_or_create_archetype(new_signature, comp_types)
 
 		# Cache the edge for next time (archetype graph optimization)

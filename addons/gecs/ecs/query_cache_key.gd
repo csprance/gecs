@@ -65,52 +65,61 @@ static func build(
 	for c in exclude_components: ex_ids.append(c.get_instance_id())
 	ex_ids.sort()
 
-	# Collect & sort relationship IDs
+	# Collect & sort relationship pair hashes (preserve pair identity, prevent cross-pair collisions)
+	# Each (relation, target) pair is pre-hashed as a unit via PackedInt64Array.hash()
 	var rel_ids: Array[int] = []
 	for rel in relationships:
-		# Use Script instance ID for type matching (consistent with component queries)
-		# Relationship.new(C_TestB.new()) creates component instance, we want the Script's ID
-		if rel.relation:
-			rel_ids.append(rel.relation.get_script().get_instance_id())
-		else:
-			rel_ids.append(0)
+		# Skip property-query relationships — they don't participate in structural hash
+		if rel is Relationship and rel._is_query_relationship:
+			continue
 
-		# Handle target - use Script instance ID for Components (type matching)
-		if rel.target is Component:
-			# Component target: use Script instance ID for type matching
-			rel_ids.append(rel.target.get_script().get_instance_id())
-		elif rel.target is Entity:
-			# Entity target: use entity instance ID (entities are specific instances)
-			rel_ids.append(rel.target.get_instance_id())
-		elif rel.target is Script:
-			# Archetype target: use Script instance ID
-			rel_ids.append(rel.target.get_instance_id())
-		elif rel.target != null:
-			# Other types: use generic hash
-			rel_ids.append(rel.target.hash())
+		var pair = PackedInt64Array()
+
+		# Relation ID
+		if rel.relation:
+			pair.append(rel.relation.get_script().get_instance_id())
 		else:
-			rel_ids.append(0) # null target
+			pair.append(0)
+
+		# Target ID
+		if rel.target is Component:
+			pair.append(rel.target.get_script().get_instance_id())
+		elif rel.target is Entity:
+			pair.append(rel.target.get_instance_id())
+		elif rel.target is Script:
+			pair.append(rel.target.get_instance_id())
+		elif rel.target != null:
+			pair.append(rel.target.hash())
+		else:
+			pair.append(0)
+
+		# Hash the pair as a unit — preserves (A,B) vs (B,A) distinction
+		rel_ids.append(pair.hash())
 	rel_ids.sort()
 
 	var ex_rel_ids: Array[int] = []
 	for rel in exclude_relationships:
-		# Use Script instance ID for type matching (consistent with component queries)
-		if rel.relation:
-			ex_rel_ids.append(rel.relation.get_script().get_instance_id())
-		else:
-			ex_rel_ids.append(0)
+		if rel is Relationship and rel._is_query_relationship:
+			continue
 
-		# Handle target - use Script instance ID for Components (type matching)
-		if rel.target is Component:
-			ex_rel_ids.append(rel.target.get_script().get_instance_id())
-		elif rel.target is Entity:
-			ex_rel_ids.append(rel.target.get_instance_id())
-		elif rel.target is Script:
-			ex_rel_ids.append(rel.target.get_instance_id())
-		elif rel.target != null:
-			ex_rel_ids.append(rel.target.hash())
+		var pair = PackedInt64Array()
+		if rel.relation:
+			pair.append(rel.relation.get_script().get_instance_id())
 		else:
-			ex_rel_ids.append(0)
+			pair.append(0)
+
+		if rel.target is Component:
+			pair.append(rel.target.get_script().get_instance_id())
+		elif rel.target is Entity:
+			pair.append(rel.target.get_instance_id())
+		elif rel.target is Script:
+			pair.append(rel.target.get_instance_id())
+		elif rel.target != null:
+			pair.append(rel.target.hash())
+		else:
+			pair.append(0)
+
+		ex_rel_ids.append(pair.hash())
 	ex_rel_ids.sort()
 
 	# Collect & sort group name hashes
