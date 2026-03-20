@@ -90,7 +90,7 @@ Plans:
 
 Plans:
 
-- [ ] 04-01: TBD
+- [ ] 04-01-PLAN.md — Integrate structural relationship queries into archetype cache lookup pipeline
 
 ### Phase 5: Property Query Preservation & Compatibility
 
