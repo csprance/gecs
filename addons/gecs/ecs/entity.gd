@@ -40,6 +40,10 @@ signal component_property_changed(
 signal relationship_added(entity: Entity, relationship: Relationship)
 ## Emit when a [Relationship] is removed from the [Entity]
 signal relationship_removed(entity: Entity, relationship: Relationship)
+## Emitted when multiple [Relationship]s are added in a batch via [method add_relationships]
+signal relationships_batch_added(entity: Entity, _relationships: Array)
+## Emitted when multiple [Relationship]s are removed in a batch via [method remove_relationships]
+signal relationships_batch_removed(entity: Entity, _relationships: Array)
 
 #endregion Signals
 
@@ -380,7 +384,13 @@ func add_relationship(relationship: Relationship) -> void:
 
 func add_relationships(_relationships: Array):
 	for relationship in _relationships:
-		add_relationship(relationship)
+		assert(
+			not relationship._is_query_relationship,
+			"Cannot add query relationships to entities. Query relationships (created with dictionaries) are for matching only, not for storage."
+		)
+		relationship.source = self
+		relationships.append(relationship)
+	relationships_batch_added.emit(self, _relationships)
 
 
 ## Removes a relationship from the entity.[br]
@@ -431,8 +441,28 @@ func remove_relationship(relationship: Relationship, limit: int = -1) -> void:
 ## [param _relationships] Array of [Relationship]s to remove.[br]
 ## [param limit] Maximum number of relationships to remove per relationship type. -1 = all (default), 0 = none, >0 = up to that many.
 func remove_relationships(_relationships: Array, limit: int = -1):
+	var all_removed: Array = []
 	for relationship in _relationships:
-		remove_relationship(relationship, limit)
+		if limit == 0:
+			continue
+		var to_remove = []
+		var removed_count = 0
+		var pattern_remove = true
+		if relationships.has(relationship):
+			to_remove.append(relationship)
+			pattern_remove = false
+		if pattern_remove:
+			for rel in relationships:
+				if rel.matches(relationship):
+					to_remove.append(rel)
+					removed_count += 1
+					if limit > 0 and removed_count >= limit:
+						break
+		for rel in to_remove:
+			relationships.erase(rel)
+			all_removed.append(rel)
+	if not all_removed.is_empty():
+		relationships_batch_removed.emit(self, all_removed)
 
 
 ## Removes all relationships from the entity.

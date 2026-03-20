@@ -332,6 +332,10 @@ func add_entity(entity: Entity, components = null, add_to_tree = true) -> void:
 		entity.relationship_added.connect(_on_entity_relationship_added)
 	if not entity.relationship_removed.is_connected(_on_entity_relationship_removed):
 		entity.relationship_removed.connect(_on_entity_relationship_removed)
+	if not entity.relationships_batch_added.is_connected(_on_entity_relationships_batch_added):
+		entity.relationships_batch_added.connect(_on_entity_relationships_batch_added)
+	if not entity.relationships_batch_removed.is_connected(_on_entity_relationships_batch_removed):
+		entity.relationships_batch_removed.connect(_on_entity_relationships_batch_removed)
 
 	#  Add the entity to the tree if it's not already there after hooking up the signals
 	# This ensures that any _ready methods on the entity or its components are called after setup
@@ -407,6 +411,9 @@ func remove_entity(entity: Entity) -> void:
 	for processor in ECS.entity_postprocessors:
 		processor.call(entity)
 
+	# REMOVE policy: Clean up relationships pointing TO this entity from other entities
+	_cleanup_relationships_to_target(entity)
+
 	# Disconnect entity signals before notifying observers to prevent re-entrancy:
 	# if an observer's on_component_removed calls entity.remove_component() as a side effect,
 	# the signal must not be connected or it will double-notify observers watching that component.
@@ -418,6 +425,10 @@ func remove_entity(entity: Entity) -> void:
 		entity.relationship_added.disconnect(_on_entity_relationship_added)
 	if entity.relationship_removed.is_connected(_on_entity_relationship_removed):
 		entity.relationship_removed.disconnect(_on_entity_relationship_removed)
+	if entity.relationships_batch_added.is_connected(_on_entity_relationships_batch_added):
+		entity.relationships_batch_added.disconnect(_on_entity_relationships_batch_added)
+	if entity.relationships_batch_removed.is_connected(_on_entity_relationships_batch_removed):
+		entity.relationships_batch_removed.disconnect(_on_entity_relationships_batch_removed)
 
 	# Emit component_removed for each component before teardown
 	# so observers learn about removal when an entity is destroyed
@@ -492,6 +503,10 @@ func disable_entity(entity) -> Entity:
 		entity.relationship_added.disconnect(_on_entity_relationship_added)
 	if entity.relationship_removed.is_connected(_on_entity_relationship_removed):
 		entity.relationship_removed.disconnect(_on_entity_relationship_removed)
+	if entity.relationships_batch_added.is_connected(_on_entity_relationships_batch_added):
+		entity.relationships_batch_added.disconnect(_on_entity_relationships_batch_added)
+	if entity.relationships_batch_removed.is_connected(_on_entity_relationships_batch_removed):
+		entity.relationships_batch_removed.disconnect(_on_entity_relationships_batch_removed)
 	entity.on_disable()
 	entity.set_process(false)
 	entity.set_physics_process(false)
@@ -538,6 +553,10 @@ func enable_entity(entity: Entity, components = null) -> void:
 		entity.relationship_added.connect(_on_entity_relationship_added)
 	if not entity.relationship_removed.is_connected(_on_entity_relationship_removed):
 		entity.relationship_removed.connect(_on_entity_relationship_removed)
+	if not entity.relationships_batch_added.is_connected(_on_entity_relationships_batch_added):
+		entity.relationships_batch_added.connect(_on_entity_relationships_batch_added)
+	if not entity.relationships_batch_removed.is_connected(_on_entity_relationships_batch_removed):
+		entity.relationships_batch_removed.connect(_on_entity_relationships_batch_removed)
 
 	if components:
 		entity.add_components(components)
@@ -778,34 +797,55 @@ func _on_entity_component_removed(entity, component: Resource) -> void:
 		assert(GECSEditorDebuggerMessages.entity_component_removed(entity, component), "")
 
 
-## (Optional) Update index when a relationship is added.
+## Update index when a relationship is added and move entity to new archetype.
 func _on_entity_relationship_added(entity: Entity, relationship: Relationship) -> void:
 	var key = relationship.relation.resource_path
 	if not relationship_entity_index.has(key):
 		relationship_entity_index[key] = []
 	relationship_entity_index[key].append(entity)
 
-	# PERFORMANCE: Do NOT invalidate archetype cache on relationship changes
-	# Relationships do not alter archetype membership (structural component sets)
-	# QueryBuilder.execute() performs relationship filtering on entity results.
-	# Systems use archetypes() + per-entity filtering, so invalidation here only
-	# increases cache churn without improving correctness.
+	# Also index by (relation_path, target_stable_id) for REMOVE policy cleanup
+	var target_id = _get_relationship_target_id(relationship)
+	if target_id != 0:
+		var target_key = key + "::" + str(target_id)
+		if not relationship_entity_index.has(target_key):
+			relationship_entity_index[target_key] = []
+		relationship_entity_index[target_key].append(entity)
 
-	# Emit Signal
+	# STRUCTURAL: Move entity to new archetype including the pair slot key
+	if entity_to_archetype.has(entity):
+		var old_archetype = entity_to_archetype[entity]
+		var slot_key = _relationship_slot_key(relationship)
+		_move_entity_to_new_archetype_fast(entity, old_archetype, slot_key, true)
+		_invalidate_cache("entity_relationship_added")
+
 	relationship_added.emit(entity, relationship)
 	if ECS.debug:
 		assert(GECSEditorDebuggerMessages.entity_relationship_added(entity, relationship), "")
 
 
-## (Optional) Update index when a relationship is removed.
+## Update index when a relationship is removed and move entity to archetype without the pair slot key.
 func _on_entity_relationship_removed(entity: Entity, relationship: Relationship) -> void:
 	var key = relationship.relation.resource_path
 	if relationship_entity_index.has(key):
 		relationship_entity_index[key].erase(entity)
 
-	# PERFORMANCE: No cache invalidation (see comment in _on_entity_relationship_added)
+	# Also clean up the target-specific index entry
+	var target_id = _get_relationship_target_id(relationship)
+	if target_id != 0:
+		var target_key = key + "::" + str(target_id)
+		if relationship_entity_index.has(target_key):
+			relationship_entity_index[target_key].erase(entity)
+			if relationship_entity_index[target_key].is_empty():
+				relationship_entity_index.erase(target_key)
 
-	# Emit Signal
+	# STRUCTURAL: Move entity to archetype without the pair slot key
+	if entity_to_archetype.has(entity):
+		var old_archetype = entity_to_archetype[entity]
+		var slot_key = _relationship_slot_key(relationship)
+		_move_entity_to_new_archetype_fast(entity, old_archetype, slot_key, false)
+		_invalidate_cache("entity_relationship_removed")
+
 	relationship_removed.emit(entity, relationship)
 	if ECS.debug:
 		assert(GECSEditorDebuggerMessages.entity_relationship_removed(entity, relationship), "")
@@ -1205,6 +1245,130 @@ func _end_suppress() -> void:
 	_suppress_invalidation_depth -= 1
 	if _suppress_invalidation_depth == 0 and _pending_invalidation:
 		_invalidate_cache("deferred_pending")
+
+
+
+
+## Get the stable ecs_id of a relationship's target entity.
+## Returns 0 if target is not an Entity.
+func _get_relationship_target_id(relationship: Relationship) -> int:
+	if relationship.target is Entity:
+		return relationship.target.ecs_id
+	return 0
+
+
+## Handle batch relationship additions — single archetype transition for N relationships.
+func _on_entity_relationships_batch_added(entity: Entity, _relationships: Array) -> void:
+	_begin_suppress()
+
+	# Update relationship_entity_index for each relationship
+	for relationship in _relationships:
+		var key = relationship.relation.resource_path
+		if not relationship_entity_index.has(key):
+			relationship_entity_index[key] = []
+		relationship_entity_index[key].append(entity)
+		var target_id = _get_relationship_target_id(relationship)
+		if target_id != 0:
+			var target_key = key + "::" + str(target_id)
+			if not relationship_entity_index.has(target_key):
+				relationship_entity_index[target_key] = []
+			relationship_entity_index[target_key].append(entity)
+
+	# STRUCTURAL: Single archetype transition using fully-updated signature
+	if entity_to_archetype.has(entity):
+		var old_archetype = entity_to_archetype[entity]
+		var new_signature = _calculate_entity_signature(entity)
+		var comp_types = _get_entity_archetype_keys(entity)
+		var new_archetype = _get_or_create_archetype(new_signature, comp_types)
+		if old_archetype != new_archetype:
+			old_archetype.remove_entity(entity)
+			new_archetype.add_entity(entity)
+			entity_to_archetype[entity] = new_archetype
+			if old_archetype.is_empty():
+				_delete_archetype(old_archetype)
+
+	_end_suppress()
+
+	# Emit individual signals for observers/debugger
+	for relationship in _relationships:
+		relationship_added.emit(entity, relationship)
+		if ECS.debug:
+			assert(GECSEditorDebuggerMessages.entity_relationship_added(entity, relationship), "")
+
+
+## Handle batch relationship removals — single archetype transition for N relationships.
+func _on_entity_relationships_batch_removed(entity: Entity, _relationships: Array) -> void:
+	_begin_suppress()
+
+	# Update relationship_entity_index
+	for relationship in _relationships:
+		var key = relationship.relation.resource_path
+		if relationship_entity_index.has(key):
+			relationship_entity_index[key].erase(entity)
+		var target_id = _get_relationship_target_id(relationship)
+		if target_id != 0:
+			var target_key = key + "::" + str(target_id)
+			if relationship_entity_index.has(target_key):
+				relationship_entity_index[target_key].erase(entity)
+				if relationship_entity_index[target_key].is_empty():
+					relationship_entity_index.erase(target_key)
+
+	# STRUCTURAL: Single archetype transition
+	if entity_to_archetype.has(entity):
+		var old_archetype = entity_to_archetype[entity]
+		var new_signature = _calculate_entity_signature(entity)
+		var comp_types = _get_entity_archetype_keys(entity)
+		var new_archetype = _get_or_create_archetype(new_signature, comp_types)
+		if old_archetype != new_archetype:
+			old_archetype.remove_entity(entity)
+			new_archetype.add_entity(entity)
+			entity_to_archetype[entity] = new_archetype
+			if old_archetype.is_empty():
+				_delete_archetype(old_archetype)
+
+	_end_suppress()
+
+	for relationship in _relationships:
+		relationship_removed.emit(entity, relationship)
+		if ECS.debug:
+			assert(GECSEditorDebuggerMessages.entity_relationship_removed(entity, relationship), "")
+
+
+## REMOVE policy: Clean up relationships pointing TO a target entity being removed.
+## Called inside remove_entity() before the target is freed.
+func _cleanup_relationships_to_target(target: Entity) -> void:
+	var target_ecs_id = target.ecs_id
+	if target_ecs_id == 0:
+		return
+
+	# Find all relationship_entity_index keys that reference this target
+	var keys_to_check: Array = []
+	var suffix = "::" + str(target_ecs_id)
+	for idx_key in relationship_entity_index.keys():
+		if idx_key is String and idx_key.ends_with(suffix):
+			keys_to_check.append(idx_key)
+
+	if keys_to_check.is_empty():
+		return
+
+	_begin_suppress()
+
+	for idx_key in keys_to_check:
+		var source_entities: Array = relationship_entity_index.get(idx_key, []).duplicate()
+		for source_entity in source_entities:
+			if not is_instance_valid(source_entity):
+				continue
+			# Find and remove relationships pointing to the freed target
+			var rels_to_remove: Array = []
+			for rel in source_entity.relationships:
+				if rel.target is Entity and rel.target == target:
+					rels_to_remove.append(rel)
+			for rel in rels_to_remove:
+				source_entity.relationships.erase(rel)
+				# Emit removal signal so world handler triggers archetype move
+				source_entity.relationship_removed.emit(source_entity, rel)
+
+	_end_suppress()
 
 
 ## Calculate archetype signature for an entity based on its components
