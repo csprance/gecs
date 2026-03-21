@@ -381,9 +381,11 @@ func _run_process(delta: float) -> void:
 
 ## Determine if a query includes non-structural filters requiring execute() fallback
 func _query_has_non_structural_filters(qb: QueryBuilder) -> bool:
-	if not qb._relationships.is_empty():
+	# Structural relationships (exact type-match, wildcard) are handled at archetype level
+	# Only post-filter relationships (property-query, script-target) trigger fallback
+	if not qb._post_filter_relationships.is_empty():
 		return true
-	if not qb._exclude_relationships.is_empty():
+	if not qb._post_filter_ex_relationships.is_empty():
 		return true
 	if not qb._groups.is_empty():
 		return true
@@ -421,11 +423,11 @@ func _filter_entities_global(qb: QueryBuilder, entities: Array[Entity]) -> Array
 		if e == null:
 			continue
 		var include := true
-		for rel in qb._relationships:
+		for rel in qb._post_filter_relationships:
 			if not e.has_relationship(rel):
 				include = false; break
 		if include:
-			for ex_rel in qb._exclude_relationships:
+			for ex_rel in qb._post_filter_ex_relationships:
 				if e.has_relationship(ex_rel):
 					include = false; break
 		if include and not qb._groups.is_empty():

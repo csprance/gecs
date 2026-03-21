@@ -996,13 +996,17 @@ func _query(
 	any_components = [],
 	exclude_components = [],
 	enabled_filter = null,
-	precalculated_cache_key: int = -1
+	precalculated_cache_key: int = -1,
+	rel_slot_keys: Array = [],
+	wildcard_rel_types: Array = [],
+	ex_rel_slot_keys: Array = [],
+	wildcard_ex_rel_types: Array = []
 ) -> Array:
 	var _perf_start_total := 0
 	if ECS.debug:
 		_perf_start_total = Time.get_ticks_usec()
-	# Early return if no components specified - return all entities
-	if all_components.is_empty() and any_components.is_empty() and exclude_components.is_empty():
+	# Early return if no components and no structural relationships specified - return all entities
+	if all_components.is_empty() and any_components.is_empty() and exclude_components.is_empty() and rel_slot_keys.is_empty() and wildcard_rel_types.is_empty() and ex_rel_slot_keys.is_empty() and wildcard_ex_rel_types.is_empty():
 		if enabled_filter == null:
 			if ECS.debug:
 				perf_mark(
@@ -1054,8 +1058,22 @@ func _query(
 		var _any := any_components.map(map_resource_path)
 		var _exclude := exclude_components.map(map_resource_path)
 
-		for archetype in archetypes.values():
+		# Determine candidate archetypes: use wildcard index if available
+		var candidates: Array = []
+		if not wildcard_rel_types.is_empty():
+			# Narrow candidates using _relation_type_archetype_index intersection
+			candidates = _get_archetypes_with_all_relation_types(wildcard_rel_types)
+		else:
+			candidates = archetypes.values()
+		var has_structural_rels := (not rel_slot_keys.is_empty() or not ex_rel_slot_keys.is_empty() or not wildcard_ex_rel_types.is_empty())
+		for archetype in candidates:
 			if archetype.matches_query(_all, _any, _exclude):
+				if has_structural_rels:
+					if not archetype.matches_relationship_query(rel_slot_keys, ex_rel_slot_keys):
+						continue
+					# Check wildcard exclusion: archetype must not have any of the excluded rel types
+					if not wildcard_ex_rel_types.is_empty() and _archetype_has_any_relation_type(archetype, wildcard_ex_rel_types):
+						continue
 				matching_archetypes.append(archetype)
 		# Cache the matching archetypes (not the entity arrays!)
 		_query_archetype_cache[cache_key] = matching_archetypes
@@ -1147,15 +1165,18 @@ func get_matching_archetypes(query_builder: QueryBuilder) -> Array[Archetype]:
 	var _perf_start := 0
 	if ECS.debug:
 		_perf_start = Time.get_ticks_usec()
-	# PERFORMANCE: Archetype matching is based ONLY on structural components.
-	# Relationship/group filters are evaluated per-entity in System execution.
-	# This avoids double-scanning entities (World + System) and reduces cache churn.
 	var all_components = query_builder._all_components
 	var any_components = query_builder._any_components
 	var exclude_components = query_builder._exclude_components
 
-	# Use a COMPONENT-ONLY cache key (ignore relationships/groups)
-	var cache_key = QueryCacheKey.build(all_components, any_components, exclude_components)
+	# Extract structural relationship info from query builder
+	var rel_slot_keys = query_builder._structural_rel_keys
+	var wildcard_rel_types = query_builder._wildcard_rel_types
+	var ex_rel_slot_keys = query_builder._structural_ex_rel_keys
+	var wildcard_ex_rel_types = query_builder._wildcard_ex_rel_types
+
+	# Use the relationship-aware cache key from query builder
+	var cache_key = query_builder.get_cache_key()
 
 	if _query_archetype_cache.has(cache_key):
 		if ECS.debug:
@@ -1171,8 +1192,20 @@ func get_matching_archetypes(query_builder: QueryBuilder) -> Array[Archetype]:
 	var _perf_scan_start := 0
 	if ECS.debug:
 		_perf_scan_start = Time.get_ticks_usec()
-	for archetype in archetypes.values():
+	# Determine candidate archetypes: use wildcard index if available
+	var candidates: Array = []
+	if not wildcard_rel_types.is_empty():
+		candidates = _get_archetypes_with_all_relation_types(wildcard_rel_types)
+	else:
+		candidates = archetypes.values()
+	var has_structural_rels := (not rel_slot_keys.is_empty() or not ex_rel_slot_keys.is_empty() or not wildcard_ex_rel_types.is_empty())
+	for archetype in candidates:
 		if archetype.matches_query(_all, _any, _exclude):
+			if has_structural_rels:
+				if not archetype.matches_relationship_query(rel_slot_keys, ex_rel_slot_keys):
+					continue
+				if not wildcard_ex_rel_types.is_empty() and _archetype_has_any_relation_type(archetype, wildcard_ex_rel_types):
+					continue
 			matching.append(archetype)
 	if ECS.debug:
 		perf_mark(
@@ -1402,6 +1435,29 @@ func _calculate_entity_signature(entity: Entity) -> int:
 
 	return signature
 
+
+
+## Get archetypes that contain ALL specified relation types (wildcard index intersection)
+func _get_archetypes_with_all_relation_types(rel_types: Array) -> Array:
+	var result = null
+	for rel_path in rel_types:
+		var type_archetypes = _relation_type_archetype_index.get(rel_path, {})
+		if result == null:
+			result = type_archetypes.duplicate()
+		else:
+			for sig in result.keys():
+				if not type_archetypes.has(sig):
+					result.erase(sig)
+	return result.values() if result else []
+
+
+## Check if archetype has any relationship of the specified types
+func _archetype_has_any_relation_type(archetype: Archetype, rel_types: Array) -> bool:
+	for rel_path in rel_types:
+		if _relation_type_archetype_index.has(rel_path):
+			if _relation_type_archetype_index[rel_path].has(archetype.signature):
+				return true
+	return false
 
 ## Compute the archetype slot key string for a relationship pair.
 ## Format: "rel://<relation_resource_path>::<target_key>"
