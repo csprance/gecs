@@ -106,7 +106,7 @@ Plans:
 
 Plans:
 
-- [ ] 05-01-PLAN.md — Add test_property_query_preservation.gd coverage + fix dormant test; verify all relationship suites pass
+- [x] 05-01-PLAN.md — Add test_property_query_preservation.gd coverage + fix dormant test; verify all relationship suites pass
 
 ### Phase 6: Cleanup & Performance Validation
 
