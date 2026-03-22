@@ -72,54 +72,56 @@ Deferred to v7.2.0 or later.
 
 ## Out of Scope
 
-| Feature | Reason |
-|---------|--------|
-| Property-based relationship queries becoming structural | Runtime values can't be archetype-keyed by definition |
-| Transitive relationship queries / graph traversal at query time | Defeats O(1) archetype lookup; anti-feature for GDScript performance |
-| Traversal / `up()` queries (FLECS pattern) | Same anti-feature rationale |
-| OnDelete cascade policy (delete parent cascades to children) | v2+ complexity; v7.1.0 ships REMOVE policy only |
-| Pair data access from archetype SoA columns | Relationship data stays on entity.relationships; archetype tracks identity only |
-| Breaking any public API on World, Entity, QueryBuilder, System, Observer | v7.1.0 semver — no public API breaks |
-| Network sync changes | Not affected by this milestone |
+| Feature                                                                  | Reason                                                                          |
+| ------------------------------------------------------------------------ | ------------------------------------------------------------------------------- |
+| Property-based relationship queries becoming structural                  | Runtime values can't be archetype-keyed by definition                           |
+| Transitive relationship queries / graph traversal at query time          | Defeats O(1) archetype lookup; anti-feature for GDScript performance            |
+| Traversal / `up()` queries (FLECS pattern)                               | Same anti-feature rationale                                                     |
+| OnDelete cascade policy (delete parent cascades to children)             | v2+ complexity; v7.1.0 ships REMOVE policy only                                 |
+| Pair data access from archetype SoA columns                              | Relationship data stays on entity.relationships; archetype tracks identity only |
+| Breaking any public API on World, Entity, QueryBuilder, System, Observer | v7.1.0 semver — no public API breaks                                            |
+| Network sync changes                                                     | Not affected by this milestone                                                  |
 
 ## Traceability
 
 Updated during roadmap creation.
 
-| Requirement | Phase | Status |
-|-------------|-------|--------|
-| ARCH-01 | Phase 1 | Pending |
-| ARCH-02 | Phase 1 | Pending |
-| ARCH-03 | Phase 1 | Pending |
-| ARCH-04 | Phase 1 | Pending |
-| ARCH-05 | Phase 1 | Pending |
-| SIGX-01 | Phase 2 | Pending |
-| SIGX-02 | Phase 2 | Pending |
-| SIGX-03 | Phase 2 | Pending |
-| SIGX-04 | Phase 2 | Pending |
-| TRAN-01 | Phase 3 | Pending |
-| TRAN-02 | Phase 3 | Pending |
-| TRAN-03 | Phase 3 | Pending |
-| TRAN-04 | Phase 3 | Pending |
-| TRAN-05 | Phase 3 | Pending |
-| QURY-01 | Phase 4 | Pending |
-| QURY-02 | Phase 4 | Pending |
-| QURY-03 | Phase 4 | Pending |
-| QURY-04 | Phase 4 | Pending |
-| QURY-05 | Phase 4 | Pending |
-| QURY-06 | Phase 4 | Pending |
-| PROP-01 | Phase 5 | Pending |
-| PROP-02 | Phase 5 | Pending |
-| PROP-03 | Phase 5 | Pending |
-| PERF-01 | Phase 6 | Pending |
-| PERF-02 | Phase 6 | Pending |
-| PERF-03 | Phase 6 | Pending |
+| Requirement | Phase   | Status    |
+| ----------- | ------- | --------- |
+| ARCH-01     | Phase 1 | Completed |
+| ARCH-02     | Phase 1 | Completed |
+| ARCH-03     | Phase 1 | Completed |
+| ARCH-04     | Phase 1 | Completed |
+| ARCH-05     | Phase 1 | Completed |
+| SIGX-01     | Phase 2 | Completed |
+| SIGX-02     | Phase 2 | Completed |
+| SIGX-03     | Phase 2 | Completed |
+| SIGX-04     | Phase 2 | Completed |
+| TRAN-01     | Phase 3 | Completed |
+| TRAN-02     | Phase 3 | Completed |
+| TRAN-03     | Phase 3 | Completed |
+| TRAN-04     | Phase 3 | Completed |
+| TRAN-05     | Phase 3 | Completed |
+| QURY-01     | Phase 4 | Completed |
+| QURY-02     | Phase 4 | Completed |
+| QURY-03     | Phase 4 | Completed |
+| QURY-04     | Phase 4 | Completed |
+| QURY-05     | Phase 4 | Completed |
+| QURY-06     | Phase 4 | Completed |
+| PROP-01     | Phase 5 | Pending   |
+| PROP-02     | Phase 5 | Pending   |
+| PROP-03     | Phase 5 | Pending   |
+| PERF-01     | Phase 6 | Pending   |
+| PERF-02     | Phase 6 | Pending   |
+| PERF-03     | Phase 6 | Pending   |
 
 **Coverage:**
+
 - v1 requirements: 26 total
 - Mapped to phases: 26
 - Unmapped: 0 ✓
 
 ---
-*Requirements defined: 2026-03-18*
-*Last updated: 2026-03-18 after initial definition*
+
+_Requirements defined: 2026-03-18_
+_Last updated: 2026-03-22 after Phase 04 verification_

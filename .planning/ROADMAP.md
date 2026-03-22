@@ -13,10 +13,10 @@ Transform GECS relationship queries from O(N*M*K) per-entity post-filtering to O
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Archetype Extension** - Archetype class handles `rel://` slot keys without breaking component behavior
-- [ ] **Phase 2: Signature Computation & Wildcard Index** - Entity signatures include relationship pairs; wildcard index enables O(1) relation-type lookup
-- [ ] **Phase 3: Structural Transitions** - Relationship add/remove triggers archetype moves with batch optimization and freed-entity cleanup
-- [ ] **Phase 4: Query System Integration** - `with_relationship()` resolves via archetype cache lookup instead of per-entity scan
+- [x] **Phase 1: Archetype Extension** - Archetype class handles `rel://` slot keys without breaking component behavior
+- [x] **Phase 2: Signature Computation & Wildcard Index** - Entity signatures include relationship pairs; wildcard index enables O(1) relation-type lookup
+- [x] **Phase 3: Structural Transitions** - Relationship add/remove triggers archetype moves with batch optimization and freed-entity cleanup
+- [x] **Phase 4: Query System Integration** - `with_relationship()` resolves via archetype cache lookup instead of per-entity scan
 - [ ] **Phase 5: Property Query Preservation & Compatibility** - Property queries remain as post-filters; all 20+ existing relationship tests pass unchanged
 - [ ] **Phase 6: Cleanup & Performance Validation** - Legacy index removed; benchmarks confirm relationship query parity with component queries
 
@@ -37,7 +37,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 Plans:
 
-- [ ] 01-01-PLAN.md — Extend Archetype class with rel:// slot key support, relationship_types array, and matches_relationship_query() method
+- [x] 01-01-PLAN.md — Extend Archetype class with rel:// slot key support, relationship_types array, and matches_relationship_query() method
 
 ### Phase 2: Signature Computation & Wildcard Index
 
@@ -72,7 +72,7 @@ Plans:
 
 Plans:
 
-- [ ] 03-01-PLAN.md — Implement structural relationship transitions: archetype moves on add/remove, batch signals, REMOVE policy cleanup
+- [x] 03-01-PLAN.md — Implement structural relationship transitions: archetype moves on add/remove, batch signals, REMOVE policy cleanup
 
 ### Phase 4: Query System Integration
 
@@ -90,7 +90,7 @@ Plans:
 
 Plans:
 
-- [ ] 04-01-PLAN.md — Integrate structural relationship queries into archetype cache lookup pipeline
+- [x] 04-01-PLAN.md — Integrate structural relationship queries into archetype cache lookup pipeline
 
 ### Phase 5: Property Query Preservation & Compatibility
 
@@ -129,11 +129,11 @@ Plans:
 **Execution Order:**
 Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 
-| Phase                          | Plans Complete | Status      | Completed |
-| ------------------------------ | -------------- | ----------- | --------- |
-| 1. Archetype Extension         | 0/1            | Planned     | -         |
-| 2. Signature & Wildcard Index  | 0/?            | Not started | -         |
-| 3. Structural Transitions      | 0/?            | Not started | -         |
-| 4. Query System Integration    | 0/?            | Not started | -         |
-| 5. Property Query Preservation | 0/?            | Not started | -         |
-| 6. Cleanup & Performance       | 0/?            | Not started | -         |
+| Phase                          | Plans Complete | Status      | Completed  |
+| ------------------------------ | -------------- | ----------- | ---------- |
+| 1. Archetype Extension         | 1/1            | Completed   | 2026-03-18 |
+| 2. Signature & Wildcard Index  | 1/1            | Completed   | 2026-03-18 |
+| 3. Structural Transitions      | 1/1            | Completed   | 2026-03-19 |
+| 4. Query System Integration    | 1/1            | Completed   | 2026-03-22 |
+| 5. Property Query Preservation | 0/?            | Not started | -          |
+| 6. Cleanup & Performance       | 0/?            | Not started | -          |

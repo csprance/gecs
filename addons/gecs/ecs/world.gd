@@ -315,8 +315,13 @@ func add_entity(entity: Entity, components = null, add_to_tree = true) -> void:
 
 	# Assign stable numeric entity ID for relationship slot key generation
 	if entity.ecs_id == 0:
-		entity.ecs_id = _next_entity_id
-		_next_entity_id += 1
+		_ensure_entity_ecs_id(entity)
+
+	# Stabilize target IDs before archetype key/signature generation so entities
+	# with pre-registered relationship targets don't get stale entity#0 slot keys.
+	for relationship in entity.relationships:
+		if relationship.target is Entity:
+			_ensure_entity_ecs_id(relationship.target)
 
 	# ID will auto-generate in _enter_tree if empty, or via property getter on first access
 
@@ -799,14 +804,15 @@ func _on_entity_component_removed(entity, component: Resource) -> void:
 
 ## Update index when a relationship is added and move entity to new archetype.
 func _on_entity_relationship_added(entity: Entity, relationship: Relationship) -> void:
-	var key = relationship.relation.resource_path
-	if not relationship_entity_index.has(key):
-		relationship_entity_index[key] = []
-	relationship_entity_index[key].append(entity)
+	var key = _get_relationship_relation_path(relationship)
+	if key != "":
+		if not relationship_entity_index.has(key):
+			relationship_entity_index[key] = []
+		relationship_entity_index[key].append(entity)
 
 	# Also index by (relation_path, target_stable_id) for REMOVE policy cleanup
 	var target_id = _get_relationship_target_id(relationship)
-	if target_id != 0:
+	if key != "" and target_id != 0:
 		var target_key = key + "::" + str(target_id)
 		if not relationship_entity_index.has(target_key):
 			relationship_entity_index[target_key] = []
@@ -816,7 +822,8 @@ func _on_entity_relationship_added(entity: Entity, relationship: Relationship) -
 	if entity_to_archetype.has(entity):
 		var old_archetype = entity_to_archetype[entity]
 		var slot_key = _relationship_slot_key(relationship)
-		_move_entity_to_new_archetype_fast(entity, old_archetype, slot_key, true)
+		if slot_key != "":
+			_move_entity_to_new_archetype_fast(entity, old_archetype, slot_key, true)
 		_invalidate_cache("entity_relationship_added")
 
 	relationship_added.emit(entity, relationship)
@@ -826,13 +833,13 @@ func _on_entity_relationship_added(entity: Entity, relationship: Relationship) -
 
 ## Update index when a relationship is removed and move entity to archetype without the pair slot key.
 func _on_entity_relationship_removed(entity: Entity, relationship: Relationship) -> void:
-	var key = relationship.relation.resource_path
-	if relationship_entity_index.has(key):
+	var key = _get_relationship_relation_path(relationship)
+	if key != "" and relationship_entity_index.has(key):
 		relationship_entity_index[key].erase(entity)
 
 	# Also clean up the target-specific index entry
 	var target_id = _get_relationship_target_id(relationship)
-	if target_id != 0:
+	if key != "" and target_id != 0:
 		var target_key = key + "::" + str(target_id)
 		if relationship_entity_index.has(target_key):
 			relationship_entity_index[target_key].erase(entity)
@@ -843,7 +850,8 @@ func _on_entity_relationship_removed(entity: Entity, relationship: Relationship)
 	if entity_to_archetype.has(entity):
 		var old_archetype = entity_to_archetype[entity]
 		var slot_key = _relationship_slot_key(relationship)
-		_move_entity_to_new_archetype_fast(entity, old_archetype, slot_key, false)
+		if slot_key != "":
+			_move_entity_to_new_archetype_fast(entity, old_archetype, slot_key, false)
 		_invalidate_cache("entity_relationship_removed")
 
 	relationship_removed.emit(entity, relationship)
@@ -1262,10 +1270,26 @@ func _invalidate_cache(reason: String) -> void:
 	_query_archetype_cache.clear()
 	cache_invalidated.emit()
 
-	# Track invalidation stats (debug mode only)
-	if ECS.debug:
-		_cache_invalidation_count += 1
-		_cache_invalidation_reasons[reason] = _cache_invalidation_reasons.get(reason, 0) + 1
+	_cache_invalidation_count += 1
+	_cache_invalidation_reasons[reason] = _cache_invalidation_reasons.get(reason, 0) + 1
+
+
+func _ensure_entity_ecs_id(entity: Entity) -> int:
+	if entity == null:
+		return 0
+	if entity.ecs_id == 0:
+		entity.ecs_id = _next_entity_id
+		_next_entity_id += 1
+	return entity.ecs_id
+
+
+func _get_relationship_relation_path(relationship: Relationship) -> String:
+	if relationship == null or relationship.relation == null:
+		return ""
+	var rel_script = relationship.relation.get_script()
+	if rel_script:
+		return rel_script.resource_path
+	return relationship.relation.resource_path
 
 
 ## Begin a batch suppression window — increments depth counter.
@@ -1280,13 +1304,11 @@ func _end_suppress() -> void:
 		_invalidate_cache("deferred_pending")
 
 
-
-
 ## Get the stable ecs_id of a relationship's target entity.
 ## Returns 0 if target is not an Entity.
 func _get_relationship_target_id(relationship: Relationship) -> int:
 	if relationship.target is Entity:
-		return relationship.target.ecs_id
+		return _ensure_entity_ecs_id(relationship.target)
 	return 0
 
 
@@ -1296,12 +1318,13 @@ func _on_entity_relationships_batch_added(entity: Entity, _relationships: Array)
 
 	# Update relationship_entity_index for each relationship
 	for relationship in _relationships:
-		var key = relationship.relation.resource_path
-		if not relationship_entity_index.has(key):
-			relationship_entity_index[key] = []
-		relationship_entity_index[key].append(entity)
+		var key = _get_relationship_relation_path(relationship)
+		if key != "":
+			if not relationship_entity_index.has(key):
+				relationship_entity_index[key] = []
+			relationship_entity_index[key].append(entity)
 		var target_id = _get_relationship_target_id(relationship)
-		if target_id != 0:
+		if key != "" and target_id != 0:
 			var target_key = key + "::" + str(target_id)
 			if not relationship_entity_index.has(target_key):
 				relationship_entity_index[target_key] = []
@@ -1335,11 +1358,11 @@ func _on_entity_relationships_batch_removed(entity: Entity, _relationships: Arra
 
 	# Update relationship_entity_index
 	for relationship in _relationships:
-		var key = relationship.relation.resource_path
-		if relationship_entity_index.has(key):
+		var key = _get_relationship_relation_path(relationship)
+		if key != "" and relationship_entity_index.has(key):
 			relationship_entity_index[key].erase(entity)
 		var target_id = _get_relationship_target_id(relationship)
-		if target_id != 0:
+		if key != "" and target_id != 0:
 			var target_key = key + "::" + str(target_id)
 			if relationship_entity_index.has(target_key):
 				relationship_entity_index[target_key].erase(entity)
@@ -1426,7 +1449,7 @@ func _calculate_entity_signature(entity: Entity) -> int:
 	# Property-query relationships are excluded (they remain post-filter only)
 	var structural_rels: Array = []
 	for rel in entity.relationships:
-		if not rel._is_query_relationship:
+		if not rel._is_query_relationship and _get_relationship_relation_path(rel) != "":
 			structural_rels.append(rel)
 
 	# Use the SAME hash function as queries - entity is just "all components, no any/exclude"
@@ -1434,7 +1457,6 @@ func _calculate_entity_signature(entity: Entity) -> int:
 	var signature = QueryCacheKey.build(comp_scripts, [], [], structural_rels)
 
 	return signature
-
 
 
 ## Get archetypes that contain ALL specified relation types (wildcard index intersection)
@@ -1462,17 +1484,46 @@ func _archetype_has_any_relation_type(archetype: Archetype, rel_types: Array) ->
 ## Compute the archetype slot key string for a relationship pair.
 ## Format: "rel://<relation_resource_path>::<target_key>"
 func _relationship_slot_key(rel: Relationship) -> String:
-	var rel_path = rel.relation.get_script().resource_path
+	var rel_path = _get_relationship_relation_path(rel)
+	if rel_path == "":
+		return ""
+	return _relationship_slot_key_from_parts(rel_path, rel.target)
+
+
+func _relationship_slot_key_from_parts(rel_path: String, target: Variant) -> String:
 	var target_key: String
-	if rel.target is Entity:
-		target_key = "entity#" + str(rel.target.ecs_id)
-	elif rel.target is Component:
-		target_key = "comp://" + rel.target.get_script().resource_path
-	elif rel.target is Script:
-		target_key = "script://" + rel.target.resource_path
+	if target is Entity:
+		target_key = "entity#" + str(_ensure_entity_ecs_id(target))
+	elif target is Component:
+		target_key = "comp://" + target.get_script().resource_path
+	elif target is Script:
+		target_key = "script://" + target.resource_path
 	else:
 		target_key = "*"
 	return "rel://" + rel_path + "::" + target_key
+
+
+func _get_compatible_relationship_slot_keys(rel: Relationship) -> Array:
+	var rel_path = _get_relationship_relation_path(rel)
+	if rel_path == "":
+		return []
+
+	var keys: Array = []
+	var primary_key = _relationship_slot_key(rel)
+	if primary_key != "":
+		keys.append(primary_key)
+
+	if rel.target is Entity or rel.target is Component:
+		var target_script = rel.target.get_script()
+		if target_script:
+			var script_key = _relationship_slot_key_from_parts(rel_path, target_script)
+			if not keys.has(script_key):
+				keys.append(script_key)
+		var wildcard_key = _relationship_slot_key_from_parts(rel_path, null)
+		if not keys.has(wildcard_key):
+			keys.append(wildcard_key)
+
+	return keys
 
 
 ## Get the full set of archetype keys for an entity (component paths + relationship slot keys)
@@ -1480,7 +1531,9 @@ func _get_entity_archetype_keys(entity: Entity) -> Array:
 	var keys = entity.components.keys().duplicate()
 	for rel in entity.relationships:
 		if not rel._is_query_relationship:
-			keys.append(_relationship_slot_key(rel))
+			var slot_key = _relationship_slot_key(rel)
+			if slot_key != "":
+				keys.append(slot_key)
 	return keys
 
 

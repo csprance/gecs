@@ -206,13 +206,26 @@ func matches_query(all_comp_types: Array, any_comp_types: Array, exclude_comp_ty
 ## [param required_rel_keys] Relationship slot keys that must all be present
 ## [param excluded_rel_keys] Relationship slot keys that must not be present
 func matches_relationship_query(required_rel_keys: Array, excluded_rel_keys: Array) -> bool:
-	# Check required: archetype must contain ALL required relationship keys
+	# Required entries may be a single slot key or an OR-group of compatible keys.
 	for rel_key in required_rel_keys:
-		if not relationship_types.has(rel_key):
+		if rel_key is Array:
+			var has_any := false
+			for candidate in rel_key:
+				if relationship_types.has(candidate):
+					has_any = true
+					break
+			if not has_any:
+				return false
+		elif not relationship_types.has(rel_key):
 			return false
-	# Check excluded: archetype must contain NONE of excluded relationship keys
+
+	# Excluded entries may also be OR-groups; any matching key excludes the archetype.
 	for rel_key in excluded_rel_keys:
-		if relationship_types.has(rel_key):
+		if rel_key is Array:
+			for candidate in rel_key:
+				if relationship_types.has(candidate):
+					return false
+		elif relationship_types.has(rel_key):
 			return false
 	return true
 

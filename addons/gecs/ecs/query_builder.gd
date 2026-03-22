@@ -31,8 +31,8 @@ var _exclude_components: Array = []
 var _relationships: Array = []
 var _exclude_relationships: Array = []
 # Structural relationship classification (populated by with_relationship/without_relationship)
-var _structural_rel_keys: Array = []       # Exact rel:// slot keys for archetype matching
-var _wildcard_rel_types: Array = []        # Relation paths for wildcard index lookup
+var _structural_rel_keys: Array = [] # Exact rel:// slot keys for archetype matching
+var _wildcard_rel_types: Array = [] # Relation paths for wildcard index lookup
 var _post_filter_relationships: Array = [] # Property-query and script-target rels (entity-level)
 var _structural_ex_rel_keys: Array = []
 var _wildcard_ex_rel_types: Array = []
@@ -138,29 +138,37 @@ func with_relationship(relationships: Array = []) -> QueryBuilder:
 	_relationships = relationships
 	_cache_valid = false
 	_cache_key_valid = false
-	# Classify each relationship into structural vs post-filter
+	# Classify each relationship into structural vs post-filter.
+	# Exact entity/component targets keep structural matching but include compatible
+	# script/wildcard slot keys so legacy weak-match semantics still hold.
 	_structural_rel_keys = []
 	_wildcard_rel_types = []
 	_post_filter_relationships = []
 	for rel in relationships:
-		if rel._is_query_relationship:
+		var rel_path = _world._get_relationship_relation_path(rel) if _world else ""
+		if rel._is_query_relationship or rel_path == "":
 			# Property queries can't be structural
 			_post_filter_relationships.append(rel)
 		elif rel.target is Script:
 			# Script target: use wildcard index to narrow, then post-filter for script match
-			var rel_path = rel.relation.get_script().resource_path
 			if not _wildcard_rel_types.has(rel_path):
 				_wildcard_rel_types.append(rel_path)
 			_post_filter_relationships.append(rel)
 		elif rel.target == null:
 			# Pure wildcard: use wildcard index only
-			var rel_path = rel.relation.get_script().resource_path
 			if not _wildcard_rel_types.has(rel_path):
 				_wildcard_rel_types.append(rel_path)
 		else:
-			# Entity or Component target: exact structural match
+			# Entity/Component target: match exact target plus compatible
+			# archetype/wildcard slots without needing an entity post-filter.
 			if _world:
-				_structural_rel_keys.append(_world._relationship_slot_key(rel))
+				if not _wildcard_rel_types.has(rel_path):
+					_wildcard_rel_types.append(rel_path)
+				var compatible_keys = _world._get_compatible_relationship_slot_keys(rel)
+				if compatible_keys.size() == 1:
+					_structural_rel_keys.append(compatible_keys[0])
+				elif not compatible_keys.is_empty():
+					_structural_rel_keys.append(compatible_keys)
 	return self
 
 
@@ -171,25 +179,31 @@ func without_relationship(relationships: Array = []) -> QueryBuilder:
 	_exclude_relationships = relationships
 	_cache_valid = false
 	_cache_key_valid = false
-	# Classify each exclude relationship into structural vs post-filter
+	# Classify each exclude relationship into structural vs post-filter.
 	_structural_ex_rel_keys = []
 	_wildcard_ex_rel_types = []
 	_post_filter_ex_relationships = []
 	for rel in relationships:
-		if rel._is_query_relationship:
+		var rel_path = _world._get_relationship_relation_path(rel) if _world else ""
+		if rel._is_query_relationship or rel_path == "":
 			_post_filter_ex_relationships.append(rel)
 		elif rel.target is Script:
 			# Script target: can't exclude structurally, use post-filter
 			_post_filter_ex_relationships.append(rel)
 		elif rel.target == null:
 			# Wildcard exclusion: exclude all archetypes with that relation type
-			var rel_path = rel.relation.get_script().resource_path
 			if not _wildcard_ex_rel_types.has(rel_path):
 				_wildcard_ex_rel_types.append(rel_path)
 		else:
-			# Entity or Component target: exact slot key exclusion
+			# Entity/Component target exclusion also excludes compatible script/wildcard slots.
 			if _world:
-				_structural_ex_rel_keys.append(_world._relationship_slot_key(rel))
+				if not _wildcard_ex_rel_types.has(rel_path):
+					_wildcard_ex_rel_types.append(rel_path)
+				var compatible_keys = _world._get_compatible_relationship_slot_keys(rel)
+				if compatible_keys.size() == 1:
+					_structural_ex_rel_keys.append(compatible_keys[0])
+				elif not compatible_keys.is_empty():
+					_structural_ex_rel_keys.append(compatible_keys)
 	return self
 
 
@@ -603,11 +617,11 @@ func get_cache_key() -> int:
 			# Filter to structural relationships for cache key
 			var structural_rels: Array = []
 			for rel in _relationships:
-				if not rel._is_query_relationship:
+				if not rel._is_query_relationship and _world._get_relationship_relation_path(rel) != "":
 					structural_rels.append(rel)
 			var structural_ex_rels: Array = []
 			for rel in _exclude_relationships:
-				if not rel._is_query_relationship:
+				if not rel._is_query_relationship and _world._get_relationship_relation_path(rel) != "":
 					structural_ex_rels.append(rel)
 			_cache_key = QueryCacheKey.build(
 				_all_components, _any_components, _exclude_components,

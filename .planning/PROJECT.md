@@ -24,19 +24,19 @@ Relationship queries must be as fast as component queries — both select pre-gr
 - ✓ Query archetype cache (FNV-1a keyed, invalidated on structural changes) — existing
 - ✓ Network sync addon (`gecs_network`) — existing
 - ✓ Serialization via `GECSIO` — existing
+- ✓ Each unique `(Relation, Target)` pair included in archetype signature
+- ✓ `entity.add_relationship()` moves entity to new archetype (structural transition)
+- ✓ `entity.remove_relationship()` moves entity back (structural transition)
+- ✓ `with_relationship()` exact-pair queries resolve via archetype cache lookup
+- ✓ Wildcard relation queries use a relation-type index bucket
+- ✓ Archetype query cache key includes structural relationship pairs
+- ✓ Cache invalidation triggers on relationship add/remove
+- ✓ New tests cover the structural archetype query path for relationships
 
 ### Active
 
-- [ ] Each unique `(Relation, Target)` pair included in archetype signature
-- [ ] `entity.add_relationship()` moves entity to new archetype (structural transition)
-- [ ] `entity.remove_relationship()` moves entity back (structural transition)
-- [ ] `with_relationship()` query resolves via archetype cache lookup, not per-entity scan
-- [ ] Wildcard queries (`null` target) use a relation-type index bucket (O(1) lookup)
 - [ ] Property-based relationship queries remain as post-filter applied after archetype selection
-- [ ] Archetype query cache key includes relationship pairs alongside component paths
-- [ ] Cache invalidation triggers on relationship add/remove (same as component add/remove)
-- [ ] All existing relationship tests pass unchanged
-- [ ] New tests covering the structural archetype path for relationships
+- [ ] All existing relationship tests pass unchanged as a formally tracked phase-5 deliverable
 - [ ] Perf benchmarks demonstrate O(1) relationship query parity with component queries
 - [ ] Ships as v7.1.0 — no public API breaks on World, Entity, QueryBuilder
 
@@ -66,12 +66,13 @@ Entity relationships support three target types: Entity instance (identity), Com
 
 ## Key Decisions
 
-| Decision | Rationale | Outcome |
-|----------|-----------|---------|
-| Each (Relation, Target) pair = unique archetype slot | Full FLECS fidelity; enables per-target structural queries; entity with (Damage,e1) AND (Damage,e2) lives in archetype including both pairs | — Pending |
-| Property queries stay as post-filter | Runtime property values can't be hashed into archetype keys | — Pending |
-| Keep `with_relationship()` API unchanged | No user code churn; just make it fast internally | — Pending |
-| Wildcard (null target) uses relation-type index | Separate bucket from exact-pair bucket; covers the common "has any X relationship" pattern fast | — Pending |
+| Decision                                             | Rationale                                                                                                                                   | Outcome                                          |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
+| Each (Relation, Target) pair = unique archetype slot | Full FLECS fidelity; enables per-target structural queries; entity with (Damage,e1) AND (Damage,e2) lives in archetype including both pairs | Validated in phases 1-4                          |
+| Property queries stay as post-filter                 | Runtime property values can't be hashed into archetype keys                                                                                 | Validated; remains a phase 5 compatibility focus |
+| Keep `with_relationship()` API unchanged             | No user code churn; just make it fast internally                                                                                            | Validated                                        |
+| Wildcard (null target) uses relation-type index      | Separate bucket from exact-pair bucket; covers the common "has any X relationship" pattern fast                                             | Validated                                        |
 
 ---
-*Last updated: 2026-03-18 after initialization*
+
+_Last updated: 2026-03-22 after Phase 04 verification_
