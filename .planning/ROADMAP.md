@@ -122,7 +122,7 @@ Plans:
 
 Plans:
 
-- [ ] 06-01-PLAN.md — Remove relationship_entity_index, migrate REMOVE policy to archetype system, add explosion warning + relationship query perf benchmarks
+- [x] 06-01-PLAN.md — Remove relationship_entity_index, migrate REMOVE policy to archetype system, add explosion warning + relationship query perf benchmarks
 
 ## Progress
 
