@@ -20,6 +20,7 @@ Phase 5 is a **closure exercise**: audit that PROP-01/02 are already correctly w
 ### Mixed Structural + Post-filter Query Correctness
 
 A single `with_relationship([...])` call mixing structural and property-query relationships must:
+
 1. **Correctly** return only entities that satisfy both the structural narrowing AND the post-filter predicate
 2. **Efficiently** run the post-filter only over the already-narrowed structural result set — never over the full entity pool
 
@@ -36,6 +37,7 @@ New tests covering PROP-01, PROP-02, and the mixed structural/post-filter path g
 ### Commented-out Test (`test_component_queries_in_relationships`)
 
 `test_relationships.gd` line 669 has a commented-out `func test_component_queries_in_relationships()` that was disabled before Phase 1. The pattern it tests (`Relationship.new({C_Eats: {'value': {'_gt': 50}}}, target)`) is valid post-filter query syntax that works today. Phase 5 must:
+
 - Uncomment it
 - Rewrite the test body to use correct assertions (the original body was exploratory/incomplete)
 - Confirm it passes
@@ -43,6 +45,7 @@ New tests covering PROP-01, PROP-02, and the mixed structural/post-filter path g
 ### All Relationship Test Files Must Pass (PROP-03)
 
 PROP-03 scope includes ALL relationship-adjacent test suites, not just `test_relationships.gd`:
+
 - `test_archetype_relationships.gd`
 - `test_relationship_hash.gd`
 - `test_relationship_serialization.gd`
@@ -94,11 +97,13 @@ execute()
   → post-filter loop over narrowed Array only (not world.entities)
   → return filtered Array
 ```
+
 The structural narrowing happens first via archetype lookup; post-filter only touches the already-reduced set.
 
 ### Test Files Requiring Green Status
 
 All of these must pass for PROP-03 (confirmed from test file discovery):
+
 - `addons/gecs/tests/core/test_relationships.gd` (30 active + 1 dormant to be activated)
 - `addons/gecs/tests/core/test_archetype_relationships.gd`
 - `addons/gecs/tests/core/test_relationship_hash.gd`
