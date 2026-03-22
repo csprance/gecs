@@ -223,3 +223,57 @@ func test_query_group_with_components(scale: int, test_parameters := [[100], [10
 
 	PerfHelpers.record_result("query_group_with_components", scale, time_ms)
 	world.purge(false)
+
+## Test relationship query (exact pair) vs component query — structural parity
+func test_query_with_relationship_exact(scale: int, test_parameters := [[100], [1000], [10000]]):
+	# Setup: one shared target, all entities hold (C_TestA, target) relationship
+	var target = Entity.new()
+	target.name = "RelTarget"
+	world.add_entity(target, null, false)
+
+	for i in scale:
+		var entity = Entity.new()
+		entity.name = "RelEntity_%d" % i
+		world.add_entity(entity, null, false)
+		entity.add_relationship(Relationship.new(C_TestA.new(), target))
+
+	# Measure structural exact-pair relationship query
+	var rel_time = PerfHelpers.time_it(func():
+		var _result = world.query.with_relationship([Relationship.new(C_TestA.new(), target)]).execute()
+	)
+	PerfHelpers.record_result("relationship_query_exact", scale, rel_time)
+
+	# Measure equivalent component query for comparison
+	for i in scale:
+		var entity = Entity.new()
+		entity.name = "CompEntity_%d" % i
+		entity.add_component(C_TestA.new())
+		world.add_entity(entity, null, false)
+
+	var comp_time = PerfHelpers.time_it(func():
+		var _result = world.query.with_all([C_TestA]).execute()
+	)
+	PerfHelpers.record_result("component_query_for_rel_comparison", scale, comp_time)
+
+	world.purge(false)
+
+
+## Test relationship query (wildcard target) — structural parity via relation-type index
+func test_query_with_relationship_wildcard(scale: int, test_parameters := [[100], [1000], [10000]]):
+	# Setup: each entity gets a unique target — spreads across many archetypes
+	for i in scale:
+		var target = Entity.new()
+		target.name = "WildTarget_%d" % i
+		world.add_entity(target, null, false)
+
+		var entity = Entity.new()
+		entity.name = "WildEntity_%d" % i
+		world.add_entity(entity, null, false)
+		entity.add_relationship(Relationship.new(C_TestA.new(), target))
+
+	var time_ms = PerfHelpers.time_it(func():
+		var _result = world.query.with_relationship([Relationship.new(C_TestA.new(), null)]).execute()
+	)
+	PerfHelpers.record_result("relationship_query_wildcard", scale, time_ms)
+
+	world.purge(false)
