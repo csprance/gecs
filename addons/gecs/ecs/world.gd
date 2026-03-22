@@ -78,9 +78,6 @@ var query: QueryBuilder:
 		if not cache_invalidated.is_connected(q.invalidate_cache):
 			cache_invalidated.connect(q.invalidate_cache)
 		return q
-## Index for relationships to entities (Optional for optimization)
-var relationship_entity_index: Dictionary = {}
-
 ## Incrementing counter for stable entity IDs (assigned in add_entity)
 var _next_entity_id: int = 1
 
@@ -104,6 +101,8 @@ var _component_script_cache: Dictionary = {} # String -> Script
 ## > 0 means we are inside a batch; invalidation is deferred until _end_suppress().
 var _suppress_invalidation_depth: int = 0
 var _pending_invalidation: bool = false
+## One-shot guard: fires push_error once when archetype count first exceeds 500 in debug mode
+var _archetype_explosion_warned: bool = false
 ## Frame + accumulated performance metrics (debug-only)
 var _perf_metrics := {"frame": {}, "accum": {}} # Per-frame aggregated timings  # Long-lived totals (cleared manually)
 ## Queue of systems waiting for setup after ECS.world is assigned
@@ -684,7 +683,6 @@ func purge(should_free = true, keep := []) -> void:
 		remove_entity(entity)
 
 	# Clear relationship indexes after purging entities
-	relationship_entity_index.clear()
 	_relation_type_archetype_index.clear()
 	_next_entity_id = 1
 	_worldLogger.debug("Cleared relationship indexes after purge")
@@ -804,20 +802,6 @@ func _on_entity_component_removed(entity, component: Resource) -> void:
 
 ## Update index when a relationship is added and move entity to new archetype.
 func _on_entity_relationship_added(entity: Entity, relationship: Relationship) -> void:
-	var key = _get_relationship_relation_path(relationship)
-	if key != "":
-		if not relationship_entity_index.has(key):
-			relationship_entity_index[key] = []
-		relationship_entity_index[key].append(entity)
-
-	# Also index by (relation_path, target_stable_id) for REMOVE policy cleanup
-	var target_id = _get_relationship_target_id(relationship)
-	if key != "" and target_id != 0:
-		var target_key = key + "::" + str(target_id)
-		if not relationship_entity_index.has(target_key):
-			relationship_entity_index[target_key] = []
-		relationship_entity_index[target_key].append(entity)
-
 	# STRUCTURAL: Move entity to new archetype including the pair slot key
 	if entity_to_archetype.has(entity):
 		var old_archetype = entity_to_archetype[entity]
@@ -833,19 +817,6 @@ func _on_entity_relationship_added(entity: Entity, relationship: Relationship) -
 
 ## Update index when a relationship is removed and move entity to archetype without the pair slot key.
 func _on_entity_relationship_removed(entity: Entity, relationship: Relationship) -> void:
-	var key = _get_relationship_relation_path(relationship)
-	if key != "" and relationship_entity_index.has(key):
-		relationship_entity_index[key].erase(entity)
-
-	# Also clean up the target-specific index entry
-	var target_id = _get_relationship_target_id(relationship)
-	if key != "" and target_id != 0:
-		var target_key = key + "::" + str(target_id)
-		if relationship_entity_index.has(target_key):
-			relationship_entity_index[target_key].erase(entity)
-			if relationship_entity_index[target_key].is_empty():
-				relationship_entity_index.erase(target_key)
-
 	# STRUCTURAL: Move entity to archetype without the pair slot key
 	if entity_to_archetype.has(entity):
 		var old_archetype = entity_to_archetype[entity]
@@ -1316,20 +1287,6 @@ func _get_relationship_target_id(relationship: Relationship) -> int:
 func _on_entity_relationships_batch_added(entity: Entity, _relationships: Array) -> void:
 	_begin_suppress()
 
-	# Update relationship_entity_index for each relationship
-	for relationship in _relationships:
-		var key = _get_relationship_relation_path(relationship)
-		if key != "":
-			if not relationship_entity_index.has(key):
-				relationship_entity_index[key] = []
-			relationship_entity_index[key].append(entity)
-		var target_id = _get_relationship_target_id(relationship)
-		if key != "" and target_id != 0:
-			var target_key = key + "::" + str(target_id)
-			if not relationship_entity_index.has(target_key):
-				relationship_entity_index[target_key] = []
-			relationship_entity_index[target_key].append(entity)
-
 	# STRUCTURAL: Single archetype transition using fully-updated signature
 	if entity_to_archetype.has(entity):
 		var old_archetype = entity_to_archetype[entity]
@@ -1355,19 +1312,6 @@ func _on_entity_relationships_batch_added(entity: Entity, _relationships: Array)
 ## Handle batch relationship removals — single archetype transition for N relationships.
 func _on_entity_relationships_batch_removed(entity: Entity, _relationships: Array) -> void:
 	_begin_suppress()
-
-	# Update relationship_entity_index
-	for relationship in _relationships:
-		var key = _get_relationship_relation_path(relationship)
-		if key != "" and relationship_entity_index.has(key):
-			relationship_entity_index[key].erase(entity)
-		var target_id = _get_relationship_target_id(relationship)
-		if key != "" and target_id != 0:
-			var target_key = key + "::" + str(target_id)
-			if relationship_entity_index.has(target_key):
-				relationship_entity_index[target_key].erase(entity)
-				if relationship_entity_index[target_key].is_empty():
-					relationship_entity_index.erase(target_key)
 
 	# STRUCTURAL: Single archetype transition
 	if entity_to_archetype.has(entity):
@@ -1397,32 +1341,34 @@ func _cleanup_relationships_to_target(target: Entity) -> void:
 	if target_ecs_id == 0:
 		return
 
-	# Find all relationship_entity_index keys that reference this target
-	var keys_to_check: Array = []
+	# Find all entities in archetypes that hold a slot key pointing to this target.
+	# Slot key format: "rel://relation_path::target_ecs_id"
 	var suffix = "::" + str(target_ecs_id)
-	for idx_key in relationship_entity_index.keys():
-		if idx_key is String and idx_key.ends_with(suffix):
-			keys_to_check.append(idx_key)
+	var source_entities: Array[Entity] = []
 
-	if keys_to_check.is_empty():
+	for rel_path in _relation_type_archetype_index.keys():
+		var type_archetypes: Dictionary = _relation_type_archetype_index[rel_path]
+		for archetype in type_archetypes.values():
+			for rel_key in archetype.relationship_types:
+				if rel_key.ends_with(suffix):
+					source_entities.append_array(archetype.entities.duplicate())
+					break  # found one matching slot in this archetype — all entities match
+
+	if source_entities.is_empty():
 		return
 
 	_begin_suppress()
 
-	for idx_key in keys_to_check:
-		var source_entities: Array = relationship_entity_index.get(idx_key, []).duplicate()
-		for source_entity in source_entities:
-			if not is_instance_valid(source_entity):
-				continue
-			# Find and remove relationships pointing to the freed target
-			var rels_to_remove: Array = []
-			for rel in source_entity.relationships:
-				if rel.target is Entity and rel.target == target:
-					rels_to_remove.append(rel)
-			for rel in rels_to_remove:
-				source_entity.relationships.erase(rel)
-				# Emit removal signal so world handler triggers archetype move
-				source_entity.relationship_removed.emit(source_entity, rel)
+	for source_entity in source_entities:
+		if not is_instance_valid(source_entity):
+			continue
+		var rels_to_remove: Array = []
+		for rel in source_entity.relationships:
+			if rel.target is Entity and rel.target == target:
+				rels_to_remove.append(rel)
+		for rel in rels_to_remove:
+			source_entity.relationships.erase(rel)
+			source_entity.relationship_removed.emit(source_entity, rel)
 
 	_end_suppress()
 
@@ -1555,6 +1501,9 @@ func _get_or_create_archetype(signature: int, component_types: Array) -> Archety
 		var archetype = Archetype.new(signature, component_types)
 		archetypes[signature] = archetype
 		_worldLogger.trace("Created new archetype: ", archetype)
+		if ECS.debug and not _archetype_explosion_warned and archetypes.size() > 500:
+			_archetype_explosion_warned = true
+			_worldLogger.error("Archetype explosion: %d archetypes created. Each unique (Relation, Target) pair creates a new archetype — check for unintended relationship cardinality." % archetypes.size())
 
 		# Register in wildcard index: for each rel:// key, extract relation path
 		for rel_key in archetype.relationship_types:
