@@ -1343,7 +1343,7 @@ func _cleanup_relationships_to_target(target: Entity) -> void:
 
 	# Find all entities in archetypes that hold a slot key pointing to this target.
 	# Slot key format: "rel://relation_path::target_ecs_id"
-	var suffix = "::" + str(target_ecs_id)
+	var suffix = "::entity#" + str(target_ecs_id)
 	var source_entities: Array[Entity] = []
 
 	for rel_path in _relation_type_archetype_index.keys():
