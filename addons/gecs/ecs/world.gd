@@ -101,6 +101,9 @@ var _component_script_cache: Dictionary = {} # String -> Script
 ## > 0 means we are inside a batch; invalidation is deferred until _end_suppress().
 var _suppress_invalidation_depth: int = 0
 var _pending_invalidation: bool = false
+## Guard flag: true when a batch relationship handler is emitting per-entity signals.
+## Prevents _on_entity_relationship_added/removed from doing redundant archetype moves.
+var _in_batch_relationship_emit: bool = false
 ## One-shot guard: fires push_error once when archetype count first exceeds 500 in debug mode
 var _archetype_explosion_warned: bool = false
 ## Frame + accumulated performance metrics (debug-only)
@@ -684,7 +687,8 @@ func purge(should_free = true, keep := []) -> void:
 
 	# Clear relationship indexes after purging entities
 	_relation_type_archetype_index.clear()
-	_next_entity_id = 1
+	if keep.is_empty():
+		_next_entity_id = 1
 	_worldLogger.debug("Cleared relationship indexes after purge")
 
 	# ARCHETYPE: Clear archetype system
@@ -802,13 +806,15 @@ func _on_entity_component_removed(entity, component: Resource) -> void:
 
 ## Update index when a relationship is added and move entity to new archetype.
 func _on_entity_relationship_added(entity: Entity, relationship: Relationship) -> void:
-	# STRUCTURAL: Move entity to new archetype including the pair slot key
-	if entity_to_archetype.has(entity):
-		var old_archetype = entity_to_archetype[entity]
-		var slot_key = _relationship_slot_key(relationship)
-		if slot_key != "":
-			_move_entity_to_new_archetype_fast(entity, old_archetype, slot_key, true)
-		_invalidate_cache("entity_relationship_added")
+	# Skip archetype move when called from batch handler re-emitting per-entity signals
+	if not _in_batch_relationship_emit:
+		# STRUCTURAL: Move entity to new archetype including the pair slot key
+		if entity_to_archetype.has(entity):
+			var old_archetype = entity_to_archetype[entity]
+			var slot_key = _relationship_slot_key(relationship)
+			if slot_key != "":
+				_move_entity_to_new_archetype_fast(entity, old_archetype, slot_key, true)
+			_invalidate_cache("entity_relationship_added")
 
 	relationship_added.emit(entity, relationship)
 	if ECS.debug:
@@ -817,13 +823,15 @@ func _on_entity_relationship_added(entity: Entity, relationship: Relationship) -
 
 ## Update index when a relationship is removed and move entity to archetype without the pair slot key.
 func _on_entity_relationship_removed(entity: Entity, relationship: Relationship) -> void:
-	# STRUCTURAL: Move entity to archetype without the pair slot key
-	if entity_to_archetype.has(entity):
-		var old_archetype = entity_to_archetype[entity]
-		var slot_key = _relationship_slot_key(relationship)
-		if slot_key != "":
-			_move_entity_to_new_archetype_fast(entity, old_archetype, slot_key, false)
-		_invalidate_cache("entity_relationship_removed")
+	# Skip archetype move when called from batch handler re-emitting per-entity signals
+	if not _in_batch_relationship_emit:
+		# STRUCTURAL: Move entity to archetype without the pair slot key
+		if entity_to_archetype.has(entity):
+			var old_archetype = entity_to_archetype[entity]
+			var slot_key = _relationship_slot_key(relationship)
+			if slot_key != "":
+				_move_entity_to_new_archetype_fast(entity, old_archetype, slot_key, false)
+			_invalidate_cache("entity_relationship_removed")
 
 	relationship_removed.emit(entity, relationship)
 	if ECS.debug:
@@ -1286,6 +1294,7 @@ func _get_relationship_target_id(relationship: Relationship) -> int:
 ## Handle batch relationship additions — single archetype transition for N relationships.
 func _on_entity_relationships_batch_added(entity: Entity, _relationships: Array) -> void:
 	_begin_suppress()
+	var moved := false
 
 	# STRUCTURAL: Single archetype transition using fully-updated signature
 	if entity_to_archetype.has(entity):
@@ -1299,19 +1308,27 @@ func _on_entity_relationships_batch_added(entity: Entity, _relationships: Array)
 			entity_to_archetype[entity] = new_archetype
 			if old_archetype.is_empty():
 				_delete_archetype(old_archetype)
+			moved = true
 
 	_end_suppress()
+	# If entity moved to an existing archetype, _end_suppress may not have
+	# triggered invalidation (no new archetype → no _pending_invalidation).
+	if moved:
+		_invalidate_cache("batch_relationship_added")
 
-	# Emit individual signals for observers/debugger
+	# Emit per-relationship signals on the entity so external listeners
+	# (e.g. network_sync) see each change. Guard prevents our own single
+	# handler from doing redundant archetype moves.
+	_in_batch_relationship_emit = true
 	for relationship in _relationships:
-		relationship_added.emit(entity, relationship)
-		if ECS.debug:
-			assert(GECSEditorDebuggerMessages.entity_relationship_added(entity, relationship), "")
+		entity.relationship_added.emit(entity, relationship)
+	_in_batch_relationship_emit = false
 
 
 ## Handle batch relationship removals — single archetype transition for N relationships.
 func _on_entity_relationships_batch_removed(entity: Entity, _relationships: Array) -> void:
 	_begin_suppress()
+	var moved := false
 
 	# STRUCTURAL: Single archetype transition
 	if entity_to_archetype.has(entity):
@@ -1325,13 +1342,18 @@ func _on_entity_relationships_batch_removed(entity: Entity, _relationships: Arra
 			entity_to_archetype[entity] = new_archetype
 			if old_archetype.is_empty():
 				_delete_archetype(old_archetype)
+			moved = true
 
 	_end_suppress()
+	if moved:
+		_invalidate_cache("batch_relationship_removed")
 
+	# Emit per-relationship signals on the entity so external listeners
+	# (e.g. network_sync) see each change.
+	_in_batch_relationship_emit = true
 	for relationship in _relationships:
-		relationship_removed.emit(entity, relationship)
-		if ECS.debug:
-			assert(GECSEditorDebuggerMessages.entity_relationship_removed(entity, relationship), "")
+		entity.relationship_removed.emit(entity, relationship)
+	_in_batch_relationship_emit = false
 
 
 ## REMOVE policy: Clean up relationships pointing TO a target entity being removed.
@@ -1352,7 +1374,7 @@ func _cleanup_relationships_to_target(target: Entity) -> void:
 			for rel_key in archetype.relationship_types:
 				if rel_key.ends_with(suffix):
 					source_entities.append_array(archetype.entities.duplicate())
-					break  # found one matching slot in this archetype — all entities match
+					break # found one matching slot in this archetype — all entities match
 
 	if source_entities.is_empty():
 		return

@@ -195,10 +195,10 @@ func without_relationship(relationships: Array = []) -> QueryBuilder:
 			if not _wildcard_ex_rel_types.has(rel_path):
 				_wildcard_ex_rel_types.append(rel_path)
 		else:
-			# Entity/Component target exclusion also excludes compatible script/wildcard slots.
+			# Entity/Component target exclusion: use structural slot keys only.
+			# Do NOT add to _wildcard_ex_rel_types — that would exclude ALL
+			# archetypes with the relation type, not just the specific target.
 			if _world:
-				if not _wildcard_ex_rel_types.has(rel_path):
-					_wildcard_ex_rel_types.append(rel_path)
 				var compatible_keys = _world._get_compatible_relationship_slot_keys(rel)
 				if compatible_keys.size() == 1:
 					_structural_ex_rel_keys.append(compatible_keys[0])
@@ -328,7 +328,12 @@ func _internal_execute() -> Array:
 			# If no required groups but we have exclude_groups, start with ALL entities from component query
 			# This handles the case of "without_group" queries
 			entities_in_group = (
-				_world._query(_all_components, _any_components, _exclude_components, _enabled_filter, get_cache_key()) as Array[Entity]
+				_world._query(
+					_all_components, _any_components, _exclude_components,
+					_enabled_filter, get_cache_key(),
+					_structural_rel_keys, _wildcard_rel_types,
+					_structural_ex_rel_keys, _wildcard_ex_rel_types
+				) as Array[Entity]
 			)
 
 		# Filter out entities in excluded groups
@@ -497,7 +502,17 @@ func combine(other: QueryBuilder) -> QueryBuilder:
 	_groups += other._groups
 	_exclude_groups += other._exclude_groups
 	_cache_valid = false
+	_reclassify_relationships()
 	return self
+
+
+## Reclassify all relationships into structural/wildcard/post-filter buckets.
+## Called after combine() merges raw _relationships/_exclude_relationships arrays.
+func _reclassify_relationships() -> void:
+	if not _relationships.is_empty():
+		with_relationship(_relationships)
+	if not _exclude_relationships.is_empty():
+		without_relationship(_exclude_relationships)
 
 
 func as_array() -> Array:

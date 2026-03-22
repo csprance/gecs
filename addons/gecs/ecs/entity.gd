@@ -215,7 +215,7 @@ func add_components(_components: Array):
 	if ECS.world and ECS.world.entity_to_archetype.has(self ):
 		var old_archetype = ECS.world.entity_to_archetype[ self ]
 		var new_signature = ECS.world._calculate_entity_signature(self )
-		var comp_types = components.keys()
+		var comp_types = ECS.world._get_entity_archetype_keys(self )
 		var new_archetype = ECS.world._get_or_create_archetype(new_signature, comp_types)
 
 		# Only move if we actually need a different archetype
@@ -322,7 +322,7 @@ func remove_components(_components: Array):
 	if ECS.world and ECS.world.entity_to_archetype.has(self ):
 		var old_archetype = ECS.world.entity_to_archetype[ self ]
 		var new_signature = ECS.world._calculate_entity_signature(self )
-		var comp_types = components.keys()
+		var comp_types = ECS.world._get_entity_archetype_keys(self )
 		var new_archetype = ECS.world._get_or_create_archetype(new_signature, comp_types)
 
 		# Only move if we actually need a different archetype
@@ -390,7 +390,7 @@ func add_relationships(_relationships: Array):
 		)
 		relationship.source = self
 		relationships.append(relationship)
-	relationships_batch_added.emit(self, _relationships)
+	relationships_batch_added.emit(self , _relationships)
 
 
 ## Removes a relationship from the entity.[br]
@@ -462,7 +462,7 @@ func remove_relationships(_relationships: Array, limit: int = -1):
 			relationships.erase(rel)
 			all_removed.append(rel)
 	if not all_removed.is_empty():
-		relationships_batch_removed.emit(self, all_removed)
+		relationships_batch_removed.emit(self , all_removed)
 
 
 ## Removes all relationships from the entity.
