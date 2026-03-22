@@ -463,16 +463,17 @@ func remove_entity(entity: Entity) -> void:
 	# ARCHETYPE: Remove entity from archetype system (parallel)
 	_remove_entity_from_archetype(entity)
 
+	# Notify debugger before freeing (entity must still be valid)
+	if ECS.debug:
+		var path = entity.get_path() if entity.is_inside_tree() else str(entity)
+		assert(GECSEditorDebuggerMessages.entity_removed(entity.get_instance_id(), path), "")
+
 	# Destroy entity normally
 	entity.on_destroy()
 	if entity.is_inside_tree():
 		entity.queue_free()
 	else:
 		entity.free()
-
-	# Notify debugger before freeing (entity must still be valid)
-	if ECS.debug:
-		assert(GECSEditorDebuggerMessages.entity_removed(entity_id), "")
 
 
 ## Removes an Array of [Entity] from the world.[br]
