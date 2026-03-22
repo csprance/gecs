@@ -228,8 +228,8 @@ func test_relationship_replacement_with_id_collision():
 	var player_weapon_rel = Relationship.new(C_TestA.new(), old_weapon)
 	player.add_relationship(player_weapon_rel)
 	
-	world.add_entity(player)
-	world.add_entity(old_weapon)
+	world.add_entity(player, null, false)
+	world.add_entity(old_weapon, null, false)
 	
 	# Verify initial relationship
 	assert_that(player.relationships).has_size(1)
@@ -250,7 +250,7 @@ func test_relationship_replacement_with_id_collision():
 	new_weapon.set("id", "weapon-id-456") # Same UUID!
 	
 	# 4. Add new weapon (should replace old weapon)
-	world.add_entity(new_weapon)
+	world.add_entity(new_weapon, null, false)
 	
 	# Verify replacement occurred
 	assert_that(world.entities).has_size(2) # Still only 2 entities
@@ -259,19 +259,16 @@ func test_relationship_replacement_with_id_collision():
 	assert_that(current_weapon.name).is_equal("NewUpgradedWeapon")
 	assert_that(current_weapon.has_component(C_TestC)).is_true()
 	
-	# 5. NOTE: When we replace an entity, existing relationships still point to the old entity object
-	# This is expected behavior - the relationship contains a direct Entity reference
-	# To update relationships, we would need to re-serialize/deserialize or manually update them
-	print("Current relationship target: ", player.relationships[0].target.name)
-	print("Expected: Relationship still points to old entity until re-serialized")
-	
-	print("=== Relationship correctly updated after entity replacement ===")
+	# 5. Phase 06 REMOVE policy: _cleanup_relationships_to_target now correctly removes
+	# relationships pointing TO the freed entity when old_weapon is replaced.
+	assert_that(player.relationships).is_empty()
+	print("=== Relationship correctly cleaned up after entity replacement (Phase 06 behavior) ===")
 	
 	# 6. Now test loading the old save file (should replace with old state)
 	var loaded_entities = ECS.deserialize(file_path)
 	
 	for entity in loaded_entities:
-		world.add_entity(entity) # Should trigger replacements
+		world.add_entity(entity, null, false) # Should trigger replacements
 	
 	# Verify entities were replaced with old state
 	var final_weapon = world.get_entity_by_id("weapon-id-456")
@@ -324,12 +321,12 @@ func test_partial_serialization_auto_inclusion():
 	standalone.add_component(C_TestF.new())
 	
 	# Add all entities to world (don't add to scene tree)
-	world.add_entity(player)
-	world.add_entity(weapon)
-	world.add_entity(attachment)
-	world.add_entity(enemy)
-	world.add_entity(enemy_weapon)
-	world.add_entity(standalone)
+	world.add_entity(player, null, false)
+	world.add_entity(weapon, null, false)
+	world.add_entity(attachment, null, false)
+	world.add_entity(enemy, null, false)
+	world.add_entity(enemy_weapon, null, false)
+	world.add_entity(standalone, null, false)
 	
 	assert_that(world.entities).has_size(6)
 	

@@ -64,12 +64,12 @@ Loads entities from file. Returns empty array if file doesn't exist.
 
 **Fields:**
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `include_all_components` | `bool` | `true` | Serialize all components on each entity. Set to `false` to use the `components` list instead. |
-| `components` | `Array` | `[]` | Component types to include when `include_all_components` is `false`. |
-| `include_relationships` | `bool` | `true` | Serialize entity relationships. Relationships are supported and serialized by default. |
-| `include_related_entities` | `bool` | `true` | Auto-include entities that are targets of relationships, even if they don't match the query. |
+| Field                      | Type    | Default | Description                                                                                   |
+| -------------------------- | ------- | ------- | --------------------------------------------------------------------------------------------- |
+| `include_all_components`   | `bool`  | `true`  | Serialize all components on each entity. Set to `false` to use the `components` list instead. |
+| `components`               | `Array` | `[]`    | Component types to include when `include_all_components` is `false`.                          |
+| `include_relationships`    | `bool`  | `true`  | Serialize entity relationships. Relationships are supported and serialized by default.        |
+| `include_related_entities` | `bool`  | `true`  | Auto-include entities that are targets of relationships, even if they don't match the query.  |
 
 **Selective serialization example:**
 
@@ -249,3 +249,34 @@ entities = [SubResource("2")]
 
 - Prefab entities need scene files present
 - External resource references need manual handling
+
+## Gotchas
+
+### ID collision replaces AND cleans up relationships
+
+When `world.add_entity(entity)` is called and an entity with the same `id` already exists, the old entity is **replaced** (removed, then the new one added). As part of removal, the REMOVE policy runs: **any other entity that holds a relationship pointing to the old entity will have that relationship silently removed**.
+
+This means after a load cycle, stale in-memory relationship references are gone — which is correct — but you should not rely on live object references to replaced targets:
+
+```gdscript
+# old_weapon gets replaced when new_weapon (same id) is added
+world.add_entity(new_weapon)
+
+# player's relationship to old_weapon is NOW EMPTY — REMOVE policy cleaned it up
+# player.relationships.size() == 0  ← correct post-Phase-06 behavior
+
+# After a full deserialize + add_entity loop, relationships are correctly
+# restored by the deserializer's pass 2 (to_relationship id mapping)
+```
+
+### Entity names corrupt if added to the scene tree with duplicate names
+
+`entity.name` is used as `entity_name` during serialization. If two entities with the same name exist in the scene tree simultaneously, Godot auto-renames the second one (e.g., `"Player"` → `"@Node@195"`), silently corrupting the serialized name.
+
+**Rule:** If entities are purely data (no rendering, no scene tree lifecycle needed), pass `add_to_tree = false`:
+
+```gdscript
+world.add_entity(entity, null, false)  # safe — no tree, no rename
+```
+
+Only use the default `add_to_tree = true` when entities actually need to be nodes in the scene tree.
