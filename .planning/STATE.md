@@ -4,12 +4,12 @@ milestone: v7.1.0
 milestone_name: milestone
 status: unknown
 stopped_at: Phase 4 complete
-last_updated: "2026-03-22T19:58:26.038Z"
+last_updated: "2026-03-22T21:09:41.377Z"
 progress:
   total_phases: 6
-  completed_phases: 5
-  total_plans: 5
-  completed_plans: 5
+  completed_phases: 6
+  total_plans: 6
+  completed_plans: 6
 ---
 
 # Project State
@@ -19,11 +19,11 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-18)
 
 **Core value:** Relationship queries must be as fast as component queries -- both select pre-grouped archetype buckets, no per-entity iteration.
-**Current focus:** Phase 05 — property-query-preservation-compatibility
+**Current focus:** Phase 06 — cleanup-performance-validation
 
 ## Current Position
 
-Phase: 6
+Phase: 06
 Plan: Not started
 
 ## Performance Metrics
