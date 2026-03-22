@@ -6,6 +6,7 @@ completed: 2026-03-22
 commits:
   - b55e2d8 feat(06-01): remove relationship_entity_index, migrate REMOVE policy, add archetype explosion warning
   - dd1d543 feat(06-01): add relationship query perf benchmarks to test_query_perf.gd
+  - dd0a8b1 fix(06-01): correct slot key suffix in _cleanup_relationships_to_target
 requirements: [PERF-01, PERF-02, PERF-03]
 ---
 
@@ -38,26 +39,24 @@ Both tests parametrize at scales 100 / 1000 / 10000 and follow the existing `Per
 
 ## Verification Results
 
-| Check | Result |
-|-------|--------|
-| `relationship_entity_index` occurrences in world.gd | 0 — PASS |
-| `_archetype_explosion_warned` occurrences (declaration + flag set + check) | 3 — PASS |
-| `_cleanup_relationships_to_target` uses `_relation_type_archetype_index` | true — PASS |
-| `_cleanup_relationships_to_target` uses `ends_with(suffix)` | true — PASS |
-| `test_query_with_relationship` functions in test_query_perf.gd | 2 — PASS |
-| Explosion warning sets flag | true — PASS |
-| Explosion warning threshold check (`archetypes.size() > 500`) | true — PASS |
+| Check                                                                      | Result      |
+| -------------------------------------------------------------------------- | ----------- |
+| `relationship_entity_index` occurrences in world.gd                        | 0 — PASS    |
+| `_archetype_explosion_warned` occurrences (declaration + flag set + check) | 3 — PASS    |
+| `_cleanup_relationships_to_target` uses `_relation_type_archetype_index`   | true — PASS |
+| `_cleanup_relationships_to_target` uses `ends_with(suffix)`                | true — PASS |
+| `test_query_with_relationship` functions in test_query_perf.gd             | 2 — PASS    |
+| Explosion warning sets flag                                                | true — PASS |
+| Explosion warning threshold check (`archetypes.size() > 500`)              | true — PASS |
 
 ## Key Files
 
 key-files:
-  modified:
-    - addons/gecs/ecs/world.gd
-    - addons/gecs/tests/performance/test_query_perf.gd
+modified: - addons/gecs/ecs/world.gd - addons/gecs/tests/performance/test_query_perf.gd
 
 ## Deviations
 
-None — implemented exactly as specified in PLAN.md.
+**Slot key suffix correction:** The PLAN.md specified `"::" + str(target_ecs_id)` as the ends_with suffix, but the actual archetype slot key format for Entity targets is `"rel://rel_path::entity#N"` (not `"rel://rel_path::N"`). The suffix was corrected to `"::entity#" + str(target_ecs_id)` after test_freed_target_cleanup_* regressions were caught post-execution.
 
 ## Notes
 
