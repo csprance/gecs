@@ -17,12 +17,14 @@ Remove legacy relationship infrastructure left over from pre-structural-query da
 **Decision:** Delete `relationship_entity_index` entirely from `world.gd`. No stub, no `@deprecated` comment.
 
 **Scope of deletion:**
+
 - Remove the `var relationship_entity_index: Dictionary = {}` declaration (~line 82)
 - Remove all read/write sites: `_on_entity_relationship_added()`, `_on_entity_relationship_removed()`, `remove_entity()`, `add_entity()` (lines ~809-819, ~837-847, ~1319-1331)
 - Remove the `relationship_entity_index.clear()` call in `purge()` (~line 687)
 
 **REMOVE policy cleanup migration:**
 The target-keyed half (`relation_path::target_ecs_id → Array[Entity]`) was used in Phase 3 for REMOVE policy cleanup when a target entity is freed. This path must be migrated to the archetype system:
+
 - Use `_relation_type_archetype_index` to find all archetypes containing any pair with the freed target's slot key
 - Iterate those archetypes' entities to find sources — this is already O(1) archetype lookup + O(matched entities) scan, which is the same asymptotic complexity as before
 - Concrete pattern: when `remove_entity(target)` is called, iterate `_relation_type_archetype_index` values to find archetypes containing `rel://<any_relation>::<target.ecs_id>` slot keys, then clean up those entities' relationships
@@ -59,6 +61,7 @@ The target-keyed half (`relation_path::target_ecs_id → Array[Entity]`) was use
 **Decision:** One-shot `push_error()` in debug mode when archetype count first crosses 500. Never fires again after the first emission.
 
 **Implementation pattern:**
+
 - Add `var _archetype_explosion_warned: bool = false` to World
 - In `_get_or_create_archetype()` (or wherever a new archetype is inserted into `_archetypes`), after insertion:
   ```gdscript
@@ -74,7 +77,7 @@ The target-keyed half (`relation_path::target_ecs_id → Array[Entity]`) was use
 
 ## Deferred Ideas
 
-*(Nothing deferred from this discussion — scope is minimal and well-bounded)*
+_(Nothing deferred from this discussion — scope is minimal and well-bounded)_
 
 ---
 
