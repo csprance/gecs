@@ -3,6 +3,9 @@
 /android/
 repomix-output.txt
 
+# Windows reserved device names (prevent accidental creation)
+nul
+
 reports/
 .claude/settings.local.json
 

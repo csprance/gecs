@@ -745,6 +745,27 @@ func get_children_of_entity(entity: Entity):
 
 ### Performance Optimization
 
+**Prefer specific targets over wildcards:**
+
+Exact-pair relationship queries (`with_relationship([Rel.new(C_X, target)])`) resolve in **O(1)** — the archetype cache returns the result instantly regardless of world size. Wildcard queries (`null` target) must scan all matching archetypes and scale **O(N entities)**.
+
+When you need a wildcard, narrow the entity set with a component query first:
+
+```gdscript
+# Slow - wildcard scans ALL archetypes at O(N)
+var all_poisoned = ECS.world.query\
+    .with_relationship([Relationship.new(C_Poison.new(), null)])\
+    .execute()
+
+# Fast - component query narrows to small set first, wildcard only runs on those
+var all_poisoned = ECS.world.query\
+    .with_all([C_Alive])  # structural O(1) archetype lookup first
+    .with_relationship([Relationship.new(C_Poison.new(), null)])\
+    .execute()
+```
+
+The rule: **always combine a `with_all()` component filter with any wildcard relationship query** in hot paths. If you know the target entity, use it — O(1) for free.
+
 **Reuse Relationship Objects:**
 
 ```gdscript

@@ -352,8 +352,10 @@ func test_multiple_relationship_changes_query_correctly():
 	assert_bool(final_result.has(entity1)).is_false()
 
 
-## Test that relationship changes DO NOT invalidate cache (performance optimization)
-func test_relationship_no_cache_invalidation():
+## Test that relationship changes DO invalidate cache (structural relationships — Phase 3)
+## Relationships are now structural: they affect archetype membership and signatures,
+## so cache invalidation is required when relationships are added or removed.
+func test_relationship_cache_invalidation():
 	var signal_count = [0]
 
 	# Connect to cache invalidation signal
@@ -365,23 +367,23 @@ func test_relationship_no_cache_invalidation():
 
 	var initial_count = signal_count[0]
 
-	# IMPORTANT: Relationship changes should NOT emit cache_invalidated signal
-	# This is a performance optimization - relationships use relationship_entity_index
-	# which is updated in real-time, so cache invalidation is unnecessary
-
+	# Relationship add should trigger cache invalidation (structural move)
 	var rel1 = Relationship.new(C_TestA.new(), target_entity)
 	entity.add_relationship(rel1)
-	assert_int(signal_count[0]).is_equal(initial_count) # No invalidation!
+	assert_int(signal_count[0]).is_greater(initial_count)
 
+	var count_after_add1 = signal_count[0]
 	var rel2 = Relationship.new(C_TestB.new(), target_entity)
 	entity.add_relationship(rel2)
-	assert_int(signal_count[0]).is_equal(initial_count) # No invalidation!
+	assert_int(signal_count[0]).is_greater(count_after_add1)
 
+	var count_after_add2 = signal_count[0]
 	entity.remove_relationship(rel1)
-	assert_int(signal_count[0]).is_equal(initial_count) # No invalidation!
+	assert_int(signal_count[0]).is_greater(count_after_add2)
 
+	var count_after_remove1 = signal_count[0]
 	entity.remove_relationship(rel2)
-	assert_int(signal_count[0]).is_equal(initial_count) # No invalidation!
+	assert_int(signal_count[0]).is_greater(count_after_remove1)
 
 
 ## Test mixed component and relationship cache invalidation

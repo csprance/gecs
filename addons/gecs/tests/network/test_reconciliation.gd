@@ -79,6 +79,9 @@ class MockNetworkSync:
 	func _sync_full_state(payload: Dictionary) -> void:
 		full_state_rpc_calls.append(payload)
 
+	func rpc(method_name: String, payload: Variant = null) -> void:
+		call(method_name, payload)
+
 
 class MockComponent:
 	extends Component

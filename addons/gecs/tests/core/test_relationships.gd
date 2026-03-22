@@ -664,31 +664,35 @@ func test_multiple_component_targets_same_relationship():
 	assert_bool(entities_with_ice_resistance_type.has(e_alice)).is_true() # alice has C_Loves resistance (ice)
 	assert_bool(entities_with_ice_resistance_type.has(e_heather)).is_true() # heather has C_Loves resistance (ice)
 	assert_bool(entities_with_ice_resistance_type.has(e_bob)).is_false() # bob doesn't have C_Loves resistance
-#
-#
-#func test_component_queries_in_relationships():
-	## Test if we can use component queries to filter relationships by target component properties
-	## Create damage relationships with different amounts
-	#var damage_marker = C_IsCryingInFrontOf.new()
-	#var light_damage = C_Eats.new(25) # 25 damage
-	#var heavy_damage = C_Eats.new(75) # 75 damage
-	#var massive_damage = C_Eats.new(150) # 150 damage
-	#
-	## Apply different damage amounts to entities
-	#e_bob.add_relationship(Relationship.new(damage_marker, light_damage))
-	#e_alice.add_relationship(Relationship.new(damage_marker, heavy_damage))
-	#e_heather.add_relationship(Relationship.new(damage_marker, massive_damage))
-	#
-	## Try to use component queries within relationships - test if this works
-	## This would be: entities with damage relationships where target component value > 50
-	#
-	## Test 1: Try direct component query in relationship (might not work)
-	## This syntax probably doesn't exist yet but let's see what happens
-	#var high_damage_query = Relationship.new(damage_marker, {C_Eats: {"value": {"_gt": 50}}})
-	#
-	#var high_damage_entities = ECS.world.query.with_relationship([high_damage_query]).execute()
-	#print("Component queries in relationships work! Found: ", high_damage_entities.size())
 
+func test_component_queries_in_relationships():
+	# Verify property-query in target position works as post-filter
+	# bob cries in front of a heavy eater, heather cries in front of a heavy eater, alice in front of light eater
+	var damage_marker = C_IsCryingInFrontOf.new()
+	var light_eater = C_Eats.new(25)
+	var heavy_eater_1 = C_Eats.new(75)
+	var heavy_eater_2 = C_Eats.new(150)
+
+	e_bob.add_relationship(Relationship.new(damage_marker, heavy_eater_1))
+	e_alice.add_relationship(Relationship.new(damage_marker, light_eater))
+	e_heather.add_relationship(Relationship.new(damage_marker, heavy_eater_2))
+
+	# TARGET property query: entities crying in front of someone who eats > 50
+	var high_eater_query = Relationship.new(damage_marker, {C_Eats: {"value": {"_gt": 50}}})
+	var result = Array(ECS.world.query.with_relationship([high_eater_query]).execute())
+
+	assert_bool(result.has(e_bob)).is_true()     # bob's target eats 75 > 50
+	assert_bool(result.has(e_heather)).is_true() # heather's target eats 150 > 50
+	assert_bool(result.has(e_alice)).is_false()  # alice's target eats 25, not > 50
+	assert_int(result.size()).is_equal(2)
+
+	# RELATION property query: entities with any C_IsCryingInFrontOf rel (points >= 0)
+	var any_crying = Array(ECS.world.query.with_relationship([
+		Relationship.new({C_IsCryingInFrontOf: {"points": {"_gte": 0}}}, null)
+	]).execute())
+	assert_bool(any_crying.has(e_bob)).is_true()
+	assert_bool(any_crying.has(e_alice)).is_true()
+	assert_bool(any_crying.has(e_heather)).is_true()
 
 func test_broad_query_with_drill_down_filtering():
 	# Test the pattern: broad query -> drill down with entity.has_relationship()

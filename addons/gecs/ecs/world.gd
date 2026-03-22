@@ -78,8 +78,12 @@ var query: QueryBuilder:
 		if not cache_invalidated.is_connected(q.invalidate_cache):
 			cache_invalidated.connect(q.invalidate_cache)
 		return q
-## Index for relationships to entities (Optional for optimization)
-var relationship_entity_index: Dictionary = {}
+## Incrementing counter for stable entity IDs (assigned in add_entity)
+var _next_entity_id: int = 1
+
+## Relation-type archetype index: maps relation resource_path -> { archetype_signature -> Archetype }
+## Enables O(1) wildcard relationship queries (find all archetypes with any (RelationType, *) pair)
+var _relation_type_archetype_index: Dictionary = {} # String -> Dictionary[int, Archetype]
 ## Logger for the world to only log to a specific domain
 var _worldLogger = GECSLogger.new().domain("World")
 ## Cache for commonly used query results - stores matching archetypes, not entities
@@ -97,6 +101,11 @@ var _component_script_cache: Dictionary = {} # String -> Script
 ## > 0 means we are inside a batch; invalidation is deferred until _end_suppress().
 var _suppress_invalidation_depth: int = 0
 var _pending_invalidation: bool = false
+## Guard flag: true when a batch relationship handler is emitting per-entity signals.
+## Prevents _on_entity_relationship_added/removed from doing redundant archetype moves.
+var _in_batch_relationship_emit: bool = false
+## One-shot guard: fires push_error once when archetype count first exceeds 500 in debug mode
+var _archetype_explosion_warned: bool = false
 ## Frame + accumulated performance metrics (debug-only)
 var _perf_metrics := {"frame": {}, "accum": {}} # Per-frame aggregated timings  # Long-lived totals (cleared manually)
 ## Queue of systems waiting for setup after ECS.world is assigned
@@ -306,6 +315,16 @@ func add_entity(entity: Entity, components = null, add_to_tree = true) -> void:
 	# Register this entity's ID
 	entity_id_registry[entity_id] = entity
 
+	# Assign stable numeric entity ID for relationship slot key generation
+	if entity.ecs_id == 0:
+		_ensure_entity_ecs_id(entity)
+
+	# Stabilize target IDs before archetype key/signature generation so entities
+	# with pre-registered relationship targets don't get stale entity#0 slot keys.
+	for relationship in entity.relationships:
+		if relationship.target is Entity:
+			_ensure_entity_ecs_id(relationship.target)
+
 	# ID will auto-generate in _enter_tree if empty, or via property getter on first access
 
 	# Update index
@@ -320,6 +339,10 @@ func add_entity(entity: Entity, components = null, add_to_tree = true) -> void:
 		entity.relationship_added.connect(_on_entity_relationship_added)
 	if not entity.relationship_removed.is_connected(_on_entity_relationship_removed):
 		entity.relationship_removed.connect(_on_entity_relationship_removed)
+	if not entity.relationships_batch_added.is_connected(_on_entity_relationships_batch_added):
+		entity.relationships_batch_added.connect(_on_entity_relationships_batch_added)
+	if not entity.relationships_batch_removed.is_connected(_on_entity_relationships_batch_removed):
+		entity.relationships_batch_removed.connect(_on_entity_relationships_batch_removed)
 
 	#  Add the entity to the tree if it's not already there after hooking up the signals
 	# This ensures that any _ready methods on the entity or its components are called after setup
@@ -395,6 +418,9 @@ func remove_entity(entity: Entity) -> void:
 	for processor in ECS.entity_postprocessors:
 		processor.call(entity)
 
+	# REMOVE policy: Clean up relationships pointing TO this entity from other entities
+	_cleanup_relationships_to_target(entity)
+
 	# Disconnect entity signals before notifying observers to prevent re-entrancy:
 	# if an observer's on_component_removed calls entity.remove_component() as a side effect,
 	# the signal must not be connected or it will double-notify observers watching that component.
@@ -406,6 +432,10 @@ func remove_entity(entity: Entity) -> void:
 		entity.relationship_added.disconnect(_on_entity_relationship_added)
 	if entity.relationship_removed.is_connected(_on_entity_relationship_removed):
 		entity.relationship_removed.disconnect(_on_entity_relationship_removed)
+	if entity.relationships_batch_added.is_connected(_on_entity_relationships_batch_added):
+		entity.relationships_batch_added.disconnect(_on_entity_relationships_batch_added)
+	if entity.relationships_batch_removed.is_connected(_on_entity_relationships_batch_removed):
+		entity.relationships_batch_removed.disconnect(_on_entity_relationships_batch_removed)
 
 	# Emit component_removed for each component before teardown
 	# so observers learn about removal when an entity is destroyed
@@ -433,16 +463,17 @@ func remove_entity(entity: Entity) -> void:
 	# ARCHETYPE: Remove entity from archetype system (parallel)
 	_remove_entity_from_archetype(entity)
 
+	# Notify debugger before freeing (entity must still be valid)
+	if ECS.debug:
+		var path = entity.get_path() if entity.is_inside_tree() else str(entity)
+		assert(GECSEditorDebuggerMessages.entity_removed(entity.get_instance_id(), path), "")
+
 	# Destroy entity normally
 	entity.on_destroy()
 	if entity.is_inside_tree():
 		entity.queue_free()
 	else:
 		entity.free()
-
-	# Notify debugger before freeing (entity must still be valid)
-	if ECS.debug:
-		assert(GECSEditorDebuggerMessages.entity_removed(entity_id), "")
 
 
 ## Removes an Array of [Entity] from the world.[br]
@@ -480,6 +511,10 @@ func disable_entity(entity) -> Entity:
 		entity.relationship_added.disconnect(_on_entity_relationship_added)
 	if entity.relationship_removed.is_connected(_on_entity_relationship_removed):
 		entity.relationship_removed.disconnect(_on_entity_relationship_removed)
+	if entity.relationships_batch_added.is_connected(_on_entity_relationships_batch_added):
+		entity.relationships_batch_added.disconnect(_on_entity_relationships_batch_added)
+	if entity.relationships_batch_removed.is_connected(_on_entity_relationships_batch_removed):
+		entity.relationships_batch_removed.disconnect(_on_entity_relationships_batch_removed)
 	entity.on_disable()
 	entity.set_process(false)
 	entity.set_physics_process(false)
@@ -526,6 +561,10 @@ func enable_entity(entity: Entity, components = null) -> void:
 		entity.relationship_added.connect(_on_entity_relationship_added)
 	if not entity.relationship_removed.is_connected(_on_entity_relationship_removed):
 		entity.relationship_removed.connect(_on_entity_relationship_removed)
+	if not entity.relationships_batch_added.is_connected(_on_entity_relationships_batch_added):
+		entity.relationships_batch_added.connect(_on_entity_relationships_batch_added)
+	if not entity.relationships_batch_removed.is_connected(_on_entity_relationships_batch_removed):
+		entity.relationships_batch_removed.connect(_on_entity_relationships_batch_removed)
 
 	if components:
 		entity.add_components(components)
@@ -648,7 +687,9 @@ func purge(should_free = true, keep := []) -> void:
 		remove_entity(entity)
 
 	# Clear relationship indexes after purging entities
-	relationship_entity_index.clear()
+	_relation_type_archetype_index.clear()
+	if keep.is_empty():
+		_next_entity_id = 1
 	_worldLogger.debug("Cleared relationship indexes after purge")
 
 	# ARCHETYPE: Clear archetype system
@@ -764,34 +805,35 @@ func _on_entity_component_removed(entity, component: Resource) -> void:
 		assert(GECSEditorDebuggerMessages.entity_component_removed(entity, component), "")
 
 
-## (Optional) Update index when a relationship is added.
+## Update index when a relationship is added and move entity to new archetype.
 func _on_entity_relationship_added(entity: Entity, relationship: Relationship) -> void:
-	var key = relationship.relation.resource_path
-	if not relationship_entity_index.has(key):
-		relationship_entity_index[key] = []
-	relationship_entity_index[key].append(entity)
+	# Skip archetype move when called from batch handler re-emitting per-entity signals
+	if not _in_batch_relationship_emit:
+		# STRUCTURAL: Move entity to new archetype including the pair slot key
+		if entity_to_archetype.has(entity):
+			var old_archetype = entity_to_archetype[entity]
+			var slot_key = _relationship_slot_key(relationship)
+			if slot_key != "":
+				_move_entity_to_new_archetype_fast(entity, old_archetype, slot_key, true)
+			_invalidate_cache("entity_relationship_added")
 
-	# PERFORMANCE: Do NOT invalidate archetype cache on relationship changes
-	# Relationships do not alter archetype membership (structural component sets)
-	# QueryBuilder.execute() performs relationship filtering on entity results.
-	# Systems use archetypes() + per-entity filtering, so invalidation here only
-	# increases cache churn without improving correctness.
-
-	# Emit Signal
 	relationship_added.emit(entity, relationship)
 	if ECS.debug:
 		assert(GECSEditorDebuggerMessages.entity_relationship_added(entity, relationship), "")
 
 
-## (Optional) Update index when a relationship is removed.
+## Update index when a relationship is removed and move entity to archetype without the pair slot key.
 func _on_entity_relationship_removed(entity: Entity, relationship: Relationship) -> void:
-	var key = relationship.relation.resource_path
-	if relationship_entity_index.has(key):
-		relationship_entity_index[key].erase(entity)
+	# Skip archetype move when called from batch handler re-emitting per-entity signals
+	if not _in_batch_relationship_emit:
+		# STRUCTURAL: Move entity to archetype without the pair slot key
+		if entity_to_archetype.has(entity):
+			var old_archetype = entity_to_archetype[entity]
+			var slot_key = _relationship_slot_key(relationship)
+			if slot_key != "":
+				_move_entity_to_new_archetype_fast(entity, old_archetype, slot_key, false)
+			_invalidate_cache("entity_relationship_removed")
 
-	# PERFORMANCE: No cache invalidation (see comment in _on_entity_relationship_added)
-
-	# Emit Signal
 	relationship_removed.emit(entity, relationship)
 	if ECS.debug:
 		assert(GECSEditorDebuggerMessages.entity_relationship_removed(entity, relationship), "")
@@ -942,13 +984,17 @@ func _query(
 	any_components = [],
 	exclude_components = [],
 	enabled_filter = null,
-	precalculated_cache_key: int = -1
+	precalculated_cache_key: int = -1,
+	rel_slot_keys: Array = [],
+	wildcard_rel_types: Array = [],
+	ex_rel_slot_keys: Array = [],
+	wildcard_ex_rel_types: Array = []
 ) -> Array:
 	var _perf_start_total := 0
 	if ECS.debug:
 		_perf_start_total = Time.get_ticks_usec()
-	# Early return if no components specified - return all entities
-	if all_components.is_empty() and any_components.is_empty() and exclude_components.is_empty():
+	# Early return if no components and no structural relationships specified - return all entities
+	if all_components.is_empty() and any_components.is_empty() and exclude_components.is_empty() and rel_slot_keys.is_empty() and wildcard_rel_types.is_empty() and ex_rel_slot_keys.is_empty() and wildcard_ex_rel_types.is_empty():
 		if enabled_filter == null:
 			if ECS.debug:
 				perf_mark(
@@ -1000,8 +1046,22 @@ func _query(
 		var _any := any_components.map(map_resource_path)
 		var _exclude := exclude_components.map(map_resource_path)
 
-		for archetype in archetypes.values():
+		# Determine candidate archetypes: use wildcard index if available
+		var candidates: Array = []
+		if not wildcard_rel_types.is_empty():
+			# Narrow candidates using _relation_type_archetype_index intersection
+			candidates = _get_archetypes_with_all_relation_types(wildcard_rel_types)
+		else:
+			candidates = archetypes.values()
+		var has_structural_rels := (not rel_slot_keys.is_empty() or not ex_rel_slot_keys.is_empty() or not wildcard_ex_rel_types.is_empty())
+		for archetype in candidates:
 			if archetype.matches_query(_all, _any, _exclude):
+				if has_structural_rels:
+					if not archetype.matches_relationship_query(rel_slot_keys, ex_rel_slot_keys):
+						continue
+					# Check wildcard exclusion: archetype must not have any of the excluded rel types
+					if not wildcard_ex_rel_types.is_empty() and _archetype_has_any_relation_type(archetype, wildcard_ex_rel_types):
+						continue
 				matching_archetypes.append(archetype)
 		# Cache the matching archetypes (not the entity arrays!)
 		_query_archetype_cache[cache_key] = matching_archetypes
@@ -1093,15 +1153,18 @@ func get_matching_archetypes(query_builder: QueryBuilder) -> Array[Archetype]:
 	var _perf_start := 0
 	if ECS.debug:
 		_perf_start = Time.get_ticks_usec()
-	# PERFORMANCE: Archetype matching is based ONLY on structural components.
-	# Relationship/group filters are evaluated per-entity in System execution.
-	# This avoids double-scanning entities (World + System) and reduces cache churn.
 	var all_components = query_builder._all_components
 	var any_components = query_builder._any_components
 	var exclude_components = query_builder._exclude_components
 
-	# Use a COMPONENT-ONLY cache key (ignore relationships/groups)
-	var cache_key = QueryCacheKey.build(all_components, any_components, exclude_components)
+	# Extract structural relationship info from query builder
+	var rel_slot_keys = query_builder._structural_rel_keys
+	var wildcard_rel_types = query_builder._wildcard_rel_types
+	var ex_rel_slot_keys = query_builder._structural_ex_rel_keys
+	var wildcard_ex_rel_types = query_builder._wildcard_ex_rel_types
+
+	# Use the relationship-aware cache key from query builder
+	var cache_key = query_builder.get_cache_key()
 
 	if _query_archetype_cache.has(cache_key):
 		if ECS.debug:
@@ -1117,8 +1180,20 @@ func get_matching_archetypes(query_builder: QueryBuilder) -> Array[Archetype]:
 	var _perf_scan_start := 0
 	if ECS.debug:
 		_perf_scan_start = Time.get_ticks_usec()
-	for archetype in archetypes.values():
+	# Determine candidate archetypes: use wildcard index if available
+	var candidates: Array = []
+	if not wildcard_rel_types.is_empty():
+		candidates = _get_archetypes_with_all_relation_types(wildcard_rel_types)
+	else:
+		candidates = archetypes.values()
+	var has_structural_rels := (not rel_slot_keys.is_empty() or not ex_rel_slot_keys.is_empty() or not wildcard_ex_rel_types.is_empty())
+	for archetype in candidates:
 		if archetype.matches_query(_all, _any, _exclude):
+			if has_structural_rels:
+				if not archetype.matches_relationship_query(rel_slot_keys, ex_rel_slot_keys):
+					continue
+				if not wildcard_ex_rel_types.is_empty() and _archetype_has_any_relation_type(archetype, wildcard_ex_rel_types):
+					continue
 			matching.append(archetype)
 	if ECS.debug:
 		perf_mark(
@@ -1175,10 +1250,26 @@ func _invalidate_cache(reason: String) -> void:
 	_query_archetype_cache.clear()
 	cache_invalidated.emit()
 
-	# Track invalidation stats (debug mode only)
-	if ECS.debug:
-		_cache_invalidation_count += 1
-		_cache_invalidation_reasons[reason] = _cache_invalidation_reasons.get(reason, 0) + 1
+	_cache_invalidation_count += 1
+	_cache_invalidation_reasons[reason] = _cache_invalidation_reasons.get(reason, 0) + 1
+
+
+func _ensure_entity_ecs_id(entity: Entity) -> int:
+	if entity == null:
+		return 0
+	if entity.ecs_id == 0:
+		entity.ecs_id = _next_entity_id
+		_next_entity_id += 1
+	return entity.ecs_id
+
+
+func _get_relationship_relation_path(relationship: Relationship) -> String:
+	if relationship == null or relationship.relation == null:
+		return ""
+	var rel_script = relationship.relation.get_script()
+	if rel_script:
+		return rel_script.resource_path
+	return relationship.relation.resource_path
 
 
 ## Begin a batch suppression window — increments depth counter.
@@ -1191,6 +1282,118 @@ func _end_suppress() -> void:
 	_suppress_invalidation_depth -= 1
 	if _suppress_invalidation_depth == 0 and _pending_invalidation:
 		_invalidate_cache("deferred_pending")
+
+
+## Get the stable ecs_id of a relationship's target entity.
+## Returns 0 if target is not an Entity.
+func _get_relationship_target_id(relationship: Relationship) -> int:
+	if relationship.target is Entity:
+		return _ensure_entity_ecs_id(relationship.target)
+	return 0
+
+
+## Handle batch relationship additions — single archetype transition for N relationships.
+func _on_entity_relationships_batch_added(entity: Entity, _relationships: Array) -> void:
+	_begin_suppress()
+	var moved := false
+
+	# STRUCTURAL: Single archetype transition using fully-updated signature
+	if entity_to_archetype.has(entity):
+		var old_archetype = entity_to_archetype[entity]
+		var new_signature = _calculate_entity_signature(entity)
+		var comp_types = _get_entity_archetype_keys(entity)
+		var new_archetype = _get_or_create_archetype(new_signature, comp_types)
+		if old_archetype != new_archetype:
+			old_archetype.remove_entity(entity)
+			new_archetype.add_entity(entity)
+			entity_to_archetype[entity] = new_archetype
+			if old_archetype.is_empty():
+				_delete_archetype(old_archetype)
+			moved = true
+
+	_end_suppress()
+	# If entity moved to an existing archetype, _end_suppress may not have
+	# triggered invalidation (no new archetype → no _pending_invalidation).
+	if moved:
+		_invalidate_cache("batch_relationship_added")
+
+	# Emit per-relationship signals on the entity so external listeners
+	# (e.g. network_sync) see each change. Guard prevents our own single
+	# handler from doing redundant archetype moves.
+	_in_batch_relationship_emit = true
+	for relationship in _relationships:
+		entity.relationship_added.emit(entity, relationship)
+	_in_batch_relationship_emit = false
+
+
+## Handle batch relationship removals — single archetype transition for N relationships.
+func _on_entity_relationships_batch_removed(entity: Entity, _relationships: Array) -> void:
+	_begin_suppress()
+	var moved := false
+
+	# STRUCTURAL: Single archetype transition
+	if entity_to_archetype.has(entity):
+		var old_archetype = entity_to_archetype[entity]
+		var new_signature = _calculate_entity_signature(entity)
+		var comp_types = _get_entity_archetype_keys(entity)
+		var new_archetype = _get_or_create_archetype(new_signature, comp_types)
+		if old_archetype != new_archetype:
+			old_archetype.remove_entity(entity)
+			new_archetype.add_entity(entity)
+			entity_to_archetype[entity] = new_archetype
+			if old_archetype.is_empty():
+				_delete_archetype(old_archetype)
+			moved = true
+
+	_end_suppress()
+	if moved:
+		_invalidate_cache("batch_relationship_removed")
+
+	# Emit per-relationship signals on the entity so external listeners
+	# (e.g. network_sync) see each change.
+	_in_batch_relationship_emit = true
+	for relationship in _relationships:
+		entity.relationship_removed.emit(entity, relationship)
+	_in_batch_relationship_emit = false
+
+
+## REMOVE policy: Clean up relationships pointing TO a target entity being removed.
+## Called inside remove_entity() before the target is freed.
+func _cleanup_relationships_to_target(target: Entity) -> void:
+	var target_ecs_id = target.ecs_id
+	if target_ecs_id == 0:
+		return
+
+	# Find all entities in archetypes that hold a slot key pointing to this target.
+	# Slot key format: "rel://relation_path::target_ecs_id"
+	var suffix = "::entity#" + str(target_ecs_id)
+	var source_entities: Array[Entity] = []
+
+	for rel_path in _relation_type_archetype_index.keys():
+		var type_archetypes: Dictionary = _relation_type_archetype_index[rel_path]
+		for archetype in type_archetypes.values():
+			for rel_key in archetype.relationship_types:
+				if rel_key.ends_with(suffix):
+					source_entities.append_array(archetype.entities.duplicate())
+					break # found one matching slot in this archetype — all entities match
+
+	if source_entities.is_empty():
+		return
+
+	_begin_suppress()
+
+	for source_entity in source_entities:
+		if not is_instance_valid(source_entity):
+			continue
+		var rels_to_remove: Array = []
+		for rel in source_entity.relationships:
+			if rel.target is Entity and rel.target == target:
+				rels_to_remove.append(rel)
+		for rel in rels_to_remove:
+			source_entity.relationships.erase(rel)
+			source_entity.relationship_removed.emit(source_entity, rel)
+
+	_end_suppress()
 
 
 ## Calculate archetype signature for an entity based on its components
@@ -1211,11 +1414,107 @@ func _calculate_entity_signature(entity: Entity) -> int:
 			_component_script_cache[comp_path] = component.get_script()
 		comp_scripts.append(_component_script_cache[comp_path])
 
+	# Collect structural relationships for signature hash
+	# Property-query relationships are excluded (they remain post-filter only)
+	var structural_rels: Array = []
+	for rel in entity.relationships:
+		if not rel._is_query_relationship and _get_relationship_relation_path(rel) != "":
+			structural_rels.append(rel)
+
 	# Use the SAME hash function as queries - entity is just "all components, no any/exclude"
 	# OPTIMIZATION: Removed enabled_marker from signature - now handled by bitset in archetype
-	var signature = QueryCacheKey.build(comp_scripts, [], [])
+	var signature = QueryCacheKey.build(comp_scripts, [], [], structural_rels)
 
 	return signature
+
+
+## Get archetypes that contain ALL specified relation types (wildcard index intersection)
+func _get_archetypes_with_all_relation_types(rel_types: Array) -> Array:
+	var result = null
+	for rel_path in rel_types:
+		var type_archetypes = _relation_type_archetype_index.get(rel_path, {})
+		if result == null:
+			result = type_archetypes.duplicate()
+		else:
+			for sig in result.keys():
+				if not type_archetypes.has(sig):
+					result.erase(sig)
+	return result.values() if result else []
+
+
+## Check if archetype has any relationship of the specified types
+func _archetype_has_any_relation_type(archetype: Archetype, rel_types: Array) -> bool:
+	for rel_path in rel_types:
+		if _relation_type_archetype_index.has(rel_path):
+			if _relation_type_archetype_index[rel_path].has(archetype.signature):
+				return true
+	return false
+
+## Compute the archetype slot key string for a relationship pair.
+## Format: "rel://<relation_resource_path>::<target_key>"
+func _relationship_slot_key(rel: Relationship) -> String:
+	var rel_path = _get_relationship_relation_path(rel)
+	if rel_path == "":
+		return ""
+	return _relationship_slot_key_from_parts(rel_path, rel.target)
+
+
+func _relationship_slot_key_from_parts(rel_path: String, target: Variant) -> String:
+	var target_key: String
+	if target is Entity:
+		target_key = "entity#" + str(_ensure_entity_ecs_id(target))
+	elif target is Component:
+		target_key = "comp://" + target.get_script().resource_path
+	elif target is Script:
+		target_key = "script://" + target.resource_path
+	else:
+		target_key = "*"
+	return "rel://" + rel_path + "::" + target_key
+
+
+func _get_compatible_relationship_slot_keys(rel: Relationship) -> Array:
+	var rel_path = _get_relationship_relation_path(rel)
+	if rel_path == "":
+		return []
+
+	var keys: Array = []
+	var primary_key = _relationship_slot_key(rel)
+	if primary_key != "":
+		keys.append(primary_key)
+
+	if rel.target is Entity or rel.target is Component:
+		var target_script = rel.target.get_script()
+		if target_script:
+			var script_key = _relationship_slot_key_from_parts(rel_path, target_script)
+			if not keys.has(script_key):
+				keys.append(script_key)
+		var wildcard_key = _relationship_slot_key_from_parts(rel_path, null)
+		if not keys.has(wildcard_key):
+			keys.append(wildcard_key)
+
+	return keys
+
+
+## Get the full set of archetype keys for an entity (component paths + relationship slot keys)
+func _get_entity_archetype_keys(entity: Entity) -> Array:
+	var keys = entity.components.keys().duplicate()
+	for rel in entity.relationships:
+		if not rel._is_query_relationship:
+			var slot_key = _relationship_slot_key(rel)
+			if slot_key != "":
+				keys.append(slot_key)
+	return keys
+
+
+## Extract the relation resource path from a rel:// slot key.
+## Input: "rel://res://path/to/component.gd::entity#42"
+## Output: "res://path/to/component.gd"
+func _extract_relation_path_from_slot_key(slot_key: String) -> String:
+	var content = slot_key.substr(6) # everything after "rel://"
+	var sep_pos = content.find("::")
+	if sep_pos == -1:
+		return ""
+	return content.substr(0, sep_pos)
 
 
 ## Get or create an archetype for the given signature and component types
@@ -1225,6 +1524,17 @@ func _get_or_create_archetype(signature: int, component_types: Array) -> Archety
 		var archetype = Archetype.new(signature, component_types)
 		archetypes[signature] = archetype
 		_worldLogger.trace("Created new archetype: ", archetype)
+		if ECS.debug and not _archetype_explosion_warned and archetypes.size() > 500:
+			_archetype_explosion_warned = true
+			_worldLogger.error("Archetype explosion: %d archetypes created. Each unique (Relation, Target) pair creates a new archetype — check for unintended relationship cardinality." % archetypes.size())
+
+		# Register in wildcard index: for each rel:// key, extract relation path
+		for rel_key in archetype.relationship_types:
+			var rel_path = _extract_relation_path_from_slot_key(rel_key)
+			if rel_path != "":
+				if not _relation_type_archetype_index.has(rel_path):
+					_relation_type_archetype_index[rel_path] = {}
+				_relation_type_archetype_index[rel_path][archetype.signature] = archetype
 
 		# ARCHETYPE OPTIMIZATION: Only invalidate cache when NEW archetype is created
 		# This is rare compared to entities moving between existing archetypes
@@ -1238,8 +1548,8 @@ func _add_entity_to_archetype(entity: Entity) -> void:
 	# Calculate signature based on entity's components (enabled state now handled by bitset)
 	var signature = _calculate_entity_signature(entity)
 
-	# Get component type paths for this entity
-	var comp_types = entity.components.keys()
+	# Get component type paths for this entity (includes relationship slot keys)
+	var comp_types = _get_entity_archetype_keys(entity)
 
 	# Get or create archetype (no longer needs enabled filter value)
 	var archetype = _get_or_create_archetype(signature, comp_types)
@@ -1277,6 +1587,14 @@ func _remove_entity_from_archetype(entity: Entity) -> bool:
 ## Delete an archetype from the world, cleaning up reverse edges in all neighbor archetypes.
 ## Replaces all three inline deletion sites for consistent cleanup.
 func _delete_archetype(archetype: Archetype) -> void:
+	# Clean up wildcard index entries for this archetype's relationship types
+	for rel_key in archetype.relationship_types:
+		var rel_path = _extract_relation_path_from_slot_key(rel_key)
+		if rel_path != "" and _relation_type_archetype_index.has(rel_path):
+			_relation_type_archetype_index[rel_path].erase(archetype.signature)
+			if _relation_type_archetype_index[rel_path].is_empty():
+				_relation_type_archetype_index.erase(rel_path)
+
 	# Clean incoming edges: iterate neighbors (archetypes that point TO this one)
 	# and remove any edge they have pointing to this archetype
 	for neighbor in archetype.neighbors.values():
@@ -1337,7 +1655,7 @@ func _move_entity_to_new_archetype_fast(
 	# If no cached edge, calculate signature and find/create archetype
 	if new_archetype == null:
 		var new_signature = _calculate_entity_signature(entity)
-		var comp_types = entity.components.keys()
+		var comp_types = _get_entity_archetype_keys(entity)
 		new_archetype = _get_or_create_archetype(new_signature, comp_types)
 
 		# Cache the edge for next time (archetype graph optimization)
