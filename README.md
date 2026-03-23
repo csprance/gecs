@@ -112,7 +112,7 @@ func _process(delta: float) -> void:
 - **[Observers](addons/gecs/docs/OBSERVERS.md)** - Reactive systems for component changes
 - **[Performance Optimization](addons/gecs/docs/PERFORMANCE_OPTIMIZATION.md)** - Make your games run fast
 
-## Example Games
+## Example Games (Some/Most of these are Outdated)
 
 - **[GECS-101](https://github.com/csprance/gecs-101)** - A simple example
 - **[Zombies Ate My Neighbors](https://github.com/csprance/gecs/tree/zombies-ate-my-neighbors/game)** - Action arcade game
