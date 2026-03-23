@@ -10,35 +10,31 @@ Relationship queries must be as fast as component queries — both select pre-gr
 
 ## Requirements
 
-### Validated
+### Validated (v7.1.0 SHIPPED 2026-03-23)
 
 - ✓ Archetype-based entity storage with FNV-1a signature hashing — existing
 - ✓ QueryBuilder with `with_all`, `with_any`, `with_none`, `with_group` — existing
 - ✓ Relationship system: typed `(relation, target)` pairs stored on entities — existing
-- ✓ `with_relationship()` query filter (currently post-filter, slow) — existing
-- ✓ Wildcard null-target relationship matching — existing
-- ✓ Property-based relationship queries via `ComponentQueryMatcher` — existing
+- ✓ `with_relationship()` query filter (now structural, O(1)) — SHIPPED
+- ✓ Wildcard null-target relationship matching — SHIPPED
+- ✓ Property-based relationship queries via `ComponentQueryMatcher` (remain as post-filter) — SHIPPED
 - ✓ CommandBuffer for safe structural mutations during iteration — existing
 - ✓ Observer/reactive system for component lifecycle events — existing
 - ✓ Archetype add/remove edge graph for O(1) archetype transitions — existing
 - ✓ Query archetype cache (FNV-1a keyed, invalidated on structural changes) — existing
 - ✓ Network sync addon (`gecs_network`) — existing
 - ✓ Serialization via `GECSIO` — existing
-- ✓ Each unique `(Relation, Target)` pair included in archetype signature
-- ✓ `entity.add_relationship()` moves entity to new archetype (structural transition)
-- ✓ `entity.remove_relationship()` moves entity back (structural transition)
-- ✓ `with_relationship()` exact-pair queries resolve via archetype cache lookup
-- ✓ Wildcard relation queries use a relation-type index bucket
-- ✓ Archetype query cache key includes structural relationship pairs
-- ✓ Cache invalidation triggers on relationship add/remove
-- ✓ New tests cover the structural archetype query path for relationships
-
-### Active
-
-- [ ] Property-based relationship queries remain as post-filter applied after archetype selection
-- [ ] All existing relationship tests pass unchanged as a formally tracked phase-5 deliverable
-- [ ] Perf benchmarks demonstrate O(1) relationship query parity with component queries
-- [ ] Ships as v7.1.0 — no public API breaks on World, Entity, QueryBuilder
+- ✓ Each unique `(Relation, Target)` pair included in archetype signature — SHIPPED
+- ✓ `entity.add_relationship()` moves entity to new archetype (structural transition) — SHIPPED
+- ✓ `entity.remove_relationship()` moves entity back (structural transition) — SHIPPED
+- ✓ `with_relationship()` exact-pair queries resolve via archetype cache lookup — SHIPPED
+- ✓ Wildcard relation queries use a relation-type index bucket — SHIPPED
+- ✓ Archetype query cache key includes structural relationship pairs — SHIPPED
+- ✓ Cache invalidation triggers on relationship add/remove — SHIPPED
+- ✓ New tests cover the structural archetype query path for relationships — SHIPPED
+- ✓ All existing relationship tests pass unchanged — SHIPPED
+- ✓ Perf benchmarks demonstrate O(1) relationship query parity with component queries — SHIPPED
+- ✓ No public API breaks on World, Entity, QueryBuilder — SHIPPED
 
 ### Out of Scope
 
@@ -75,4 +71,8 @@ Entity relationships support three target types: Entity instance (identity), Com
 
 ---
 
-_Last updated: 2026-03-22 after Phase 04 verification_
+## Next Milestone
+
+_Placeholder for v7.2.0 planning_
+
+_Last updated: 2026-03-23 after v7.1.0 archival_
