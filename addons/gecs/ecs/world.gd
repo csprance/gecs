@@ -611,10 +611,15 @@ func add_system(system: System, topo_sort: bool = false) -> void:
 	systems_by_group[system.group].push_back(system)
 	system_added.emit(system)
 
-	# ALWAYS DEFER SETUP: Queue system setup until ECS.world is assigned
-	# This ensures setup() methods can safely access ECS.world
-	_deferred_setup_systems.append(system)
-	_worldLogger.trace("add_system Deferring setup for system: ", system)
+	if ECS.world == self:
+		# ECS.world is already assigned, we can setup the system immediately.
+		system._internal_setup()
+		_worldLogger.trace("add_system Calling setup() for system: ", system)
+	else:
+		# Queue system setup until ECS.world is assigned
+		# This ensures setup() methods can safely access ECS.world
+		_deferred_setup_systems.append(system)
+		_worldLogger.trace("add_system Deferring setup for system: ", system)
 
 	if topo_sort:
 		ArrayExtensions.topological_sort(systems_by_group)
