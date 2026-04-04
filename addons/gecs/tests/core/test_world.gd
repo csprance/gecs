@@ -37,6 +37,16 @@ func test_add_and_remove_system():
 	assert_bool(world.systems.has(system)).is_false()
 
 
+func test_add_system_calls_setup():
+	var system = SetupTestSystem.new()
+	assert_bool(system.setup_was_called).is_false()
+
+	world.add_system(system)
+
+	assert_bool(system.setup_was_called).is_true()
+	assert_bool(world.systems.has(system)).is_true()
+
+
 func test_purge():
 	# Add an entity and a system
 	var entity1 = Entity.new()
