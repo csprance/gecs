@@ -91,10 +91,10 @@ func test_add_and_remove_component():
 		var comp = C_TestB.new()
 		entity.add_component(comp)
 		entity.remove_component(C_TestB)
-		print('_component_path_cache size=', entity._component_path_cache.size())
+		print('_component_key_cache size=', entity._component_key_cache.size())
 
 	# Test memory leak
-	assert_int(entity._component_path_cache.size()).is_equal(0)
+	assert_int(entity._component_key_cache.size()).is_equal(0)
 
 
 func test_remove_components_with_scripts():

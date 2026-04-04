@@ -1,6 +1,10 @@
 class_name LifetimeSystem
 extends System
 
+
+func setup():
+	safe_iteration = false
+
 func query() -> QueryBuilder:
 	return q.with_all([C_Lifetime]).iterate([C_Lifetime])
 

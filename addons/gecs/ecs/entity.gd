@@ -67,14 +67,22 @@ signal relationships_batch_removed(entity: Entity, _relationships: Array)
 #endregion Exported Variables
 
 #region Public Variables
-## [Component]s attached to the [Entity] in the form of Dict[resource_path:String, Component]
+## [Component]s attached to the [Entity] in the form of Dict[int (script_instance_id), Component]
 var components: Dictionary = {}
 
 ## Relationships attached to the entity
 var relationships: Array[Relationship] = []
 
-## Cache for component resource paths to avoid repeated .get_script().resource_path calls
-var _component_path_cache: Dictionary = {}
+## Cache for component keys to avoid repeated .get_script().get_instance_id() calls
+var _component_key_cache: Dictionary = {}
+
+
+## Returns the int key used for component dictionary lookups.
+## Accepts either a Script (class reference) or a Component instance.
+static func _comp_key(c) -> int:
+	if c is Script:
+		return c.get_instance_id()
+	return c.get_script().get_instance_id()
 
 ## Logger for entities to only log to a specific domain
 var _entityLogger = GECSLogger.new().domain("Entity")
@@ -162,22 +170,22 @@ func get_effective_serialize_config() -> GECSSerializeConfig:
 ## [b]Example[/b]:
 ## [codeblock]entity.add_component(HealthComponent)[/codeblock]
 func add_component(component: Resource) -> void:
-	# Cache the resource path to avoid repeated calls
-	var resource_path = component.get_script().resource_path
+	# Cache the component key to avoid repeated calls
+	var comp_key = _comp_key(component)
 
 	# If a component of this type already exists, remove it first
-	if components.has(resource_path):
-		var existing_component = components[resource_path]
+	if components.has(comp_key):
+		var existing_component = components[comp_key]
 		remove_component(existing_component)
 
-	_component_path_cache[component] = resource_path
-	components[resource_path] = component
+	_component_key_cache[component] = comp_key
+	components[comp_key] = component
 	component.parent = self
 	if not component.property_changed.is_connected(_on_component_property_changed):
 		component.property_changed.connect(_on_component_property_changed)
 	## Adding components happens through a signal
 	component_added.emit(self , component)
-	_entityLogger.trace("Added Component: ", resource_path)
+	_entityLogger.trace("Added Component: ", comp_key)
 
 
 func _on_component_property_changed(
@@ -202,9 +210,9 @@ func add_components(_components: Array):
 	for component in _components:
 		if component == null:
 			continue
-		var component_path = component.get_script().resource_path
-		if not components.has(component_path):
-			components[component_path] = component
+		var comp_key = _comp_key(component)
+		if not components.has(comp_key):
+			components[comp_key] = component
 			added_components.append(component)
 
 	# If no new components were actually added, return early
@@ -232,9 +240,9 @@ func add_components(_components: Array):
 		else:
 			# Same archetype - just update the column data for new components
 			for component in added_components:
-				var comp_path = component.get_script().resource_path
+				var comp_key = _comp_key(component)
 				var entity_index = old_archetype.entity_to_index[ self ]
-				old_archetype.columns[comp_path][entity_index] = component
+				old_archetype.columns[comp_key][entity_index] = component
 
 	# Emit signals for all added components
 	for component in added_components:
@@ -246,21 +254,20 @@ func add_components(_components: Array):
 ## [b]Example:[/b]
 ##     [codeblock]entity.remove_component(HealthComponent)[/codeblock]
 func remove_component(component: Resource) -> void:
-	# Use cached path if available, otherwise get it from the component class
-	var resource_path: String
-	if _component_path_cache.has(component):
-		resource_path = _component_path_cache[component]
-		_component_path_cache.erase(component)
+	# Use cached key if available, otherwise derive it
+	var comp_key: int
+	if _component_key_cache.has(component):
+		comp_key = _component_key_cache[component]
+		_component_key_cache.erase(component)
 	else:
-		# Component parameter should be a class/script, consistent with has_component
-		resource_path = component.resource_path
+		comp_key = _comp_key(component)
 
-	if components.has(resource_path):
-		var component_instance = components[resource_path]
-		components.erase(resource_path)
+	if components.has(comp_key):
+		var component_instance = components[comp_key]
+		components.erase(comp_key)
 
 		# Clean up cache entry for the component instance
-		_component_path_cache.erase(component_instance)
+		_component_key_cache.erase(component_instance)
 
 		# OBS-03: Disconnect property_changed before emitting removal signal.
 		# Without this, phantom on_component_changed callbacks arrive whenever
@@ -270,7 +277,7 @@ func remove_component(component: Resource) -> void:
 
 		component_removed.emit(self , component_instance)
 		# ARCHETYPE: Signal handler (_on_entity_component_removed) handles archetype update
-		_entityLogger.trace("Removed Component: ", resource_path)
+		_entityLogger.trace("Removed Component: ", comp_key)
 
 
 func deferred_remove_component(component: Resource) -> void:
@@ -303,12 +310,12 @@ func remove_components(_components: Array):
 			comp_to_remove = _component
 
 		if comp_to_remove:
-			var component_path = comp_to_remove.get_script().resource_path
-			if components.has(component_path):
-				components.erase(component_path)
+			var comp_key = _comp_key(comp_to_remove)
+			if components.has(comp_key):
+				components.erase(comp_key)
 				# Clean up cache entries for both the class and instance
-				_component_path_cache.erase(_component)
-				_component_path_cache.erase(comp_to_remove)
+				_component_key_cache.erase(_component)
+				_component_key_cache.erase(comp_to_remove)
 				# OBS-03: Disconnect property_changed before emitting removal signal.
 				if comp_to_remove.property_changed.is_connected(_on_component_property_changed):
 					comp_to_remove.property_changed.disconnect(_on_component_property_changed)
@@ -356,14 +363,14 @@ func remove_all_components() -> void:
 ## [b]Example:[/b]
 ##     [codeblock]var transform = entity.get_component(Transform)[/codeblock]
 func get_component(component: Resource) -> Component:
-	return components.get(component.resource_path, null)
+	return components.get(_comp_key(component), null)
 
 
 ## Check to see if an entity has a  specific component on it.[br]
 ## This is useful when you're checking to see if it has a component and not going to use the component itself.[br]
 ## If you plan on getting and using the component, use [method get_component] instead.
 func has_component(component: Resource) -> bool:
-	return components.has(component.resource_path)
+	return components.has(_comp_key(component))
 
 #endregion Components
 
@@ -517,9 +524,13 @@ func get_relationships(relationship: Relationship) -> Array[Relationship]:
 
 
 ## Checks if the entity has a specific relationship.[br]
+## Fast path — skips validation/cleanup (use get_relationship when you need the value).[br]
 ## [param relationship] The [Relationship] to check for.
 func has_relationship(relationship: Relationship) -> bool:
-	return get_relationship(relationship) != null
+	for rel in relationships:
+		if rel.matches(relationship):
+			return true
+	return false
 
 #endregion Relationships
 

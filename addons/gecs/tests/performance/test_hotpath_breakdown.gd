@@ -43,11 +43,11 @@ func test_component_access(scale: int, test_parameters := [[100], [1000], [10000
 	setup_velocity_entities(scale)
 
 	var entities = world.query.with_all([C_Velocity]).execute()
-	var c_velocity_path = C_Velocity.resource_path
+	var c_velocity_key = (C_Velocity as GDScript).get_instance_id()
 
 	var time_ms = PerfHelpers.time_it(func():
 		for entity in entities:
-			var _component = entity.components.get(c_velocity_path, null) as C_Velocity
+			var _component = entity.components.get(c_velocity_key, null) as C_Velocity
 	)
 
 	PerfHelpers.record_result("hotpath_component_access", scale, time_ms)
@@ -59,11 +59,11 @@ func test_component_data_read(scale: int, test_parameters := [[100], [1000], [10
 	setup_velocity_entities(scale)
 
 	var entities = world.query.with_all([C_Velocity]).execute()
-	var c_velocity_path = C_Velocity.resource_path
+	var c_velocity_key = (C_Velocity as GDScript).get_instance_id()
 
 	var time_ms = PerfHelpers.time_it(func():
 		for entity in entities:
-			var component = entity.components.get(c_velocity_path, null) as C_Velocity
+			var component = entity.components.get(c_velocity_key, null) as C_Velocity
 			if component:
 				# Read the velocity data
 				var _vel = component.velocity
@@ -77,14 +77,14 @@ func test_component_data_read(scale: int, test_parameters := [[100], [1000], [10
 func test_simulated_system_loop(scale: int, test_parameters := [[100], [1000], [10000]]):
 	setup_velocity_entities(scale)
 
-	var c_velocity_path = C_Velocity.resource_path
+	var c_velocity_key = (C_Velocity as GDScript).get_instance_id()
 	var delta = 0.016
 
 	var time_ms = PerfHelpers.time_it(func():
 		# Simulate what a system does: query + iterate + component access + work
 		var entities = world.query.with_all([C_Velocity]).execute()
 		for entity in entities:
-			var component = entity.components.get(c_velocity_path, null) as C_Velocity
+			var component = entity.components.get(c_velocity_key, null) as C_Velocity
 			if component:
 				# Simulate typical work (reading velocity, calculating new position)
 				var _new_pos = component.velocity * delta
@@ -139,11 +139,11 @@ func test_component_access_patterns(scale: int, test_parameters := [[100], [1000
 
 	var entities = world.query.with_all([C_Velocity]).execute()
 
-	# Test with cached path (current best practice)
-	var c_velocity_path = C_Velocity.resource_path
+	# Test with cached key (current best practice)
+	var c_velocity_key = (C_Velocity as GDScript).get_instance_id()
 	var time_cached = PerfHelpers.time_it(func():
 		for entity in entities:
-			var _component = entity.components.get(c_velocity_path, null) as C_Velocity
+			var _component = entity.components.get(c_velocity_key, null) as C_Velocity
 	)
 
 	# Test with get_component() helper

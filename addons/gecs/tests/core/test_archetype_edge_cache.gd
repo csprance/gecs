@@ -251,9 +251,9 @@ func test_no_stale_reverse_edge_after_edge_reassignment():
 	## Now entity_keeper is in A-only and entity2 is in AB2.
 	## A-only should have add_edges[b] = AB2, and AB2.remove_edges[b] = A-only.
 	var a_archetype = world.entity_to_archetype[entity_keeper]
-	var b_path = C_TestB.new().get_script().resource_path
+	var b_key = C_TestB.new().get_script().get_instance_id()
 	## AB2's remove_edge[b] should point to a_archetype (the CURRENT a-only), not a ghost.
-	var reverse_edge_target = ab2_archetype.get_remove_edge(b_path)
+	var reverse_edge_target = ab2_archetype.get_remove_edge(b_key)
 	assert_object(reverse_edge_target).is_same(a_archetype)
 
 	## ASSERT: The old (deleted) ab_archetype must NOT have a stale neighbors entry
@@ -262,13 +262,13 @@ func test_no_stale_reverse_edge_after_edge_reassignment():
 	## incorrectly sweep ab2_archetype's edges.
 	## With current code (no fix): the neighbors dict may retain stale back-pointers.
 	## After fix: stale back-pointer is cleared during the second edge assignment.
-	## We check that ab2_archetype.remove_edges[b_path] == a_archetype (not a ghost).
-	assert_object(ab2_archetype.get_remove_edge(b_path)).is_same(a_archetype)
-	assert_bool(world.archetypes.has(ab2_archetype.get_remove_edge(b_path).signature)).is_true()
+	## We check that ab2_archetype.remove_edges[b_key] == a_archetype (not a ghost).
+	assert_object(ab2_archetype.get_remove_edge(b_key)).is_same(a_archetype)
+	assert_bool(world.archetypes.has(ab2_archetype.get_remove_edge(b_key).signature)).is_true()
 
 	## CRITICAL ASSERT: After the second "add B" cycle completes,
 	## verify that NO live archetype has a stale edge pointing to the deleted ab_archetype.
 	## The a_archetype's add_edges[b] must point to AB2 (not the ghost ab_archetype).
-	var forward_edge = a_archetype.get_add_edge(b_path)
+	var forward_edge = a_archetype.get_add_edge(b_key)
 	assert_object(forward_edge).is_not_same(ab_archetype)
 	assert_object(forward_edge).is_same(ab2_archetype)

@@ -3,9 +3,10 @@ extends System
 
 @export var random_mover_scene: PackedScene
 
-func _init():
+func setup():
 	# Use PER_GROUP flush mode - spawns will be visible to other systems next frame
 	command_buffer_flush_mode = "PER_GROUP"
+	safe_iteration = false
 
 
 func process(_es: Array, _cs: Array, _d: float):

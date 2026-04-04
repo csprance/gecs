@@ -106,9 +106,11 @@ func test_subsystem_mixed_execution_methods():
 	world.process(0.016)
 
 	# Verify: Each subsystem ran with correct execution method
-	# Note: entity2 (C_SubsystemTestB only) also somehow matches, investigating why
-	assert_int(system.process_count).is_greater_equal(2) # entity1, entity3 have C_SubsystemTestA (expecting 2, getting 3)
-	assert_int(system.process_all_count).is_equal(1) # Called once with all C_SubsystemTestB entities
+	# Subsystem callables are invoked per-archetype in the structural fast path.
+	# entity1 (A only) and entity3 (A+B) live in different archetypes, so process_sub is called twice.
+	# entity2 (B only) and entity3 (A+B) also live in different archetypes, so process_all_sub is called twice.
+	assert_int(system.process_count).is_equal(2) # entity1 + entity3 via C_SubsystemTestA (2 entities across 2 archetypes)
+	assert_int(system.process_all_count).is_equal(2) # entity2 + entity3 via C_SubsystemTestB (2 archetypes, called once each)
 	assert_int(system.archetype_count).is_greater_equal(1) # At least once for C_SubsystemTestA archetypes
 
 

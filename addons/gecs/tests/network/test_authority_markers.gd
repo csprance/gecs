@@ -174,8 +174,7 @@ func test_marker_injection_idempotent() -> void:
 
 	# Count CN_LocalAuthority components — should be exactly 1, not 2
 	var local_auth_count = 0
-	for comp_path in entity.components.keys():
-		var comp = entity.components[comp_path]
+	for comp in entity.components.values():
 		if comp is CN_LocalAuthority:
 			local_auth_count += 1
 
