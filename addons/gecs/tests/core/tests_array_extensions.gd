@@ -1,10 +1,17 @@
 extends GdUnitTestSuite
 
 
-var testSystemA = TestASystem.new()
-var testSystemB = TestBSystem.new()
-var testSystemC = TestCSystem.new()
-var testSystemD = TestDSystem.new()
+var testSystemA: TestASystem
+var testSystemB: TestBSystem
+var testSystemC: TestCSystem
+var testSystemD: TestDSystem
+
+
+func before_test():
+	testSystemA = auto_free(TestASystem.new())
+	testSystemB = auto_free(TestBSystem.new())
+	testSystemC = auto_free(TestCSystem.new())
+	testSystemD = auto_free(TestDSystem.new())
 
 
 func test_topological_sort():

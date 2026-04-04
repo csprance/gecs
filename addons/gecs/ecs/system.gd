@@ -45,6 +45,9 @@ enum Runs {
 	After,
 }
 
+## Internal flush mode enum — mirrors @export_enum "PER_SYSTEM","PER_GROUP","MANUAL"
+enum FlushMode { PER_SYSTEM, PER_GROUP, MANUAL }
+
 #endregion Enums
 
 #region Exported Variables
@@ -67,6 +70,13 @@ enum Runs {
 ## - PER_GROUP: Flush at the end of the process group (after all systems in the group)
 ## - MANUAL: Requires manual world.flush_command_buffers() call (for cross-group batching)
 @export_enum("PER_SYSTEM", "PER_GROUP", "MANUAL") var command_buffer_flush_mode: String = "PER_SYSTEM"
+
+@export_group("Iteration")
+## When true (default), entity arrays are copied before iteration to guard against
+## mutation skipping from mid-iteration structural changes (add/remove component).
+## Set to false when ALL structural changes go through [member cmd] (CommandBuffer),
+## since deferred commands never mutate during iteration — skipping the copy entirely.
+@export var safe_iteration: bool = true
 
 #endregion Exported Variables
 
@@ -101,10 +111,18 @@ var cmd: CommandBuffer = null:
 
 ## Cached query to avoid recreating it every frame (lazily initialized)
 var _query_cache: QueryBuilder = null
-## Cached component paths for iterate() fast path (6.0.0 style)
-var _component_paths: Array[String] = []
+## Cached component keys for iterate() fast path (script instance ids)
+var _component_keys: Array = []
 ## Cached subsystems array (6.0.0 style)
 var _subsystems_cache: Array = []
+## -1 = unchecked, 0 = no subsystems, 1 = has subsystems (avoids sub_systems() alloc every frame)
+var _has_subsystems_cached: int = -1
+## Cached non-structural filter result for _query_cache (-1 = uncached, 0 = false, 1 = true)
+var _uses_non_structural_cached: int = -1
+## Cached non-structural filter result per subsystem index (built once with _subsystems_cache)
+var _subsystem_non_structural_cache: Array[int] = []
+## Integer flush mode derived from command_buffer_flush_mode string (avoids per-frame string comparison)
+var _flush_mode: int = FlushMode.PER_SYSTEM
 
 #endregion Public Variables
 
@@ -172,8 +190,7 @@ func process(entities: Array[Entity], components: Array, delta: float) -> void:
 
 ## Check if this system has a command buffer with pending commands
 func has_pending_commands() -> bool:
-	# Accessing cmd will initialize it if needed, then check if it has commands
-	return not cmd.is_empty()
+	return cmd != null and not cmd.is_empty()
 
 #endregion Public Methods
 
@@ -182,6 +199,11 @@ func has_pending_commands() -> bool:
 ## INTERNAL: Called by World.add_system() to initialize the system
 ## DO NOT CALL OR OVERRIDE - this is framework code
 func _internal_setup():
+	# Convert string flush mode to int once (avoids per-frame string comparisons)
+	match command_buffer_flush_mode:
+		"PER_GROUP": _flush_mode = FlushMode.PER_GROUP
+		"MANUAL":    _flush_mode = FlushMode.MANUAL
+		_:           _flush_mode = FlushMode.PER_SYSTEM
 	# Call user setup
 	setup()
 
@@ -232,13 +254,14 @@ func _handle(delta: float) -> void:
 			"system_name": get_script().resource_path.get_file().get_basename(),
 			"frame_delta": delta,
 		}
-	var subs = sub_systems()
-	if not subs.is_empty():
+	if _has_subsystems_cached == -1:
+		_has_subsystems_cached = 1 if not sub_systems().is_empty() else 0
+	if _has_subsystems_cached == 1:
 		_run_subsystems(delta)
 	else:
 		_run_process(delta)
 	# Flush command buffer if mode is PER_SYSTEM
-	if command_buffer_flush_mode == "PER_SYSTEM" and has_pending_commands():
+	if _flush_mode == FlushMode.PER_SYSTEM and has_pending_commands():
 		cmd.execute()
 
 	if ECS.debug:
@@ -256,11 +279,15 @@ func _handle(delta: float) -> void:
 func _run_subsystems(delta: float) -> void:
 	if _subsystems_cache.is_empty():
 		_subsystems_cache = sub_systems()
+		_subsystem_non_structural_cache.clear()
+		for subsystem_tuple in _subsystems_cache:
+			var sq := subsystem_tuple[0] as QueryBuilder
+			_subsystem_non_structural_cache.append(1 if _query_has_non_structural_filters(sq) else 0)
 	var subsystem_index := 0
 	for subsystem_tuple in _subsystems_cache:
 		var subsystem_query := subsystem_tuple[0] as QueryBuilder
 		var subsystem_callable := subsystem_tuple[1] as Callable
-		var uses_non_structural := _query_has_non_structural_filters(subsystem_query)
+		var uses_non_structural := _subsystem_non_structural_cache[subsystem_index] == 1
 		var iterate_comps = subsystem_query._iterate_components
 		if uses_non_structural:
 			# Gather ALL structural entities first then filter once (avoid per-archetype filtering churn)
@@ -293,8 +320,8 @@ func _run_subsystems(delta: float) -> void:
 				var components = []
 				if not iterate_comps.is_empty():
 					for comp_type in iterate_comps:
-						var comp_path = comp_type.resource_path if comp_type is Script else comp_type.get_script().resource_path
-						components.append(archetype.get_column(comp_path))
+						var comp_key = comp_type.get_instance_id() if comp_type is Script else comp_type.get_script().get_instance_id()
+						components.append(archetype.get_column(comp_key))
 				subsystem_callable.call(arch_entities, components, delta)
 			if ECS.debug:
 				lastRunData[subsystem_index] = {"subsystem_index": subsystem_index, "entity_count": total_entity_count, "fallback_execute": false}
@@ -304,12 +331,15 @@ func _run_subsystems(delta: float) -> void:
 func _run_process(delta: float) -> void:
 	if not _query_cache:
 		_query_cache = query()
-	if _component_paths.is_empty():
+		_uses_non_structural_cached = -1
+	if _component_keys.is_empty():
 		var iterate_comps = _query_cache._iterate_components
 		for comp_type in iterate_comps:
-			var comp_path = comp_type.resource_path if comp_type is Script else comp_type.get_script().resource_path
-			_component_paths.append(comp_path)
-	var uses_non_structural := _query_has_non_structural_filters(_query_cache)
+			var comp_key = comp_type.get_instance_id() if comp_type is Script else comp_type.get_script().get_instance_id()
+			_component_keys.append(comp_key)
+	if _uses_non_structural_cached == -1:
+		_uses_non_structural_cached = 1 if _query_has_non_structural_filters(_query_cache) else 0
+	var uses_non_structural := _uses_non_structural_cached == 1
 	var iterate_comps = _query_cache._iterate_components
 	if uses_non_structural:
 		# Gather all entities across structural archetypes and then filter once
@@ -341,33 +371,22 @@ func _run_process(delta: float) -> void:
 			lastRunData["fallback_execute"] = true
 			lastRunData["parallel"] = parallel_processing and filtered.size() >= parallel_threshold
 		return
-	# Structural fast path
+	# Structural fast path — single pass over archetypes
 	var matching_archetypes = _query_cache.archetypes()
-	var has_entities = false
-	var total_entity_count := 0
-	for arch in matching_archetypes:
-		if not arch.entities.is_empty():
-			has_entities = true
-			total_entity_count += arch.entities.size()
-	if ECS.debug:
-		lastRunData["entity_count"] = total_entity_count
-		lastRunData["archetype_count"] = matching_archetypes.size()
-		lastRunData["fallback_execute"] = false
-	if not has_entities and not process_empty:
-		return
-	if not has_entities and process_empty:
-		process([], [], delta)
-		return
+	var processed_any := false
 	for arch in matching_archetypes:
 		var arch_entities = arch.entities
 		if arch_entities.is_empty():
 			continue
-		# Snapshot structural entities to avoid mutation skipping during component add/remove
-		var snapshot_entities = arch_entities.duplicate()
+		processed_any = true
+		# Snapshot entities to avoid mutation skipping during component add/remove.
+		# When safe_iteration is false the system uses CommandBuffer for ALL structural
+		# changes so the snapshot copy is unnecessary — use the archetype array directly.
+		var snapshot_entities = arch_entities.duplicate() if safe_iteration else arch_entities
 		var components = []
 		if not iterate_comps.is_empty():
-			for comp_path in _component_paths:
-				components.append(arch.get_column(comp_path))
+			for comp_key in _component_keys:
+				components.append(arch.get_column(comp_key))
 		if parallel_processing and snapshot_entities.size() >= parallel_threshold:
 			if ECS.debug:
 				lastRunData["parallel"] = true
@@ -377,6 +396,21 @@ func _run_process(delta: float) -> void:
 			if ECS.debug:
 				lastRunData["parallel"] = false
 			process(snapshot_entities, components, delta)
+	if not processed_any:
+		if process_empty:
+			process([], [], delta)
+		if ECS.debug:
+			lastRunData["entity_count"] = 0
+			lastRunData["archetype_count"] = matching_archetypes.size()
+			lastRunData["fallback_execute"] = false
+		return
+	if ECS.debug:
+		var total := 0
+		for arch in matching_archetypes:
+			total += arch.entities.size()
+		lastRunData["entity_count"] = total
+		lastRunData["archetype_count"] = matching_archetypes.size()
+		lastRunData["fallback_execute"] = false
 
 
 ## Determine if a query includes non-structural filters requiring execute() fallback

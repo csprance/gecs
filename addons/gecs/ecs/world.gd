@@ -94,9 +94,12 @@ var _cache_hits: int = 0
 var _cache_misses: int = 0
 ## Track cache invalidations for debugging
 var _cache_invalidation_count: int = 0
+## Monotonic version counter — incremented on every structural cache invalidation.
+## QueryBuilder checks this to detect stale cached results without relying on signal delivery.
+var cache_version: int = 0
 var _cache_invalidation_reasons: Dictionary = {} # reason -> count
-## Global cache: resource_path -> Script (loaded once, reused forever)
-var _component_script_cache: Dictionary = {} # String -> Script
+## Global cache: script_instance_id (int) -> Script (loaded once, reused forever)
+var _component_script_cache: Dictionary = {} # int -> Script
 ## OPTIMIZATION: Depth counter to suppress cache invalidation during batch operations.
 ## > 0 means we are inside a batch; invalidation is deferred until _end_suppress().
 var _suppress_invalidation_depth: int = 0
@@ -255,7 +258,7 @@ func process(delta: float, group: String = "") -> void:
 
 		# Flush PER_GROUP command buffers after all systems in the group complete
 		for system in systems_by_group[group]:
-			if system.command_buffer_flush_mode == "PER_GROUP" and system.has_pending_commands():
+			if system._flush_mode == System.FlushMode.PER_GROUP and system.has_pending_commands():
 				system.cmd.execute()
 	if ECS.debug:
 		assert(GECSEditorDebuggerMessages.process_world(delta, group), "")
@@ -273,7 +276,7 @@ func process(delta: float, group: String = "") -> void:
 func flush_command_buffers() -> void:
 	for group_key in systems_by_group.keys():
 		for system in systems_by_group[group_key]:
-			if system.command_buffer_flush_mode == "MANUAL" and system.has_pending_commands():
+			if system._flush_mode == System.FlushMode.MANUAL and system.has_pending_commands():
 				system.cmd.execute()
 
 
@@ -611,10 +614,14 @@ func add_system(system: System, topo_sort: bool = false) -> void:
 	systems_by_group[system.group].push_back(system)
 	system_added.emit(system)
 
-	# ALWAYS DEFER SETUP: Queue system setup until ECS.world is assigned
-	# This ensures setup() methods can safely access ECS.world
-	_deferred_setup_systems.append(system)
-	_worldLogger.trace("add_system Deferring setup for system: ", system)
+	# If ECS.world is already this world, setup immediately since finalize_system_setup()
+	# has already run. Otherwise defer until finalize_system_setup() is called.
+	if ECS.world == self:
+		system._internal_setup()
+		_worldLogger.trace("add_system Immediate setup for system: ", system)
+	else:
+		_deferred_setup_systems.append(system)
+		_worldLogger.trace("add_system Deferring setup for system: ", system)
 
 	if topo_sort:
 		ArrayExtensions.topological_sort(systems_by_group)
@@ -741,9 +748,9 @@ func _on_entity_component_added(entity: Entity, component: Resource) -> void:
 	# ARCHETYPE: Move entity to new archetype
 	if entity_to_archetype.has(entity):
 		var old_archetype = entity_to_archetype[entity]
-		var comp_path = component.get_script().resource_path
+		var comp_key = component.get_script().get_instance_id()
 		var new_archetype = _move_entity_to_new_archetype_fast(
-			entity, old_archetype, comp_path, true
+			entity, old_archetype, comp_key, true
 		)
 		# Always invalidate: even if no new archetype was created, entity membership
 		# within archetypes changed, so cached query results are stale.
@@ -791,9 +798,9 @@ func _on_entity_component_property_change(
 func _on_entity_component_removed(entity, component: Resource) -> void:
 	if entity_to_archetype.has(entity):
 		var old_archetype = entity_to_archetype[entity]
-		var comp_path = component.resource_path
+		var comp_key = component.get_script().get_instance_id()
 		var new_archetype = _move_entity_to_new_archetype_fast(
-			entity, old_archetype, comp_path, false
+			entity, old_archetype, comp_key, false
 		)
 		# Always invalidate: even if no new archetype was created, entity membership
 		# within archetypes changed, so cached query results are stale.
@@ -1041,10 +1048,10 @@ func _query(
 		if ECS.debug:
 			_perf_start_scan = Time.get_ticks_usec()
 		# Find all archetypes that match this query
-		var map_resource_path = func(x): return x.resource_path
-		var _all := all_components.map(map_resource_path)
-		var _any := any_components.map(map_resource_path)
-		var _exclude := exclude_components.map(map_resource_path)
+		var map_to_key = func(x): return x.get_instance_id()
+		var _all := all_components.map(map_to_key)
+		var _any := any_components.map(map_to_key)
+		var _exclude := exclude_components.map(map_to_key)
 
 		# Determine candidate archetypes: use wildcard index if available
 		var candidates: Array = []
@@ -1145,7 +1152,7 @@ func group_entities_by_archetype(entities: Array) -> Dictionary:
 ##     # NEW WAY (fast):
 ##     var archetypes = ECS.world.get_matching_archetypes(q.with_all([C_Velocity]))
 ##     for archetype in archetypes:
-##         var velocities = archetype.get_column(C_Velocity.resource_path)
+##         var velocities = archetype.get_column(C_Velocity.get_instance_id())
 ##         for i in range(velocities.size()):
 ##             # Process with cache-friendly column access
 ## [/codeblock]
@@ -1171,10 +1178,10 @@ func get_matching_archetypes(query_builder: QueryBuilder) -> Array[Archetype]:
 			perf_mark("archetypes_cache_hit", Time.get_ticks_usec() - _perf_start)
 		return _query_archetype_cache[cache_key]
 
-	var map_resource_path = func(x): return x.resource_path
-	var _all := all_components.map(map_resource_path)
-	var _any := any_components.map(map_resource_path)
-	var _exclude := exclude_components.map(map_resource_path)
+	var map_to_key = func(x): return x.get_instance_id()
+	var _all := all_components.map(map_to_key)
+	var _any := any_components.map(map_to_key)
+	var _exclude := exclude_components.map(map_to_key)
 
 	var matching: Array[Archetype] = []
 	var _perf_scan_start := 0
@@ -1248,6 +1255,7 @@ func _invalidate_cache(reason: String) -> void:
 
 	_pending_invalidation = false
 	_query_archetype_cache.clear()
+	cache_version += 1
 	cache_invalidated.emit()
 
 	_cache_invalidation_count += 1
@@ -1400,19 +1408,19 @@ func _cleanup_relationships_to_target(target: Entity) -> void:
 ## Uses the same hash function as queries for consistency
 ## An entity signature is just a query with all its components (no any/exclude)
 func _calculate_entity_signature(entity: Entity) -> int:
-	# Get component resource paths
-	var comp_paths = entity.components.keys()
-	comp_paths.sort() # Sort paths for consistent ordering
+	# Get component keys (script instance ids)
+	var comp_keys = entity.components.keys()
+	comp_keys.sort() # Sort keys for consistent ordering
 
-	# Convert paths to Script objects using cached scripts (load once, reuse forever)
+	# Convert keys to Script objects using cached scripts (load once, reuse forever)
 	var comp_scripts = []
-	for comp_path in comp_paths:
+	for comp_key in comp_keys:
 		# Check cache first
-		if not _component_script_cache.has(comp_path):
+		if not _component_script_cache.has(comp_key):
 			# Load once and cache
-			var component = entity.components[comp_path]
-			_component_script_cache[comp_path] = component.get_script()
-		comp_scripts.append(_component_script_cache[comp_path])
+			var component = entity.components[comp_key]
+			_component_script_cache[comp_key] = component.get_script()
+		comp_scripts.append(_component_script_cache[comp_key])
 
 	# Collect structural relationships for signature hash
 	# Property-query relationships are excluded (they remain post-filter only)
@@ -1495,7 +1503,7 @@ func _get_compatible_relationship_slot_keys(rel: Relationship) -> Array:
 	return keys
 
 
-## Get the full set of archetype keys for an entity (component paths + relationship slot keys)
+## Get the full set of archetype keys for an entity (int component keys + String relationship slot keys)
 func _get_entity_archetype_keys(entity: Entity) -> Array:
 	var keys = entity.components.keys().duplicate()
 	for rel in entity.relationships:
@@ -1630,26 +1638,26 @@ func _delete_archetype(archetype: Archetype) -> void:
 ## This avoids expensive set comparisons to find the difference
 ## Returns the new archetype the entity was moved to
 func _move_entity_to_new_archetype_fast(
-	entity: Entity, old_archetype: Archetype, comp_path: String, is_add: bool
+	entity: Entity, old_archetype: Archetype, comp_key: Variant, is_add: bool
 ) -> Archetype:
 	# Try to use archetype edge for O(1) transition
 	var new_archetype: Archetype = null
 
 	if is_add:
 		# Check if we have a cached edge for this component addition
-		new_archetype = old_archetype.get_add_edge(comp_path)
+		new_archetype = old_archetype.get_add_edge(comp_key)
 	else:
 		# Check if we have a cached edge for this component removal
-		new_archetype = old_archetype.get_remove_edge(comp_path)
+		new_archetype = old_archetype.get_remove_edge(comp_key)
 
 	# ARCH-01: Guard against stale edge cache references
 	# Archetype was deleted when empty — clear edge and fall through to find/create.
 	if new_archetype != null and not archetypes.has(new_archetype.signature):
 		# Stale edge — archetype was deleted when empty. Clear edge and fall through to find/create.
 		if is_add:
-			old_archetype.add_edges.erase(comp_path)
+			old_archetype.add_edges.erase(comp_key)
 		else:
-			old_archetype.remove_edges.erase(comp_path)
+			old_archetype.remove_edges.erase(comp_key)
 		new_archetype = null
 
 	# If no cached edge, calculate signature and find/create archetype
@@ -1658,13 +1666,20 @@ func _move_entity_to_new_archetype_fast(
 		var comp_types = _get_entity_archetype_keys(entity)
 		new_archetype = _get_or_create_archetype(new_signature, comp_types)
 
-		# Cache the edge for next time (archetype graph optimization)
-		if is_add:
-			old_archetype.set_add_edge(comp_path, new_archetype)
-			new_archetype.set_remove_edge(comp_path, old_archetype)
-		else:
-			old_archetype.set_remove_edge(comp_path, new_archetype)
-			new_archetype.set_add_edge(comp_path, old_archetype)
+		# Only cache edges when source and target differ — self-referencing edges
+		# arise during _initialize() (clear + re-add same components) and cause
+		# subsequent remove_component to "move" the entity back to the same archetype.
+		if new_archetype != old_archetype:
+			if is_add:
+				old_archetype.set_add_edge(comp_key, new_archetype)
+				new_archetype.set_remove_edge(comp_key, old_archetype)
+			else:
+				old_archetype.set_remove_edge(comp_key, new_archetype)
+				new_archetype.set_add_edge(comp_key, old_archetype)
+
+	# Skip move if entity is already in the target archetype (e.g. re-add of existing component)
+	if new_archetype == old_archetype:
+		return old_archetype
 
 	# Remove from old archetype
 	old_archetype.remove_entity(entity)
@@ -1778,8 +1793,8 @@ func _poll_entity_for_debugger(entity_id: int) -> void:
 		return
 
 	# Re-send all component data with fresh serialize() calls
-	for comp_path in entity.components.keys():
-		var comp = entity.components[comp_path]
+	for comp_key in entity.components.keys():
+		var comp = entity.components[comp_key]
 		if comp and comp is Resource:
 			# Send updated component data
 			GECSEditorDebuggerMessages.entity_component_added(entity, comp)

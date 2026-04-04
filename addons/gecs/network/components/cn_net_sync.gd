@@ -96,8 +96,7 @@ func scan_entity_components(entity: Entity) -> void:
 	_comp_refs.clear()
 	_comp_type_names.clear()
 
-	for comp_key in entity.components.keys():
-		var comp = entity.components[comp_key]
+	for comp in entity.components.values():
 		if not is_instance_valid(comp):
 			continue
 		if comp is CN_NetSync:

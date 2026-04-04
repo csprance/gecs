@@ -179,8 +179,7 @@ func _apply_component_data(entity: Entity, comp_data: Dictionary) -> void:
 ## Find a component on an entity by its type name string.
 ## Mirrors SpawnManager._find_component_by_type() exactly.
 func _find_component_by_type(entity: Entity, comp_type: String) -> Component:
-	for comp_path in entity.components.keys():
-		var comp = entity.components[comp_path]
+	for comp in entity.components.values():
 		var script = comp.get_script()
 		var ct: String
 		if script == null:

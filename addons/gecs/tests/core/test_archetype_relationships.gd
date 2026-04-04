@@ -3,12 +3,19 @@ extends GdUnitTestSuite
 ## Test suite for archetype relationship slot key handling
 ##
 ## Verifies that Archetype correctly handles rel:// prefixed slot keys
-## alongside component resource paths (ARCH-01 through ARCH-05).
+## alongside component int keys (ARCH-01 through ARCH-05).
 
 
-# Test component paths (matching real test components)
-const COMP_A := "res://addons/gecs/tests/components/c_test_a.gd"
-const COMP_B := "res://addons/gecs/tests/components/c_test_b.gd"
+# Test component keys (script instance ids, initialized in before())
+var COMP_A: int
+var COMP_B: int
+
+var _script_a: GDScript = preload("res://addons/gecs/tests/components/c_test_a.gd")
+var _script_b: GDScript = preload("res://addons/gecs/tests/components/c_test_b.gd")
+
+func before():
+	COMP_A = _script_a.get_instance_id()
+	COMP_B = _script_b.get_instance_id()
 
 # Relationship slot keys using the rel:// format
 const REL_A_ENTITY := "rel://res://addons/gecs/tests/components/c_test_a.gd::entity#99999"
@@ -40,13 +47,11 @@ func test_rel_key_format_and_sorting():
 	# component_types should contain all 4 entries
 	assert_int(arch.component_types.size()).is_equal(4)
 
-	# rel:// keys sort after res:// keys alphabetically
-	# After sorting: COMP_A (res://...c_test_a), COMP_B (res://...c_test_b),
-	# REL_A_ENTITY (rel://...c_test_a::entity#99999), REL_B_COMP (rel://...c_test_b::comp://...)
-	# Note: 'rel' < 'res' alphabetically, so rel:// keys come BEFORE res:// keys
+	# component_types is a mix of ints (components) and Strings (rel:// keys)
+	# After sorting: ints come before Strings in Godot's Variant comparison
 	for ct in arch.component_types:
 		assert_bool(
-			(ct as String).begins_with("rel://") or (ct as String).begins_with("res://")
+			ct is int or (ct is String and (ct as String).begins_with("rel://"))
 		).is_true()
 
 	# Should contain all keys

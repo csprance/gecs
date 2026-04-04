@@ -47,8 +47,7 @@ func serialize_entity(entity: Entity) -> Dictionary:
 	var components_data := {}
 	var script_paths := {}
 
-	for comp_path in entity.components.keys():
-		var comp = entity.components[comp_path]
+	for comp in entity.components.values():
 		var script = comp.get_script()
 
 		var comp_type: String
@@ -253,8 +252,7 @@ func _inject_authority_markers(entity: Entity, net_id: CN_NetworkIdentity) -> vo
 
 ## Find a component on an entity by its type name string.
 func _find_component_by_type(entity: Entity, comp_type: String) -> Component:
-	for comp_path in entity.components.keys():
-		var comp = entity.components[comp_path]
+	for comp in entity.components.values():
 		var script = comp.get_script()
 		var ct: String
 		if script == null:

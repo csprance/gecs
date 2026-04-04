@@ -140,8 +140,8 @@ func query():
 # Debug what components an entity actually has
 func debug_entity_components(entity: Entity):
     print("Entity components:")
-    for component_path in entity.components.keys():
-        print("  ", component_path)
+    for component in entity.components.values():
+        print("  ", component.get_script().resource_path)
 ```
 
 **Solution**: Ensure components are added correctly:
@@ -382,13 +382,12 @@ func _on_inspect_button_pressed():
     for i in range(min(10, entities.size())):  # Show first 10
         var entity = entities[i]
         print("Entity ", i, ":")
-        print("  Components: ", entity.components.keys())
+        print("  Components: ", entity.components.values().map(func(c): return c.get_script().resource_path))
         print("  Groups: ", entity.get_groups())
 
         # Show component values
-        for comp_path in entity.components.keys():
-            var comp = entity.components[comp_path]
-            print("    ", comp_path, ": ", comp)
+        for comp in entity.components.values():
+            print("    ", comp.get_script().resource_path, ": ", comp)
 ```
 
 ## Getting More Help

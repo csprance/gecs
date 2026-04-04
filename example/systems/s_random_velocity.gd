@@ -3,6 +3,9 @@ extends System
 
 @export var time_between_updates: float = 0.1 # Time in seconds between updates
 
+func setup():
+	safe_iteration = false
+	
 func query() -> QueryBuilder:
 	return q.with_all([C_Velocity, C_Timer]).enabled().iterate([C_Velocity, C_Timer])
 

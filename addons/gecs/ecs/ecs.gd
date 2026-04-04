@@ -89,7 +89,7 @@ func process(delta: float, group: String = "") -> void:
 func get_components(entities, component_type, default_component = null) -> Array:
 	var components = []
 	for entity in entities:
-		var component = entity.components.get(component_type.resource_path, null)
+		var component = entity.components.get(component_type.get_instance_id() if component_type is Script else component_type.get_script().get_instance_id(), null)
 		if not component and not default_component:
 			assert(component, "Entity does not have component: " + str(component_type))
 		if not component and default_component:

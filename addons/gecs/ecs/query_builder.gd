@@ -53,6 +53,8 @@ var _iterate_components: Array = []
 # Add fields for query result caching
 var _cache_valid: bool = false
 var _cached_result: Array = []
+# World cache_version when _cached_result was stored — detects stale cache without signal reliance
+var _cached_world_version: int = -1
 
 # OPTIMIZATION: Cache the query hash key to avoid recalculating FNV-1a hash every frame
 var _cache_key: int = -1
@@ -275,6 +277,10 @@ func execute() -> Array:
 	var has_post_filter_rels := (not _post_filter_relationships.is_empty() or not _post_filter_ex_relationships.is_empty())
 	var uses_group_filters := (not _groups.is_empty() or not _exclude_groups.is_empty())
 
+	# Detect stale cache via world version counter (robust fallback for signal delivery)
+	if _cache_valid and _world and _cached_world_version != _world.cache_version:
+		_cache_valid = false
+
 	var structural_result: Array
 	if _cache_valid and not has_post_filter_rels and not uses_group_filters:
 		# Safe to reuse full cached result only for purely structural component queries
@@ -286,6 +292,7 @@ func execute() -> Array:
 		if not has_post_filter_rels and not uses_group_filters:
 			_cached_result = structural_result
 			_cache_valid = true
+			_cached_world_version = _world.cache_version if _world else -1
 		else:
 			_cache_valid = false # force recompute next call
 

@@ -1,6 +1,10 @@
 class_name VelocitySystem
 extends System
 
+func setup():
+	safe_iteration = false
+
+
 func query() -> QueryBuilder:
 	return q.with_all([C_Velocity]).enabled().iterate([C_Velocity])
 
