@@ -28,7 +28,11 @@
 
 ### Deferred Execution
 
-- **CommandBuffer** - Queue structural changes during iteration with `cmd`. Eliminates backwards iteration and defensive snapshots. Three flush modes: PER_SYSTEM, PER_GROUP, MANUAL.
+- **CommandBuffer** - Queue structural changes during iteration with `cmd`. Eliminates backwards iteration and defensive snapshots. Three flush modes: `FlushMode.PER_SYSTEM`, `FlushMode.PER_GROUP`, `FlushMode.MANUAL`.
+
+### Tick Rate Control
+
+- **SystemTimer** - Throttle systems to run at fixed intervals instead of every frame. Share a single timer between systems for synchronized execution. Supports interval (repeating) and one-shot (timeout) modes. See `system.set_tick_rate()` and `SystemTimer`.
 
 ### Networking (Optional addon)
 

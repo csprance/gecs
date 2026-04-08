@@ -2,11 +2,15 @@ class_name RandomSpawnerSystem
 extends System
 
 @export var random_mover_scene: PackedScene
+## How many seconds between spawns (0 = every frame, old behavior)
+@export var spawn_interval: float = 0.1
 
 func setup():
 	# Use PER_GROUP flush mode - spawns will be visible to other systems next frame
-	command_buffer_flush_mode = "PER_GROUP"
+	command_buffer_flush_mode = FlushMode.PER_GROUP
 	safe_iteration = false
+	if spawn_interval > 0.0:
+		set_tick_rate(spawn_interval)
 
 
 func process(_es: Array, _cs: Array, _d: float):

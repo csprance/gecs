@@ -21,14 +21,18 @@ func query() -> QueryBuilder:
 
 
 ## Runs once after the system has been added to the [World] to setup anything on the system one time[br]
+## Use set_tick_rate(seconds) to throttle this system instead of running every frame.[br]
 # func setup():
+# 	set_tick_rate(0.5) # Run every 500ms
 # 	pass
 
 
 ## Override this method to define any sub-systems that should be processed by this system.[br]
+## Each tuple is [QueryBuilder, Callable] or [QueryBuilder, Callable, SystemTimer] for throttled subsystems.[br]
 # func sub_systems() -> Array[Array]:
 # 	return [
-# 		[q.with_all([YourComponent]), process_subsystem]
+# 		[q.with_all([YourComponent]), process_subsystem],
+# 		[q.with_all([YourOtherComponent]), process_throttled, my_timer],
 # 	]
 #
 # func process_subsystem(entities: Array[Entity], components: Array, delta: float):

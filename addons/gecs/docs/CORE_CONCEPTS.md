@@ -330,7 +330,7 @@ func process(entities: Array[Entity], components: Array, delta: float):
 
 ### Sub-Systems
 
-Group related logic into one system file - all subsystems use the unified signature:
+Group related logic into one system file - all subsystems use the unified signature. Each tuple is `[QueryBuilder, Callable]` with an optional third element `SystemTimer` to throttle that subsystem:
 
 ```gdscript
 class_name DamageSystem
@@ -371,6 +371,27 @@ func regenerate_health(entities: Array[Entity], components: Array, delta: float)
         healths[i].current = min(healths[i].current + 1 * delta, healths[i].maximum)
 ```
 
+**Throttled Sub-Systems:** Add a `SystemTimer` as the third tuple element to gate a subsystem:
+
+```gdscript
+class_name VelocitySystem
+extends System
+
+var _offscreen_timer: SystemTimer
+
+func setup():
+    _offscreen_timer = SystemTimer.new()
+    _offscreen_timer.interval = 0.2  # 5x/sec
+
+func sub_systems():
+    return [
+        [q.with_all([C_Velocity]).enabled().iterate([C_Velocity]), process_onscreen],
+        [q.with_all([C_Velocity]).disabled().iterate([C_Velocity]), process_offscreen, _offscreen_timer],
+    ]
+```
+
+The framework advances each subsystem's timer automatically and skips execution when the timer hasn't ticked.
+
 ### System Dependencies
 
 Control system execution order with dependencies:
@@ -391,12 +412,44 @@ func deps() -> Dictionary[int, Array]:
 - **Class names**: `SystemNameSystem` in ClassCase (TransformSystem, PhysicsSystem)
 - **File names**: `s_system_name.gd` (s_transform.gd, s_physics.gd)
 
+### System Tick Rate (SystemTimer)
+
+By default, systems run every frame. Use `set_tick_rate()` to throttle a system to a fixed interval:
+
+```gdscript
+class_name AIDecisionSystem
+extends System
+
+func setup():
+    set_tick_rate(0.5)  # Run every 500ms
+
+func process(entities: Array[Entity], components: Array, delta: float):
+    # Only called when the timer fires
+    for entity in entities:
+        recalculate_ai(entity)
+```
+
+**Shared timers** guarantee multiple systems tick on the exact same frame:
+
+```gdscript
+var timer = physics_step_system.set_tick_rate(0.2)
+collision_resolve_system.tick_source = timer
+# Both systems always run together
+```
+
+**One-shot timers** fire once after a delay and then stop:
+
+```gdscript
+func setup():
+    set_tick_rate(3.0, true)  # single_shot = true
+```
+
 ### System Lifecycle
 
 Systems follow Godot node lifecycle:
 
 - `setup()` - Initial setup after system is added to world
-- `process(entities, components, delta)` - Unified method called each frame for matching entities
+- `process(entities, components, delta)` - Unified method called each frame (or per timer tick) for matching entities
 - System groups for organized processing order
 
 ## Query System

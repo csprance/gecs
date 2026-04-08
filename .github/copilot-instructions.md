@@ -6,7 +6,7 @@ Concise, codebase-specific instructions for AI agents. Focus only on proven patt
 
 Entity (`entity.gd`): Node holding components (data) + relationships. Provides `add_component()`, `has_component()`, `add_relationship()`.
 Component (`component.gd`): Resource, data-only `@export` fields. Emits `property_changed` manually to trigger observers.
-System (`system.gd`): Override `query()` returning a `QueryBuilder`; implement `process(entities, components, delta)`. Use `iterate([...])` in query for batch column access (components array order matches iterate list). Optional `sub_systems()` returns `[QueryBuilder, Callable]` tuples.
+System (`system.gd`): Override `query()` returning a `QueryBuilder`; implement `process(entities, components, delta)`. Use `iterate([...])` in query for batch column access (components array order matches iterate list). Optional `sub_systems()` returns `[QueryBuilder, Callable]` or `[QueryBuilder, Callable, SystemTimer]` tuples — the optional third element gates the subsystem to only run when the timer ticks.
 Observer (`observer.gd`): Reactive system: implement `watch()` (returns component instance) and handlers (`on_component_added/removed/changed`). Property changes require explicit signal emission in component setter.
 World (`world.gd`): Owns entities, systems, observers, archetype & relationship indices. Provides `world.query` (pooled `QueryBuilder`), archetype cache, enabled/disabled filtering baked into signatures.
 ECS (`ecs.gd`): Autoload singleton exposing `ECS.world` and `ECS.process(delta, group?)`.
@@ -21,7 +21,7 @@ Cache keys (FNV-1a) reused between World `_query` and archetype retrieval; relat
 #### Archetype & Performance Model
 
 Entities grouped by component signature (+ enabled bit) → O(1) query intersection using archetype match + result flattening only when needed. Enable/disable moves entity to distinct archetype; `.enabled()` / `.disabled()` skip entity-level filtering.
-Use `iterate()` or `archetypes()` inside systems for tight loops: access columns via `archetype.get_column(component_resource_path)`.
+Use `iterate()` or `archetypes()` inside systems for tight loops: access columns via `archetype.get_column(ComponentScript.get_instance_id())`.
 Parallel processing: set `parallel_processing=true` and `parallel_threshold` on a System; only use pure data logic (no scene tree access) inside `process()` when parallel.
 
 #### Relationships (`relationship.gd`)
@@ -36,12 +36,30 @@ Callable-based deferred execution for safe structural changes during system iter
 
 System property: `cmd: CommandBuffer` (lazy-initialized). Queue methods: `add_component()`, `remove_component()`, `add_components()`, `remove_components()`, `add_entity()`, `remove_entity()`, `add_relationship()`, `remove_relationship()`, `add_custom()`. Inspection: `is_empty()`, `size()`, `get_stats()`. Manual: `execute()`, `clear()`.
 
-Flush modes (`command_buffer_flush_mode` export on System):
-- **PER_SYSTEM** (default): auto-executes after each system completes
-- **PER_GROUP**: auto-executes after all systems in group complete
-- **MANUAL**: requires explicit `ECS.world.flush_command_buffers()`
+Flush modes (`command_buffer_flush_mode: FlushMode` export on System):
+- **FlushMode.PER_SYSTEM** (default): auto-executes after each system completes
+- **FlushMode.PER_GROUP**: auto-executes after all systems in group complete
+- **FlushMode.MANUAL**: requires explicit `ECS.world.flush_command_buffers()`
 
 Pattern: use `cmd.remove_entity(entity)` instead of `ECS.world.remove_entity(entity)` inside system `process()` for safe forward iteration. Use `cmd.add_component(entity, comp)` instead of `entity.add_component(comp)` when modifying entities during iteration.
+
+#### SystemTimer (`system_timer.gd`)
+
+Tick rate control for systems. Systems run every frame by default; assign a `SystemTimer` to `tick_source` to throttle execution. `set_tick_rate(interval, single_shot?)` is a convenience that creates and assigns the timer, returning it for sharing.
+
+Shared timers: multiple systems referencing the same `SystemTimer` instance are guaranteed to tick on the same frame. Timers are advanced once per group in `World.process()` before systems run. Overshoot is carried forward to prevent drift.
+
+```gdscript
+# Throttle a system
+func setup(): set_tick_rate(0.5)  # every 500ms
+
+# Share a timer
+var timer = system_a.set_tick_rate(0.2)
+system_b.tick_source = timer
+
+# One-shot (fire once after delay)
+func setup(): set_tick_rate(3.0, true)
+```
 
 #### Reactive Patterns
 

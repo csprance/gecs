@@ -102,6 +102,17 @@ func _process(delta):
 
 Systems can safely add or remove entities and components during iteration using the built-in `cmd` buffer. This avoids manual backwards iteration. See [Core Concepts](CORE_CONCEPTS.md) for details.
 
+## Tick Rate Control
+
+Systems run every frame by default. Use `set_tick_rate()` in `setup()` to throttle a system:
+
+```gdscript
+func setup():
+    set_tick_rate(0.5)  # Run every 500ms instead of every frame
+```
+
+Multiple systems can share the same timer for synchronized execution. See [Core Concepts](CORE_CONCEPTS.md) for details.
+
 ## Next Steps
 
 - [Core Concepts](CORE_CONCEPTS.md) — full API reference for Entity, Component, System, World, and QueryBuilder

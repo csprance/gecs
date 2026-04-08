@@ -69,7 +69,7 @@ enum FlushMode { PER_SYSTEM, PER_GROUP, MANUAL }
 ## - PER_SYSTEM: Flush immediately after this system completes (default, safest)
 ## - PER_GROUP: Flush at the end of the process group (after all systems in the group)
 ## - MANUAL: Requires manual world.flush_command_buffers() call (for cross-group batching)
-@export_enum("PER_SYSTEM", "PER_GROUP", "MANUAL") var command_buffer_flush_mode: String = "PER_SYSTEM"
+@export var command_buffer_flush_mode: FlushMode = FlushMode.PER_SYSTEM
 
 @export_group("Iteration")
 ## When true (default), entity arrays are copied before iteration to guard against
@@ -83,6 +83,10 @@ enum FlushMode { PER_SYSTEM, PER_GROUP, MANUAL }
 #region Public Variables
 ## Is this system paused. (Will be skipped if true)
 var paused := false
+## Optional tick source. If null, system runs every frame (default behavior).
+## Multiple systems can share the same [SystemTimer] for synchronized ticking.
+## [br]See [method set_tick_rate] for a convenience constructor.
+var tick_source: SystemTimer = null
 
 ## Logger for system debugging and tracing
 var systemLogger = GECSLogger.new().domain("System")
@@ -121,8 +125,8 @@ var _has_subsystems_cached: int = -1
 var _uses_non_structural_cached: int = -1
 ## Cached non-structural filter result per subsystem index (built once with _subsystems_cache)
 var _subsystem_non_structural_cache: Array[int] = []
-## Integer flush mode derived from command_buffer_flush_mode string (avoids per-frame string comparison)
-var _flush_mode: int = FlushMode.PER_SYSTEM
+## Cached per-subsystem timers (null if no timer for that subsystem index)
+var _subsystem_timers_cache: Array = []
 
 #endregion Public Variables
 
@@ -188,6 +192,26 @@ func process(entities: Array[Entity], components: Array, delta: float) -> void:
 	pass # Override in subclasses - base implementation does nothing
 
 
+## Create and assign an interval [SystemTimer] for this system.[br]
+## Returns the timer so it can be shared with other systems.[br][br]
+## [b]Example — private timer:[/b]
+## [codeblock]
+## func setup():
+##     set_tick_rate(0.5)  # run every 500ms
+## [/codeblock]
+## [b]Example — shared timer:[/b]
+## [codeblock]
+## var timer = system_a.set_tick_rate(0.2)
+## system_b.tick_source = timer  # both tick together
+## [/codeblock]
+func set_tick_rate(interval_seconds: float, single_shot: bool = false) -> SystemTimer:
+	var timer = SystemTimer.new()
+	timer.interval = interval_seconds
+	timer.single_shot = single_shot
+	tick_source = timer
+	return timer
+
+
 ## Check if this system has a command buffer with pending commands
 func has_pending_commands() -> bool:
 	return cmd != null and not cmd.is_empty()
@@ -199,11 +223,6 @@ func has_pending_commands() -> bool:
 ## INTERNAL: Called by World.add_system() to initialize the system
 ## DO NOT CALL OR OVERRIDE - this is framework code
 func _internal_setup():
-	# Convert string flush mode to int once (avoids per-frame string comparisons)
-	match command_buffer_flush_mode:
-		"PER_GROUP": _flush_mode = FlushMode.PER_GROUP
-		"MANUAL":    _flush_mode = FlushMode.MANUAL
-		_:           _flush_mode = FlushMode.PER_SYSTEM
 	# Call user setup
 	setup()
 
@@ -247,6 +266,9 @@ func _process_batch_callable(entities: Array[Entity], components: Array, delta: 
 func _handle(delta: float) -> void:
 	if not active or paused:
 		return
+	# Timer gate: only run when tick source fires (null = every frame)
+	if tick_source and not tick_source.ticked:
+		return
 	var start_time_usec := 0
 	if ECS.debug:
 		start_time_usec = Time.get_ticks_usec()
@@ -261,7 +283,7 @@ func _handle(delta: float) -> void:
 	else:
 		_run_process(delta)
 	# Flush command buffer if mode is PER_SYSTEM
-	if _flush_mode == FlushMode.PER_SYSTEM and has_pending_commands():
+	if command_buffer_flush_mode == FlushMode.PER_SYSTEM and has_pending_commands():
 		cmd.execute()
 
 	if ECS.debug:
@@ -280,13 +302,22 @@ func _run_subsystems(delta: float) -> void:
 	if _subsystems_cache.is_empty():
 		_subsystems_cache = sub_systems()
 		_subsystem_non_structural_cache.clear()
+		_subsystem_timers_cache.clear()
 		for subsystem_tuple in _subsystems_cache:
 			var sq := subsystem_tuple[0] as QueryBuilder
 			_subsystem_non_structural_cache.append(1 if _query_has_non_structural_filters(sq) else 0)
+			_subsystem_timers_cache.append(subsystem_tuple[2] if subsystem_tuple.size() > 2 else null)
 	var subsystem_index := 0
 	for subsystem_tuple in _subsystems_cache:
 		var subsystem_query := subsystem_tuple[0] as QueryBuilder
 		var subsystem_callable := subsystem_tuple[1] as Callable
+		# Subsystem timer gate: advance and skip if not ticked
+		var sub_timer: SystemTimer = _subsystem_timers_cache[subsystem_index]
+		if sub_timer:
+			sub_timer.advance(delta)
+			if not sub_timer.ticked:
+				subsystem_index += 1
+				continue
 		var uses_non_structural := _subsystem_non_structural_cache[subsystem_index] == 1
 		var iterate_comps = subsystem_query._iterate_components
 		if uses_non_structural:

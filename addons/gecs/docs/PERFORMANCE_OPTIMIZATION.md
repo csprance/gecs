@@ -360,10 +360,10 @@ func spawn_enemy_wave():
     ECS.world.add_entities(enemies)
 ```
 
-**CommandBuffer flush modes** for performance tuning:
-- **PER_SYSTEM** (default) — safe, flushes after each system
-- **PER_GROUP** — batches all systems in a group, flushes once at end
-- **MANUAL** — maximum batching, requires explicit `ECS.world.flush_command_buffers()` call
+**CommandBuffer flush modes** (`command_buffer_flush_mode: FlushMode`) for performance tuning:
+- **FlushMode.PER_SYSTEM** (default) — safe, flushes after each system
+- **FlushMode.PER_GROUP** — batches all systems in a group, flushes once at end
+- **FlushMode.MANUAL** — maximum batching, requires explicit `ECS.world.flush_command_buffers()` call
 
 ## Performance Targets
 
