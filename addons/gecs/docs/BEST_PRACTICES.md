@@ -177,11 +177,11 @@ func process(entities: Array[Entity], components: Array, delta: float):
             ECS.world.remove_entity(entities[i])  # Modifies array during iteration
 ```
 
-**Flush Modes** control when queued commands execute:
+**Flush Modes** (`command_buffer_flush_mode: FlushMode`) control when queued commands execute:
 
-- **PER_SYSTEM** (default) — executes after each system completes
-- **PER_GROUP** — executes after all systems in the group complete
-- **MANUAL** — requires explicit `ECS.world.flush_command_buffers()` call
+- **FlushMode.PER_SYSTEM** (default) — executes after each system completes
+- **FlushMode.PER_GROUP** — executes after all systems in the group complete
+- **FlushMode.MANUAL** — requires explicit `ECS.world.flush_command_buffers()` call
 
 ## Code Organization Patterns
 

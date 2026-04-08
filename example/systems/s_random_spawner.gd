@@ -5,7 +5,7 @@ extends System
 
 func setup():
 	# Use PER_GROUP flush mode - spawns will be visible to other systems next frame
-	command_buffer_flush_mode = "PER_GROUP"
+	command_buffer_flush_mode = FlushMode.PER_GROUP
 	safe_iteration = false
 
 

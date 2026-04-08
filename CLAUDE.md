@@ -98,11 +98,11 @@ cmd.clear()    # Discard queued commands
 
 #### Flush Modes
 
-Systems can configure when commands execute:
+Systems configure when commands execute via the `FlushMode` enum:
 
 **PER_SYSTEM (default)** - Executes immediately after each system completes:
 ```gdscript
-@export_enum("PER_SYSTEM", "PER_GROUP", "MANUAL") var command_buffer_flush_mode: String = "PER_SYSTEM"
+@export var command_buffer_flush_mode: FlushMode = FlushMode.PER_SYSTEM
 ```
 - Commands execute immediately after system completes
 - Later systems in the same frame see the changes
@@ -110,8 +110,8 @@ Systems can configure when commands execute:
 
 **PER_GROUP** - Executes at the end of the process group:
 ```gdscript
-func _init():
-    command_buffer_flush_mode = "PER_GROUP"
+func setup():
+    command_buffer_flush_mode = FlushMode.PER_GROUP
 ```
 - Commands execute after ALL systems in the group complete
 - Later groups or next frame will see the changes
@@ -120,8 +120,8 @@ func _init():
 
 **MANUAL** - Requires manual flush call:
 ```gdscript
-func _init():
-    command_buffer_flush_mode = "MANUAL"
+func setup():
+    command_buffer_flush_mode = FlushMode.MANUAL
 ```
 - Commands are queued but NOT auto-executed
 - **Must manually call** `ECS.world.flush_command_buffers()`
@@ -161,6 +161,75 @@ func process(entities: Array[Entity], components: Array, delta: float):
         if should_delete(entity):
             cmd.remove_entity(entity)
 ```
+
+### SystemTimer (Tick Rate Control)
+
+Systems run every frame by default. The `SystemTimer` class allows systems to run at a fixed interval, fire once after a delay, or share a tick source for synchronized execution.
+
+#### Basic Usage
+
+```gdscript
+class_name AIDecisionSystem
+extends System
+
+func setup():
+    set_tick_rate(0.5)  # Run every 500ms instead of every frame
+
+func process(entities: Array[Entity], components: Array, delta: float):
+    # This only runs when the timer ticks
+    for entity in entities:
+        recalculate_ai(entity)
+```
+
+#### Shared Timers
+
+Multiple systems can share the same `SystemTimer` instance. They are guaranteed to execute on the exact same frame:
+
+```gdscript
+var timer = SystemTimer.new()
+timer.interval = 0.2
+
+physics_step.tick_source = timer
+collision_resolve.tick_source = timer
+# Both systems tick together every 200ms
+```
+
+Or share via `set_tick_rate()`:
+
+```gdscript
+# In system A's setup:
+var timer = set_tick_rate(0.5)
+# Pass to system B:
+system_b.tick_source = timer
+```
+
+#### One-Shot Timers
+
+```gdscript
+func setup():
+    set_tick_rate(3.0, true)  # Fire once after 3 seconds, then stop
+```
+
+#### SystemTimer API
+
+```gdscript
+var timer = SystemTimer.new()
+timer.interval = 1.0           # Seconds between ticks
+timer.single_shot = false      # true = fire once and deactivate
+timer.active = true            # Can be paused independently
+timer.ticked                   # Read-only: true on the frame the timer fired
+timer.tick_count               # Total ticks since creation/reset
+timer.time_elapsed             # Accumulated time since last tick
+
+timer.reset()                  # Reset to initial state (active, zero elapsed)
+```
+
+#### Key Behaviors
+
+- **No timer = every frame**: Systems without `tick_source` are unchanged
+- **Timers advance in World.process()**: Before any system in the group runs, all unique timers for that group are advanced once
+- **Overshoot is carried forward**: `time_elapsed = time_elapsed - interval` prevents drift over time
+- **Paused systems don't block shared timers**: The timer keeps ticking; the paused system simply skips execution
 
 ## Development Commands
 
@@ -379,6 +448,7 @@ The project provides script templates in `script_templates/Node/` for:
 - `addons/gecs/ecs/ecs.gd` - ECS singleton, global World access, deferred system setup coordination
 - `addons/gecs/ecs/world.gd` - Core world management, entity indexing, query caching, system group processing
 - `addons/gecs/ecs/system.gd` - Base system class with CommandBuffer integration and flush modes
+- `addons/gecs/ecs/system_timer.gd` - Tick rate control for systems (interval, one-shot, shared timers)
 - `addons/gecs/ecs/command_buffer.gd` - Callable-based deferred command execution
 - `addons/gecs/query_builder.gd` - Query system implementation
 - `addons/gecs/relationship.gd` - Entity relationship system

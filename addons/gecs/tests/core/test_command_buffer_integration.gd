@@ -26,7 +26,7 @@ class TestSystemPerGroup extends System:
 	var spawned_count: int = 0
 
 	func _init():
-		command_buffer_flush_mode = "PER_GROUP"
+		command_buffer_flush_mode = FlushMode.PER_GROUP
 
 	func query():
 		return q.with_all([C_TestC])
@@ -45,7 +45,7 @@ class TestSystemManual extends System:
 	var spawned_count: int = 0
 
 	func _init():
-		command_buffer_flush_mode = "MANUAL"
+		command_buffer_flush_mode = FlushMode.MANUAL
 
 	func query():
 		return q.with_all([C_TestC])

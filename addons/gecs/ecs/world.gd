@@ -113,6 +113,10 @@ var _archetype_explosion_warned: bool = false
 var _perf_metrics := {"frame": {}, "accum": {}} # Per-frame aggregated timings  # Long-lived totals (cleared manually)
 ## Queue of systems waiting for setup after ECS.world is assigned
 var _deferred_setup_systems: Array[System] = []
+## Per-group unique SystemTimers to advance each frame (rebuilt lazily when _timers_dirty)
+var _group_timers: Dictionary = {} # group_name -> Array[SystemTimer]
+## True when systems have been added/removed and _group_timers needs rebuilding
+var _timers_dirty: bool = true
 
 
 ## Internal perf helper (debug only)
@@ -243,6 +247,12 @@ func process(delta: float, group: String = "") -> void:
 	# PERF: Reset frame metrics at start of processing step
 	perf_reset_frame()
 	if systems_by_group.has(group):
+		# Advance all unique timers for this group BEFORE running systems
+		if _timers_dirty:
+			_rebuild_group_timers()
+		if _group_timers.has(group):
+			for timer in _group_timers[group]:
+				timer.advance(delta)
 		var system_index = 0
 		for system in systems_by_group[group]:
 			if system.active:
@@ -258,14 +268,14 @@ func process(delta: float, group: String = "") -> void:
 
 		# Flush PER_GROUP command buffers after all systems in the group complete
 		for system in systems_by_group[group]:
-			if system._flush_mode == System.FlushMode.PER_GROUP and system.has_pending_commands():
+			if system.command_buffer_flush_mode == System.FlushMode.PER_GROUP and system.has_pending_commands():
 				system.cmd.execute()
 	if ECS.debug:
 		assert(GECSEditorDebuggerMessages.process_world(delta, group), "")
 
 
 ## Manually flush all command buffers with MANUAL flush mode.[br]
-## This executes all queued commands from systems that use command_buffer_flush_mode = "MANUAL".[br]
+## This executes all queued commands from systems that use command_buffer_flush_mode = FlushMode.MANUAL.[br]
 ## [b]Example:[/b]
 ## [codeblock]
 ## func _process(delta):
@@ -276,7 +286,7 @@ func process(delta: float, group: String = "") -> void:
 func flush_command_buffers() -> void:
 	for group_key in systems_by_group.keys():
 		for system in systems_by_group[group_key]:
-			if system._flush_mode == System.FlushMode.MANUAL and system.has_pending_commands():
+			if system.command_buffer_flush_mode == System.FlushMode.MANUAL and system.has_pending_commands():
 				system.cmd.execute()
 
 
@@ -612,6 +622,7 @@ func add_system(system: System, topo_sort: bool = false) -> void:
 	if not systems_by_group.has(system.group):
 		systems_by_group[system.group] = []
 	systems_by_group[system.group].push_back(system)
+	_timers_dirty = true
 	system_added.emit(system)
 
 	# If ECS.world is already this world, setup immediately since finalize_system_setup()
@@ -650,6 +661,7 @@ func add_systems(_systems: Array, topo_sort: bool = false):
 func remove_system(system, topo_sort: bool = false) -> void:
 	_worldLogger.debug("remove_system Removing System: ", system)
 	systems_by_group[system.group].erase(system)
+	_timers_dirty = true
 	if systems_by_group[system.group].size() == 0:
 		systems_by_group.erase(system.group)
 	system_removed.emit(system)
@@ -737,6 +749,26 @@ func purge(should_free = true, keep := []) -> void:
 ## as we only need to check the smallest possible set of entities against other components.
 
 #endregion Systems
+
+#region Timer Management
+
+## Rebuild the per-group unique timer sets from current systems.
+## Called lazily when _timers_dirty is true (after add_system / remove_system).
+func _rebuild_group_timers() -> void:
+	_group_timers.clear()
+	for group_key in systems_by_group.keys():
+		var seen := {} # instance_id -> true (dedup shared timers)
+		var timers: Array = []
+		for system in systems_by_group[group_key]:
+			if system.tick_source and not seen.has(system.tick_source.get_instance_id()):
+				seen[system.tick_source.get_instance_id()] = true
+				timers.append(system.tick_source)
+		if not timers.is_empty():
+			_group_timers[group_key] = timers
+	_timers_dirty = false
+
+#endregion Timer Management
+
 
 #region Signal Callbacks
 

@@ -1,5 +1,26 @@
 # GECS Changelog
 
+## [7.3.0] - 2026-04-07 - SystemTimer + FlushMode Enum
+
+### Added
+
+- **SystemTimer tick rate control** — Systems can now run at fixed intervals instead of every frame. Call `set_tick_rate(seconds)` in `setup()` to throttle a system. Multiple systems can share the same `SystemTimer` instance for guaranteed synchronized execution on the same frame. Supports repeating (interval) and one-shot (timeout) modes. Overshoot is carried forward to prevent drift.
+  - New class: `SystemTimer` (`addons/gecs/ecs/system_timer.gd`)
+  - New property: `System.tick_source: SystemTimer`
+  - New method: `System.set_tick_rate(interval, single_shot?) -> SystemTimer`
+  - World advances all unique timers per group before running systems
+- **SystemTimer tests** — 17 tests covering unit behavior and system integration (interval, shared timers, one-shot, pause, groups, overshoot)
+
+### Changed
+
+- **`command_buffer_flush_mode` is now a `FlushMode` enum** instead of a `String`. This eliminates per-frame string comparisons — all flush mode checks are now int comparisons. The `_flush_mode` internal cache variable and the string-to-int conversion in `_internal_setup()` have been removed.
+  - **Migration**: Change `command_buffer_flush_mode = "PER_GROUP"` to `command_buffer_flush_mode = FlushMode.PER_GROUP` (same for `PER_SYSTEM` and `MANUAL`)
+- Updated all documentation to reflect FlushMode enum and SystemTimer APIs
+
+### Fixed
+
+- `s_random_spawner.gd` example was assigning `FlushMode.PER_GROUP` (enum) to a `String`-typed export, causing a parse error
+
 ## [Unreleased]
 
 ### Breaking Changes
