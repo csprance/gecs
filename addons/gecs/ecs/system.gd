@@ -342,17 +342,29 @@ func _run_subsystems(delta: float) -> void:
 		else:
 			# Structural fast path archetype iteration
 			var total_entity_count := 0
+			var enabled_filter = subsystem_query._enabled_filter
 			for archetype in subsystem_query.archetypes():
 				if archetype.entities.is_empty():
 					continue
-				# Snapshot to avoid losing entities during add/remove component archetype moves mid-iteration
-				var arch_entities = archetype.entities.duplicate()
+				# Apply enabled/disabled filter at archetype level via bitset
+				var arch_entities: Array[Entity]
+				if enabled_filter != null:
+					arch_entities = archetype.get_entities_by_enabled_state(enabled_filter)
+				else:
+					arch_entities = archetype.entities.duplicate()
+				if arch_entities.is_empty():
+					continue
 				total_entity_count += arch_entities.size()
 				var components = []
 				if not iterate_comps.is_empty():
-					for comp_type in iterate_comps:
-						var comp_key = comp_type.get_instance_id() if comp_type is Script else comp_type.get_script().get_instance_id()
-						components.append(archetype.get_column(comp_key))
+					if enabled_filter != null:
+						# Filtered subset — build columns from entities (can't use archetype columns directly)
+						for comp_type in iterate_comps:
+							components.append(_build_component_column_from_entities(arch_entities, comp_type))
+					else:
+						for comp_type in iterate_comps:
+							var comp_key = comp_type.get_instance_id() if comp_type is Script else comp_type.get_script().get_instance_id()
+							components.append(archetype.get_column(comp_key))
 				subsystem_callable.call(arch_entities, components, delta)
 			if ECS.debug:
 				lastRunData[subsystem_index] = {"subsystem_index": subsystem_index, "entity_count": total_entity_count, "fallback_execute": false}
@@ -404,20 +416,30 @@ func _run_process(delta: float) -> void:
 		return
 	# Structural fast path — single pass over archetypes
 	var matching_archetypes = _query_cache.archetypes()
+	var enabled_filter = _query_cache._enabled_filter
 	var processed_any := false
 	for arch in matching_archetypes:
-		var arch_entities = arch.entities
+		var arch_entities: Array[Entity]
+		if enabled_filter != null:
+			arch_entities = arch.get_entities_by_enabled_state(enabled_filter)
+		else:
+			arch_entities = arch.entities
 		if arch_entities.is_empty():
 			continue
 		processed_any = true
 		# Snapshot entities to avoid mutation skipping during component add/remove.
 		# When safe_iteration is false the system uses CommandBuffer for ALL structural
 		# changes so the snapshot copy is unnecessary — use the archetype array directly.
-		var snapshot_entities = arch_entities.duplicate() if safe_iteration else arch_entities
+		# When enabled_filter is set, arch_entities is already a new array from get_entities_by_enabled_state.
+		var snapshot_entities = arch_entities if enabled_filter != null else (arch_entities.duplicate() if safe_iteration else arch_entities)
 		var components = []
 		if not iterate_comps.is_empty():
-			for comp_key in _component_keys:
-				components.append(arch.get_column(comp_key))
+			if enabled_filter != null:
+				for comp_type in _query_cache._iterate_components:
+					components.append(_build_component_column_from_entities(snapshot_entities, comp_type))
+			else:
+				for comp_key in _component_keys:
+					components.append(arch.get_column(comp_key))
 		if parallel_processing and snapshot_entities.size() >= parallel_threshold:
 			if ECS.debug:
 				lastRunData["parallel"] = true
