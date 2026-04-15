@@ -99,6 +99,22 @@ visible = false
 layout_mode = 2
 text = "QueryBuilder"
 
+[node name="PollRateLabel" type="Label" parent="HSplit/HSplitContainer/EntitiesVBox/HBoxContainer"]
+layout_mode = 2
+text = "Poll Hz:"
+tooltip_text = "How often to refresh component data for expanded entities (0 = disabled)"
+
+[node name="PollRateSpinBox" type="SpinBox" parent="HSplit/HSplitContainer/EntitiesVBox/HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(70, 0)
+min_value = 0.0
+max_value = 30.0
+step = 1.0
+value = 10.0
+suffix = ""
+tooltip_text = "How often to refresh component data for expanded entities (0 = disabled)"
+
 [node name="EntitiesTree" type="Tree" parent="HSplit/HSplitContainer/EntitiesVBox"]
 unique_name_in_owner = true
 layout_mode = 2

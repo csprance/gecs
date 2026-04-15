@@ -10,6 +10,7 @@ extends Control
 @onready var systems_collapse_all_btn: Button = %SystemsCollapseAllBtn
 @onready var systems_expand_all_btn: Button = %SystemsExpandAllBtn
 @onready var pop_out_btn: Button = %PopOutBtn
+@onready var poll_rate_spin_box: SpinBox = %PollRateSpinBox
 
 var ecs_data: Dictionary = {}
 var default_system := {"path": "", "active": true, "metrics": {}, "group": ""}
@@ -35,6 +36,9 @@ var _entity_sort_ascending: bool = true
 # Pinned items
 var _pinned_entities: Dictionary = {} # entity_id -> bool
 var _pinned_systems: Dictionary = {} # system_id -> bool
+
+# Debug polling for live component data updates
+var _poll_elapsed: float = 0.0
 
 # Icon constants (using Unicode characters)
 const ICON_ENTITY = "📦" # Entity icon
@@ -141,8 +145,16 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
-	# No periodic polling; rely on debugger messages only
-	pass
+	# Poll expanded entities for live component data updates
+	var poll_hz: float = poll_rate_spin_box.value if poll_rate_spin_box else 0.0
+	if poll_hz <= 0.0 or not active:
+		return
+	_poll_elapsed += delta
+	var poll_interval := 1.0 / poll_hz
+	if _poll_elapsed < poll_interval:
+		return
+	_poll_elapsed = 0.0
+	_poll_expanded_entities()
 
 
 func _update_debug_mode_overlay() -> void:
@@ -175,6 +187,22 @@ func send_to_game(message: String, data: Array = []) -> bool:
 		return false
 	_debugger_session.send_message(message, data)
 	return true
+
+
+## Poll only expanded entity tree items for fresh component data.
+## This keeps the debugger updated without requiring components to have explicit setters,
+## and stays cheap by only polling what the user is actually looking at.
+func _poll_expanded_entities() -> void:
+	if not entities_tree or not entities_tree.get_root():
+		return
+	var child = entities_tree.get_root().get_first_child()
+	while child:
+		# Only poll entities that are expanded (user is viewing their components)
+		if not child.collapsed:
+			var entity_id = child.get_meta("entity_id", null)
+			if entity_id != null:
+				send_to_game("gecs:poll_entity", [entity_id])
+		child = child.get_next()
 
 
 func clear_all_data():
