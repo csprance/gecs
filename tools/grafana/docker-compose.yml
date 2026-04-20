@@ -16,9 +16,14 @@ services:
       - ../../reports/perf:/data/perf:ro
     networks:
       - gecs-monitoring
+    healthcheck:
+      test: ["CMD", "influx", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   grafana:
-    image: grafana/grafana:latest
+    image: grafana/grafana:11.6.0
     container_name: gecs-grafana
     ports:
       - "3000:3000"
@@ -28,7 +33,8 @@ services:
       - grafana-data:/var/lib/grafana
       - ./provisioning:/etc/grafana/provisioning
     depends_on:
-      - influxdb
+      influxdb:
+        condition: service_healthy
     networks:
       - gecs-monitoring
 
@@ -47,7 +53,8 @@ services:
     working_dir: /scripts
     command: ["python", "load_jsonl_to_influx.py"]
     depends_on:
-      - influxdb
+      influxdb:
+        condition: service_healthy
     networks:
       - gecs-monitoring
 
