@@ -21,7 +21,7 @@ func before():
 const REL_A_ENTITY := "rel://res://addons/gecs/tests/components/c_test_a.gd::entity#99999"
 const REL_B_COMP := "rel://res://addons/gecs/tests/components/c_test_b.gd::comp://res://addons/gecs/tests/components/c_test_a.gd"
 const REL_A_WILDCARD := "rel://res://addons/gecs/tests/components/c_test_a.gd::*"
-const REL_B_SCRIPT := "rel://res://addons/gecs/tests/components/c_test_b.gd::script://res://example/entities/random_mover.gd"
+const REL_B_SCRIPT := "rel://res://addons/gecs/tests/components/c_test_b.gd::script://res://example_performance/entities/random_mover.gd"
 
 
 ## Test 1 (ARCH-01 + ARCH-03): Columns exist only for component paths, NOT for rel:// keys

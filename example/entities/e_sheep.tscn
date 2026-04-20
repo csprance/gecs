@@ -1,0 +1,25 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://example/entities/e_sheep.gd" id="1_sheep"]
+
+[sub_resource type="StandardMaterial3D" id="Mat_sheep"]
+albedo_color = Color(0.94, 0.94, 0.9, 1)
+
+[sub_resource type="SphereMesh" id="Mesh_sheep"]
+material = SubResource("Mat_sheep")
+radius = 0.35
+height = 0.7
+
+[sub_resource type="SphereShape3D" id="Shape_sheep"]
+radius = 0.35
+
+[node name="Sheep" type="CharacterBody3D" groups=["sheep"]]
+script = ExtResource("1_sheep")
+
+[node name="Mesh" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.35, 0)
+mesh = SubResource("Mesh_sheep")
+
+[node name="Collision" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.35, 0)
+shape = SubResource("Shape_sheep")
