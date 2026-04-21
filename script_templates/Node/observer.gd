@@ -1,18 +1,41 @@
-# meta-description: An Observer watches for changes to a specific type of Component on all Entities in the world.
+# meta-description: A query-driven reactive node. Override query() + each() or sub_observers().
 class_name _CLASS_
 extends Observer
 
 
-func watch() -> Resource:
-	return Component
+## The observer's reactive spec. Return a QueryBuilder with on_* event modifiers chained on.
+## Omit / return null if using sub_observers() exclusively.
+func query() -> QueryBuilder:
+	return q.with_all([Component]).on_added().on_removed()
 
-# func on_component_added(entity: Entity, component: Resource):
+
+## Unified callback. Fires for every event declared on query().
+## `event` is an Observer.Event value or a StringName for custom events.
+## `payload` depends on event type — see Observer class docs.
+func each(event: Variant, entity: Entity, payload: Variant = null) -> void:
+	match event:
+		Observer.Event.ADDED:
+			pass
+		Observer.Event.REMOVED:
+			pass
+
+
+# Optional: compose multiple reactive axes in one node (mirrors sub_systems).
+# Each tuple: [QueryBuilder with events, Callable(event, entity, payload)]
+#
+# func sub_observers() -> Array[Array]:
+# 	return [
+# 		[q.with_all([Component]).on_match().on_unmatch(), _on_match_state],
+# 		[q.with_all([Component]).on_event(&"custom_event"), _on_custom_event],
+# 	]
+#
+# func _on_match_state(event, entity, _payload):
+# 	pass
+#
+# func _on_custom_event(event, entity, data):
 # 	pass
 
-# func on_component_removed(entity: Entity, component: Resource):
-# 	pass
 
-# func on_component_changed(
-# 	entity: Entity, component: Resource, property: String, new_value: Variant, old_value: Variant
-# ):
+# Optional lifecycle hook — called once after the observer is added to the World.
+# func setup() -> void:
 # 	pass

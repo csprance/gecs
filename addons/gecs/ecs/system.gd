@@ -225,6 +225,28 @@ func has_pending_commands() -> bool:
 func _internal_setup():
 	# Call user setup
 	setup()
+	# Editor-only sanity check: warn if the system's query declares observer event
+	# modifiers (on_added/on_match/etc.). Those flags have no effect on Systems —
+	# the user probably meant to extend Observer. Stripped from release exports via
+	# `OS.has_feature("editor")`, which is false in exported builds.
+	if OS.has_feature("editor"):
+		_warn_if_query_has_observer_events()
+
+
+func _warn_if_query_has_observer_events() -> void:
+	var path: String = get_script().resource_path if get_script() else "<unknown>"
+	var main_q: QueryBuilder = query()
+	if main_q != null and main_q.has_observer_events():
+		push_warning(
+			"%s: System.query() declares observer event modifiers (on_added/on_removed/on_changed/on_match/on_unmatch/on_relationship_*/on_event). These have NO effect on Systems — the System still runs every frame. Did you mean to extend Observer instead?" % path
+		)
+	for tuple in sub_systems():
+		if tuple.size() >= 1:
+			var sq: QueryBuilder = tuple[0] as QueryBuilder
+			if sq != null and sq.has_observer_events():
+				push_warning(
+					"%s: sub_systems() tuple query declares observer event modifiers. These have NO effect on Systems — use sub_observers() on an Observer instead." % path
+				)
 
 
 ## Process entities in parallel using WorkerThreadPool

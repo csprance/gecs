@@ -50,6 +50,22 @@ var _enabled_filter = null
 # Components to iterate in archetype mode (ordered array of component types)
 var _iterate_components: Array = []
 
+# ------------------------------------------------------------------------------
+# Observer event declarations (FLECS-style). A query with any of these set is an
+# Observer spec; a query with none of them set is a plain System filter. The
+# mask uses Observer.Event bit flags.
+# ------------------------------------------------------------------------------
+# Bitmask of Observer.Event flags this query reacts to.
+var _observer_events_mask: int = 0
+# Optional property filter for Observer.Event.CHANGED. Empty = all properties fire.
+var _observer_changed_props: Array[StringName] = []
+# Optional relation-type filter for RELATIONSHIP_ADDED (scripts). Empty = any relation type.
+var _observer_rel_add_types: Array = []
+# Optional relation-type filter for RELATIONSHIP_REMOVED (scripts). Empty = any relation type.
+var _observer_rel_remove_types: Array = []
+# Custom event names this query listens for (StringName).
+var _observer_event_names: Array[StringName] = []
+
 # Add fields for query result caching
 var _cache_valid: bool = false
 var _cached_result: Array = []
@@ -91,6 +107,11 @@ func clear():
 	_exclude_groups = []
 	_enabled_filter = null
 	_iterate_components = []
+	_observer_events_mask = 0
+	_observer_changed_props = []
+	_observer_rel_add_types = []
+	_observer_rel_remove_types = []
+	_observer_event_names = []
 	_cache_valid = false
 	_cache_key_valid = false
 	return self
@@ -259,6 +280,115 @@ func disabled() -> QueryBuilder:
 func iterate(components: Array) -> QueryBuilder:
 	_iterate_components = components
 	return self
+
+
+#region Observer Event Declarations
+## Declare this query as an [Observer] spec that fires when a component matching
+## [method with_all]/[method with_any] is added to a matching entity.[br]
+## [param returns] - [QueryBuilder] for chaining.
+func on_added() -> QueryBuilder:
+	_observer_events_mask |= (1 << Observer.Event.ADDED)
+	return self
+
+
+## Declare this query fires when a component matching [method with_all]/[method with_any]
+## is removed from a matching entity.[br]
+## [param returns] - [QueryBuilder] for chaining.
+func on_removed() -> QueryBuilder:
+	_observer_events_mask |= (1 << Observer.Event.REMOVED)
+	return self
+
+
+## Declare this query fires when a property on a matching component changes.[br]
+## [param properties] Optional list of property names to filter by (empty = all properties).[br]
+## [param returns] - [QueryBuilder] for chaining.
+func on_changed(properties: Array[StringName] = []) -> QueryBuilder:
+	_observer_events_mask |= (1 << Observer.Event.CHANGED)
+	_observer_changed_props = properties
+	return self
+
+
+## Declare this query as a monitor: fire when an entity NEWLY matches the full query.[br]
+## [param returns] - [QueryBuilder] for chaining.
+func on_match() -> QueryBuilder:
+	_observer_events_mask |= (1 << Observer.Event.MATCH)
+	return self
+
+
+## Declare this query as a monitor: fire when an entity STOPS matching the full query.[br]
+## [param returns] - [QueryBuilder] for chaining.
+func on_unmatch() -> QueryBuilder:
+	_observer_events_mask |= (1 << Observer.Event.UNMATCH)
+	return self
+
+
+## Declare this query fires when a relationship is added to a matching entity.[br]
+## [param relation_types] Optional list of relation [Component] script types to filter by (empty = any).[br]
+## [param returns] - [QueryBuilder] for chaining.
+func on_relationship_added(relation_types: Array = []) -> QueryBuilder:
+	_observer_events_mask |= (1 << Observer.Event.RELATIONSHIP_ADDED)
+	_observer_rel_add_types = relation_types
+	return self
+
+
+## Declare this query fires when a relationship is removed from a matching entity.[br]
+## [param relation_types] Optional list of relation [Component] script types to filter by (empty = any).[br]
+## [param returns] - [QueryBuilder] for chaining.
+func on_relationship_removed(relation_types: Array = []) -> QueryBuilder:
+	_observer_events_mask |= (1 << Observer.Event.RELATIONSHIP_REMOVED)
+	_observer_rel_remove_types = relation_types
+	return self
+
+
+## Declare this query reacts to a custom event emitted via [method World.emit_event].[br]
+## May be chained multiple times to listen for several events on the same query.[br]
+## [param event_name] The event [StringName] to subscribe to.[br]
+## [param returns] - [QueryBuilder] for chaining.
+func on_event(event_name: StringName) -> QueryBuilder:
+	if not _observer_event_names.has(event_name):
+		_observer_event_names.append(event_name)
+	return self
+
+
+## True if this query declares any observer events (lifecycle, monitor, relationship, or custom).
+func has_observer_events() -> bool:
+	return _observer_events_mask != 0 or not _observer_event_names.is_empty()
+
+
+## True if this query declares the given [Observer.Event] flag.
+func has_event(event: Observer.Event) -> bool:
+	return (_observer_events_mask & (1 << event)) != 0
+
+
+## True if this query declares the given custom event name.
+func has_custom_event(event_name: StringName) -> bool:
+	return _observer_event_names.has(event_name)
+
+
+## Return the set of component/relationship script resource paths this query's filters
+## reference. Used by the world's monitor dispatch to decide whether a structural
+## mutation on an entity could affect this query's membership.
+func _component_sensitivity() -> Array[String]:
+	var paths: Array[String] = []
+	_collect_script_paths(_all_components, paths)
+	_collect_script_paths(_any_components, paths)
+	_collect_script_paths(_exclude_components, paths)
+	for rel in _relationships:
+		var rel_path = _world._get_relationship_relation_path(rel) if _world else ""
+		if rel_path != "" and not paths.has(rel_path):
+			paths.append(rel_path)
+	for rel in _exclude_relationships:
+		var rel_path = _world._get_relationship_relation_path(rel) if _world else ""
+		if rel_path != "" and not paths.has(rel_path):
+			paths.append(rel_path)
+	return paths
+
+
+func _collect_script_paths(components: Array, out: Array[String]) -> void:
+	for c in components:
+		if c is Script and c.resource_path != "" and not out.has(c.resource_path):
+			out.append(c.resource_path)
+#endregion Observer Event Declarations
 
 
 func execute_one() -> Entity:

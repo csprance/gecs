@@ -53,6 +53,16 @@ var entities: Array[Entity] = []
 var observers: Array[Observer] = []
 ## PERF-02: Cache for observer watch() results — populated at add_observer() time, cleared at remove_observer()
 var _observer_watch_cache: Dictionary = {} # Observer -> Resource (component script reference)
+## Per-event observer dispatch index. Key = [enum Observer.Event] int flag. Value = Array of
+## dispatch entries: [code]{observer, query, callable, legacy, legacy_watch_path}[/code].
+## Rebuilt per observer by [method _register_observer_entries] / [method _unregister_observer_entries].
+var _obs_entries_by_event: Dictionary = {}
+## Per-custom-event observer dispatch index. Key = [StringName]. Same entry shape as
+## [member _obs_entries_by_event].
+var _obs_entries_by_custom_event: Dictionary = {}
+## All observer/sub-observer entries belonging to a given [Observer], keyed by observer instance.
+## Used for O(1) cleanup on [method remove_observer].
+var _obs_entries_by_observer: Dictionary = {}
 ## All the [System]s by group Dictionary[String, Array[System]]
 var systems_by_group: Dictionary[String, Array] = {}
 ## All the [System]s in the world flattened into a single array
@@ -197,6 +207,13 @@ func initialize():
 	_worldLogger.debug("_initialize Added Systems from Scene Tree and dep sorted: ", _systems)
 
 	# Add observers from scene tree
+	# NOTE: Observers register BEFORE scene-tree entities load, so an observer with
+	# yield_existing=true iterates an empty entities list and retro-fires nothing.
+	# That's the intended behavior — entities added after the observer registers are
+	# delivered through normal dispatch (component_added → _dispatch_observer_event),
+	# so every scene-tree entity still triggers the observer via its structural add.
+	# yield_existing only matters for observers added at runtime AFTER entities already
+	# exist (where natural dispatch wouldn't cover them).
 	var _observers = get_node(system_nodes_root).find_children("*", "Observer") as Array[Observer]
 	add_observers(_observers)
 	_worldLogger.debug("_initialize Added Observers from Scene Tree: ", _observers)
@@ -288,6 +305,11 @@ func flush_command_buffers() -> void:
 		for system in systems_by_group[group_key]:
 			if system.command_buffer_flush_mode == System.FlushMode.MANUAL and system.has_pending_commands():
 				system.cmd.execute()
+	# Observers with MANUAL flush mode share the same drain point — otherwise their
+	# queued commands would never execute.
+	for obs in observers:
+		if obs.command_buffer_flush_mode == Observer.FlushMode.MANUAL and obs.has_pending_commands():
+			obs.cmd.execute()
 
 
 ## Updates the pause behavior for all systems based on the provided paused state.
@@ -455,6 +477,9 @@ func remove_entity(entity: Entity) -> void:
 	for comp in entity.components.values():
 		component_removed.emit(entity, comp)
 		_handle_observer_component_removed(entity, comp)
+
+	# Unmatch monitor queries this entity was in — fires on_unmatch and clears membership
+	_drop_entity_from_monitors(entity)
 
 	entity_removed.emit(entity)
 	_worldLogger.debug("remove_entity Removing Entity: ", entity)
@@ -791,6 +816,8 @@ func _on_entity_component_added(entity: Entity, component: Resource) -> void:
 	# Emit Signal
 	component_added.emit(entity, component)
 	_handle_observer_component_added(entity, component)
+	if component != null and component.get_script() != null:
+		_evaluate_monitors_for_entity(entity, [component.get_script().resource_path])
 	if not entity.component_property_changed.is_connected(_on_entity_component_property_change):
 		entity.component_property_changed.connect(_on_entity_component_property_change)
 	if ECS.debug:
@@ -813,6 +840,12 @@ func _on_entity_component_property_change(
 ) -> void:
 	# Notify the World to trigger observers
 	_handle_observer_component_changed(entity, component, property_name, new_value, old_value)
+	# Re-evaluate monitor queries whose filters include property-query criteria on this
+	# component. Monitor sensitivity is keyed by component script path; property-query
+	# components live in the same path so this catches "hp dropped below threshold"-style
+	# transitions without any structural mutation.
+	if component != null and component.get_script() != null:
+		_evaluate_monitors_for_entity(entity, [component.get_script().resource_path])
 	# ARCHETYPE: No cache invalidation - property changes don't affect archetype membership
 	# Send the message to the debugger if we're in debug
 	if ECS.debug:
@@ -840,6 +873,8 @@ func _on_entity_component_removed(entity, component: Resource) -> void:
 
 	component_removed.emit(entity, component)
 	_handle_observer_component_removed(entity, component)
+	if component != null and component.get_script() != null:
+		_evaluate_monitors_for_entity(entity, [component.get_script().resource_path])
 	if ECS.debug:
 		assert(GECSEditorDebuggerMessages.entity_component_removed(entity, component), "")
 
@@ -857,12 +892,22 @@ func _on_entity_relationship_added(entity: Entity, relationship: Relationship) -
 			_invalidate_cache("entity_relationship_added")
 
 	relationship_added.emit(entity, relationship)
+	_dispatch_observer_event(Observer.Event.RELATIONSHIP_ADDED, entity, relationship)
+	var rel_path_added = _get_relationship_relation_path(relationship)
+	if rel_path_added != "":
+		_evaluate_monitors_for_entity(entity, [rel_path_added])
 	if ECS.debug:
 		assert(GECSEditorDebuggerMessages.entity_relationship_added(entity, relationship), "")
 
 
 ## Update index when a relationship is removed and move entity to archetype without the pair slot key.
 func _on_entity_relationship_removed(entity: Entity, relationship: Relationship) -> void:
+	# Dispatch observer RELATIONSHIP_REMOVED BEFORE archetype move so the entity still
+	# structurally satisfies match() queries that reference the relationship type.
+	_dispatch_observer_event(Observer.Event.RELATIONSHIP_REMOVED, entity, relationship)
+	var rel_path_removed = _get_relationship_relation_path(relationship)
+	if rel_path_removed != "":
+		_evaluate_monitors_for_entity(entity, [rel_path_removed])
 	# Skip archetype move when called from batch handler re-emitting per-entity signals
 	if not _in_batch_relationship_emit:
 		# STRUCTURAL: Move entity to archetype without the pair slot key
@@ -888,11 +933,19 @@ func add_observer(_observer: Observer) -> void:
 	_worldLogger.trace("add_observer Adding Observer: ", _observer)
 	observers.append(_observer)
 
-	# Initialize the query builder for the observer
-	_observer.q = QueryBuilder.new(self )
+	# Wire world reference — observer's `q` property is a getter that returns a fresh
+	# QueryBuilder on every access (mirrors System.q), so we don't assign it directly.
+	_observer._world = self
 
 	# Cache watch() result — called once at registration, not on every notification
+	# null = new-style observer (no legacy watch override); non-null = legacy observer.
 	_observer_watch_cache[_observer] = _observer.watch()
+
+	# Call user setup() after world/query are wired up
+	_observer.setup()
+
+	# Build dispatch entries for this observer from query() + legacy watch() + sub_observers()
+	_register_observer_entries(_observer)
 
 
 ## Adds multiple [Observer]s to the [World].
@@ -915,6 +968,7 @@ func remove_observer(observer: Observer) -> void:
 	# 	# Don't use system_removed as it expects a System not ReactiveSystem
 	# 	GECSEditorDebuggerMessages.exit_world()  # Just send a general update
 	_observer_watch_cache.erase(observer) # Prevent memory leak on observer churn
+	_unregister_observer_entries(observer)
 	observer.queue_free()
 
 
@@ -934,82 +988,654 @@ func handle_component_changed(
 	_handle_observer_component_changed(entity, component, property, new_value, old_value)
 
 
-## Notify observers when a component is added
+## Thin wrapper: routes component-added events through the unified observer dispatch pipeline.
 func _handle_observer_component_added(entity: Entity, component: Resource) -> void:
-	for reactive_system in observers:
-		# Get the component that this system is watching
-		var watch_component = _observer_watch_cache.get(reactive_system)
-		if (
-			watch_component
-			and component
-			and component.get_script()
-			and watch_component.resource_path == component.get_script().resource_path
-		):
-			# Check if the entity matches the system's query
-			var query_builder = reactive_system.match()
-			var matches = true
-
-			if query_builder:
-				# Use the _query method instead of trying to use query as a function
-				var entities_matching = _query(
-					query_builder._all_components,
-					query_builder._any_components,
-					query_builder._exclude_components
-				)
-				# Check if our entity is in the result set
-				matches = entities_matching.has(entity)
-
-			if matches:
-				reactive_system.on_component_added(entity, component)
+	_dispatch_observer_event(Observer.Event.ADDED, entity, component)
 
 
-## Notify observers when a component is removed
+## Thin wrapper: routes component-removed events through the unified observer dispatch pipeline.
 func _handle_observer_component_removed(entity: Entity, component: Resource) -> void:
-	for reactive_system in observers:
-		# Get the component that this system is watching
-		var watch_component = _observer_watch_cache.get(reactive_system)
-		if (
-			watch_component
-			and component
-			and component.get_script()
-			and watch_component.resource_path == component.get_script().resource_path
-		):
-			# For removal, we don't check the query since the component is already removed
-			# Just notify the system
-			reactive_system.on_component_removed(entity, component)
+	_dispatch_observer_event(Observer.Event.REMOVED, entity, component)
 
 
-## Notify observers when a component property changes
+## Thin wrapper: routes component-changed events through the unified observer dispatch pipeline.
 func _handle_observer_component_changed(
 	entity: Entity, component: Resource, property: String, new_value: Variant, old_value: Variant
 ) -> void:
-	for reactive_system in observers:
-		# Get the component that this system is watching
-		var watch_component = _observer_watch_cache.get(reactive_system)
-		if (
-			watch_component
-			and component
-			and component.get_script()
-			and watch_component.resource_path == component.get_script().resource_path
-		):
-			# Check if the entity matches the system's query
-			var query_builder = reactive_system.match()
-			var matches = true
+	var payload: Dictionary = {
+		"component": component,
+		"property": property,
+		"new_value": new_value,
+		"old_value": old_value,
+	}
+	_dispatch_observer_event(Observer.Event.CHANGED, entity, payload)
 
-			if query_builder:
-				# Use the _query method instead of trying to use query as a function
-				var entities_matching = _query(
-					query_builder._all_components,
-					query_builder._any_components,
-					query_builder._exclude_components
-				)
-				# Check if our entity is in the result set
-				matches = entities_matching.has(entity)
 
-			if matches:
-				reactive_system.on_component_changed(
-					entity, component, property, new_value, old_value
+#region Observer Registration & Dispatch
+## Build and register all dispatch entries for an [Observer]. Called from
+## [method add_observer] after [method Observer.setup] returns.
+## Creates one entry for the top-level [method Observer.query] (new-style) or for the
+## legacy [method Observer.watch] / [method Observer.match] pair, plus entries for every
+## tuple returned by [method Observer.sub_observers]. Each entry is indexed by the events
+## its query declares.
+func _register_observer_entries(_observer: Observer) -> void:
+	var entries: Array = []
+
+	var top_query: QueryBuilder = _observer.query()
+	var legacy_watch: Resource = _observer_watch_cache.get(_observer)
+
+	if top_query != null and top_query.has_observer_events():
+		# New-style: query() returned a QueryBuilder with on_* modifiers.
+		# Watched paths for component ADDED/REMOVED/CHANGED events are the union of
+		# with_all/with_any components — adding/removing any of those could change the
+		# entity's membership in the query.
+		if legacy_watch != null and OS.has_feature("editor"):
+			var _path: String = _observer.get_script().resource_path if _observer.get_script() else "<unknown>"
+			push_warning(
+				"%s: overrides BOTH watch() (legacy) and query() (with events). The legacy on_component_added/removed/changed methods will NOT be called — only query()+each() dispatch runs. Remove the watch() override to silence this warning." % _path
+			)
+		var entry := {
+			"observer": _observer,
+			"query": top_query,
+			"callable": Callable(_observer, "each"),
+			"legacy": false,
+			"watched_paths": _collect_watched_paths(top_query),
+			"is_monitor": (
+				top_query.has_event(Observer.Event.MATCH)
+				or top_query.has_event(Observer.Event.UNMATCH)
+			),
+			"monitor_sensitivity": top_query._component_sensitivity(),
+			"membership": {}, # entity -> true, populated for monitor queries
+		}
+		entries.append(entry)
+	elif legacy_watch != null:
+		# Legacy: synthesize a query from watch() + match() and route to on_component_*.
+		# IMPORTANT: legacy watched_paths is JUST the single watch() component, not the full
+		# match() filter — legacy semantics dispatched only on that one component's events.
+		var match_q: QueryBuilder = _observer.match()
+		var synth_q: QueryBuilder = QueryBuilder.new(self )
+		synth_q.with_all([legacy_watch])
+		if match_q != null:
+			for c in match_q._all_components:
+				if not synth_q._all_components.has(c):
+					synth_q._all_components.append(c)
+			synth_q._any_components = match_q._any_components.duplicate()
+			synth_q._exclude_components = match_q._exclude_components.duplicate()
+		synth_q.on_added().on_removed().on_changed()
+		var legacy_path := legacy_watch.resource_path if legacy_watch is Script else ""
+		entries.append({
+			"observer": _observer,
+			"query": synth_q,
+			"callable": Callable(), # legacy uses direct method routing
+			"legacy": true,
+			"legacy_watch_path": legacy_path,
+			"watched_paths": [legacy_path] if legacy_path != "" else [],
+			"is_monitor": false,
+			"monitor_sensitivity": [],
+			"membership": {},
+		})
+
+	# sub_observers: each tuple becomes its own virtual entry. Queries carry their own
+	# event modifiers; callables receive the same (event, entity, payload) shape as each().
+	# Tuple shape: [QueryBuilder, Callable, optional SystemTimer, optional yield_existing_override]
+	# The 4th element lets a specific sub-observer opt in/out of yield_existing independently
+	# of the parent Observer's flag.
+	var subs: Array = _observer.sub_observers()
+	for tuple in subs:
+		if tuple.size() < 2:
+			_worldLogger.warning("sub_observers tuple must be [QueryBuilder, Callable]: ", tuple)
+			continue
+		var sub_q: QueryBuilder = tuple[0] as QueryBuilder
+		var sub_callable: Callable = tuple[1] as Callable
+		if sub_q == null or not sub_callable.is_valid():
+			_worldLogger.warning("sub_observers invalid tuple: ", tuple)
+			continue
+		if not sub_q.has_observer_events():
+			_worldLogger.warning("sub_observers query declares no events: ", sub_q)
+			continue
+		var yield_override = null
+		if tuple.size() >= 4:
+			yield_override = tuple[3]
+		entries.append({
+			"observer": _observer,
+			"query": sub_q,
+			"callable": sub_callable,
+			"legacy": false,
+			"watched_paths": _collect_watched_paths(sub_q),
+			"is_monitor": (
+				sub_q.has_event(Observer.Event.MATCH)
+				or sub_q.has_event(Observer.Event.UNMATCH)
+			),
+			"monitor_sensitivity": sub_q._component_sensitivity(),
+			"membership": {},
+			"yield_existing_override": yield_override,
+		})
+
+	_obs_entries_by_observer[_observer] = entries
+	for entry in entries:
+		_index_observer_entry(entry)
+		# Skip retroactive fires for inactive/paused observers — matches the runtime
+		# `if not obs.active or obs.paused` skip in _dispatch_observer_event.
+		if not _observer.active or _observer.paused:
+			continue
+		# yield_existing can be overridden per sub-observer tuple (4th tuple element).
+		# null override → fall back to the parent observer's yield_existing flag.
+		var yield_override = entry.get("yield_existing_override", null)
+		var should_yield: bool = yield_override if yield_override != null else _observer.yield_existing
+		if entry.get("is_monitor", false):
+			_seed_monitor_membership(entry, should_yield)
+		elif should_yield:
+			_yield_existing_for_entry(entry)
+
+
+## Union of [code]with_all[/code] + [code]with_any[/code] component script paths. These are
+## the components whose add/remove/change events could affect this query's membership.
+func _collect_watched_paths(q: QueryBuilder) -> Array[String]:
+	var paths: Array[String] = []
+	for c in q._all_components:
+		if c is Script and c.resource_path != "" and not paths.has(c.resource_path):
+			paths.append(c.resource_path)
+	for c in q._any_components:
+		if c is Script and c.resource_path != "" and not paths.has(c.resource_path):
+			paths.append(c.resource_path)
+	return paths
+
+
+func _index_observer_entry(entry: Dictionary) -> void:
+	var q: QueryBuilder = entry.query
+	if q == null:
+		return
+	# Index by Observer.Event bit flags
+	for e in [
+		Observer.Event.ADDED,
+		Observer.Event.REMOVED,
+		Observer.Event.CHANGED,
+		Observer.Event.MATCH,
+		Observer.Event.UNMATCH,
+		Observer.Event.RELATIONSHIP_ADDED,
+		Observer.Event.RELATIONSHIP_REMOVED,
+	]:
+		if q.has_event(e):
+			var arr: Array = _obs_entries_by_event.get(e, [])
+			arr.append(entry)
+			_obs_entries_by_event[e] = arr
+	# Index by custom event StringName
+	for ev_name in q._observer_event_names:
+		var arr2: Array = _obs_entries_by_custom_event.get(ev_name, [])
+		arr2.append(entry)
+		_obs_entries_by_custom_event[ev_name] = arr2
+
+
+## Remove all dispatch entries belonging to [param _observer] from the event indexes.
+func _unregister_observer_entries(_observer: Observer) -> void:
+	var entries: Array = _obs_entries_by_observer.get(_observer, [])
+	if entries.is_empty():
+		_obs_entries_by_observer.erase(_observer)
+		return
+	for e_key in _obs_entries_by_event.keys():
+		var arr: Array = _obs_entries_by_event[e_key]
+		var kept: Array = []
+		for entry in arr:
+			if entry.observer != _observer:
+				kept.append(entry)
+		_obs_entries_by_event[e_key] = kept
+	for ev_name in _obs_entries_by_custom_event.keys():
+		var arr2: Array = _obs_entries_by_custom_event[ev_name]
+		var kept2: Array = []
+		for entry in arr2:
+			if entry.observer != _observer:
+				kept2.append(entry)
+		_obs_entries_by_custom_event[ev_name] = kept2
+	_obs_entries_by_observer.erase(_observer)
+
+
+## Unified observer event dispatch. Called by the three legacy `_handle_observer_component_*`
+## wrappers and (in later steps) by relationship / monitor / custom-event paths.
+## [param event] An [enum Observer.Event] int flag or a [StringName] custom event.
+## [param entity] The entity the event concerns.
+## [param payload] Event-specific data — see [Observer.each] doc for the shape table.
+func _dispatch_observer_event(event: Variant, entity: Entity, payload: Variant) -> void:
+	var entries: Array
+	if event is StringName:
+		entries = _obs_entries_by_custom_event.get(event, [])
+	else:
+		entries = _obs_entries_by_event.get(event, [])
+	if entries.is_empty():
+		return
+	# Snapshot so re-entrant add_observer/remove_observer inside a callback cannot
+	# mutate the list we're iterating (new observers would otherwise receive the
+	# event that caused their creation).
+	entries = entries.duplicate()
+	# Snapshot deferred-mode observers at the end (so callback invocations happen
+	# below and deferred observers drain later).
+	# Component-lifecycle events (ADDED/REMOVED/CHANGED) are keyed by the specific
+	# component that triggered them — we can cheaply reject entries whose watched_paths
+	# don't include that component's script path BEFORE running any world query.
+	# This preserves legacy fast-path behavior and avoids stale-cache false negatives.
+	var is_int_event := not (event is StringName)
+	var component_path: String = ""
+	if is_int_event:
+		if event == Observer.Event.ADDED or event == Observer.Event.REMOVED:
+			if payload != null and payload is Resource and payload.get_script() != null:
+				component_path = payload.get_script().resource_path
+		elif event == Observer.Event.CHANGED:
+			if payload is Dictionary and payload.has("component"):
+				var comp = payload.component
+				if comp != null and comp.get_script() != null:
+					component_path = comp.get_script().resource_path
+	for entry in entries:
+		var obs: Observer = entry.observer
+		if obs == null or not is_instance_valid(obs):
+			continue
+		if not obs.active or obs.paused:
+			continue
+		# Watched-component filter for lifecycle events
+		if component_path != "":
+			var watched: Array = entry.get("watched_paths", [])
+			if not watched.is_empty() and not watched.has(component_path):
+				continue
+		# Property filter for CHANGED events (from on_changed([&"prop"]))
+		if is_int_event and event == Observer.Event.CHANGED:
+			var q_prop: QueryBuilder = entry.query
+			if q_prop != null and not q_prop._observer_changed_props.is_empty():
+				if payload is Dictionary and payload.has("property"):
+					var prop_name := StringName(payload.property)
+					if not q_prop._observer_changed_props.has(prop_name):
+						continue
+		# Relationship-type filter for RELATIONSHIP_ADDED/REMOVED events
+		if is_int_event and (event == Observer.Event.RELATIONSHIP_ADDED or event == Observer.Event.RELATIONSHIP_REMOVED):
+			var q_b: QueryBuilder = entry.query
+			if q_b != null and payload is Relationship:
+				var type_filter: Array = (
+					q_b._observer_rel_add_types
+					if event == Observer.Event.RELATIONSHIP_ADDED
+					else q_b._observer_rel_remove_types
 				)
+				if not type_filter.is_empty() and not _relationship_matches_types(payload, type_filter):
+					continue
+		# Entity query filter. For REMOVED / RELATIONSHIP_REMOVED the removed piece has
+		# already been dropped from the entity at signal time, so a naive has_component /
+		# has_relationship check would always fail even for entities that DID satisfy the
+		# filter before removal. Use a "match-before-removal" check that virtually treats
+		# the removed piece as still present.
+		# For custom (StringName) events with a null entity, skip the filter entirely —
+		# emit_event(name, null, data) is a broadcast to every subscriber.
+		# Legacy observers preserve their original semantic (watched_path match is
+		# sufficient; no entity-filter check for REMOVED) to avoid breaking existing code.
+		var is_legacy: bool = entry.get("legacy", false)
+		if not is_int_event and entity == null:
+			pass  # broadcast — no entity filter applicable
+		elif is_int_event and event == Observer.Event.REMOVED:
+			if is_legacy:
+				pass  # legacy: watched_path check is sufficient
+			elif not _observer_entry_matched_before_component_removal(entry, entity, component_path):
+				continue
+		elif is_int_event and event == Observer.Event.RELATIONSHIP_REMOVED:
+			if is_legacy:
+				pass
+			else:
+				var removed_rel_path := ""
+				if payload is Relationship:
+					removed_rel_path = _get_relationship_relation_path(payload)
+				if not _observer_entry_matched_before_relationship_removal(entry, entity, removed_rel_path, payload):
+					continue
+		elif not _observer_entry_entity_matches(entry, entity):
+			continue
+		# Invoke the callable.
+		if entry.legacy:
+			_invoke_legacy_observer(obs, event, entity, payload)
+		else:
+			entry.callable.call(event, entity, payload)
+		# Flush command buffer if PER_CALLBACK mode
+		if obs.has_pending_commands() and obs.command_buffer_flush_mode == Observer.FlushMode.PER_CALLBACK:
+			obs.cmd.execute()
+
+
+func _observer_entry_entity_matches(entry: Dictionary, entity: Entity) -> bool:
+	var q: QueryBuilder = entry.query
+	if q == null:
+		return true
+	# Unrestricted query (no component/relationship filters) → match all
+	if (
+		q._all_components.is_empty()
+		and q._any_components.is_empty()
+		and q._exclude_components.is_empty()
+		and q._relationships.is_empty()
+		and q._exclude_relationships.is_empty()
+	):
+		return true
+	# Direct per-entity check instead of world-level _query() — this avoids hitting a
+	# stale archetype cache while observer events fire inside a suppressed batch (e.g.
+	# during add_entity's _initialize loop). Query matching here mirrors
+	# QueryBuilder.matches() for a single entity.
+	for c in q._all_components:
+		if not entity.has_component(c):
+			return false
+	if not q._any_components.is_empty():
+		var any_ok := false
+		for c in q._any_components:
+			if entity.has_component(c):
+				any_ok = true
+				break
+		if not any_ok:
+			return false
+	for c in q._exclude_components:
+		if entity.has_component(c):
+			return false
+	for rel in q._relationships:
+		if not entity.has_relationship(rel):
+			return false
+	for rel in q._exclude_relationships:
+		if entity.has_relationship(rel):
+			return false
+	# Property-query filters (from with_all([{C_X: {"amount": {"_gte": 50}}}])) —
+	# evaluate via ComponentQueryMatcher so monitors with property-query membership
+	# can transition correctly on property changes.
+	if not q._all_components_queries.is_empty():
+		for i in range(q._all_components.size()):
+			if i >= q._all_components_queries.size():
+				break
+			var query_dict = q._all_components_queries[i]
+			if query_dict.is_empty():
+				continue
+			var comp = entity.get_component(q._all_components[i])
+			if comp == null:
+				return false
+			if not ComponentQueryMatcher.matches_query(comp, query_dict):
+				return false
+	if not q._any_components_queries.is_empty():
+		var any_prop_ok := true
+		# Only evaluate when there are actual property queries in _any_components_queries.
+		var has_any_prop_query := false
+		for qd in q._any_components_queries:
+			if not qd.is_empty():
+				has_any_prop_query = true
+				break
+		if has_any_prop_query:
+			any_prop_ok = false
+			for i in range(q._any_components.size()):
+				if i >= q._any_components_queries.size():
+					break
+				var query_dict = q._any_components_queries[i]
+				if query_dict.is_empty():
+					continue
+				var comp = entity.get_component(q._any_components[i])
+				if comp != null and ComponentQueryMatcher.matches_query(comp, query_dict):
+					any_prop_ok = true
+					break
+			if not any_prop_ok:
+				return false
+	return true
+
+
+## Match-before-removal check for component REMOVED events. Mirrors
+## [method _observer_entry_entity_matches] but treats [param removed_path] as still
+## present on the entity so observers with a [code]with_all[/code] filter only fire
+## REMOVED for entities that satisfied the full filter prior to removal.
+func _observer_entry_matched_before_component_removal(entry: Dictionary, entity: Entity, removed_path: String) -> bool:
+	var q: QueryBuilder = entry.query
+	if q == null:
+		return true
+	if (
+		q._all_components.is_empty()
+		and q._any_components.is_empty()
+		and q._exclude_components.is_empty()
+		and q._relationships.is_empty()
+		and q._exclude_relationships.is_empty()
+	):
+		return true
+	for c in q._all_components:
+		if c is Script and c.resource_path == removed_path:
+			continue
+		if not entity.has_component(c):
+			return false
+	if not q._any_components.is_empty():
+		var any_ok := false
+		for c in q._any_components:
+			if c is Script and c.resource_path == removed_path:
+				any_ok = true
+				break
+			if entity.has_component(c):
+				any_ok = true
+				break
+		if not any_ok:
+			return false
+	for c in q._exclude_components:
+		# If the removed component matches an exclude, the entity DID fail exclusion
+		# before removal, so was NOT matching — return false.
+		if c is Script and c.resource_path == removed_path:
+			return false
+		if entity.has_component(c):
+			return false
+	for rel in q._relationships:
+		if not entity.has_relationship(rel):
+			return false
+	for rel in q._exclude_relationships:
+		if entity.has_relationship(rel):
+			return false
+	return true
+
+
+## Match-before-removal check for relationship REMOVED events. Treats
+## [param removed_rel] as still present (by matching against [param removed_rel_path] or
+## equality with the removed [Relationship]) when evaluating the query filter.
+func _observer_entry_matched_before_relationship_removal(entry: Dictionary, entity: Entity, removed_rel_path: String, removed_rel: Relationship) -> bool:
+	var q: QueryBuilder = entry.query
+	if q == null:
+		return true
+	if (
+		q._all_components.is_empty()
+		and q._any_components.is_empty()
+		and q._exclude_components.is_empty()
+		and q._relationships.is_empty()
+		and q._exclude_relationships.is_empty()
+	):
+		return true
+	for c in q._all_components:
+		if not entity.has_component(c):
+			return false
+	if not q._any_components.is_empty():
+		var any_ok := false
+		for c in q._any_components:
+			if entity.has_component(c):
+				any_ok = true
+				break
+		if not any_ok:
+			return false
+	for c in q._exclude_components:
+		if entity.has_component(c):
+			return false
+	for rel in q._relationships:
+		# Treat the removed relationship as still present when its relation path matches.
+		if removed_rel_path != "" and _get_relationship_relation_path(rel) == removed_rel_path:
+			continue
+		if not entity.has_relationship(rel):
+			return false
+	for rel in q._exclude_relationships:
+		if removed_rel_path != "" and _get_relationship_relation_path(rel) == removed_rel_path:
+			# The entity DID have this excluded relationship before removal.
+			return false
+		if entity.has_relationship(rel):
+			return false
+	return true
+
+
+## True if [param relationship]'s relation component script path matches any entry in
+## [param type_filter]. Accepts both Script references and component instances — any
+## entry whose resolved resource_path matches the relation's script path counts.
+func _relationship_matches_types(relationship: Relationship, type_filter: Array) -> bool:
+	var rel_path = _get_relationship_relation_path(relationship)
+	if rel_path == "":
+		return false
+	for t in type_filter:
+		var p: String = ""
+		if t is Script:
+			p = t.resource_path
+		elif t is Resource and t.get_script() != null:
+			p = t.get_script().resource_path
+		if p != "" and p == rel_path:
+			return true
+	return false
+
+
+func _invoke_legacy_observer(obs: Observer, event: int, entity: Entity, payload: Variant) -> void:
+	match event:
+		Observer.Event.ADDED:
+			obs.on_component_added(entity, payload)
+		Observer.Event.REMOVED:
+			obs.on_component_removed(entity, payload)
+		Observer.Event.CHANGED:
+			# Legacy signature: (entity, component, property, new_value, old_value)
+			obs.on_component_changed(entity, payload.component, payload.property, payload.new_value, payload.old_value)
+## yield_existing pass for non-monitor observers: fire ADDED for every pre-existing
+## component instance on entities that currently satisfy the entry's entity filter.
+## Only fires events the entry's query declared (e.g. skipped if only .on_changed()).
+func _yield_existing_for_entry(entry: Dictionary) -> void:
+	var q: QueryBuilder = entry.query
+	if q == null:
+		return
+	var obs: Observer = entry.observer
+	if obs == null or not is_instance_valid(obs) or not obs.active or obs.paused:
+		return
+	var fires_added: bool = q.has_event(Observer.Event.ADDED)
+	if not fires_added:
+		return
+	var watched: Array = entry.get("watched_paths", [])
+	for entity in entities:
+		if not _observer_entry_entity_matches(entry, entity):
+			continue
+		# Re-check active between iterations in case a callback flips it.
+		if not obs.active or obs.paused:
+			return
+		for comp in entity.components.values():
+			if comp == null or comp.get_script() == null:
+				continue
+			var cp: String = comp.get_script().resource_path
+			if watched.is_empty() or watched.has(cp):
+				_invoke_entry(entry, Observer.Event.ADDED, entity, comp)
+
+
+## When an entity is removed from the world, evict it from all monitor membership sets
+## and fire UNMATCH on monitors that had it.
+func _drop_entity_from_monitors(entity: Entity) -> void:
+	# Dedup: monitors with both MATCH and UNMATCH are indexed under both keys.
+	var seen: Dictionary = {}
+	var candidates: Array = []
+	for e_key in [Observer.Event.UNMATCH, Observer.Event.MATCH]:
+		for entry in _obs_entries_by_event.get(e_key, []):
+			if seen.has(entry):
+				continue
+			seen[entry] = true
+			candidates.append(entry)
+	# Iterate the snapshot — callbacks mutating observer registration stay safe.
+	for entry in candidates:
+		if not entry.get("is_monitor", false):
+			continue
+		if entry.membership.has(entity):
+			entry.membership.erase(entity)
+			var q: QueryBuilder = entry.query
+			if q != null and q.has_event(Observer.Event.UNMATCH):
+				var obs: Observer = entry.observer
+				if obs != null and is_instance_valid(obs) and obs.active and not obs.paused:
+					_invoke_entry(entry, Observer.Event.UNMATCH, entity, null)
+
+
+## Populate a monitor entry's membership set with entities currently matching its query.
+## If the observer has [code]yield_existing[/code], also fires MATCH for each seeded entity.
+func _seed_monitor_membership(entry: Dictionary, yield_existing: bool = false) -> void:
+	var q: QueryBuilder = entry.query
+	var obs: Observer = entry.observer
+	if q == null or obs == null or not is_instance_valid(obs):
+		return
+	# Walk existing entities (can't rely on query.execute() for monitor-only queries
+	# that declared only on_event; but for MATCH we need the query's structural filters).
+	# Population of membership happens even for inactive observers — it's framework
+	# bookkeeping. But the retroactive MATCH fire is gated on active/paused.
+	# [param yield_existing] resolves parent-observer vs per-tuple override at the caller.
+	for entity in entities:
+		if _observer_entry_entity_matches(entry, entity):
+			entry.membership[entity] = true
+			if yield_existing and q.has_event(Observer.Event.MATCH) and obs.active and not obs.paused:
+				_invoke_entry(entry, Observer.Event.MATCH, entity, null)
+
+
+## Re-evaluate monitor-mode observers whose sensitivity set intersects [param touched_paths].
+## Fires MATCH / UNMATCH on membership delta for [param entity].
+func _evaluate_monitors_for_entity(entity: Entity, touched_paths: Array) -> void:
+	if entity == null or not is_instance_valid(entity):
+		return
+	# Walk monitor entries once; dedup by entry identity since MATCH + UNMATCH share entries.
+	var seen: Dictionary = {}
+	var candidates: Array = []
+	for e_key in [Observer.Event.MATCH, Observer.Event.UNMATCH]:
+		for entry in _obs_entries_by_event.get(e_key, []):
+			if seen.has(entry):
+				continue
+			seen[entry] = true
+			candidates.append(entry)
+	for entry in candidates:
+		if not entry.get("is_monitor", false):
+			continue
+		var obs: Observer = entry.observer
+		if obs == null or not is_instance_valid(obs) or not obs.active or obs.paused:
+			continue
+		# Cheap rejection by sensitivity
+		if not touched_paths.is_empty():
+			var sens: Array = entry.get("monitor_sensitivity", [])
+			if not sens.is_empty():
+				var touches := false
+				for p in touched_paths:
+					if sens.has(p):
+						touches = true
+						break
+				if not touches:
+					continue
+		var was_matching: bool = entry.membership.has(entity)
+		var now_matches: bool = _observer_entry_entity_matches(entry, entity)
+		if now_matches and not was_matching:
+			entry.membership[entity] = true
+			var q: QueryBuilder = entry.query
+			if q != null and q.has_event(Observer.Event.MATCH):
+				_invoke_entry(entry, Observer.Event.MATCH, entity, null)
+		elif was_matching and not now_matches:
+			entry.membership.erase(entity)
+			var q2: QueryBuilder = entry.query
+			if q2 != null and q2.has_event(Observer.Event.UNMATCH):
+				_invoke_entry(entry, Observer.Event.UNMATCH, entity, null)
+
+
+## Invoke the callable on an observer entry with the standard (event, entity, payload)
+## shape, flushing [member Observer.cmd] per the observer's flush mode.
+func _invoke_entry(entry: Dictionary, event: Variant, entity: Entity, payload: Variant) -> void:
+	var obs: Observer = entry.observer
+	if entry.get("legacy", false):
+		_invoke_legacy_observer(obs, event, entity, payload)
+	else:
+		var c: Callable = entry.callable
+		if c.is_valid():
+			c.call(event, entity, payload)
+	if obs.has_pending_commands() and obs.command_buffer_flush_mode == Observer.FlushMode.PER_CALLBACK:
+		obs.cmd.execute()
+
+
+## Emit a custom observer event. Observers whose [QueryBuilder] declared
+## [code].on_event(event_name)[/code] will receive this event through their [method Observer.each]
+## callback (dispatch respects the observer's entity filter via [method QueryBuilder.match]).[br]
+## [param event_name] Name of the event (use [StringName] literals like [code]&"damage_dealt"[/code]).[br]
+## [param entity] The [Entity] the event concerns; passed through to observer callbacks.[br]
+## [param data] Arbitrary user payload delivered to observers as the third argument.[br]
+## [b]Example:[/b]
+## [codeblock]
+## ECS.world.emit_event(&"damage_dealt", target, {"amount": 10, "source": attacker})
+## [/codeblock]
+func emit_event(event_name: StringName, entity: Entity = null, data: Variant = null) -> void:
+	# null entity is explicitly permitted for custom events — broadcasts to every
+	# subscriber regardless of entity filter (the filter can't be evaluated without
+	# an entity). Filtered int events still require a valid entity.
+	if entity != null and not is_instance_valid(entity):
+		return
+	_dispatch_observer_event(event_name, entity, data)
+#endregion Observer Registration & Dispatch
 
 #endregion Signal Callbacks
 

@@ -245,6 +245,177 @@ timer.reset()                  # Reset to initial state (active, zero elapsed)
 - **Overshoot is carried forward**: `time_elapsed = time_elapsed - interval` prevents drift over time
 - **Paused systems don't block shared timers**: The timer keeps ticking; the paused system simply skips execution
 
+### Observers (Reactive Queries)
+
+GECS `Observer` is the **reactive** counterpart to `System`: instead of running every frame against a set of matching entities, an observer fires callbacks in response to **events** (component added/removed/changed, relationship added/removed, query-membership transitions, and custom user events).
+
+An observer is modeled as a **query that declares which events it reacts to**. The `QueryBuilder` grows fluent `on_*` methods that chain on top of the normal filter methods (`with_all`, `with_any`, etc.).
+
+#### Minimal example
+
+```gdscript
+class_name HealthObserver
+extends Observer
+
+func query() -> QueryBuilder:
+    return q.with_all([C_Health, C_Player]).on_added().on_removed()
+
+func each(event: Variant, entity: Entity, payload: Variant) -> void:
+    match event:
+        Observer.Event.ADDED:   print("Health granted: ", payload)
+        Observer.Event.REMOVED: print("Health lost from: ", entity.name)
+```
+
+#### Fluent event modifiers
+
+```gdscript
+q.with_all([C_Health])
+    .on_added()                              # fires when C_Health added to matching entity
+    .on_removed()                            # fires when C_Health removed
+    .on_changed([&"amount"])                 # optional property filter
+    .on_match()                              # monitor: entity enters query match set
+    .on_unmatch()                            # monitor: entity leaves query match set
+    .on_relationship_added([C_ChildOf])      # optional relation-type filter
+    .on_relationship_removed()
+    .on_event(&"damage_dealt")               # custom event subscription
+```
+
+Queries with zero `on_*` modifiers behave exactly like System queries — nothing changes for existing System code.
+
+#### Observer.Event values & payload shape
+
+| Event | Payload |
+|---|---|
+| `Observer.Event.ADDED` | the component [Resource] instance just added |
+| `Observer.Event.REMOVED` | the component [Resource] instance just removed (entity still valid) |
+| `Observer.Event.CHANGED` | `{component, property, new_value, old_value}` Dictionary |
+| `Observer.Event.MATCH` | `null` |
+| `Observer.Event.UNMATCH` | `null` |
+| `Observer.Event.RELATIONSHIP_ADDED` | the [Relationship] instance |
+| `Observer.Event.RELATIONSHIP_REMOVED` | the [Relationship] instance |
+| `StringName` custom | whatever `emit_event()` passed |
+
+#### Query monitors (`on_match` / `on_unmatch`)
+
+A query with `.on_match()` or `.on_unmatch()` enters **monitor mode**: the framework tracks which entities currently satisfy the full query and fires `on_match` exactly once when an entity transitions in, and `on_unmatch` exactly once when it transitions out. Intermediate component churn that doesn't change membership fires nothing.
+
+```gdscript
+class_name CombatTargetMonitor
+extends Observer
+
+func query() -> QueryBuilder:
+    return q.with_all([C_Player, C_Alive, C_InCombat]).on_match().on_unmatch()
+
+func each(event: Variant, entity: Entity, _payload: Variant) -> void:
+    match event:
+        Observer.Event.MATCH:   add_to_target_list(entity)
+        Observer.Event.UNMATCH: remove_from_target_list(entity)
+```
+
+Monitors also fire `on_unmatch` when an entity is removed from the world.
+
+#### Custom events
+
+Anywhere — in a System, game code, or another observer — emit a custom event via `ECS.world.emit_event(name, entity, data)`. Any observer whose query declared `.on_event(name)` receives the event through `each` (the event argument is the `StringName`).
+
+```gdscript
+# Emitter
+ECS.world.emit_event(&"damage_dealt", target, {"amount": 10, "source": attacker})
+
+# Observer
+func query() -> QueryBuilder:
+    return q.with_all([C_Alive]).on_event(&"damage_dealt")
+
+func each(event: Variant, entity: Entity, data: Variant) -> void:
+    entity.get_component(C_Health).hp -= data.amount
+```
+
+#### sub_observers — same shape as sub_systems
+
+Compose multiple reactive axes in one node. Each tuple is `[QueryBuilder (with events), Callable]`, mirroring `sub_systems` exactly. The callable signature is `(event, entity, payload)` — identical to `each`.
+
+```gdscript
+func sub_observers() -> Array[Array]:
+    return [
+        # Component-event sub-observer
+        [q.with_all([C_Health]).on_added().on_removed(), _on_health_life],
+        # Monitor sub-observer
+        [q.with_all([C_Player, C_Alive]).on_match().on_unmatch(), _on_alive_state],
+        # Relationship sub-observer
+        [q.with_all([C_Unit]).on_relationship_added([C_ChildOf]), _on_parented],
+        # Custom-event sub-observer
+        [q.with_all([C_Player]).on_event(&"damage_dealt"), _on_damage],
+    ]
+
+func _on_health_life(event, entity, payload): ...
+func _on_alive_state(event, entity, _payload): ...
+```
+
+**Important:** `q` is a fresh builder on every access (matches `System.q`), so `q.with_all(...)` in one tuple does not leak state into another.
+
+#### yield_existing
+
+```gdscript
+@export var yield_existing: bool = true
+```
+
+Set `yield_existing = true` (property on the `Observer` node) and at `setup()` the framework retroactively fires:
+- `on_added` for every component instance on entities that currently satisfy the entry's query (for entries declaring `.on_added()`).
+- `on_match` for every currently-matching entity (for monitor entries).
+
+Off by default — cost scales with world size.
+
+**Scene-tree ordering note:** `World.initialize()` registers observers *before* entities, so `yield_existing` on a scene-tree Observer sees an empty entity list and retro-fires nothing. That's fine — every entity added after the observer registers is delivered through normal dispatch (`component_added` → ADDED event), so scene-tree entities still trigger the observer. `yield_existing` is primarily useful for observers added at runtime *after* entities already exist.
+
+**Per-sub-observer override:** each `sub_observers()` tuple accepts an optional 4th element `[QueryBuilder, Callable, SystemTimer|null, yield_existing_override]`. `true` forces retroactive fire for this tuple regardless of the parent's flag; `false` suppresses it. `null`/omitted inherits the parent's `yield_existing`.
+
+**Group filters don't transition monitors:** `with_group("name").on_match().on_unmatch()` will fire MATCH/UNMATCH when structural component changes bring the entity in/out of the query, but Godot group membership changes are not hooked by the ECS — adding/removing a node from a group won't re-evaluate the monitor. Pair group filters with a component marker (e.g. `C_Target`) if you need transition events.
+
+**REMOVED / RELATIONSHIP_REMOVED fire only for matched entities:** the framework evaluates the full query against the entity *virtually treating the removed piece as still present*, so an observer with `with_all([C_A, C_B]).on_removed()` fires REMOVED only for entities that satisfied the filter before the removal — not for entities that had `C_A` but never had `C_B`.
+
+**Property-query monitors transition on property changes:** a monitor like `q.with_all([{C_Health: {"hp": {"_gt": 0}}}]).on_match().on_unmatch()` fires UNMATCH when `hp` crosses the threshold via a property setter that emits `property_changed` — no structural mutation required.
+
+**Custom events accept null entity for broadcast:** `world.emit_event(&"game_paused")` (no entity) delivers the event to every subscriber of that name regardless of their entity filter. Subscribers with filtered queries should gate on `entity == null` inside `each()` if they handle both scoped and broadcast events.
+
+#### Observer parity with System
+
+Observers share the System lifecycle and infrastructure:
+
+- `setup()` — one-shot init after registration.
+- `active: bool`, `paused: bool` — skip dispatch when off.
+- `cmd: CommandBuffer` — lazy, queue structural changes from callbacks.
+- `command_buffer_flush_mode: FlushMode` — `PER_CALLBACK` (default) or `MANUAL`.
+- `lastRunData: Dictionary` — debugger integration.
+
+#### Why use `cmd` in an Observer (different reasons than a System)
+
+Systems use `cmd` primarily to avoid **iteration hazards** — deferring add/remove until after the entity loop completes so the iteration doesn't skip entries or invalidate the archetype cache mid-walk. Observers aren't iterating anything; they're a callback for a single event on a single entity. So the motivations are different:
+
+1. **Break event cascades.** A mutation inside an Observer callback (e.g. `entity.add_component(C_X)`) synchronously fires any observer watching `C_X.on_added` — which might mutate more, which fires more observers, etc. Queueing through `cmd` defers those triggers until after the current callback returns, so chained logic is flat rather than recursive.
+2. **Avoid stale-cache observations.** The Observer is running *inside* a mutation path that may have suppressed cache invalidation (e.g. during `add_entity` / batch operations). Performing more direct mutations at that point risks observing stale query state. Deferring through `cmd` means the current mutation finishes and the cache stabilizes before your changes apply.
+3. **Batch across multiple events.** With `FlushMode.MANUAL`, an observer can accumulate structural changes from many events (e.g. queue a spawn per `&"damage_dealt"` received) and apply them all at once when `ECS.world.flush_command_buffers()` is called — typically at a known safe point between process groups.
+4. **Safe monitor reactions.** When an `on_match` or `on_unmatch` handler reacts by mutating components that *would cause another monitor transition*, `cmd` lets the current transition settle before the next one is evaluated.
+
+What Observers do **not** need `cmd` for: forward-vs-backward iteration safety, `safe_iteration = false` escapes, or "don't skip entities in this loop" — none of those apply because observers don't loop.
+
+**Rule of thumb:** in a System, reach for `cmd` whenever you're mutating structure. In an Observer, reach for `cmd` when your callback triggers further mutations — otherwise a direct mutation is fine.
+
+#### Property-change observers
+
+`Observer.Event.CHANGED` only fires when a component explicitly emits `Component.property_changed`. Direct property assignment does **not** trigger observers; this is intentional for performance. Components that want change events must implement a setter that emits `property_changed`:
+
+```gdscript
+@export var health: int = 100 : set = set_health
+func set_health(new_value: int) -> void:
+    var old_value = health
+    health = new_value
+    property_changed.emit(self, "health", old_value, new_value)
+```
+
+#### Legacy API (deprecated shim)
+
+The pre-existing Observer API — `watch() -> Resource`, `match() -> QueryBuilder`, `on_component_added/removed/changed` — continues to work unchanged via an internal shim. Existing observers do **not** need migration. For new code, prefer `query()` + `each()` or `sub_observers()`.
+
 ## Development Commands
 
 ### Running Tests with GdUnit4
