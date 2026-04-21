@@ -4,9 +4,9 @@
 [ext_resource type="Script" uid="uid://cdu5tlyk72uu4" path="res://addons/gecs/ecs/world.gd" id="2_world"]
 [ext_resource type="Script" uid="uid://b3vi2ingux88g" path="res://addons/gecs/lib/system_group.gd" id="3_group"]
 [ext_resource type="Script" uid="uid://cade8lld15uwy" path="res://example_multimesh/systems/s_mm_velocity.gd" id="4_vel"]
-[ext_resource type="Script" uid="uid://dqbcf8fcp00ab" path="res://example/systems/s_random_velocity.gd" id="5_rvel"]
+[ext_resource type="Script" uid="uid://dqbcf8fcp00ab" path="res://example_stress_test/systems/s_random_velocity.gd" id="5_rvel"]
 [ext_resource type="Script" uid="uid://ch5tiqvco114d" path="res://example_multimesh/systems/s_mm_random_spawner.gd" id="6_spawn"]
-[ext_resource type="Script" uid="uid://bhyk76gs76j8p" path="res://example/systems/s_lifetime.gd" id="7_life"]
+[ext_resource type="Script" uid="uid://bhyk76gs76j8p" path="res://example_stress_test/systems/s_lifetime.gd" id="7_life"]
 [ext_resource type="Script" uid="uid://cmuasel05mtxk" path="res://example_multimesh/systems/s_multi_mesh_renderer.gd" id="8_render"]
 [ext_resource type="Script" uid="uid://ysb6qh6i8udi" path="res://example_multimesh/observers/o_mm_lifecycle_demo.gd" id="9_obs"]
 

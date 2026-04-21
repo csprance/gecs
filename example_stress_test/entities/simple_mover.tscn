@@ -1,10 +1,10 @@
-[gd_scene load_steps=9 format=3]
+[gd_scene format=3]
 
-[ext_resource type="Script" uid="uid://gwavdptq2008" path="res://example/entities/simple_mover.gd" id="1_entity"]
+[ext_resource type="Script" uid="uid://gwavdptq2008" path="res://example_stress_test/entities/simple_mover.gd" id="1_entity"]
 [ext_resource type="Script" uid="uid://b6k13gc2m4e5s" path="res://addons/gecs/ecs/component.gd" id="2_comp"]
-[ext_resource type="Script" uid="uid://b7r4xkfiy8qi0" path="res://example/components/c_velocity.gd" id="3_vel"]
-[ext_resource type="Script" uid="uid://bx3pmlknhmilu" path="res://example/components/c_timer.gd" id="4_timer"]
-[ext_resource type="Script" uid="uid://d0fit03sansqe" path="res://example/components/c_lifetime.gd" id="5_life"]
+[ext_resource type="Script" uid="uid://b7r4xkfiy8qi0" path="res://example_stress_test/components/c_velocity.gd" id="3_vel"]
+[ext_resource type="Script" uid="uid://bx3pmlknhmilu" path="res://example_stress_test/components/c_timer.gd" id="4_timer"]
+[ext_resource type="Script" uid="uid://d0fit03sansqe" path="res://example_stress_test/components/c_lifetime.gd" id="5_life"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_mat"]
 albedo_color = Color(0.36, 1, 1, 1)
