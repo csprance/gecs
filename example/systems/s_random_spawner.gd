@@ -1,26 +1,21 @@
-class_name RandomSpawnerSystem
+class_name SimpleRandomSpawnerSystem
 extends System
 
 @export var random_mover_scene: PackedScene
-## How many seconds between spawns (0 = every frame, old behavior)
-@export var spawn_interval: float = 0.1
+@export var spawn_area: float = 5.0
 
 func setup():
-	# Use PER_GROUP flush mode - spawns will be visible to other systems next frame
 	command_buffer_flush_mode = FlushMode.PER_GROUP
 	safe_iteration = false
-	if spawn_interval > 0.0:
-		set_tick_rate(spawn_interval)
 
 
 func process(_es: Array, _cs: Array, _d: float):
-	# Use CommandBuffer instead of call_deferred
-	var entitya = random_mover_scene.instantiate() as Entity
-	entitya.color = Color(randf(), randf(), randf())
-
-	# Queue entity addition - will be executed at end of process group
-	cmd.add_entity(entitya)
-
-	# Queue relationship addition
-	if ECS.world.entities.size() % 3 == 0:
-		cmd.add_relationship(entitya, Relationship.new(C_IsSpecial.new()))
+	var entity = random_mover_scene.instantiate() as Entity
+	entity.color = Color(randf(), randf(), randf())
+	var half = spawn_area / 2.0
+	entity.position = Vector3(
+		randf_range(-half, half),
+		randf_range(-half, half),
+		randf_range(-half, half),
+	)
+	cmd.add_entity(entity)

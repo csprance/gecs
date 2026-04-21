@@ -1,0 +1,75 @@
+[gd_scene format=3 uid="uid://b5pjoj8g471ak"]
+
+[ext_resource type="Script" uid="uid://ceb0c7dnxwvif" path="res://example_multimesh/multimesh_main.gd" id="1_main"]
+[ext_resource type="Script" uid="uid://cdu5tlyk72uu4" path="res://addons/gecs/ecs/world.gd" id="2_world"]
+[ext_resource type="Script" uid="uid://b3vi2ingux88g" path="res://addons/gecs/lib/system_group.gd" id="3_group"]
+[ext_resource type="Script" uid="uid://cade8lld15uwy" path="res://example_multimesh/systems/s_mm_velocity.gd" id="4_vel"]
+[ext_resource type="Script" uid="uid://dqbcf8fcp00ab" path="res://example/systems/s_random_velocity.gd" id="5_rvel"]
+[ext_resource type="Script" uid="uid://ch5tiqvco114d" path="res://example_multimesh/systems/s_mm_random_spawner.gd" id="6_spawn"]
+[ext_resource type="Script" uid="uid://bhyk76gs76j8p" path="res://example/systems/s_lifetime.gd" id="7_life"]
+[ext_resource type="Script" uid="uid://cmuasel05mtxk" path="res://example_multimesh/systems/s_multi_mesh_renderer.gd" id="8_render"]
+[ext_resource type="Script" uid="uid://ysb6qh6i8udi" path="res://example_multimesh/observers/o_mm_lifecycle_demo.gd" id="9_obs"]
+
+[sub_resource type="TorusMesh" id="TorusMesh_render"]
+
+[node name="Main" type="Node3D" unique_id=1877190916]
+script = ExtResource("1_main")
+
+[node name="World" type="Node" parent="." unique_id=2097647671]
+script = ExtResource("2_world")
+entity_nodes_root = NodePath("Entities")
+system_nodes_root = NodePath("Systems")
+metadata/_custom_type_script = "uid://cdu5tlyk72uu4"
+
+[node name="Entities" type="Node" parent="World" unique_id=1490708899]
+
+[node name="Systems" type="Node" parent="World" unique_id=891781131]
+
+[node name="physics" type="Node" parent="World/Systems" unique_id=707573659]
+script = ExtResource("3_group")
+metadata/_custom_type_script = "uid://b3vi2ingux88g"
+
+[node name="RandomVelocitySystem" type="Node" parent="World/Systems/physics" unique_id=1791638888]
+script = ExtResource("5_rvel")
+time_between_updates = 1.0
+group = &"physics"
+safe_iteration = false
+
+[node name="VelocitySystem" type="Node" parent="World/Systems/physics" unique_id=603450394]
+script = ExtResource("4_vel")
+group = &"physics"
+safe_iteration = false
+
+[node name="gameplay" type="Node" parent="World/Systems" unique_id=1430280491]
+script = ExtResource("3_group")
+metadata/_custom_type_script = "uid://b3vi2ingux88g"
+
+[node name="RandomSpawnerSystem" type="Node" parent="World/Systems/gameplay" unique_id=1935076858]
+script = ExtResource("6_spawn")
+group = &"gameplay"
+safe_iteration = false
+
+[node name="LifetimeSystem" type="Node" parent="World/Systems/gameplay" unique_id=1748980720]
+script = ExtResource("7_life")
+group = &"gameplay"
+safe_iteration = false
+
+[node name="render" type="Node" parent="World/Systems" unique_id=288197892]
+script = ExtResource("3_group")
+metadata/_custom_type_script = "uid://b3vi2ingux88g"
+
+[node name="MultiMeshRendererSystem" type="Node" parent="World/Systems/render" unique_id=505655330]
+script = ExtResource("8_render")
+mesh = SubResource("TorusMesh_render")
+group = &"render"
+safe_iteration = false
+
+[node name="LifecycleDemoObserver" type="Node" parent="World/Systems" unique_id=1663845210]
+script = ExtResource("9_obs")
+metadata/_custom_type_script = "uid://ysb6qh6i8udi"
+
+[node name="Camera3D" type="Camera3D" parent="." unique_id=603295880]
+transform = Transform3D(0.254029, 0.499719, -0.828101, -0.095908, 0.864981, 0.492554, 0.96243, -0.045702, 0.267657, -5.016, 4.13, 2.031)
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=1727752971]
+transform = Transform3D(-0.02218, 0.716119, -0.697625, 0.022756, 0.697978, 0.715758, 0.999495, 0, -0.031777, -12.464, 14.089, -4.198)

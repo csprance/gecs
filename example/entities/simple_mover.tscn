@@ -1,0 +1,33 @@
+[gd_scene load_steps=9 format=3]
+
+[ext_resource type="Script" uid="uid://gwavdptq2008" path="res://example/entities/simple_mover.gd" id="1_entity"]
+[ext_resource type="Script" uid="uid://b6k13gc2m4e5s" path="res://addons/gecs/ecs/component.gd" id="2_comp"]
+[ext_resource type="Script" uid="uid://b7r4xkfiy8qi0" path="res://example/components/c_velocity.gd" id="3_vel"]
+[ext_resource type="Script" uid="uid://bx3pmlknhmilu" path="res://example/components/c_timer.gd" id="4_timer"]
+[ext_resource type="Script" uid="uid://d0fit03sansqe" path="res://example/components/c_lifetime.gd" id="5_life"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_mat"]
+albedo_color = Color(0.36, 1, 1, 1)
+
+[sub_resource type="TorusMesh" id="TorusMesh_mesh"]
+material = SubResource("StandardMaterial3D_mat")
+
+[sub_resource type="Resource" id="Resource_vel"]
+script = ExtResource("3_vel")
+velocity = Vector3(1, 0, 0)
+metadata/_custom_type_script = "uid://b7r4xkfiy8qi0"
+
+[sub_resource type="Resource" id="Resource_timer"]
+script = ExtResource("4_timer")
+time = 1.0
+metadata/_custom_type_script = "uid://bx3pmlknhmilu"
+
+[sub_resource type="Resource" id="Resource_life"]
+script = ExtResource("5_life")
+lifetime = 15.0
+metadata/_custom_type_script = "uid://d0fit03sansqe"
+
+[node name="SimpleMover" type="MeshInstance3D" groups=["movers"]]
+mesh = SubResource("TorusMesh_mesh")
+script = ExtResource("1_entity")
+component_resources = Array[ExtResource("2_comp")]([SubResource("Resource_vel"), SubResource("Resource_timer"), SubResource("Resource_life")])
