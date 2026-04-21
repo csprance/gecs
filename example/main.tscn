@@ -12,6 +12,7 @@
 [ext_resource type="Script" path="res://example/systems/s_pen.gd" id="10_spen"]
 [ext_resource type="Script" path="res://example/systems/s_win_check.gd" id="11_swin"]
 [ext_resource type="Script" path="res://example/systems/s_movement.gd" id="12_smov"]
+[ext_resource type="Script" path="res://example/systems/o_penned.gd" id="13_open"]
 
 [sub_resource type="StandardMaterial3D" id="Mat_floor"]
 albedo_color = Color(0.23, 0.28, 0.22, 1)
@@ -95,6 +96,9 @@ command_buffer_flush_mode = "PER_GROUP"
 script = ExtResource("11_swin")
 counter_label_path = NodePath("../../../../UI/CounterLabel")
 win_label_path = NodePath("../../../../UI/WinLabel")
+
+[node name="PennedObserver" type="Node" parent="World/Systems/gameplay"]
+script = ExtResource("13_open")
 
 [node name="physics" type="Node" parent="World/Systems"]
 script = ExtResource("3_group")
