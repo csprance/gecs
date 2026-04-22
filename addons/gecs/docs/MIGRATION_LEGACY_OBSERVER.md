@@ -266,6 +266,27 @@ func set_hp(new_value: int) -> void:
 
 Unchanged behavior, but worth re-stating: observers placed under the `Systems/` node register **before** scene-tree entities are loaded. So `@export var yield_existing = true` sees an empty entity list at setup time and retro-fires nothing. That's fine — every entity added after the observer registers is delivered through normal dispatch (`ADDED` when its components are added). `yield_existing` is primarily useful for observers added at runtime *after* entities already exist.
 
+### Helper methods called from legacy callbacks
+
+If your v7.x observer had private helpers invoked from `on_component_added` / `on_component_removed` / `on_component_changed` — e.g. `_refresh_ui(entity)`, `_queue_cleanup(entity)` — keep them as-is and call them from the appropriate branch in `each()`. The structure of the class doesn't change; only the entry point does.
+
+```gdscript
+# OLD — helper called from a legacy callback
+func on_component_added(entity, component):
+    _refresh_ui(entity)
+
+func _refresh_ui(entity): ...
+
+# NEW — helper called from each()
+func each(event, entity, _payload):
+    if event == Observer.Event.ADDED:
+        _refresh_ui(entity)
+
+func _refresh_ui(entity): ...
+```
+
+If one helper was called from multiple legacy callbacks, call it from each matching branch in `each()`, or from each entry's callable when using `sub_observers()`.
+
 ---
 
 ## Related documentation

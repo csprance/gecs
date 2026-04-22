@@ -131,3 +131,56 @@ func test_sub_observer_per_tuple_yield_existing_override():
 	assert_int(obs.yield_count).is_equal(1)
 	# Tuple with override=false did NOT yield.
 	assert_int(obs.non_yield_count).is_equal(0)
+
+
+class InheritYieldObserver extends Observer:
+	var tuple_a_count: int = 0
+	var tuple_b_count: int = 0
+	var tuple_c_count: int = 0
+
+	func sub_observers() -> Array[Array]:
+		# Tuple A: no 3rd element at all → inherits parent's yield_existing.
+		# Tuple B: 3rd element null → also inherits parent.
+		# Tuple C: 3rd element true → overrides parent (always yields).
+		return [
+			[q.with_all([C_TestA]).on_added(), _a],
+			[q.with_all([C_TestA]).on_added(), _b, null],
+			[q.with_all([C_TestA]).on_added(), _c, true],
+		]
+
+	func _a(_event, _entity, _payload): tuple_a_count += 1
+	func _b(_event, _entity, _payload): tuple_b_count += 1
+	func _c(_event, _entity, _payload): tuple_c_count += 1
+
+
+func test_sub_observer_yield_existing_inherits_parent_true():
+	# Pre-existing entity.
+	var e = Entity.new()
+	e.add_component(C_TestA.new())
+	world.add_entity(e)
+
+	var obs = InheritYieldObserver.new()
+	obs.yield_existing = true  # parent=true → tuples A (no 3rd) and B (null) inherit yield.
+	world.add_observer(obs)
+
+	# All three tuples yielded the pre-existing entity (A/B inherit true, C forces true).
+	assert_int(obs.tuple_a_count).is_equal(1)
+	assert_int(obs.tuple_b_count).is_equal(1)
+	assert_int(obs.tuple_c_count).is_equal(1)
+
+
+func test_sub_observer_yield_existing_inherits_parent_false_with_override_true():
+	# Pre-existing entity.
+	var e = Entity.new()
+	e.add_component(C_TestA.new())
+	world.add_entity(e)
+
+	var obs = InheritYieldObserver.new()
+	obs.yield_existing = false  # parent=false → A and B inherit false (no yield)
+	world.add_observer(obs)
+
+	# A and B inherited parent=false → no retroactive fire.
+	assert_int(obs.tuple_a_count).is_equal(0)
+	assert_int(obs.tuple_b_count).is_equal(0)
+	# C has override=true → forced yield regardless of parent.
+	assert_int(obs.tuple_c_count).is_equal(1)

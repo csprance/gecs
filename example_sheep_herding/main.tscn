@@ -1,0 +1,66 @@
+[gd_scene format=3 uid="uid://jlrnl878wedr"]
+
+[ext_resource type="Script" uid="uid://h31f5sai8ab4" path="res://example_sheep_herding/main.gd" id="1_s1hfj"]
+[ext_resource type="Script" uid="uid://cdu5tlyk72uu4" path="res://addons/gecs/ecs/world.gd" id="2_b4ie0"]
+[ext_resource type="Script" uid="uid://b3vi2ingux88g" path="res://addons/gecs/lib/system_group.gd" id="3_1h00a"]
+[ext_resource type="PackedScene" uid="uid://cglpj5rcjwgx8" path="res://example_sheep_herding/entities/e_sheep.tscn" id="3_s1hfj"]
+[ext_resource type="PackedScene" uid="uid://d2kq74rgcoj6m" path="res://example_sheep_herding/entities/e_shepherd.tscn" id="4_81gyn"]
+[ext_resource type="PackedScene" uid="uid://c7glmjhtv1wp3" path="res://example_sheep_herding/assets/world/world.gltf" id="5_lfjco"]
+[ext_resource type="Script" uid="uid://b526ff1fn75fa" path="res://example_stress_test/systems/s_velocity.gd" id="5_m83r3"]
+
+[node name="Main" type="Node" unique_id=458166463]
+script = ExtResource("1_s1hfj")
+
+[node name="World" type="Node" parent="." unique_id=1281094391]
+script = ExtResource("2_b4ie0")
+entity_nodes_root = NodePath("Entities")
+system_nodes_root = NodePath("Systems")
+metadata/_custom_type_script = "uid://cdu5tlyk72uu4"
+
+[node name="Entities" type="Node" parent="World" unique_id=1040353364]
+
+[node name="ESheep" parent="World/Entities" unique_id=1143044569 instance=ExtResource("3_s1hfj")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.3655205, 0, 0.67858124)
+
+[node name="ESheep2" parent="World/Entities" unique_id=513183627 instance=ExtResource("3_s1hfj")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.5975165, 0, 5.1636944)
+
+[node name="ESheep3" parent="World/Entities" unique_id=1465674434 instance=ExtResource("3_s1hfj")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.1300354, 0, -1.0624485)
+
+[node name="ESheep4" parent="World/Entities" unique_id=1727009879 instance=ExtResource("3_s1hfj")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.60445595, 0, 2.476429)
+
+[node name="ESheep5" parent="World/Entities" unique_id=861302351 instance=ExtResource("3_s1hfj")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.739113, 0, 4.0562477)
+
+[node name="ESheep6" parent="World/Entities" unique_id=2042898598 instance=ExtResource("3_s1hfj")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.134836, 0, -1.0831356)
+
+[node name="ESheperd" parent="World/Entities" unique_id=1947142817 instance=ExtResource("4_81gyn")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.7744634, 0, 7.247355)
+
+[node name="Systems" type="Node" parent="World" unique_id=520057144]
+
+[node name="physics" type="Node" parent="World/Systems" unique_id=1237391528]
+script = ExtResource("3_1h00a")
+metadata/_custom_type_script = "uid://b3vi2ingux88g"
+
+[node name="VelocitySystem" type="Node" parent="World/Systems/physics" unique_id=405055388]
+script = ExtResource("5_m83r3")
+group = &"physics"
+safe_iteration = false
+
+[node name="gameplay" type="Node" parent="World/Systems" unique_id=1350672065]
+script = ExtResource("3_1h00a")
+metadata/_custom_type_script = "uid://b3vi2ingux88g"
+
+[node name="Camera3D" type="Camera3D" parent="." unique_id=2048537433]
+transform = Transform3D(-0.9994433, 0.030177053, -0.014226907, 0, 0.4264335, 0.9045189, 0.033362545, 0.90401536, -0.4261961, 1.4207008, 10.432027, -4.1965594)
+current = true
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=1278830736]
+transform = Transform3D(-0.02218, 0.716119, -0.697625, 0.022756, 0.697978, 0.715758, 0.999495, 0, -0.031777, -12.464, 14.089, -4.198)
+
+[node name="Map" parent="." unique_id=2033739832 instance=ExtResource("5_lfjco")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.013450623, 0, 0.009108543)

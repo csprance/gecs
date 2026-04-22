@@ -171,3 +171,29 @@ func test_paused_observer_does_not_receive_custom_event():
 
 	world.emit_event(&"damage_dealt", e, {"amount": 1})
 	assert_int(obs.event_count).is_equal(0)
+
+
+func test_emit_event_on_removed_entity_does_not_crash():
+	# Contract: an entity that has been removed from the world (remove_entity already
+	# queue_freed it) still passes is_instance_valid() for the rest of the frame, and
+	# its components dict persists on the Node until free. emit_event() on such an
+	# entity must not crash. Whether the event is delivered is implementation-defined —
+	# currently the observer's with_all([C_TestA]) filter still passes because
+	# has_component reads the (yet-unfreed) components dict.
+	var obs = DamageObserver.new()
+	world.add_observer(obs)
+
+	var e = Entity.new()
+	e.add_component(C_TestA.new())
+	world.add_entity(e)
+	world.emit_event(&"damage_dealt", e, {"amount": 1})
+	assert_int(obs.event_count).is_equal(1)
+
+	# Remove the entity (internal queue_free + signal disconnect).
+	world.remove_entity(e)
+
+	# Emit again on the now-removed entity. Must not crash. Event may or may not be
+	# delivered depending on Node free timing — the contract is "no crash" only.
+	world.emit_event(&"damage_dealt", e, {"amount": 2})
+	# Tolerant assertion: either state is acceptable.
+	assert_int(obs.event_count).is_between(1, 2)

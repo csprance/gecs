@@ -636,3 +636,41 @@ class MutatingYieldObserver extends Observer:
 			added_count += 1
 			if entity == trigger_on and is_instance_valid(target_to_remove):
 				_world.remove_entity(target_to_remove)
+
+
+class SelfRemovingObserver extends Observer:
+	var added_count: int = 0
+
+	func query() -> QueryBuilder:
+		return q.with_all([C_TestA]).on_added()
+
+	func each(event: Variant, _entity: Entity, _payload: Variant = null) -> void:
+		if event == Observer.Event.ADDED:
+			added_count += 1
+			# Remove self from the world during our own callback.
+			if _world != null:
+				_world.remove_observer(self)
+
+
+func test_observer_removed_during_own_callback_is_safe():
+	# Contract: an observer can call world.remove_observer(self) inside its own
+	# each() callback without crashing. The dispatch snapshot keeps iteration stable,
+	# and the observer does not receive any further events.
+	var obs = SelfRemovingObserver.new()
+	world.add_observer(obs)
+
+	var e = Entity.new()
+	e.add_component(C_TestA.new())
+	world.add_entity(e)
+	# First event fired and was received; observer then removed itself.
+	assert_int(obs.added_count).is_equal(1)
+
+	# A subsequent event must NOT invoke the removed observer.
+	var e2 = Entity.new()
+	e2.add_component(C_TestA.new())
+	world.add_entity(e2)
+	# Observer was queue_freed after remove_observer — skip the post-callback check if
+	# it's no longer valid. The key contract is that the framework did not crash and the
+	# second event was not delivered to the old observer.
+	if is_instance_valid(obs):
+		assert_int(obs.added_count).is_equal(1)

@@ -12,6 +12,8 @@ func query() -> QueryBuilder:
 ## Unified callback. Fires for every event declared on query().
 ## `event` is an Observer.Event value or a StringName for custom events.
 ## `payload` depends on event type — see Observer class docs.
+## Full event set: ADDED / REMOVED / CHANGED / MATCH / UNMATCH /
+## RELATIONSHIP_ADDED / RELATIONSHIP_REMOVED / <StringName for custom events>.
 func each(event: Variant, entity: Entity, payload: Variant = null) -> void:
 	match event:
 		Observer.Event.ADDED:

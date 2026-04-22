@@ -1,0 +1,15 @@
+[gd_scene format=3 uid="uid://cglpj5rcjwgx8"]
+
+[ext_resource type="Script" uid="uid://b6lbgvgb4xwce" path="res://example_sheep_herding/entities/e_sheep.gd" id="1_a72a0"]
+[ext_resource type="PackedScene" uid="uid://cceh4wftmcbg7" path="res://example_sheep_herding/assets/sheep/sheep.gltf" id="2_5nnvd"]
+[ext_resource type="Material" uid="uid://d2vdj8b46r6cg" path="res://example_sheep_herding/assets/vertex_color.tres" id="3_5nnvd"]
+
+[node name="ESheep" type="Node3D" unique_id=1143044569]
+script = ExtResource("1_a72a0")
+
+[node name="sheep" parent="." unique_id=974780395 instance=ExtResource("2_5nnvd")]
+
+[node name="geo1" parent="sheep" index="0" unique_id=1095880762]
+surface_material_override/0 = ExtResource("3_5nnvd")
+
+[editable path="sheep"]

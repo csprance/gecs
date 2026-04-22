@@ -1048,18 +1048,23 @@ func _register_observer_entries(_observer: Observer) -> void:
 
 	# sub_observers: each tuple becomes its own virtual entry. Queries carry their own
 	# event modifiers; callables receive the same (event, entity, payload) shape as each().
-	# Tuple shape: [QueryBuilder, Callable, optional SystemTimer, optional yield_existing_override]
-	# The 4th element lets a specific sub-observer opt in/out of yield_existing independently
+	# Tuple shape: [QueryBuilder, Callable, optional yield_existing_override]
+	# The 3rd element lets a specific sub-observer opt in/out of yield_existing independently
 	# of the parent Observer's flag.
 	var subs: Array = _observer.sub_observers()
 	for tuple in subs:
 		if tuple.size() < 2:
 			_worldLogger.warning("sub_observers tuple must be [QueryBuilder, Callable]: ", tuple)
 			continue
-		var sub_q: QueryBuilder = tuple[0] as QueryBuilder
+		if not (tuple[0] is QueryBuilder):
+			_worldLogger.warning(
+				"sub_observers tuple[0] must be QueryBuilder, got: ", tuple[0]
+			)
+			continue
+		var sub_q: QueryBuilder = tuple[0]
 		var sub_callable: Callable = tuple[1] as Callable
-		if sub_q == null or not sub_callable.is_valid():
-			_worldLogger.warning("sub_observers invalid tuple: ", tuple)
+		if not sub_callable.is_valid():
+			_worldLogger.warning("sub_observers invalid callable: ", tuple)
 			continue
 		if not sub_q.has_observer_events():
 			_worldLogger.warning("sub_observers query declares no events: ", sub_q)
@@ -2058,9 +2063,10 @@ func _cleanup_relationships_to_target(target: Entity) -> void:
 		for rel in source_entity.relationships:
 			if rel.target is Entity and rel.target == target:
 				rels_to_remove.append(rel)
+		# Go through the documented Entity.remove_relationship API so any future
+		# bookkeeping there (beyond erase+emit) stays consistent with other removal paths.
 		for rel in rels_to_remove:
-			source_entity.relationships.erase(rel)
-			source_entity.relationship_removed.emit(source_entity, rel)
+			source_entity.remove_relationship(rel)
 
 	_end_suppress()
 

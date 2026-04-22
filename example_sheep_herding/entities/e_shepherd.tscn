@@ -1,0 +1,15 @@
+[gd_scene format=3 uid="uid://d2kq74rgcoj6m"]
+
+[ext_resource type="Script" uid="uid://dqtyn8u1sb455" path="res://example_sheep_herding/entities/e_shepherd.gd" id="1_qtdct"]
+[ext_resource type="PackedScene" uid="uid://d1i4wbvs70jfr" path="res://example_sheep_herding/assets/shepherd/sheperd.gltf" id="2_qxysk"]
+[ext_resource type="Material" uid="uid://d2vdj8b46r6cg" path="res://example_sheep_herding/assets/vertex_color.tres" id="3_hecvn"]
+
+[node name="ESheperd" type="Node3D" unique_id=1947142817]
+script = ExtResource("1_qtdct")
+
+[node name="sheperd2" parent="." unique_id=1105678201 instance=ExtResource("2_qxysk")]
+
+[node name="sheperd" parent="sheperd2" index="0" unique_id=1952305871]
+surface_material_override/0 = ExtResource("3_hecvn")
+
+[editable path="sheperd2"]

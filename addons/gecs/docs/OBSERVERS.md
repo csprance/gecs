@@ -124,7 +124,7 @@ Observers are event-driven and do not accept a `SystemTimer`. To throttle observ
 ## `yield_existing`
 
 ```gdscript
-@export var yield_existing: bool = true
+@export var yield_existing: bool = false
 ```
 
 At `setup()` time the framework retroactively fires:

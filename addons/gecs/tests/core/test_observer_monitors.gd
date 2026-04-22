@@ -186,3 +186,38 @@ func test_monitor_fires_on_property_transition():
 	# Bringing health back above 0 → MATCH fires again.
 	h.health = 50
 	assert_int(obs.matched.size()).is_equal(2)
+
+
+class GroupScopedMonitor extends Observer:
+	var matched: Array[Entity] = []
+	var unmatched: Array[Entity] = []
+
+	func query() -> QueryBuilder:
+		return q.with_all([C_TestA]).with_group(["tagged"]).on_match().on_unmatch()
+
+	func each(event: Variant, entity: Entity, _payload: Variant = null) -> void:
+		match event:
+			Observer.Event.MATCH:   matched.append(entity)
+			Observer.Event.UNMATCH: unmatched.append(entity)
+
+
+func test_monitor_group_changes_do_not_transition():
+	# Contract: Godot group membership changes (add_to_group / remove_from_group) are
+	# NOT hooked by the ECS, so a monitor filtered by with_group() does not transition
+	# when only the entity's group membership changes. See OBSERVERS.md "Caveats".
+	var obs = GroupScopedMonitor.new()
+	world.add_observer(obs)
+
+	# Entity has the required component but is NOT in the group — no match.
+	var e = Entity.new()
+	e.add_component(C_TestA.new())
+	world.add_entity(e)
+	assert_int(obs.matched.size()).is_equal(0)
+
+	# Group membership change alone must NOT fire MATCH.
+	e.add_to_group("tagged")
+	assert_int(obs.matched.size()).is_equal(0)
+
+	# Remove from the group alone must NOT fire UNMATCH.
+	e.remove_from_group("tagged")
+	assert_int(obs.unmatched.size()).is_equal(0)
