@@ -7,6 +7,7 @@
 [ext_resource type="PackedScene" uid="uid://d2kq74rgcoj6m" path="res://example_sheep_herding/entities/e_shepherd.tscn" id="4_81gyn"]
 [ext_resource type="PackedScene" uid="uid://c7glmjhtv1wp3" path="res://example_sheep_herding/assets/world/world.gltf" id="5_lfjco"]
 [ext_resource type="Script" uid="uid://b526ff1fn75fa" path="res://example_stress_test/systems/s_velocity.gd" id="5_m83r3"]
+[ext_resource type="Material" uid="uid://d2vdj8b46r6cg" path="res://example_sheep_herding/assets/vertex_color.tres" id="8_25kgx"]
 
 [node name="Main" type="Node" unique_id=458166463]
 script = ExtResource("1_s1hfj")
@@ -62,5 +63,10 @@ current = true
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=1278830736]
 transform = Transform3D(-0.02218, 0.716119, -0.697625, 0.022756, 0.697978, 0.715758, 0.999495, 0, -0.031777, -12.464, 14.089, -4.198)
 
-[node name="Map" parent="." unique_id=2033739832 instance=ExtResource("5_lfjco")]
+[node name="Map" parent="." unique_id=2084334481 instance=ExtResource("5_lfjco")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.013450623, 0, 0.009108543)
+
+[node name="world" parent="Map" index="0" unique_id=541840267]
+surface_material_override/0 = ExtResource("8_25kgx")
+
+[editable path="Map"]

@@ -45,7 +45,13 @@ enabled=PackedStringArray("res://addons/debug_menu/plugin.cfg", "res://addons/gd
 
 [gdunit4]
 
-ui/inspector/tree_view_mode=1
+settings/test/test_lookup_folder="tests"
+ui/inspector/tree_sort_mode=1
+ui/toolbar/run_overall=true
+hooks/session_hooks=Dictionary[String, bool]({
+"res://addons/gdUnit4/src/core/hooks/GdUnitHtmlReporterTestSessionHook.gd": false,
+"res://addons/gdUnit4/src/core/hooks/GdUnitXMLReporterTestSessionHook.gd": false
+})
 
 [gecs]
 
