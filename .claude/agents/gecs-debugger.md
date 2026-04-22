@@ -64,6 +64,15 @@ You are a debugger specializing in ECS runtime issues for the GECS framework (Go
 7. **Run tests** to verify the fix doesn't break anything else
 
 ```bash
-# Run all tests after a fix
-addons/gdUnit4/runtest.cmd -a "res://addons/gecs/tests" -c
+# Run all tests after a fix — ALWAYS wrap with timeout + capped log file.
+timeout 600 ./addons/gdUnit4/runtest.sh -a "res://addons/gecs/tests" -c \
+  > /tmp/gecs_test.log 2>&1
+grep -c "Debugger Break, Reason" /tmp/gecs_test.log   # >50 = gdUnit4 runaway loop
+grep -E "Statistics:|Overall Summary:" /tmp/gecs_test.log | sed 's/\x1b\[[0-9;]*m//g'
 ```
+
+**Runaway-loop guard (CRITICAL):** gdUnit4 has a known bug where orphan-node
+monitor casts hit freed instances and enter an infinite debugger-break loop
+that fills terabytes of log data (stdout AND `editor.log`). See
+`gecs-test-writer.md` § "gdUnit4 runaway-loop guard" for the full mitigation.
+Never run gdUnit4 with raw stdout piped into long-running contexts.

@@ -367,7 +367,7 @@ Off by default — cost scales with world size.
 
 **Scene-tree ordering note:** `World.initialize()` registers observers *before* entities, so `yield_existing` on a scene-tree Observer sees an empty entity list and retro-fires nothing. That's fine — every entity added after the observer registers is delivered through normal dispatch (`component_added` → ADDED event), so scene-tree entities still trigger the observer. `yield_existing` is primarily useful for observers added at runtime *after* entities already exist.
 
-**Per-sub-observer override:** each `sub_observers()` tuple accepts an optional 4th element `[QueryBuilder, Callable, SystemTimer|null, yield_existing_override]`. `true` forces retroactive fire for this tuple regardless of the parent's flag; `false` suppresses it. `null`/omitted inherits the parent's `yield_existing`.
+**Per-sub-observer override:** each `sub_observers()` tuple accepts an optional 3rd element `[QueryBuilder, Callable, yield_existing_override]`. `true` forces retroactive fire for this tuple regardless of the parent's flag; `false` suppresses it. `null`/omitted inherits the parent's `yield_existing`. (Observers are event-driven and do not accept a `SystemTimer`; use `FlushMode.MANUAL` + a timed System for throttling.)
 
 **Group filters don't transition monitors:** `with_group("name").on_match().on_unmatch()` will fire MATCH/UNMATCH when structural component changes bring the entity in/out of the query, but Godot group membership changes are not hooked by the ECS — adding/removing a node from a group won't re-evaluate the monitor. Pair group filters with a component marker (e.g. `C_Target`) if you need transition events.
 
@@ -412,9 +412,9 @@ func set_health(new_value: int) -> void:
     property_changed.emit(self, "health", old_value, new_value)
 ```
 
-#### Legacy API (deprecated shim)
+#### Upgrading from GECS 7.x
 
-The pre-existing Observer API — `watch() -> Resource`, `match() -> QueryBuilder`, `on_component_added/removed/changed` — continues to work unchanged via an internal shim. Existing observers do **not** need migration. For new code, prefer `query()` + `each()` or `sub_observers()`.
+The legacy Observer API (`watch()`, `match()`, `on_component_added/removed/changed`) was removed in v8.0.0. Upgrading projects should consult `addons/gecs/docs/MIGRATION_LEGACY_OBSERVER.md` for the mechanical translation.
 
 ## Development Commands
 

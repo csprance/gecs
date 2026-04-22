@@ -32,9 +32,9 @@
 ## observers. Components that want change events must implement a setter that emits
 ## [code]property_changed[/code] — this is intentional for performance.
 ##
-## [b]Legacy API note:[/b] the original Observer API ([method watch], [method match],
-## [method on_component_added] / [method on_component_removed] / [method on_component_changed])
-## remains supported as a shim. New code should prefer [method query] + [method each].
+## [b]Upgrading from GECS 7.x?[/b] The legacy Observer API ([code]watch()[/code], [code]match()[/code],
+## [code]on_component_added/removed/changed()[/code]) was removed in v8.0.0. See
+## [code]addons/gecs/docs/MIGRATION_LEGACY_OBSERVER.md[/code].
 @icon("res://addons/gecs/assets/observer.svg")
 class_name Observer
 extends Node
@@ -133,13 +133,15 @@ func each(event: Variant, entity: Entity, payload: Variant = null) -> void:
 	pass
 
 
-## Override to return a list of sub-observer tuples. Each tuple has the same shape as
-## [method System.sub_systems]: [code][QueryBuilder, Callable, optional SystemTimer,
-## optional yield_existing_override][/code].
+## Override to return a list of sub-observer tuples. Tuple shape:
+## [code][QueryBuilder, Callable, optional yield_existing_override][/code].
 ## The callable receives [code](event, entity, payload)[/code] — identical to [method each].[br]
-## The 4th element, when non-null, overrides the parent observer's [member yield_existing]
+## The 3rd element, when non-null, overrides the parent observer's [member yield_existing]
 ## flag for this tuple only. Pass [code]true[/code] to force retroactive fire for pre-existing
 ## entities, or [code]false[/code] to suppress it. Leave null (or omit) to inherit the parent.[br]
+## Observers are event-driven and do NOT accept a [SystemTimer] — to throttle observer work,
+## use [code]FlushMode.MANUAL[/code] + [code]cmd.add_custom(callable)[/code] and flush from
+## a timed System.[br]
 ## [b]Example:[/b]
 ## [codeblock]
 ## func sub_observers() -> Array[Array]:
@@ -147,7 +149,7 @@ func each(event: Variant, entity: Entity, payload: Variant = null) -> void:
 ##         [q.with_all([C_Health]).on_added(), _on_join],
 ##         [q.with_all([C_Player, C_Alive]).on_match().on_unmatch(), _on_alive_state],
 ##         # This sub-observer yields pre-existing entities even when the parent doesn't:
-##         [q.with_all([C_Loot]).on_added(), _on_loot, null, true],
+##         [q.with_all([C_Loot]).on_added(), _on_loot, true],
 ##     ]
 ## [/codeblock]
 func sub_observers() -> Array[Array]:
@@ -160,35 +162,3 @@ func has_pending_commands() -> bool:
 #endregion Public Methods
 
 
-#region Legacy API (deprecated shim — do not use in new code)
-## [b]Deprecated.[/b] Legacy observer spec returning a single [Component] script class.
-## Retained so existing observers keep working; the shim in [method World.add_observer]
-## detects a non-null return and synthesizes an equivalent fluent [method query].[br]
-## New code should use [method query] + [method each] instead.
-func watch() -> Resource:
-	return null
-
-
-## [b]Deprecated.[/b] Legacy entity filter for observers that use [method watch]. Ignored
-## when [method query] is overridden.
-func match() -> QueryBuilder:
-	return q
-
-
-## [b]Deprecated.[/b] Legacy component-added callback. Only invoked by the legacy shim
-## for observers that override [method watch].
-func on_component_added(entity: Entity, component: Resource) -> void:
-	pass
-
-
-## [b]Deprecated.[/b] Legacy component-removed callback. Only invoked by the legacy shim.
-func on_component_removed(entity: Entity, component: Resource) -> void:
-	pass
-
-
-## [b]Deprecated.[/b] Legacy component-changed callback. Only invoked by the legacy shim.
-func on_component_changed(
-	entity: Entity, component: Resource, property: String, new_value: Variant, old_value: Variant
-) -> void:
-	pass
-#endregion Legacy API

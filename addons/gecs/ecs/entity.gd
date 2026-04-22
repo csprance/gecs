@@ -446,9 +446,11 @@ func remove_relationship(relationship: Relationship, limit: int = -1) -> void:
 
 ## Removes multiple relationships from the entity.[br]
 ## [param _relationships] Array of [Relationship]s to remove.[br]
-## [param limit] Maximum number of relationships to remove per relationship type. -1 = all (default), 0 = none, >0 = up to that many.
+## [param limit] Maximum number of relationships to remove per relationship type. -1 = all (default), 0 = none, >0 = up to that many.[br]
+## Emits [signal relationship_removed] per removed rel as the removal happens, so
+## multi-rel observer queries see the entity in its correct pre-removal state for
+## each individual removal (rather than all rels gone at once).
 func remove_relationships(_relationships: Array, limit: int = -1):
-	var all_removed: Array = []
 	for relationship in _relationships:
 		if limit == 0:
 			continue
@@ -467,9 +469,7 @@ func remove_relationships(_relationships: Array, limit: int = -1):
 						break
 		for rel in to_remove:
 			relationships.erase(rel)
-			all_removed.append(rel)
-	if not all_removed.is_empty():
-		relationships_batch_removed.emit(self , all_removed)
+			relationship_removed.emit(self , rel)
 
 
 ## Removes all relationships from the entity.

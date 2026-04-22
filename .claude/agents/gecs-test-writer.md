@@ -34,6 +34,71 @@ addons/gdUnit4/runtest.cmd -a "res://addons/gecs/tests" -c
 
 Always use `res://` prefix for paths. Path format uses forward slashes.
 
+## ⚠️ CRITICAL: gdUnit4 runaway-loop guard
+
+gdUnit4 has a known bug where certain failure modes (most commonly an orphan-node
+monitor hitting freed instances) cause it to enter an **infinite debugger-break
+loop** that can fill **terabytes** of log data. The signatures are:
+
+- Repeating lines in stdout or the Godot editor's `editor.log`:
+  - `Debugger Break, Reason: 'Invalid cast: can't convert a non-object value to an object type.'`
+  - `*Frame 0 - res://addons/gdUnit4/src/monitor/GdUnitOrphanNodesMonitor.gd:130 in function '_find_orphan_at_node'`
+  - `debug>` prompts repeating forever
+- Repeating `Lambda capture at index 0 was freed. Passed "null" instead.` floods
+  (usually benign single-shot stderr, but can chain into the above).
+
+The run will appear to "hang" — it's actually writing millions of identical log
+lines per second.
+
+### Mandatory test-run pattern
+
+**Always** redirect output to a capped file and wrap with a wall-clock timeout.
+Never run gdUnit4 with raw stdout/stderr in a notebook-style loop.
+
+```bash
+# Linux/macOS/Git Bash on Windows
+timeout 600 ./addons/gdUnit4/runtest.sh -a "res://addons/gecs/tests/core" -c \
+  > /tmp/gecs_test.log 2>&1
+# Then immediately check size and tail:
+wc -l /tmp/gecs_test.log
+tail -40 /tmp/gecs_test.log
+grep -c "Debugger Break, Reason" /tmp/gecs_test.log   # > 50 = runaway loop
+```
+
+If `grep -c "Debugger Break, Reason"` returns a number in the hundreds or
+thousands, the runaway fired. The actual test results are still near the top of
+the log — extract them with:
+
+```bash
+grep -E "Statistics:|Overall Summary:" /tmp/gecs_test.log | sed 's/\x1b\[[0-9;]*m//g'
+```
+
+### If the runaway triggers
+
+1. **Kill any running godot processes immediately** (`pkill -f godot` or
+   Task Manager). A crashing gdUnit4 run can log >1 GB in under a minute.
+2. **Delete the runaway log** — `rm /tmp/gecs_test.log` — before doing anything
+   else. Don't let it linger on disk.
+3. **Check the editor log too** — on Windows, Godot writes to
+   `%APPDATA%\Godot\app_userdata\<project>\logs\` (and the editor's own
+   `editor.log`). These files grow just as fast. Truncate them if huge:
+   ```bash
+   find "$APPDATA/Godot" -name "*.log" -size +100M -exec truncate -s 0 {} \;
+   ```
+4. **Report the per-suite statistics to the user** from the portion of the log
+   that ran cleanly — don't claim the suite failed just because the harness
+   crashed on cleanup. Every line matching `Statistics: ... PASSED` is an
+   individual suite that finished successfully.
+
+### Root cause (unresolved)
+
+The orphan-node monitor in gdUnit4 casts freed node references during final
+garbage-collection inspection. When the test suite has used `entity.free()`
+directly (rather than `auto_free()` or `queue_free()`), the monitor hits a
+freed instance, enters the debugger, and the gdUnit4 runner doesn't recover —
+it just keeps re-entering the break. Until gdUnit4 fixes this upstream, the
+timeout + log-cap workflow above is the required mitigation.
+
 ## Test Writing Conventions
 
 - Test files: `test_*.gd` in `addons/gecs/tests/core/` or `addons/gecs/tests/network/`

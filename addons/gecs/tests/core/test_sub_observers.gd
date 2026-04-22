@@ -105,10 +105,10 @@ class PerTupleYieldObserver extends Observer:
 	var non_yield_count: int = 0
 
 	func sub_observers() -> Array[Array]:
-		# 4th element is the per-tuple yield_existing override.
+		# 3rd element is the per-tuple yield_existing override.
 		return [
-			[q.with_all([C_TestA]).on_added(), _on_yield, null, true],
-			[q.with_all([C_TestA]).on_added(), _on_non_yield, null, false],
+			[q.with_all([C_TestA]).on_added(), _on_yield, true],
+			[q.with_all([C_TestA]).on_added(), _on_non_yield, false],
 		]
 
 	func _on_yield(_event, _entity, _payload):     yield_count += 1

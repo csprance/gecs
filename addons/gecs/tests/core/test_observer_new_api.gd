@@ -148,24 +148,6 @@ func test_new_style_entity_filter_respected_on_add():
 	assert_int(obs.added_count).is_equal(1)
 
 
-func test_legacy_and_new_style_coexist():
-	# Legacy observer (overrides watch())
-	var legacy = TestAObserver.new()
-	world.add_observer(legacy)
-
-	# New-style observer (overrides query())
-	var modern = AddedObserver.new()
-	world.add_observer(modern)
-
-	var e = Entity.new()
-	e.add_component(C_TestA.new())
-	world.add_entity(e)
-
-	# Both observers saw the add
-	assert_int(legacy.added_count).is_equal(1)
-	assert_int(modern.added_count).is_equal(1)
-
-
 func test_observer_active_false_skips_dispatch():
 	var obs = AddedObserver.new()
 	obs.active = false
@@ -364,3 +346,293 @@ func test_reentrant_add_observer_during_callback_does_not_fire_new_observer():
 	e2.add_component(C_TestA.new())
 	world.add_entity(e2)
 	assert_int(obs.spawned_observer.added_count).is_equal(1)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Ported from the pre-v8 test_observer.gd — OBS-01/02/03 regression scaffold.
+# These cover real correctness concerns (signal disconnect ordering, ghost
+# property_changed connections) that survive the API rewrite.
+# ─────────────────────────────────────────────────────────────────────────────
+
+class InstanceCapturingObserver extends Observer:
+	var removed_count: int = 0
+	var changed_count: int = 0
+	var last_removed_component: Resource = null
+
+	func query() -> QueryBuilder:
+		return q.with_all([C_ObserverTest]).on_removed().on_changed()
+
+	func each(event: Variant, entity: Entity, payload: Variant = null) -> void:
+		match event:
+			Observer.Event.REMOVED:
+				removed_count += 1
+				last_removed_component = payload
+			Observer.Event.CHANGED:
+				changed_count += 1
+
+	func reset() -> void:
+		removed_count = 0
+		changed_count = 0
+		last_removed_component = null
+
+
+## OBS-01: world.remove_entity() must fire REMOVED exactly once per watched component.
+func test_obs01_remove_entity_fires_observer_per_component():
+	var observer = InstanceCapturingObserver.new()
+	world.add_observer(observer)
+
+	var entity = Entity.new()
+	entity.add_component(C_ObserverTest.new(7, "obs01"))
+	world.add_entity(entity)
+	observer.reset()
+
+	world.remove_entity(entity)
+	assert_int(observer.removed_count).is_equal(1)
+
+
+## OBS-02: REMOVED payload is the exact component instance, with preserved properties.
+func test_obs02_removed_component_instance_correct():
+	var observer = InstanceCapturingObserver.new()
+	world.add_observer(observer)
+
+	var entity = Entity.new()
+	var component = C_ObserverTest.new(42, "marker")
+	entity.add_component(component)
+	world.add_entity(entity)
+	observer.reset()
+
+	entity.remove_component(C_ObserverTest)
+
+	assert_int(observer.removed_count).is_equal(1)
+	assert_object(observer.last_removed_component).is_not_null()
+	assert_str(observer.last_removed_component.get_script().resource_path).is_equal(
+		C_ObserverTest.resource_path
+	)
+	assert_int(observer.last_removed_component.value).is_equal(42)
+
+
+## OBS-03: After entity.remove_component(), mutating the removed component's property
+## must NOT trigger CHANGED — property_changed must be disconnected.
+func test_obs03_no_phantom_callbacks_after_removal():
+	var observer = InstanceCapturingObserver.new()
+	world.add_observer(observer)
+
+	var entity = Entity.new()
+	var component = C_ObserverTest.new(0, "start")
+	entity.add_component(component)
+	world.add_entity(entity)
+
+	entity.remove_component(C_ObserverTest)
+	observer.reset()
+
+	# Mutate the now-detached component via its setter (emits property_changed)
+	component.value = 99
+
+	assert_int(observer.changed_count).is_equal(0)
+
+
+## Two observers watching the same component type must both be notified.
+func test_obs_multiple_observers_both_notified():
+	var observer_a = InstanceCapturingObserver.new()
+	var observer_b = InstanceCapturingObserver.new()
+	world.add_observer(observer_a)
+	world.add_observer(observer_b)
+
+	var entity = Entity.new()
+	entity.add_component(C_ObserverTest.new(5, "multi"))
+	world.add_entity(entity)
+	observer_a.reset()
+	observer_b.reset()
+
+	entity.remove_component(C_ObserverTest)
+
+	assert_int(observer_a.removed_count).is_equal(1)
+	assert_int(observer_b.removed_count).is_equal(1)
+
+
+## Re-entrancy guard: an observer that removes ANOTHER component as a side effect
+## of REMOVED must not cause a double-notification on the second observer.
+class CleanupSideEffectObserver extends Observer:
+	func query() -> QueryBuilder:
+		return q.with_all([C_ObserverTest]).on_removed()
+
+	func each(event: Variant, entity: Entity, _payload: Variant = null) -> void:
+		if event == Observer.Event.REMOVED:
+			if entity.has_component(C_ObserverHealth):
+				entity.remove_component(C_ObserverHealth)
+
+
+class HealthRemovalCounter extends Observer:
+	var health_removed_count: int = 0
+
+	func query() -> QueryBuilder:
+		# Filter only on the component being removed — by the time we receive the
+		# REMOVED event, C_ObserverTest has already been removed (it was the trigger),
+		# so demanding it via with_all would correctly fail and suppress the event.
+		return q.with_all([C_ObserverHealth]).on_removed()
+
+	func each(event: Variant, _entity: Entity, _payload: Variant = null) -> void:
+		if event == Observer.Event.REMOVED:
+			health_removed_count += 1
+
+	func reset() -> void:
+		health_removed_count = 0
+
+
+func test_obs_reentrancy_guard_prevents_double_notify():
+	var cleanup_observer = CleanupSideEffectObserver.new()
+	var health_observer = HealthRemovalCounter.new()
+	world.add_observer(cleanup_observer)
+	world.add_observer(health_observer)
+
+	var entity = Entity.new()
+	entity.add_component(C_ObserverTest.new())
+	entity.add_component(C_ObserverHealth.new(100))
+	world.add_entity(entity)
+	health_observer.reset()
+
+	# Removing C_ObserverTest causes cleanup_observer to remove C_ObserverHealth as a side effect.
+	# health_observer watches C_ObserverHealth removal; must fire exactly once.
+	entity.remove_component(C_ObserverTest)
+
+	assert_int(health_observer.health_removed_count).is_equal(1)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# v8.0.0 — filters that were silently ignored by observer dispatch before:
+# group, enabled/disabled, property-query-on-removal.
+# ─────────────────────────────────────────────────────────────────────────────
+
+class GroupFilteredObserver extends Observer:
+	var added_count: int = 0
+
+	func query() -> QueryBuilder:
+		return q.with_all([C_TestA]).with_group(["friends"]).on_added()
+
+	func each(event: Variant, _entity: Entity, _payload: Variant = null) -> void:
+		if event == Observer.Event.ADDED:
+			added_count += 1
+
+
+func test_with_group_filter_is_enforced_on_observer_dispatch():
+	# Regression for the §1.1 bug: observer with a with_group filter now fires
+	# ONLY for entities in that group. Previously the filter was silently ignored.
+	var obs = GroupFilteredObserver.new()
+	world.add_observer(obs)
+
+	var outsider = Entity.new()
+	outsider.add_component(C_TestA.new())
+	world.add_entity(outsider)
+	assert_int(obs.added_count).is_equal(0)  # not in "friends" → skipped
+
+	var friend = Entity.new()
+	friend.add_to_group("friends")
+	friend.add_component(C_TestA.new())
+	world.add_entity(friend)
+	assert_int(obs.added_count).is_equal(1)
+
+
+class PropertyQueryRemovedObserver extends Observer:
+	var removed_count: int = 0
+
+	func query() -> QueryBuilder:
+		return q.with_all([{C_ObserverHealth: {"health": {"_gt": 0}}}]).on_removed()
+
+	func each(event: Variant, _entity: Entity, _payload: Variant = null) -> void:
+		if event == Observer.Event.REMOVED:
+			removed_count += 1
+
+
+func test_on_removed_property_query_evaluated_before_removal():
+	# Regression for §1.2: match-before-removal now evaluates property queries.
+	# Observer fires only for entities whose C_ObserverHealth had health > 0 pre-removal.
+	var obs = PropertyQueryRemovedObserver.new()
+	world.add_observer(obs)
+
+	# Entity with health=0: does NOT match the property query, REMOVED must NOT fire.
+	var zero_hp = Entity.new()
+	zero_hp.add_component(C_ObserverHealth.new(0))
+	world.add_entity(zero_hp)
+	zero_hp.remove_component(C_ObserverHealth)
+	assert_int(obs.removed_count).is_equal(0)
+
+	# Entity with health=50: matches; REMOVED must fire.
+	var alive = Entity.new()
+	alive.add_component(C_ObserverHealth.new(50))
+	world.add_entity(alive)
+	alive.remove_component(C_ObserverHealth)
+	assert_int(obs.removed_count).is_equal(1)
+
+
+class InactiveMonitorObserver extends Observer:
+	var matched: Array[Entity] = []
+	var unmatched: Array[Entity] = []
+
+	func query() -> QueryBuilder:
+		return q.with_all([C_TestA]).on_match().on_unmatch()
+
+	func each(event: Variant, entity: Entity, _payload: Variant = null) -> void:
+		match event:
+			Observer.Event.MATCH:   matched.append(entity)
+			Observer.Event.UNMATCH: unmatched.append(entity)
+
+
+func test_monitor_membership_is_seeded_even_when_inactive_at_registration():
+	# Regression for §1.4: monitors registered while inactive still seed membership.
+	# Previously, flipping active=true later left membership empty and UNMATCH never fired.
+	var entity = Entity.new()
+	entity.add_component(C_TestA.new())
+	world.add_entity(entity)
+
+	var obs = InactiveMonitorObserver.new()
+	obs.active = false
+	world.add_observer(obs)
+
+	# MATCH was suppressed because inactive at registration. Good — matches existing semantics.
+	assert_int(obs.matched.size()).is_equal(0)
+
+	# Flip active on and remove the component. UNMATCH must fire because membership
+	# was seeded at registration despite being inactive.
+	obs.active = true
+	entity.remove_component(C_TestA)
+	assert_int(obs.unmatched.size()).is_equal(1)
+
+
+func test_yield_existing_snapshots_entities_array_against_mutating_callback():
+	# Regression for §1.3: yield_existing callbacks that mutate entities[] (e.g. by
+	# removing another entity) must not crash or skip the iteration.
+	var e1 = Entity.new()
+	e1.add_component(C_TestA.new())
+	world.add_entity(e1)
+
+	var e2 = Entity.new()
+	e2.add_component(C_TestA.new())
+	world.add_entity(e2)
+
+	# MutatingObserver removes e2 when it sees e1. If _yield_existing_for_entry
+	# iterated the live entities array, e2 would either be skipped or processed
+	# after being freed. The snapshot guarantees neither happens.
+	var obs := MutatingYieldObserver.new()
+	obs.target_to_remove = e2
+	obs.trigger_on = e1
+	obs.yield_existing = true
+	world.add_observer(obs)
+
+	# The observer fired at least once (for e1). e2 is now removed.
+	assert_int(obs.added_count).is_greater_equal(1)
+	assert_bool(is_instance_valid(e2) and not e2.is_queued_for_deletion()).is_false()
+
+
+class MutatingYieldObserver extends Observer:
+	var added_count: int = 0
+	var target_to_remove: Entity
+	var trigger_on: Entity
+
+	func query() -> QueryBuilder:
+		return q.with_all([C_TestA]).on_added()
+
+	func each(event: Variant, entity: Entity, _payload: Variant = null) -> void:
+		if event == Observer.Event.ADDED:
+			added_count += 1
+			if entity == trigger_on and is_instance_valid(target_to_remove):
+				_world.remove_entity(target_to_remove)

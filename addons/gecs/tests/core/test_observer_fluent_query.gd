@@ -147,3 +147,27 @@ func test_clear_resets_observer_event_state():
 	assert_int(q._observer_events_mask).is_equal(0)
 	assert_array(q._observer_changed_props).is_empty()
 	assert_array(q._observer_event_names).is_empty()
+
+
+## P2-2 regression: chained on_changed calls accumulate filter properties
+## (append-and-dedup) rather than replacing. Mirrors on_event semantics.
+func test_on_changed_chained_accumulates_and_dedupes():
+	var q = _make_query().with_all([C_TestA]) \
+		.on_changed([&"a"]) \
+		.on_changed([&"b"]) \
+		.on_changed([&"a"])   # duplicate — should be deduped
+	assert_int(q._observer_changed_props.size()).is_equal(2)
+	assert_bool(q._observer_changed_props.has(&"a")).is_true()
+	assert_bool(q._observer_changed_props.has(&"b")).is_true()
+
+
+## P2-2 regression: chained on_relationship_added/removed calls accumulate type
+## filters (append-and-dedup) rather than replacing.
+func test_on_relationship_added_chained_accumulates_and_dedupes():
+	var q = _make_query() \
+		.on_relationship_added([C_TestA]) \
+		.on_relationship_added([C_TestB]) \
+		.on_relationship_added([C_TestA])   # duplicate — should be deduped
+	assert_int(q._observer_rel_add_types.size()).is_equal(2)
+	assert_bool(q._observer_rel_add_types.has(C_TestA)).is_true()
+	assert_bool(q._observer_rel_add_types.has(C_TestB)).is_true()

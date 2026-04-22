@@ -1,5 +1,44 @@
 # GECS Changelog
 
+## [8.0.0] - 2026-04-21 - Observer API overhaul
+
+### Breaking Changes
+
+- **Legacy Observer API removed.** `watch() -> Resource`, `match() -> QueryBuilder`, and the fixed callbacks `on_component_added` / `on_component_removed` / `on_component_changed` are gone — no shim. Observers must now override `query() -> QueryBuilder` with event modifiers chained on it (`.on_added()`, `.on_removed()`, `.on_changed([&"prop"])`, `.on_match()`, `.on_unmatch()`, `.on_relationship_added([...])`, `.on_relationship_removed()`, `.on_event(&"name")`) plus a single unified `each(event, entity, payload)` callback. See **[MIGRATION_LEGACY_OBSERVER.md](addons/gecs/docs/MIGRATION_LEGACY_OBSERVER.md)**.
+- **Project Settings namespace migration**: `gecs_network/sync/*` renamed to `gecs/network/sync/*`.
+  All four settings are affected:
+  - `gecs_network/sync/high_hz` → `gecs/network/sync/high_hz`
+  - `gecs_network/sync/medium_hz` → `gecs/network/sync/medium_hz`
+  - `gecs_network/sync/low_hz` → `gecs/network/sync/low_hz`
+  - `gecs_network/sync/reconciliation_interval` → `gecs/network/sync/reconciliation_interval`
+
+  **Migration**: Open Project Settings and update any overrides from the old paths to the new ones. Default values are unchanged.
+
+### Added
+
+- **New migration guide** at `addons/gecs/docs/MIGRATION_LEGACY_OBSERVER.md` covering the v7→v8 Observer translation with Quick Reference table and step-by-step examples.
+- **Editor-only `push_warning`** when `Observer.query()` returns a `QueryBuilder` with no event modifiers — catches the silent no-op footgun at dev time.
+
+### Changed
+
+- **Addon merge**: `addons/gecs_network/` has been merged into `addons/gecs/network/`. The GECS Network module is now included in the main GECS addon — no separate plugin install needed. Enable the `gecs` plugin only; all networking classes are available immediately.
+- Network test files moved from `addons/gecs_network/tests/` to `addons/gecs/tests/network/`.
+- New `GECSNetworkSettings` class with typed constants for all `gecs/network/sync/*` setting paths.
+- **`addons/gecs/docs/OBSERVERS.md`** fully rewritten to document the new API (query + event modifiers + each, sub_observers, monitors, custom events, yield_existing, active/paused, cmd, FlushMode).
+- **`sub_observers()` tuple shape** simplified to `[QueryBuilder, Callable, optional yield_existing_override]`. The previously-documented-but-unimplemented `SystemTimer` slot has been removed. Observers are event-driven; for throttled observer work use `FlushMode.MANUAL` + `cmd.add_custom(callable)` inside `each()` and flush from a timed System.
+- **`on_changed()`, `on_relationship_added()`, `on_relationship_removed()`** now append-and-dedup their filter lists across chained calls (previously replaced). `.on_changed([&"a"]).on_changed([&"b"])` accumulates both property filters, matching the semantics of `on_event()` and `with_group()`.
+
+### Fixed
+
+- **Observer queries with `with_group` / `without_group` / `enabled()` / `disabled()` now filter correctly** in dispatch. These were silently ignored in v7.x — code that accidentally depended on the bug (i.e., observers firing for entities outside the group or in the wrong enabled state) will now fire less. This is the intended behavior.
+- **`on_removed` / `on_relationship_removed`** now evaluate property queries and group/enabled filters in the match-before-removal check — previously only structural component membership was checked. Property-query match-before-removal evaluates against the detached component payload, so pre-removal property state is preserved.
+- **Relationship property queries in match-before-removal** (`on_relationship_removed` with `with_relationship([Relationship.new({C_X: {...}}, null)])`) now evaluate the removed relationship's property criteria via `Relationship.matches()`. Previously any removal of a matching relation type would fire `RELATIONSHIP_REMOVED` even if the removed rel didn't satisfy the property query.
+- **`Entity.remove_relationships([...])`** now erases and emits per-rel as it removes, rather than batch-then-replay. Multi-relationship `on_relationship_removed()` observers (`with_relationship([RelA, RelB]).on_relationship_removed()`) now fire correctly on batch removals — previously all rels were gone before any signal fired, so match-before-removal failed for all of them.
+- **`yield_existing` and monitor seeding** iterate snapshots — mutating callbacks (e.g. `remove_entity` from inside a `MATCH` handler) can no longer skip remaining entries or crash on invalidated instances.
+- **Monitor membership is seeded at `add_observer()` regardless of `active` / `paused` state** — flipping `active = true` later no longer leaves pre-existing matching entities stuck outside membership (which caused `UNMATCH` to never fire for them).
+- **`remove_observer`** now flushes pending MANUAL-mode command buffers before freeing the observer — queued work is no longer silently dropped.
+- **Re-entrancy safety**: dispatch entries are snapshotted so observers registered inside another observer's callback do not receive the event that caused their creation. `yield_existing` callbacks iterate an entity snapshot; monitor evaluation iterates a dedup snapshot. All mutation-safe.
+
 ## [7.3.0] - 2026-04-07 - SystemTimer + FlushMode Enum
 
 ### Added
@@ -20,28 +59,6 @@
 ### Fixed
 
 - `s_random_spawner.gd` example was assigning `FlushMode.PER_GROUP` (enum) to a `String`-typed export, causing a parse error
-
-## [Unreleased]
-
-### Breaking Changes
-
-- **Project Settings namespace migration**: `gecs_network/sync/*` renamed to `gecs/network/sync/*`.
-  All four settings are affected:
-  - `gecs_network/sync/high_hz` → `gecs/network/sync/high_hz`
-  - `gecs_network/sync/medium_hz` → `gecs/network/sync/medium_hz`
-  - `gecs_network/sync/low_hz` → `gecs/network/sync/low_hz`
-  - `gecs_network/sync/reconciliation_interval` → `gecs/network/sync/reconciliation_interval`
-
-  **Migration**: Open Project Settings and update any overrides from the old paths to the new ones.
-  Default values are unchanged.
-
-### Changed
-
-- **Addon merge**: `addons/gecs_network/` has been merged into `addons/gecs/network/`.
-  The GECS Network module is now included in the main GECS addon — no separate plugin install needed.
-  Enable the `gecs` plugin only; all networking classes are available immediately.
-- Network test files moved from `addons/gecs_network/tests/` to `addons/gecs/tests/network/`.
-- New `GECSNetworkSettings` class with typed constants for all `gecs/network/sync/*` setting paths.
 
 ## [6.9.0] - 2026-03-16 - GECS Network + Core Reliability Audit
 

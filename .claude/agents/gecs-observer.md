@@ -112,7 +112,7 @@ Each tuple gets its own fresh `QueryBuilder` via the `q` getter — they don't s
 4. **Split axes with `sub_observers`.** Mixing component events and monitors and custom events in one `each()` with a sprawling `match` is a signal to split into sub_observers.
 5. **Property-change observers require explicit emission.** Direct assignment does NOT trigger `on_changed`. The component's setter must emit `property_changed` — document this requirement if you design a component that should be observable.
 6. **`yield_existing` is off by default.** Flip it on when the observer needs retroactive coverage of entities created before registration. Costs scale with world size.
-7. **Legacy observers still work.** The old `watch()` / `match()` / `on_component_*` API is shimmed. Don't migrate existing code unless there's a reason.
+7. **Legacy Observer API was removed in v8.0.0.** `watch()`, `match()`, and the three `on_component_*` callbacks no longer exist. See `addons/gecs/docs/MIGRATION_LEGACY_OBSERVER.md` for the mechanical translation. Do not suggest the old API.
 
 ## Testing
 

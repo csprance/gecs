@@ -20,17 +20,28 @@ You are a performance engineer for GECS, a Godot 4.x ECS framework. You analyze 
 ## Running Benchmarks (Windows)
 
 ```bash
-# All perf tests
-addons/gdUnit4/runtest.cmd -a "res://addons/gecs/tests/performance"
+# All perf tests — ALWAYS wrap with timeout + capped log file.
+timeout 900 ./addons/gdUnit4/runtest.sh -a "res://addons/gecs/tests/performance" \
+  > /tmp/gecs_perf.log 2>&1
+grep -c "Debugger Break, Reason" /tmp/gecs_perf.log   # >50 = gdUnit4 runaway loop
 
 # Specific category
-addons/gdUnit4/runtest.cmd -a "res://addons/gecs/tests/performance/test_query_perf.gd"
+timeout 300 ./addons/gdUnit4/runtest.sh -a "res://addons/gecs/tests/performance/test_query_perf.gd" \
+  > /tmp/gecs_perf.log 2>&1
 
 # Specific test
-addons/gdUnit4/runtest.cmd -a "res://addons/gecs/tests/performance/test_entity_perf.gd::test_entity_creation"
+timeout 120 ./addons/gdUnit4/runtest.sh -a "res://addons/gecs/tests/performance/test_entity_perf.gd::test_entity_creation" \
+  > /tmp/gecs_perf.log 2>&1
 ```
 
 Tests use parameterized scales: 100, 1000, 10000 entities.
+
+**Runaway-loop guard (CRITICAL):** gdUnit4 has a known bug where orphan-node
+monitor casts hit freed instances and enter an infinite debugger-break loop
+that fills terabytes of log data (stdout AND `editor.log`). See
+`gecs-test-writer.md` § "gdUnit4 runaway-loop guard" for the full mitigation.
+Perf suites are especially vulnerable because they churn large numbers of
+entities — never run them with raw stdout piped into long-running contexts.
 
 ## Key Hot Paths to Know
 

@@ -301,10 +301,14 @@ func on_removed() -> QueryBuilder:
 
 ## Declare this query fires when a property on a matching component changes.[br]
 ## [param properties] Optional list of property names to filter by (empty = all properties).[br]
+## Chaining [code].on_changed([&"a"]).on_changed([&"b"])[/code] accumulates filters
+## (append-and-dedup) rather than replacing — matches [method on_event] semantics.[br]
 ## [param returns] - [QueryBuilder] for chaining.
 func on_changed(properties: Array[StringName] = []) -> QueryBuilder:
 	_observer_events_mask |= (1 << Observer.Event.CHANGED)
-	_observer_changed_props = properties
+	for p in properties:
+		if not _observer_changed_props.has(p):
+			_observer_changed_props.append(p)
 	return self
 
 
@@ -324,19 +328,25 @@ func on_unmatch() -> QueryBuilder:
 
 ## Declare this query fires when a relationship is added to a matching entity.[br]
 ## [param relation_types] Optional list of relation [Component] script types to filter by (empty = any).[br]
+## Chained calls accumulate filter types (append-and-dedup) rather than replacing.[br]
 ## [param returns] - [QueryBuilder] for chaining.
 func on_relationship_added(relation_types: Array = []) -> QueryBuilder:
 	_observer_events_mask |= (1 << Observer.Event.RELATIONSHIP_ADDED)
-	_observer_rel_add_types = relation_types
+	for t in relation_types:
+		if not _observer_rel_add_types.has(t):
+			_observer_rel_add_types.append(t)
 	return self
 
 
 ## Declare this query fires when a relationship is removed from a matching entity.[br]
 ## [param relation_types] Optional list of relation [Component] script types to filter by (empty = any).[br]
+## Chained calls accumulate filter types (append-and-dedup) rather than replacing.[br]
 ## [param returns] - [QueryBuilder] for chaining.
 func on_relationship_removed(relation_types: Array = []) -> QueryBuilder:
 	_observer_events_mask |= (1 << Observer.Event.RELATIONSHIP_REMOVED)
-	_observer_rel_remove_types = relation_types
+	for t in relation_types:
+		if not _observer_rel_remove_types.has(t):
+			_observer_rel_remove_types.append(t)
 	return self
 
 

@@ -17,6 +17,46 @@ func after_test():
 		world.purge(false)
 
 
+## New-API observer for C_ObserverTest benchmarks.
+class PerfObserver extends Observer:
+	var added_count: int = 0
+	var removed_count: int = 0
+	var changed_count: int = 0
+
+	func query() -> QueryBuilder:
+		return q.with_all([C_ObserverTest]).on_added().on_removed().on_changed()
+
+	func each(event: Variant, _entity: Entity, payload: Variant = null) -> void:
+		match event:
+			Observer.Event.ADDED:   added_count += 1
+			Observer.Event.REMOVED: removed_count += 1
+			Observer.Event.CHANGED:
+				changed_count += 1
+				# Simulate some processing
+				if payload is Dictionary and payload.has("component"):
+					var _val = payload.component.get("value")
+
+	func reset_counts():
+		added_count = 0
+		removed_count = 0
+		changed_count = 0
+
+
+## Observer filtering on both C_ObserverTest + C_ObserverHealth — complex-query benchmark.
+class PerfHealthObserver extends Observer:
+	var health_changed_count: int = 0
+
+	func query() -> QueryBuilder:
+		return q.with_all([C_ObserverHealth, C_ObserverTest]).on_changed([&"health"])
+
+	func each(event: Variant, _entity: Entity, _payload: Variant = null) -> void:
+		if event == Observer.Event.CHANGED:
+			health_changed_count += 1
+
+	func reset():
+		health_changed_count = 0
+
+
 ## Setup entities with position and velocity for movement tests
 func setup_velocity_entities(count: int) -> void:
 	for i in count:
@@ -58,7 +98,7 @@ func test_system_continuous_processing(scale: int, test_parameters := [[100], [1
 ## Test observer detecting component additions
 ## This is an IDEAL use case for observers - they excel at reacting to state changes
 func test_observer_component_additions(scale: int, test_parameters := [[100], [1000], [10000]]):
-	var observer = O_PerformanceTest.new()
+	var observer = PerfObserver.new()
 	world.add_observer(observer)
 
 	var time_ms = PerfHelpers.time_it(func():
@@ -80,10 +120,14 @@ func test_observer_component_additions(scale: int, test_parameters := [[100], [1
 func test_observer_component_removals(scale: int, test_parameters := [[100], [1000], [10000]]):
 	setup_observer_test_entities(scale)
 
-	var observer = O_PerformanceTest.new()
+	var observer = PerfObserver.new()
 	world.add_observer(observer)
 
-	var entities = world.query.with_all([C_ObserverTest]).execute()
+	# Duplicate the entity list before iteration: when only one archetype matches, the
+	# world returns a live reference to that archetype's entities array. Calling
+	# remove_component mid-iteration moves entities out of that array and causes the
+	# for-loop to skip every other entry.
+	var entities = world.query.with_all([C_ObserverTest]).execute().duplicate()
 
 	var time_ms = PerfHelpers.time_it(func():
 		# Remove components (observers react to removals)
@@ -102,7 +146,7 @@ func test_observer_component_removals(scale: int, test_parameters := [[100], [10
 func test_observer_property_changes(scale: int, test_parameters := [[100], [1000], [10000]]):
 	setup_observer_test_entities(scale)
 
-	var observer = O_PerformanceTest.new()
+	var observer = PerfObserver.new()
 	world.add_observer(observer)
 	observer.reset_counts()
 
@@ -144,7 +188,7 @@ func test_system_batch_property_reads(scale: int, test_parameters := [[100], [10
 func test_observer_frequent_changes(scale: int, test_parameters := [[100], [1000], [10000]]):
 	setup_observer_test_entities(scale)
 
-	var observer = O_PerformanceTest.new()
+	var observer = PerfObserver.new()
 	world.add_observer(observer)
 	observer.reset_counts()
 
@@ -196,9 +240,9 @@ func test_system_simulating_frequent_changes(scale: int, test_parameters := [[10
 func test_multiple_observers_same_component(scale: int, test_parameters := [[100], [1000], [10000]]):
 	setup_observer_test_entities(scale)
 
-	var observer1 = O_PerformanceTest.new()
-	var observer2 = O_PerformanceTest.new()
-	var observer3 = O_PerformanceTest.new()
+	var observer1 = PerfObserver.new()
+	var observer2 = PerfObserver.new()
+	var observer3 = PerfObserver.new()
 	world.add_observers([observer1, observer2, observer3])
 
 	observer1.reset_counts()
@@ -234,7 +278,7 @@ func test_observer_with_complex_query(scale: int, test_parameters := [[100], [10
 		world.add_entity(entity, null, false)
 
 	# Observer with complex query (needs both components)
-	var observer = O_HealthObserver.new()
+	var observer = PerfHealthObserver.new()
 	world.add_observer(observer)
 	observer.reset()
 
@@ -258,7 +302,7 @@ func test_observer_baseline_overhead(scale: int, test_parameters := [[100], [100
 	setup_observer_test_entities(scale)
 
 	# Add observer but don't trigger it
-	var observer = O_PerformanceTest.new()
+	var observer = PerfObserver.new()
 	world.add_observer(observer)
 
 	var entities = world.query.with_all([C_ObserverTest]).execute()
@@ -282,7 +326,7 @@ func test_observer_baseline_overhead(scale: int, test_parameters := [[100], [100
 func test_observer_vs_system_sporadic_changes(scale: int, test_parameters := [[100], [1000], [10000]]):
 	setup_observer_test_entities(scale)
 
-	var observer = O_PerformanceTest.new()
+	var observer = PerfObserver.new()
 	world.add_observer(observer)
 	observer.reset_counts()
 

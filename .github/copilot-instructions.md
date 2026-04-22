@@ -7,7 +7,7 @@ Concise, codebase-specific instructions for AI agents. Focus only on proven patt
 Entity (`entity.gd`): Node holding components (data) + relationships. Provides `add_component()`, `has_component()`, `add_relationship()`.
 Component (`component.gd`): Resource, data-only `@export` fields. Emits `property_changed` manually to trigger observers.
 System (`system.gd`): Override `query()` returning a `QueryBuilder`; implement `process(entities, components, delta)`. Use `iterate([...])` in query for batch column access (components array order matches iterate list). Optional `sub_systems()` returns `[QueryBuilder, Callable]` or `[QueryBuilder, Callable, SystemTimer]` tuples — the optional third element gates the subsystem to only run when the timer ticks.
-Observer (`observer.gd`): Reactive system: implement `watch()` (returns component instance) and handlers (`on_component_added/removed/changed`). Property changes require explicit signal emission in component setter.
+Observer (`observer.gd`): Reactive node: override `query() -> QueryBuilder` and chain event modifiers (`.on_added()`, `.on_removed()`, `.on_changed([&"prop"])`, `.on_match()`, `.on_unmatch()`, `.on_relationship_added([...])`, `.on_relationship_removed()`, `.on_event(&"name")`). Implement `each(event, entity, payload)` as the single dispatch callback. Use `sub_observers()` to compose multiple reactive axes in one node. `CHANGED` events require the component to emit `property_changed` manually in a setter.
 World (`world.gd`): Owns entities, systems, observers, archetype & relationship indices. Provides `world.query` (pooled `QueryBuilder`), archetype cache, enabled/disabled filtering baked into signatures.
 ECS (`ecs.gd`): Autoload singleton exposing `ECS.world` and `ECS.process(delta, group?)`.
 
