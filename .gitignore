@@ -64,3 +64,5 @@ htmlcov/
 # Ensure perf reports remain tracked (counteract earlier blanket reports/ ignore)
 !reports/perf/**
 .planning/
+
+*_bak*.hip*
