@@ -160,5 +160,3 @@ func sub_observers() -> Array[Array]:
 func has_pending_commands() -> bool:
 	return cmd != null and not cmd.is_empty()
 #endregion Public Methods
-
-

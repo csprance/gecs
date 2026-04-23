@@ -117,23 +117,29 @@ func execute() -> void:
 
 	var start_time := Time.get_ticks_usec()
 
+	# Take ownership of the current queue before iterating. A queued command may
+	# synchronously trigger observer dispatch (PER_CALLBACK flush reads
+	# `has_pending_commands()`); if `_commands` still held this batch, the
+	# reentrant `execute()` would re-run the same lambdas and recurse infinitely.
+	# Commands queued during iteration land in a fresh `_commands` and are
+	# flushed by the next `execute()` call.
+	var to_run: Array[Callable] = _commands
+	_commands = []
+
 	# Suppress cache invalidation during batch execution; _end_suppress fires once at end.
 	# Force _pending_invalidation so _end_suppress always fires exactly one invalidation —
 	# commands always mutate state, so the cache must always be invalidated after execute().
 	_world._begin_suppress()
 	_world._pending_invalidation = true
 
-	for callable in _commands:
+	for callable in to_run:
 		callable.call()
 
 	_world._end_suppress()
 
 	# Update statistics
-	_stats["commands_executed"] += _commands.size()
+	_stats["commands_executed"] += to_run.size()
 	_stats["last_execution_time_ms"] = (Time.get_ticks_usec() - start_time) / 1000.0
-
-	# Clear command queue
-	_commands.clear()
 
 ## Clear all queued commands without executing them
 func clear() -> void:
