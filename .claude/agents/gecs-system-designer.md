@@ -32,6 +32,39 @@ Read these files for current API details before designing:
 7. **Use CommandBuffer** for structural changes during iteration (add/remove entities/components)
 8. **Use sub_systems()** to group related query+callable pairs in one System node
 9. **Use SystemTimer** for systems that don't need to run every frame (AI decisions, cleanup)
+10. **Use `.iterate()` in every System query that reads components in its process loop** — batch-extracts component arrays so the process body avoids per-entity `entity.get_component(...)` Dictionary lookups. This is the single biggest per-frame perf win available in GECS. Make it the default, not an optimization step.
+11. **Cache relationship patterns as module-level statics with `R_*` naming** — e.g. `static var R_AnyFlockmate := Relationship.new(C_Flockmate.new(), null)`. A "relationship pattern" here means a `Relationship` instance passed into `get_relationships()` / `has_relationship()` / `with_relationship()` to match against existing relationships (it's never stored on an entity — only read via `rel.matches(pattern)`). Passing a fresh `Relationship.new(...)` each call allocates a Relationship **and** a Component per call; cache once and reuse. Mirrors the `C_*` convention for components.
+
+## Performance: `.iterate()` for batch component access
+
+The default (and recommended) shape for any System whose `process()` reads components:
+
+```gdscript
+func query() -> QueryBuilder:
+    return q.with_all([C_Velocity, C_Transform]).iterate([C_Velocity, C_Transform])
+
+func process(entities: Array[Entity], components: Array, delta: float) -> void:
+    var velocities = components[0]  # order matches iterate() arg
+    var transforms = components[1]
+    for i in entities.size():
+        transforms[i].position += velocities[i].linear * delta
+```
+
+Compare to the slow path (avoid this when the system runs every frame):
+
+```gdscript
+# DON'T: per-entity Dictionary lookup in a hot loop
+for entity in entities:
+    var vel := entity.get_component(C_Velocity)
+    var tx := entity.get_component(C_Transform)
+    tx.position += vel.linear * delta
+```
+
+Rules:
+- `iterate()` arg order **is** the `components[]` index order — document it with a comment if there are 3+ entries.
+- `with_all()` determines *which* entities match; `iterate()` determines *which component arrays* get extracted for the process body. Components you want in `iterate()` must also appear in `with_all()`.
+- If `process()` doesn't touch any components (e.g. a pure tag-based system that only reads transforms off `Node3D`), `iterate()` is unnecessary — don't add it.
+- `sub_systems()` entries inherit the batched behavior when their subquery declares `iterate()`.
 
 ## Naming Conventions
 
@@ -40,6 +73,7 @@ Read these files for current API details before designing:
 - Systems: `S_PascalCase` (file: `s_snake_case.gd`)
 - Observers: `O_PascalCase` (file: `o_snake_case.gd`)
 - Network components: `CN_PascalCase` (file: `cn_snake_case.gd`)
+- Cached relationship patterns (module-level statics): `R_PascalCase` (e.g. `R_AnyFlockmate`, `R_ChildOf`)
 
 ## Workflow
 
@@ -48,8 +82,10 @@ When asked to design a feature:
 2. Identify what data is needed (components)
 3. Identify what logic operates on that data (systems)
 4. Identify what queries connect systems to the right entities
-5. Consider edge cases: entity lifecycle, enable/disable, relationships
-6. Present the design with code examples showing the component definitions, system queries, and processing logic
-7. Call out any performance considerations (query complexity, system ordering, tick rates)
+5. **For every per-frame system with a `process()` body, declare `.iterate([...])` on the query** and use the `components[]` array instead of `get_component()` calls in the loop. Explicitly justify the exception if you skip it (e.g. system reads zero components; runs at 1Hz via SystemTimer).
+6. Identify any `Relationship` patterns the system passes into `get_relationships()` / `has_relationship()` / `with_relationship()` — cache them as `R_*` module-level statics rather than allocating per call.
+7. Consider edge cases: entity lifecycle, enable/disable, relationships
+8. Present the design with code examples showing the component definitions, system queries (including `.iterate()` and any cached `R_*` patterns), and processing logic
+9. Call out any remaining performance considerations (query complexity, system ordering, tick rates)
 
 Always check `addons/gecs/docs/` for documentation on patterns and best practices.
