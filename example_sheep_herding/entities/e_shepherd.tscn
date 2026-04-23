@@ -1,11 +1,27 @@
-[gd_scene format=3 uid="uid://d2kq74rgcoj6m"]
+[gd_scene load_steps=7 format=3 uid="uid://d2kq74rgcoj6m"]
 
 [ext_resource type="Script" uid="uid://dqtyn8u1sb455" path="res://example_sheep_herding/entities/e_shepherd.gd" id="1_qtdct"]
+[ext_resource type="Script" uid="uid://b6k13gc2m4e5s" path="res://addons/gecs/ecs/component.gd" id="2_hecvn"]
 [ext_resource type="PackedScene" uid="uid://d1i4wbvs70jfr" path="res://example_sheep_herding/assets/shepherd/sheperd.gltf" id="2_qxysk"]
+[ext_resource type="Script" uid="uid://mmswdh201kc3" path="res://example_sheep_herding/components/c_shepherd.gd" id="3_gepd0"]
 [ext_resource type="Material" uid="uid://d2vdj8b46r6cg" path="res://example_sheep_herding/assets/vertex_color.tres" id="3_hecvn"]
 
-[node name="ESheperd" type="Node3D" unique_id=1947142817]
+[sub_resource type="Resource" id="Resource_jjby3"]
+script = ExtResource("3_gepd0")
+metadata/_custom_type_script = "uid://mmswdh201kc3"
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_shepherd"]
+height = 1.4
+radius = 0.35
+
+[node name="EShepherd" type="CharacterBody3D" unique_id=1947142817]
+physics_interpolation_mode = 1
 script = ExtResource("1_qtdct")
+component_resources = Array[ExtResource("2_hecvn")]([SubResource("Resource_jjby3")])
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=901234569]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, 0)
+shape = SubResource("CapsuleShape3D_shepherd")
 
 [node name="sheperd2" parent="." unique_id=1105678201 instance=ExtResource("2_qxysk")]
 

@@ -7,7 +7,7 @@
 [ext_resource type="Script" uid="uid://dqbcf8fcp00ab" path="res://example_stress_test/systems/s_random_velocity.gd" id="5_rvel"]
 [ext_resource type="Script" uid="uid://cbuk7oliknjcg" path="res://example_stress_test/systems/s_random_spawner.gd" id="6_spawn"]
 [ext_resource type="Script" uid="uid://bhyk76gs76j8p" path="res://example_stress_test/systems/s_lifetime.gd" id="7_life"]
-[ext_resource type="PackedScene" path="res://example_stress_test/entities/simple_mover.tscn" id="8_mover"]
+[ext_resource type="PackedScene" uid="uid://d3ic6lh1dkiua" path="res://example_stress_test/entities/simple_mover.tscn" id="8_mover"]
 [ext_resource type="Script" uid="uid://0ote6bgdrspd" path="res://example_stress_test/observers/o_lifecycle_demo.gd" id="9_obs"]
 
 [node name="Main" type="Node3D" unique_id=1548949468]

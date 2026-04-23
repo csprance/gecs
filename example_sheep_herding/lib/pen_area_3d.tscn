@@ -1,0 +1,15 @@
+[gd_scene load_steps=3 format=3 uid="uid://p1u8ghe7m1r2"]
+
+[ext_resource type="Script" uid="uid://cgf548yty0fvj" path="res://example_sheep_herding/lib/pen_area_3d.gd" id="1_bejyi"]
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_pen"]
+height = 2.0
+radius = 3.0
+
+[node name="PenArea3D" type="Area3D" unique_id=1388332803]
+script = ExtResource("1_bejyi")
+monitorable = false
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=553977358]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+shape = SubResource("CylinderShape3D_pen")

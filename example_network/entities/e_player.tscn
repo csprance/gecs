@@ -6,6 +6,7 @@
 albedo_color = Color(0.3, 0.3, 0.8, 1)
 
 [node name="E_NetworkPlayer" type="Node3D" unique_id=1870780056]
+physics_interpolation_mode = 2
 script = ExtResource("1_player")
 
 [node name="Visual" type="CSGBox3D" parent="." unique_id=168770590]

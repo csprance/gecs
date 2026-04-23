@@ -1,0 +1,14 @@
+[gd_scene format=3 uid="uid://ckrvjheiistlx"]
+
+[ext_resource type="Script" uid="uid://c5chqt4endajw" path="res://example_sheep_herding/entities/e_pen.gd" id="1_iaan8"]
+[ext_resource type="PackedScene" uid="uid://p1u8ghe7m1r2" path="res://example_sheep_herding/lib/pen_area_3d.tscn" id="2_jnlj1"]
+
+[node name="Pen" type="Node3D" unique_id=1595559963]
+script = ExtResource("1_iaan8")
+
+[node name="PenArea3D" parent="." unique_id=1388332803 instance=ExtResource("2_jnlj1")]
+
+[node name="CollisionShape3D" parent="PenArea3D" index="0" unique_id=553977358]
+debug_color = Color(0.57039154, 0.38872552, 1, 1)
+
+[editable path="PenArea3D"]

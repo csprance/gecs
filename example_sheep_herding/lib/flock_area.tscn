@@ -1,0 +1,12 @@
+[gd_scene format=3 uid="uid://bjx6m0my3xvox"]
+
+[ext_resource type="Script" uid="uid://dlnjyai08k2nl" path="res://example_sheep_herding/lib/flock_area.gd" id="1_lann1"]
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_j3f1s"]
+radius = 3.005736
+
+[node name="Area3D" type="Area3D" unique_id=374145626]
+script = ExtResource("1_lann1")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=142070703]
+shape = SubResource("SphereShape3D_j3f1s")

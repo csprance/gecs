@@ -1,13 +1,7 @@
 @tool
-class_name Sheperd
+class_name Shepherd
 extends Entity
 
-# Remember Entities are just containers and glue code
 
-# func on_ready() -> void:
-# 	# we may want to sync the component transform to the node transform?
-# 	pass
-
-
-# func on_destroy() -> void:
-#     pass    
+func define_components() -> Array:
+	return [C_Shepherd.new(), C_Velocity.new()]

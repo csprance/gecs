@@ -5,9 +5,19 @@
 [ext_resource type="Script" uid="uid://b3vi2ingux88g" path="res://addons/gecs/lib/system_group.gd" id="3_1h00a"]
 [ext_resource type="PackedScene" uid="uid://cglpj5rcjwgx8" path="res://example_sheep_herding/entities/e_sheep.tscn" id="3_s1hfj"]
 [ext_resource type="PackedScene" uid="uid://d2kq74rgcoj6m" path="res://example_sheep_herding/entities/e_shepherd.tscn" id="4_81gyn"]
+[ext_resource type="Script" uid="uid://bpev1e66hqael" path="res://example_sheep_herding/observers/o_penned.gd" id="5_hssrj"]
 [ext_resource type="PackedScene" uid="uid://c7glmjhtv1wp3" path="res://example_sheep_herding/assets/world/world.gltf" id="5_lfjco"]
-[ext_resource type="Script" uid="uid://b526ff1fn75fa" path="res://example_stress_test/systems/s_velocity.gd" id="5_m83r3"]
+[ext_resource type="Script" uid="uid://tkrd3dj3drh6" path="res://example_sheep_herding/systems/s_velocity.gd" id="6_local"]
+[ext_resource type="Script" uid="uid://cshmot8f1ohge" path="res://example_sheep_herding/systems/s_flee.gd" id="7_pqktl"]
 [ext_resource type="Material" uid="uid://d2vdj8b46r6cg" path="res://example_sheep_herding/assets/vertex_color.tres" id="8_25kgx"]
+[ext_resource type="Script" uid="uid://c1xg7eguqbrc1" path="res://example_sheep_herding/systems/s_wander.gd" id="8_m83r3"]
+[ext_resource type="Script" uid="uid://dv0iofxiqw4tb" path="res://example_sheep_herding/systems/s_shepherd.gd" id="9_hssrj"]
+[ext_resource type="PackedScene" uid="uid://ckrvjheiistlx" path="res://example_sheep_herding/entities/e_pen.tscn" id="14_hssrj"]
+[ext_resource type="Script" uid="uid://cref4368xyjkv" path="res://example_sheep_herding/observers/o_sheep_entered_pen.gd" id="15_entered"]
+
+[sub_resource type="NavigationMesh" id="NavigationMesh_world"]
+geometry_source_geometry_mode = 1
+geometry_source_group_name = &"navmesh_source"
 
 [node name="Main" type="Node" unique_id=458166463]
 script = ExtResource("1_s1hfj")
@@ -38,35 +48,60 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.739113, 0, 4.0562477)
 [node name="ESheep6" parent="World/Entities" unique_id=2042898598 instance=ExtResource("3_s1hfj")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.134836, 0, -1.0831356)
 
-[node name="ESheperd" parent="World/Entities" unique_id=1947142817 instance=ExtResource("4_81gyn")]
+[node name="EShepherd" parent="World/Entities" unique_id=1947142817 instance=ExtResource("4_81gyn")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.7744634, 0, 7.247355)
+
+[node name="EPen" parent="World/Entities" unique_id=1595559963 instance=ExtResource("14_hssrj")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -48.93383, 0, 8.125643)
+
+[node name="CollisionShape3D" parent="World/Entities/EPen/PenArea3D" parent_id_path=PackedInt32Array(1595559963, 1388332803) index="0" unique_id=553977358]
+transform = Transform3D(2.785, 0, 0, 0, 2.785, 0, 0, 0, 2.785, -0.48262787, 1, 1.0776901)
 
 [node name="Systems" type="Node" parent="World" unique_id=520057144]
 
-[node name="physics" type="Node" parent="World/Systems" unique_id=1237391528]
+[node name="OPenned" type="Node" parent="World/Systems" unique_id=1841116559]
+script = ExtResource("5_hssrj")
+
+[node name="OSheepEnteredPen" type="Node" parent="World/Systems" unique_id=1841116560]
+script = ExtResource("15_entered")
+
+[node name="sim" type="Node" parent="World/Systems" unique_id=1350672065]
 script = ExtResource("3_1h00a")
 metadata/_custom_type_script = "uid://b3vi2ingux88g"
 
-[node name="VelocitySystem" type="Node" parent="World/Systems/physics" unique_id=405055388]
-script = ExtResource("5_m83r3")
-group = &"physics"
-safe_iteration = false
+[node name="ShepherdSystem" type="Node" parent="World/Systems/sim" unique_id=1166710648]
+script = ExtResource("9_hssrj")
+group = &"sim"
 
-[node name="gameplay" type="Node" parent="World/Systems" unique_id=1350672065]
-script = ExtResource("3_1h00a")
-metadata/_custom_type_script = "uid://b3vi2ingux88g"
+[node name="WanderSystem" type="Node" parent="World/Systems/sim" unique_id=644019920]
+script = ExtResource("8_m83r3")
+group = &"sim"
+
+[node name="FleeSystem" type="Node" parent="World/Systems/sim" unique_id=1851602804]
+script = ExtResource("7_pqktl")
+group = &"sim"
+
+[node name="SheepVelocitySystem" type="Node" parent="World/Systems/sim" unique_id=405055388]
+script = ExtResource("6_local")
+group = &"sim"
 
 [node name="Camera3D" type="Camera3D" parent="." unique_id=2048537433]
-transform = Transform3D(-0.9994433, 0.030177053, -0.014226907, 0, 0.4264335, 0.9045189, 0.033362545, 0.90401536, -0.4261961, 1.4207008, 10.432027, -4.1965594)
+transform = Transform3D(-0.99944335, 0.030177059, -0.0142269125, 0.0020367412, 0.48082712, 0.87681293, 0.033300318, 0.87629586, -0.48062095, 1.4207008, 7.6486998, 4.722176)
 current = true
+fov = 100.12246
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=1278830736]
 transform = Transform3D(-0.02218, 0.716119, -0.697625, 0.022756, 0.697978, 0.715758, 0.999495, 0, -0.031777, -12.464, 14.089, -4.198)
 
-[node name="Map" parent="." unique_id=2084334481 instance=ExtResource("5_lfjco")]
+[node name="NavigationRegion3D" type="NavigationRegion3D" parent="." unique_id=-1294977295]
+navigation_mesh = SubResource("NavigationMesh_world")
+
+[node name="Map" parent="NavigationRegion3D" unique_id=2084334481 groups=["navmesh_source"] instance=ExtResource("5_lfjco")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.013450623, 0, 0.009108543)
 
-[node name="world" parent="Map" index="0" unique_id=541840267]
+[node name="world" parent="NavigationRegion3D/Map" index="0" unique_id=541840267]
 surface_material_override/0 = ExtResource("8_25kgx")
 
-[editable path="Map"]
+[editable path="World/Entities/EPen"]
+[editable path="World/Entities/EPen/PenArea3D"]
+[editable path="NavigationRegion3D/Map"]

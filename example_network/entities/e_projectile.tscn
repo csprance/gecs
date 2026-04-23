@@ -9,6 +9,7 @@ emission = Color(1, 1, 1, 1)
 emission_energy_multiplier = 0.5
 
 [node name="E_NetworkProjectile" type="Node3D"]
+physics_interpolation_mode = 2
 script = ExtResource("1_projectile")
 
 [node name="Visual" type="CSGSphere3D" parent="."]

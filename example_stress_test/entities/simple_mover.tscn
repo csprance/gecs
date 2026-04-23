@@ -1,4 +1,4 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://d3ic6lh1dkiua"]
 
 [ext_resource type="Script" uid="uid://gwavdptq2008" path="res://example_stress_test/entities/simple_mover.gd" id="1_entity"]
 [ext_resource type="Script" uid="uid://b6k13gc2m4e5s" path="res://addons/gecs/ecs/component.gd" id="2_comp"]
@@ -24,10 +24,10 @@ metadata/_custom_type_script = "uid://bx3pmlknhmilu"
 
 [sub_resource type="Resource" id="Resource_life"]
 script = ExtResource("5_life")
-lifetime = 15.0
 metadata/_custom_type_script = "uid://d0fit03sansqe"
 
-[node name="SimpleMover" type="MeshInstance3D" groups=["movers"]]
+[node name="SimpleMover" type="MeshInstance3D" unique_id=1996935768 groups=["movers"]]
+physics_interpolation_mode = 2
 mesh = SubResource("TorusMesh_mesh")
 script = ExtResource("1_entity")
 component_resources = Array[ExtResource("2_comp")]([SubResource("Resource_vel"), SubResource("Resource_timer"), SubResource("Resource_life")])
