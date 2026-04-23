@@ -14,25 +14,40 @@ func query() -> QueryBuilder:
 		C_Flocking,
 		C_Wander,
 		C_Velocity,
-	]).with_none([C_Flee, C_Penned])
+	]).with_none([C_Flee, C_Penned]).iterate([
+		C_SheepMovement,
+		C_SheepThreat,
+		C_Flocking,
+		C_Wander,
+		C_Velocity,
+	])
 
 
-func process(entities: Array[Entity], _components: Array, delta: float) -> void:
+func process(entities: Array[Entity], components: Array, delta: float) -> void:
+	# components[] order matches iterate(): movement, threat, flocking, wander, velocity.
+	var moves: Array = components[0]
+	var threats: Array = components[1]
+	var flocks: Array = components[2]
+	var wanders: Array = components[3]
+	var velocities: Array = components[4]
+
 	var shepherd := SheepMath.get_shepherd()
 	var shepherd_valid := shepherd != null
+	var shepherd_pos := shepherd.global_position if shepherd_valid else Vector3.ZERO
 
-	for entity in entities:
+	for i in entities.size():
+		var entity := entities[i]
 		var sheep := (entity as Node) as Node3D
 		if sheep == null:
 			continue
-		var c_move := entity.get_component(C_SheepMovement) as C_SheepMovement
-		var c_threat := entity.get_component(C_SheepThreat) as C_SheepThreat
-		var c_flock := entity.get_component(C_Flocking) as C_Flocking
-		var c_wander := entity.get_component(C_Wander) as C_Wander
-		var c_vel := entity.get_component(C_Velocity) as C_Velocity
+		var c_move: C_SheepMovement = moves[i]
+		var c_threat: C_SheepThreat = threats[i]
+		var c_flock: C_Flocking = flocks[i]
+		var c_wander: C_Wander = wanders[i]
+		var c_vel: C_Velocity = velocities[i]
 
 		if shepherd_valid:
-			var dist_sq := SheepMath.xz_distance_sq(sheep.global_position, shepherd.global_position)
+			var dist_sq := SheepMath.xz_distance_sq(sheep.global_position, shepherd_pos)
 			if dist_sq < c_threat.flee_radius * c_threat.flee_radius:
 				cmd.add_component(entity, C_Flee.new())
 				c_vel.velocity = Vector3.ZERO

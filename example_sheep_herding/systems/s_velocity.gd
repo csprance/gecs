@@ -10,16 +10,18 @@ extends System
 
 
 func query() -> QueryBuilder:
-	return q.with_all([C_Velocity])
+	return q.with_all([C_Velocity]).iterate([C_Velocity])
 
 
-func process(entities: Array[Entity], _components: Array, delta: float) -> void:
-	for entity in entities:
-		var c_vel := entity.get_component(C_Velocity) as C_Velocity
+func process(entities: Array[Entity], components: Array, delta: float) -> void:
+	var velocities: Array = components[0]
+
+	for i in entities.size():
+		var c_vel: C_Velocity = velocities[i]
 		if c_vel == null:
 			continue
 
-		var as_node := entity as Node
+		var as_node := entities[i] as Node
 		var body := as_node as CharacterBody3D
 		if body:
 			body.velocity = c_vel.velocity
