@@ -122,13 +122,13 @@ func test_query_cache_key_cross_pair_no_collision():
 	# Set 1: (C_TestA, entity_1), (C_TestB, entity_2)
 	var rel_set_1 = [
 		Relationship.new(C_TestA.new(), entity_1),
-		Relationship.new(C_TestB.new(), entity_2)
+		Relationship.new(C_TestB.new(), entity_2),
 	]
 
 	# Set 2: (C_TestA, entity_2), (C_TestB, entity_1) — swapped targets
 	var rel_set_2 = [
 		Relationship.new(C_TestA.new(), entity_2),
-		Relationship.new(C_TestB.new(), entity_1)
+		Relationship.new(C_TestB.new(), entity_1),
 	]
 
 	var hash_1 = QueryCacheKey.build([], [], [], rel_set_1)
@@ -160,7 +160,7 @@ func test_query_cache_key_excludes_property_queries():
 func test_wildcard_index_populated_on_archetype_creation():
 	var rel_key = "rel://res://addons/gecs/tests/components/c_test_a.gd::entity#1"
 	var comp_types = ["res://addons/gecs/tests/components/c_test_a.gd", rel_key]
-	var sig = QueryCacheKey.build([C_TestA], [], []) # Simplified sig for testing
+	var sig = QueryCacheKey.build([C_TestA], [], [])  # Simplified sig for testing
 
 	var archetype = world._get_or_create_archetype(sig, comp_types)
 
@@ -168,7 +168,9 @@ func test_wildcard_index_populated_on_archetype_creation():
 	var rel_path = "res://addons/gecs/tests/components/c_test_a.gd"
 	assert_bool(world._relation_type_archetype_index.has(rel_path)).is_true()
 	assert_bool(world._relation_type_archetype_index[rel_path].has(archetype.signature)).is_true()
-	assert_object(world._relation_type_archetype_index[rel_path][archetype.signature]).is_same(archetype)
+	assert_object(world._relation_type_archetype_index[rel_path][archetype.signature]).is_same(
+		archetype
+	)
 
 
 ## Test 8 (SIGX-04 wildcard index cleanup): When an archetype is deleted,
@@ -176,7 +178,7 @@ func test_wildcard_index_populated_on_archetype_creation():
 func test_wildcard_index_cleaned_on_archetype_deletion():
 	var rel_key = "rel://res://addons/gecs/tests/components/c_test_b.gd::entity#2"
 	var comp_types = ["res://addons/gecs/tests/components/c_test_b.gd", rel_key]
-	var sig = QueryCacheKey.build([C_TestB], [], []) # Simplified sig for testing
+	var sig = QueryCacheKey.build([C_TestB], [], [])  # Simplified sig for testing
 
 	var archetype = world._get_or_create_archetype(sig, comp_types)
 	var rel_path = "res://addons/gecs/tests/components/c_test_b.gd"

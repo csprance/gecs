@@ -3,7 +3,6 @@
 ## and [Callable]. Shape mirrors sub_systems() exactly.
 extends GdUnitTestSuite
 
-
 var runner: GdUnitSceneRunner
 var world: World
 
@@ -18,7 +17,8 @@ func after_test():
 	world.purge(false)
 
 
-class MultiAxisObserver extends Observer:
+class MultiAxisObserver:
+	extends Observer
 	var add_count: int = 0
 	var remove_count: int = 0
 	var match_count: int = 0
@@ -26,16 +26,23 @@ class MultiAxisObserver extends Observer:
 
 	func sub_observers() -> Array[Array]:
 		return [
-			[q.with_all([C_TestA]).on_added(),   _on_added],
+			[q.with_all([C_TestA]).on_added(), _on_added],
 			[q.with_all([C_TestA]).on_removed(), _on_removed],
 			[q.with_all([C_TestA, C_TestB]).on_match(), _on_match],
 			[q.with_all([C_TestA]).on_event(&"ping"), _on_event],
 		]
 
-	func _on_added(_event, _entity, _payload):   add_count += 1
-	func _on_removed(_event, _entity, _payload): remove_count += 1
-	func _on_match(_event, _entity, _payload):   match_count += 1
-	func _on_event(_event, _entity, _payload):   custom_event_count += 1
+	func _on_added(_event, _entity, _payload):
+		add_count += 1
+
+	func _on_removed(_event, _entity, _payload):
+		remove_count += 1
+
+	func _on_match(_event, _entity, _payload):
+		match_count += 1
+
+	func _on_event(_event, _entity, _payload):
+		custom_event_count += 1
 
 
 func test_sub_observer_component_added():
@@ -100,7 +107,8 @@ func test_sub_observer_independent_entity_filters():
 	assert_int(obs.match_count).is_equal(0)
 
 
-class PerTupleYieldObserver extends Observer:
+class PerTupleYieldObserver:
+	extends Observer
 	var yield_count: int = 0
 	var non_yield_count: int = 0
 
@@ -111,8 +119,11 @@ class PerTupleYieldObserver extends Observer:
 			[q.with_all([C_TestA]).on_added(), _on_non_yield, false],
 		]
 
-	func _on_yield(_event, _entity, _payload):     yield_count += 1
-	func _on_non_yield(_event, _entity, _payload): non_yield_count += 1
+	func _on_yield(_event, _entity, _payload):
+		yield_count += 1
+
+	func _on_non_yield(_event, _entity, _payload):
+		non_yield_count += 1
 
 
 func test_sub_observer_per_tuple_yield_existing_override():
@@ -133,7 +144,8 @@ func test_sub_observer_per_tuple_yield_existing_override():
 	assert_int(obs.non_yield_count).is_equal(0)
 
 
-class InheritYieldObserver extends Observer:
+class InheritYieldObserver:
+	extends Observer
 	var tuple_a_count: int = 0
 	var tuple_b_count: int = 0
 	var tuple_c_count: int = 0
@@ -148,9 +160,14 @@ class InheritYieldObserver extends Observer:
 			[q.with_all([C_TestA]).on_added(), _c, true],
 		]
 
-	func _a(_event, _entity, _payload): tuple_a_count += 1
-	func _b(_event, _entity, _payload): tuple_b_count += 1
-	func _c(_event, _entity, _payload): tuple_c_count += 1
+	func _a(_event, _entity, _payload):
+		tuple_a_count += 1
+
+	func _b(_event, _entity, _payload):
+		tuple_b_count += 1
+
+	func _c(_event, _entity, _payload):
+		tuple_c_count += 1
 
 
 func test_sub_observer_yield_existing_inherits_parent_true():

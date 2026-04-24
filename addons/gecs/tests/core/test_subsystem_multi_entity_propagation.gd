@@ -1,5 +1,4 @@
 extends GdUnitTestSuite
-
 ## Test suite for multi-entity subsystem propagation (projectile scenario)
 ## Tests that when subsystem A adds components to MULTIPLE entities,
 ## subsystem B sees ALL of them in the same frame
@@ -335,8 +334,10 @@ func test_projectile_mixed_archetypes():
 ## TEST HELPER SYSTEMS
 ## ===============================
 
+
 ## Simulates the ProjectileSystem: travelling_subsys adds collision, collision_subsys processes
-class ProjectileCollisionSystem extends System:
+class ProjectileCollisionSystem:
+	extends System
 	var travelling_count = 0
 	var collisions_added = 0
 	var collision_count = 0
@@ -346,7 +347,10 @@ class ProjectileCollisionSystem extends System:
 			# Travelling subsystem: entities with A+B (no C yet)
 			[ECS.world.query.with_all([C_OrderTestA, C_OrderTestB]), travelling_subsys],
 			# Collision subsystem: entities with A+B+C
-			[ECS.world.query.with_all([C_OrderTestA, C_OrderTestB, C_OrderTestC]), collision_subsys]
+			[
+				ECS.world.query.with_all([C_OrderTestA, C_OrderTestB, C_OrderTestC]),
+				collision_subsys
+			],
 		]
 
 	func travelling_subsys(entities: Array[Entity], components: Array, delta: float):
@@ -366,7 +370,8 @@ class ProjectileCollisionSystem extends System:
 
 
 ## System where only SOME entities collide
-class ProjectilePartialCollisionSystem extends System:
+class ProjectilePartialCollisionSystem:
+	extends System
 	var travelling_count = 0
 	var collisions_added = 0
 	var collision_count = 0
@@ -374,7 +379,10 @@ class ProjectilePartialCollisionSystem extends System:
 	func sub_systems() -> Array[Array]:
 		return [
 			[ECS.world.query.with_all([C_OrderTestA, C_OrderTestB]), travelling_subsys],
-			[ECS.world.query.with_all([C_OrderTestA, C_OrderTestB, C_OrderTestC]), collision_subsys]
+			[
+				ECS.world.query.with_all([C_OrderTestA, C_OrderTestB, C_OrderTestC]),
+				collision_subsys
+			],
 		]
 
 	func travelling_subsys(entities: Array[Entity], components: Array, delta: float):
@@ -394,7 +402,8 @@ class ProjectilePartialCollisionSystem extends System:
 
 
 ## System that removes entities after collision handling
-class ProjectileCollisionRemovalSystem extends System:
+class ProjectileCollisionRemovalSystem:
+	extends System
 	var travelling_count = 0
 	var collision_count = 0
 	var entities_removed = []
@@ -402,7 +411,10 @@ class ProjectileCollisionRemovalSystem extends System:
 	func sub_systems() -> Array[Array]:
 		return [
 			[ECS.world.query.with_all([C_OrderTestA, C_OrderTestB]), travelling_subsys],
-			[ECS.world.query.with_all([C_OrderTestA, C_OrderTestB, C_OrderTestC]), collision_subsys]
+			[
+				ECS.world.query.with_all([C_OrderTestA, C_OrderTestB, C_OrderTestC]),
+				collision_subsys
+			],
 		]
 
 	func travelling_subsys(entities: Array[Entity], components: Array, delta: float):
@@ -422,7 +434,8 @@ class ProjectileCollisionRemovalSystem extends System:
 
 
 ## System that exactly mirrors your ProjectileSystem structure
-class ExactProjectileSystem extends System:
+class ExactProjectileSystem:
+	extends System
 	var travelling_count = 0
 	var collision_count = 0
 
@@ -431,7 +444,10 @@ class ExactProjectileSystem extends System:
 			# IMPORTANT: Travelling MUST run first to add collision component
 			# Then collision handler can see all entities with collision
 			[ECS.world.query.with_all([C_OrderTestA, C_OrderTestB]), travelling_subsys],
-			[ECS.world.query.with_all([C_OrderTestA, C_OrderTestB, C_OrderTestC]), projectile_collision_subsys]
+			[
+				ECS.world.query.with_all([C_OrderTestA, C_OrderTestB, C_OrderTestC]),
+				projectile_collision_subsys
+			],
 		]
 
 	func travelling_subsys(entities: Array[Entity], components: Array, delta: float):

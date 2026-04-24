@@ -1,16 +1,19 @@
 class_name S_TestOrderD
 extends System
 
-const NAME = 'S_TestOrderD'
+const NAME = "S_TestOrderD"
+
 
 func deps():
 	return {
-		Runs.After: [ECS.wildcard], # Run after all other systems
+		Runs.After: [ECS.wildcard],  # Run after all other systems
 		Runs.Before: [],
 	}
 
+
 func query():
 	return ECS.world.query.with_all([C_TestOrderComponent])
+
 
 func process(entities: Array[Entity], components: Array, delta: float):
 	for entity in entities:

@@ -4,7 +4,7 @@ extends System
 
 func deps():
 	return {
-		Runs.After: [ECS.wildcard], # Runs after all other systems
+		Runs.After: [ECS.wildcard],  # Runs after all other systems
 		# If we exclude Rubs.Before it will be ignored
 		# Runs.Before: [], # We could also set it to an empty array
 	}

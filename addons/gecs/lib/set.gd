@@ -40,6 +40,7 @@ func _init(data = null) -> void:
 			for key in data.keys():
 				_data[key] = true
 
+
 #region Basic Set Operations
 
 
@@ -132,6 +133,7 @@ func is_empty() -> bool:
 func values() -> Array:
 	return _data.keys()
 
+
 #endregion
 
 #region Set Algebra Operations
@@ -171,7 +173,7 @@ func union(other: Set) -> Set:
 func intersect(other: Set) -> Set:
 	# Optimization: iterate over smaller set for better performance
 	if other.size() < _data.size():
-		return other.intersect(self )
+		return other.intersect(self)
 
 	var result = Set.new()
 	for key in _data.keys():
@@ -223,6 +225,7 @@ func symmetric_difference(other: Set) -> Set:
 			result._data[key] = true
 	return result
 
+
 #endregion
 
 #region Set Relationship Testing
@@ -259,7 +262,7 @@ func is_subset(other: Set) -> bool:
 ##     print(large_set.is_superset(small_set))  # true
 ## [/codeblock]
 func is_superset(other: Set) -> bool:
-	return other.is_subset(self )
+	return other.is_subset(self)
 
 
 ## Tests whether this set contains exactly the same elements as another set (A = B).
@@ -280,6 +283,7 @@ func is_equal(other) -> bool:
 	if _data.size() != other._data.size():
 		return false
 	return self.is_subset(other)
+
 
 #endregion
 

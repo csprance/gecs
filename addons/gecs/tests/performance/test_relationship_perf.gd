@@ -49,14 +49,16 @@ func _setup_relationship_web(count: int) -> Array:
 ## freshly-allocated relationship pattern each call (the pre-optimization
 ## pattern — allocates Relationship + Component every call).
 func test_get_relationships_per_call_probe(
-	scale: int, test_parameters := [[100], [1000]]
+	scale: int,
+	test_parameters := [[100], [1000]],
 ) -> void:
 	var entities := _setup_relationship_web(scale)
 
-	var time_ms := PerfHelpers.time_it(func():
-		for e in entities:
-			var probe := Relationship.new(C_TestA.new(), null)
-			var _rels: Array = e.get_relationships(probe)
+	var time_ms := PerfHelpers.time_it(
+		func():
+			for e in entities:
+				var probe := Relationship.new(C_TestA.new(), null)
+				var _rels: Array = e.get_relationships(probe)
 	)
 	PerfHelpers.record_result("relationship_get_relationships_per_call", scale, time_ms)
 
@@ -65,13 +67,15 @@ func test_get_relationships_per_call_probe(
 ## and reused across all get_relationships calls (the post-optimization
 ## approach used in example_sheep_herding/lib/flocking.gd as R_AnyFlockmate).
 func test_get_relationships_cached_probe(
-	scale: int, test_parameters := [[100], [1000]]
+	scale: int,
+	test_parameters := [[100], [1000]],
 ) -> void:
 	var entities := _setup_relationship_web(scale)
 
 	var probe := Relationship.new(C_TestA.new(), null)
-	var time_ms := PerfHelpers.time_it(func():
-		for e in entities:
-			var _rels: Array = e.get_relationships(probe)
+	var time_ms := PerfHelpers.time_it(
+		func():
+			for e in entities:
+				var _rels: Array = e.get_relationships(probe)
 	)
 	PerfHelpers.record_result("relationship_get_relationships_cached", scale, time_ms)

@@ -1,5 +1,4 @@
 extends GdUnitTestSuite
-
 ## Test suite for NetworkSession host/join/end_session API.
 ## Covers the 9 behavioral contracts from 07-02-PLAN.md (Plan 02)
 ## and the 9 ECS event component contracts from 07-03-PLAN.md (Plan 03).
@@ -38,7 +37,6 @@ class MockTransport:
 # ============================================================================
 # SETUP / TEARDOWN
 # ============================================================================
-
 
 var session: NetworkSession
 var mock_transport: MockTransport

@@ -1,9 +1,10 @@
 extends GdUnitTestSuite
-
 ## Test suite for SyncReconciliationHandler (ADV-02).
 ## Plan 02: RED stubs replaced with real assertions.
 
-const SyncReconciliationHandler = preload("res://addons/gecs/network/sync_reconciliation_handler.gd")
+const SyncReconciliationHandler = preload(
+	"res://addons/gecs/network/sync_reconciliation_handler.gd"
+)
 
 # ============================================================================
 # MOCK OBJECTS
@@ -45,7 +46,7 @@ class MockSpawnManager:
 			"components": {},
 			"session_id": 42,
 			"relationships": [],
-			"peer_id": net_id.peer_id if net_id else 0
+			"peer_id": net_id.peer_id if net_id else 0,
 		}
 
 
@@ -176,13 +177,14 @@ func test_handle_full_state_applies_component_data() -> void:
 	mock_ns.net_adapter._my_peer_id = 1
 
 	var payload = {
-		"entities": [
+		"entities":
+		[
 			{
 				"id": entity.id,
-				"components": {"MockComponent": {"value": 99}}
-			}
+				"components": {"MockComponent": {"value": 99}},
+			},
 		],
-		"session_id": 42
+		"session_id": 42,
 	}
 	handler.handle_sync_full_state(payload)
 
@@ -200,13 +202,14 @@ func test_handle_full_state_skips_local_entities() -> void:
 	mock_ns.net_adapter._my_peer_id = 1
 
 	var payload = {
-		"entities": [
+		"entities":
+		[
 			{
 				"id": entity.id,
-				"components": {"MockComponent": {"value": 99}}
-			}
+				"components": {"MockComponent": {"value": 99}},
+			},
 		],
-		"session_id": 42
+		"session_id": 42,
 	}
 	handler.handle_sync_full_state(payload)
 
@@ -228,7 +231,7 @@ func test_handle_full_state_removes_ghost_entities() -> void:
 	# Payload with empty entities — ghost not mentioned = should be removed
 	var payload = {
 		"entities": [],
-		"session_id": 42
+		"session_id": 42,
 	}
 	handler.handle_sync_full_state(payload)
 
@@ -241,6 +244,9 @@ func test_reconciliation_interval_project_setting() -> void:
 		ProjectSettings.set_setting("gecs/network/sync/reconciliation_interval", 30.0)
 	ProjectSettings.set_initial_value("gecs/network/sync/reconciliation_interval", 30.0)
 
-	assert_float(
-		ProjectSettings.get_setting("gecs/network/sync/reconciliation_interval", 0.0)
-	).is_equal(30.0)
+	(
+		assert_float(
+			ProjectSettings.get_setting("gecs/network/sync/reconciliation_interval", 0.0),
+		)
+		.is_equal(30.0)
+	)

@@ -1,6 +1,5 @@
 extends GdUnitTestSuite
 
-
 var testSystemA: TestASystem
 var testSystemB: TestBSystem
 var testSystemC: TestCSystem
@@ -30,7 +29,7 @@ func test_topological_sort():
 			testSystemD,
 			testSystemA,
 			testSystemC,
-		]
+		],
 	}
 
 	var expected_sorted_systems = {
@@ -47,7 +46,7 @@ func test_topological_sort():
 			testSystemB,
 			testSystemC,
 			testSystemD,
-		]
+		],
 	}
 
 	# Sorts the dict in place

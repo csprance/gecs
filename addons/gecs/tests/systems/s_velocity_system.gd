@@ -4,8 +4,10 @@ extends System
 
 var process_count: int = 0
 
+
 func query():
 	return ECS.world.query.with_all([C_TestPosition, C_TestVelocity])
+
 
 func process(entities: Array[Entity], components: Array, delta: float):
 	for entity in entities:
@@ -16,6 +18,7 @@ func process(entities: Array[Entity], components: Array, delta: float):
 		# Update position based on velocity
 		# Note: Direct assignment without using setter to avoid triggering observers
 		pos.position = pos.position + vel.velocity * delta
+
 
 func reset_count():
 	process_count = 0

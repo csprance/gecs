@@ -2,7 +2,6 @@
 class_name PerformanceTestSystem
 extends System
 
-
 var process_count: int = 0
 
 
@@ -17,8 +16,8 @@ func process(entities: Array[Entity], components: Array, delta: float):
 		var component = entity.get_component(C_TestA)
 		if component:
 			# Access component data (simulates typical system work)
-			var _value = component.value # Read property directly, not via reflection
-	
-	
+			var _value = component.value  # Read property directly, not via reflection
+
+
 func reset_count():
 	process_count = 0

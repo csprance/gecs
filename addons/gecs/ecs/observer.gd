@@ -44,19 +44,19 @@ extends Node
 ## framework derives bit flags internally (via [code]1 << event[/code]) for the
 ## [member QueryBuilder._observer_events_mask] storage.
 enum Event {
-	ADDED = 0,                  ## A watched component was added to a matching entity.
-	REMOVED = 1,                ## A watched component was removed from a matching entity.
-	CHANGED = 2,                ## A watched property changed on a watched component.
-	MATCH = 3,                  ## Monitor: entity newly satisfies the query.
-	UNMATCH = 4,                ## Monitor: entity no longer satisfies the query.
-	RELATIONSHIP_ADDED = 5,     ## A relationship was added to a matching entity.
-	RELATIONSHIP_REMOVED = 6,   ## A relationship was removed from a matching entity.
+	ADDED = 0,  ## A watched component was added to a matching entity.
+	REMOVED = 1,  ## A watched component was removed from a matching entity.
+	CHANGED = 2,  ## A watched property changed on a watched component.
+	MATCH = 3,  ## Monitor: entity newly satisfies the query.
+	UNMATCH = 4,  ## Monitor: entity no longer satisfies the query.
+	RELATIONSHIP_ADDED = 5,  ## A relationship was added to a matching entity.
+	RELATIONSHIP_REMOVED = 6,  ## A relationship was removed from a matching entity.
 }
 
 ## Controls when the observer's [member cmd] [CommandBuffer] executes queued structural changes.
 enum FlushMode {
-	PER_CALLBACK,    ## Flush after every [method each] invocation (default, safest).
-	MANUAL,          ## Flush only when [method World.flush_command_buffers] is called explicitly.
+	PER_CALLBACK,  ## Flush after every [method each] invocation (default, safest).
+	MANUAL,  ## Flush only when [method World.flush_command_buffers] is called explicitly.
 }
 #endregion Enums
 

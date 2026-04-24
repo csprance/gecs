@@ -2,7 +2,6 @@
 ## (query() + fluent on_* + each()).
 extends GdUnitTestSuite
 
-
 var runner: GdUnitSceneRunner
 var world: World
 
@@ -17,7 +16,8 @@ func after_test():
 	world.purge(false)
 
 
-class AddedObserver extends Observer:
+class AddedObserver:
+	extends Observer
 	var added_count: int = 0
 	var last_entity: Entity
 	var last_payload: Resource
@@ -32,7 +32,8 @@ class AddedObserver extends Observer:
 			last_payload = payload
 
 
-class RemovedObserver extends Observer:
+class RemovedObserver:
+	extends Observer
 	var removed_count: int = 0
 	var last_component: Resource
 
@@ -45,7 +46,8 @@ class RemovedObserver extends Observer:
 			last_component = payload
 
 
-class MultiEventObserver extends Observer:
+class MultiEventObserver:
+	extends Observer
 	var added_count: int = 0
 	var removed_count: int = 0
 	var changed_count: int = 0
@@ -55,12 +57,16 @@ class MultiEventObserver extends Observer:
 
 	func each(event: Variant, entity: Entity, payload: Variant = null) -> void:
 		match event:
-			Observer.Event.ADDED:   added_count += 1
-			Observer.Event.REMOVED: removed_count += 1
-			Observer.Event.CHANGED: changed_count += 1
+			Observer.Event.ADDED:
+				added_count += 1
+			Observer.Event.REMOVED:
+				removed_count += 1
+			Observer.Event.CHANGED:
+				changed_count += 1
 
 
-class FilteredObserver extends Observer:
+class FilteredObserver:
+	extends Observer
 	## Observer that fires only for entities that ALSO have C_TestB.
 	var added_count: int = 0
 
@@ -186,8 +192,10 @@ func test_setup_called_after_registration():
 	assert_object(obs.q).is_not_null()
 
 
-class SetupTrackingObserver extends Observer:
+class SetupTrackingObserver:
+	extends Observer
 	var setup_called: bool = false
+
 	func setup() -> void:
 		setup_called = true
 
@@ -198,7 +206,8 @@ class SetupTrackingObserver extends Observer:
 		pass
 
 
-class HealthPropFilteredObserver extends Observer:
+class HealthPropFilteredObserver:
+	extends Observer
 	var health_changes: int = 0
 	var max_health_changes: int = 0
 
@@ -236,7 +245,8 @@ func test_on_changed_filter_limits_dispatch_to_named_property():
 	assert_int(obs.health_changes).is_equal(2)
 
 
-class RemovedWithAllObserver extends Observer:
+class RemovedWithAllObserver:
+	extends Observer
 	var removed_count: int = 0
 
 	func query() -> QueryBuilder:
@@ -275,7 +285,8 @@ func test_removed_fires_for_entities_that_matched_before_removal():
 	assert_int(obs.removed_count).is_equal(1)
 
 
-class ReentrantRegisterObserver extends Observer:
+class ReentrantRegisterObserver:
+	extends Observer
 	var spawned_observer: AddedObserver
 	var _world_ref: World
 
@@ -292,7 +303,8 @@ class ReentrantRegisterObserver extends Observer:
 				_world_ref.add_observer(spawned_observer)
 
 
-class YieldExistingObserver extends Observer:
+class YieldExistingObserver:
+	extends Observer
 	var added_count: int = 0
 
 	func _init():
@@ -354,7 +366,9 @@ func test_reentrant_add_observer_during_callback_does_not_fire_new_observer():
 # property_changed connections) that survive the API rewrite.
 # ─────────────────────────────────────────────────────────────────────────────
 
-class InstanceCapturingObserver extends Observer:
+
+class InstanceCapturingObserver:
+	extends Observer
 	var removed_count: int = 0
 	var changed_count: int = 0
 	var last_removed_component: Resource = null
@@ -405,8 +419,11 @@ func test_obs02_removed_component_instance_correct():
 
 	assert_int(observer.removed_count).is_equal(1)
 	assert_object(observer.last_removed_component).is_not_null()
-	assert_str(observer.last_removed_component.get_script().resource_path).is_equal(
-		C_ObserverTest.resource_path
+	(
+		assert_str(observer.last_removed_component.get_script().resource_path)
+		.is_equal(
+			C_ObserverTest.resource_path,
+		)
 	)
 	assert_int(observer.last_removed_component.value).is_equal(42)
 
@@ -452,7 +469,9 @@ func test_obs_multiple_observers_both_notified():
 
 ## Re-entrancy guard: an observer that removes ANOTHER component as a side effect
 ## of REMOVED must not cause a double-notification on the second observer.
-class CleanupSideEffectObserver extends Observer:
+class CleanupSideEffectObserver:
+	extends Observer
+
 	func query() -> QueryBuilder:
 		return q.with_all([C_ObserverTest]).on_removed()
 
@@ -462,7 +481,8 @@ class CleanupSideEffectObserver extends Observer:
 				entity.remove_component(C_ObserverHealth)
 
 
-class HealthRemovalCounter extends Observer:
+class HealthRemovalCounter:
+	extends Observer
 	var health_removed_count: int = 0
 
 	func query() -> QueryBuilder:
@@ -503,7 +523,9 @@ func test_obs_reentrancy_guard_prevents_double_notify():
 # group, enabled/disabled, property-query-on-removal.
 # ─────────────────────────────────────────────────────────────────────────────
 
-class GroupFilteredObserver extends Observer:
+
+class GroupFilteredObserver:
+	extends Observer
 	var added_count: int = 0
 
 	func query() -> QueryBuilder:
@@ -532,7 +554,8 @@ func test_with_group_filter_is_enforced_on_observer_dispatch():
 	assert_int(obs.added_count).is_equal(1)
 
 
-class PropertyQueryRemovedObserver extends Observer:
+class PropertyQueryRemovedObserver:
+	extends Observer
 	var removed_count: int = 0
 
 	func query() -> QueryBuilder:
@@ -564,7 +587,8 @@ func test_on_removed_property_query_evaluated_before_removal():
 	assert_int(obs.removed_count).is_equal(1)
 
 
-class InactiveMonitorObserver extends Observer:
+class InactiveMonitorObserver:
+	extends Observer
 	var matched: Array[Entity] = []
 	var unmatched: Array[Entity] = []
 
@@ -573,8 +597,10 @@ class InactiveMonitorObserver extends Observer:
 
 	func each(event: Variant, entity: Entity, _payload: Variant = null) -> void:
 		match event:
-			Observer.Event.MATCH:   matched.append(entity)
-			Observer.Event.UNMATCH: unmatched.append(entity)
+			Observer.Event.MATCH:
+				matched.append(entity)
+			Observer.Event.UNMATCH:
+				unmatched.append(entity)
 
 
 func test_monitor_membership_is_seeded_even_when_inactive_at_registration():
@@ -623,7 +649,8 @@ func test_yield_existing_snapshots_entities_array_against_mutating_callback():
 	assert_bool(is_instance_valid(e2) and not e2.is_queued_for_deletion()).is_false()
 
 
-class MutatingYieldObserver extends Observer:
+class MutatingYieldObserver:
+	extends Observer
 	var added_count: int = 0
 	var target_to_remove: Entity
 	var trigger_on: Entity
@@ -638,7 +665,8 @@ class MutatingYieldObserver extends Observer:
 				_world.remove_entity(target_to_remove)
 
 
-class SelfRemovingObserver extends Observer:
+class SelfRemovingObserver:
+	extends Observer
 	var added_count: int = 0
 
 	func query() -> QueryBuilder:

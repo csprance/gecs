@@ -1,5 +1,4 @@
 extends GdUnitTestSuite
-
 ## Test suite for SyncSender (SYNC-01).
 ## Tests verify the behavioral contract: timer accumulator, priority dispatch,
 ## RPC routing (unreliable vs reliable), and relay queue.
@@ -90,7 +89,6 @@ class MockCompLow:
 # ============================================================================
 # SETUP / TEARDOWN
 # ============================================================================
-
 
 var world: World
 var mock_ns: MockNetworkSync

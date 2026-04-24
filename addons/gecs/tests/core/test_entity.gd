@@ -4,8 +4,6 @@ var runner: GdUnitSceneRunner
 var world: World
 
 
-
-
 func before():
 	runner = scene_runner("res://addons/gecs/tests/test_scene.tscn")
 	world = runner.get_property("world")
@@ -30,12 +28,14 @@ func test_add_and_get_component():
 	var retrieved_component = entity.get_component(C_TestA)
 	assert_str(type_string(typeof(retrieved_component))).is_equal(type_string(typeof(comp)))
 
+
 # Components need default values on init or they will error
 # FIXME: How can we catch this in the code?
 func test_add_entity_with_component_with_no_defaults_in_init():
 	var entity = auto_free(Entity.new())
 	# this line will lead to crash (the _init parameters has no default value)
 	assert_error(func(): entity.add_component(C_TestH.new(57)))
+
 
 func test_add_multiple_components_and_has():
 	var entity = auto_free(TestB.new())
@@ -71,19 +71,32 @@ func test_add_get_has_relationship():
 	# Test retrieving the relationship
 	# with the actual relationship
 	var inst_retrieved_relationship = entityb.get_relationship(r_testa_entitya)
-	assert_str(type_string(typeof(inst_retrieved_relationship))).is_equal(
-		type_string(typeof(r_testa_entitya))
+	(
+		assert_str(type_string(typeof(inst_retrieved_relationship)))
+		.is_equal(
+			type_string(typeof(r_testa_entitya)),
+		)
 	)
 	# with a matching relationship
-	var class_retrieved_relationship = entityb.get_relationship(
-		Relationship.new(C_TestA.new(), entitya)
+	var class_retrieved_relationship = (
+		entityb
+		.get_relationship(
+			Relationship.new(C_TestA.new(), entitya),
+		)
 	)
-	assert_str(type_string(typeof(class_retrieved_relationship))).is_equal(
-		type_string(typeof(r_testa_entitya))
+	(
+		assert_str(type_string(typeof(class_retrieved_relationship)))
+		.is_equal(
+			type_string(typeof(r_testa_entitya)),
+		)
 	)
-	assert_str(type_string(typeof(class_retrieved_relationship))).is_equal(
-		type_string(typeof(Relationship.new(C_TestA.new(), entitya)))
+	(
+		assert_str(type_string(typeof(class_retrieved_relationship)))
+		.is_equal(
+			type_string(typeof(Relationship.new(C_TestA.new(), entitya))),
+		)
 	)
+
 
 func test_add_and_remove_component():
 	var entity = auto_free(TestB.new())
@@ -91,7 +104,7 @@ func test_add_and_remove_component():
 		var comp = C_TestB.new()
 		entity.add_component(comp)
 		entity.remove_component(C_TestB)
-		print('_component_key_cache size=', entity._component_key_cache.size())
+		print("_component_key_cache size=", entity._component_key_cache.size())
 
 	# Test memory leak
 	assert_int(entity._component_key_cache.size()).is_equal(0)

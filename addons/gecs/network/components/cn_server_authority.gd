@@ -1,6 +1,5 @@
 class_name CN_ServerAuthority
 extends Component
-
 ## Marker component indicating this entity should only be processed by the server.
 ##
 ## Automatically assigned by NetworkSync to server-owned entities (peer_id=0).

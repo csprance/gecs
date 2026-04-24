@@ -1,6 +1,5 @@
 class_name TestComponentLifecycle
 extends GdUnitTestSuite
-
 ## Regression tests for COMP-01 and COMP-03: non-@export property preservation.
 ##
 ## COMP-01: entity.add_entity() path — world._initialize() calls res.duplicate(true)
@@ -9,7 +8,6 @@ extends GdUnitTestSuite
 ##
 ## These tests are intentionally RED on the unpatched codebase.
 ## They turn GREEN when Plan 04-02 replaces duplicate(true) with a shallow copy.
-
 
 var runner: GdUnitSceneRunner
 var world: World
@@ -35,8 +33,8 @@ func test_non_export_property_preserved_through_add_entity():
 	world.add_entity(entity)
 
 	var stored = entity.get_component(C_LifecycleTest)
-	assert_int(stored.exported_value).is_equal(10)       # passes — duplicate(true) copies @export
-	assert_int(stored.non_exported_value).is_equal(42)   # RED: fails — duplicate(true) resets to 0
+	assert_int(stored.exported_value).is_equal(10)  # passes — duplicate(true) copies @export
+	assert_int(stored.non_exported_value).is_equal(42)  # RED: fails — duplicate(true) resets to 0
 
 
 ## COMP-03 regression: non-@export value must survive world.add_entities() batch path.
@@ -48,5 +46,5 @@ func test_non_export_property_preserved_through_add_entities():
 	world.add_entities([entity])
 
 	var stored = entity.get_component(C_LifecycleTest)
-	assert_int(stored.exported_value).is_equal(10)       # passes — duplicate(true) copies @export
-	assert_int(stored.non_exported_value).is_equal(42)   # RED: fails — duplicate(true) resets to 0
+	assert_int(stored.exported_value).is_equal(10)  # passes — duplicate(true) copies @export
+	assert_int(stored.non_exported_value).is_equal(42)  # RED: fails — duplicate(true) resets to 0

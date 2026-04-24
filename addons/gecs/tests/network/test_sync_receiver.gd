@@ -1,5 +1,4 @@
 extends GdUnitTestSuite
-
 ## Test suite for SyncReceiver (SYNC-01, SYNC-02, SYNC-03).
 ## Tests verify: authority validation, CN_NetworkIdentity strip,
 ## _applying_network_data guard, relay dispatch, and spawn-only rejection.
@@ -77,7 +76,6 @@ class MockComp:
 # ============================================================================
 # SETUP / TEARDOWN
 # ============================================================================
-
 
 var world: World
 var mock_ns: MockNetworkSync
@@ -179,10 +177,11 @@ func test_server_strips_cn_network_identity():
 	# Use actual resolved type name so _find_component_by_type() can match it
 	var comp_key = _comp_type_name(comp)
 	var batch = {
-		entity.id: {
+		entity.id:
+		{
 			"CN_NetworkIdentity": {"peer_id": 999},  # Spoof attempt — must be stripped
-			comp_key: {"value": 42}
-		}
+			comp_key: {"value": 42},
+		},
 	}
 	var receiver = SyncReceiver.new(mock_ns)
 	receiver.handle_apply_sync_data(batch)

@@ -40,49 +40,57 @@ func setup_diverse_entities(count: int) -> void:
 func test_query_with_all(scale: int, test_parameters := [[100], [1000], [10000]]):
 	setup_diverse_entities(scale)
 
-	var time_ms = PerfHelpers.time_it(func():
-		var entities = world.query.with_all([C_TestA]).execute()
+	var time_ms = PerfHelpers.time_it(
+		func(): var entities = world.query.with_all([C_TestA]).execute()
 	)
 
 	PerfHelpers.record_result("query_with_all", scale, time_ms)
 	world.purge(false)
 
+
 ## Test query with_any performance
 func test_query_with_any(scale: int, test_parameters := [[100], [1000], [10000]]):
 	setup_diverse_entities(scale)
 
-	var time_ms = PerfHelpers.time_it(func():
-		var entities = world.query.with_any([C_TestA, C_TestB, C_TestC]).execute()
+	var time_ms = PerfHelpers.time_it(
+		func(): var entities = world.query.with_any([C_TestA, C_TestB, C_TestC]).execute()
 	)
 
 	PerfHelpers.record_result("query_with_any", scale, time_ms)
 	world.purge(false)
 
+
 ## Test query with_none performance
 func test_query_with_none(scale: int, test_parameters := [[100], [1000], [10000]]):
 	setup_diverse_entities(scale)
 
-	var time_ms = PerfHelpers.time_it(func():
-		var entities = world.query.with_none([C_TestD]).execute()
+	var time_ms = PerfHelpers.time_it(
+		func(): var entities = world.query.with_none([C_TestD]).execute()
 	)
 
 	PerfHelpers.record_result("query_with_none", scale, time_ms)
 	world.purge(false)
 
+
 ## Test complex combined query
 func test_query_complex(scale: int, test_parameters := [[100], [1000], [10000]]):
 	setup_diverse_entities(scale)
 
-	var time_ms = PerfHelpers.time_it(func():
-		var entities = world.query\
-			.with_all([C_TestA])\
-			.with_any([C_TestB, C_TestC])\
-			.with_none([C_TestD])\
-			.execute()
+	var time_ms = PerfHelpers.time_it(
+		func():
+			var entities = (
+				world
+				.query
+				.with_all([C_TestA])
+				.with_any([C_TestB, C_TestC])
+				.with_none([C_TestD])
+				.execute()
+			)
 	)
 
 	PerfHelpers.record_result("query_complex", scale, time_ms)
 	world.purge(false)
+
 
 ## Test query with component query (property filtering)
 func test_query_with_component_query(scale: int, test_parameters := [[100], [1000], [10000]]):
@@ -94,49 +102,57 @@ func test_query_with_component_query(scale: int, test_parameters := [[100], [100
 		entity.add_component(comp)
 		world.add_entity(entity, null, false)
 
-	var time_ms = PerfHelpers.time_it(func():
-		var entities = world.query\
-			.with_all([{C_TestA: {'value': {"_gte": scale / 2}}}])\
-			.execute()
+	var time_ms = PerfHelpers.time_it(
+		func():
+			var entities = (
+				world.query.with_all([{C_TestA: {"value": {"_gte": scale / 2}}}]).execute()
+			)
 	)
 
 	PerfHelpers.record_result("query_with_component_query", scale, time_ms)
 	world.purge(false)
+
 
 ## Test query caching performance
 func test_query_caching(scale: int, test_parameters := [[100], [1000], [10000]]):
 	setup_diverse_entities(scale)
 
 	# Execute same query multiple times to test cache
-	var time_ms = PerfHelpers.time_it(func():
-		for i in 100:
-			var entities = world.query.with_all([C_TestA, C_TestB]).execute()
+	var time_ms = PerfHelpers.time_it(
+		func():
+			for i in 100:
+				var entities = world.query.with_all([C_TestA, C_TestB]).execute()
 	)
 
 	PerfHelpers.record_result("query_caching", scale, time_ms)
 	world.purge(false)
 
+
 ## Test query on empty world
 func test_query_empty_world(scale: int, test_parameters := [[100], [1000], [10000]]):
 	# Don't setup any entities - testing empty world query
 
-	var time_ms = PerfHelpers.time_it(func():
-		for i in scale:
-			var entities = world.query.with_all([C_TestA]).execute()
+	var time_ms = PerfHelpers.time_it(
+		func():
+			for i in scale:
+				var entities = world.query.with_all([C_TestA]).execute()
 	)
 
 	PerfHelpers.record_result("query_empty_world", scale, time_ms)
 	world.purge(false)
 
+
 ## Test that disabled entities don't contribute to query time
 ## Creates many disabled entities with only a few enabled ones
 ## Query time should be similar to querying with only the enabled count
-func test_query_disabled_entities_no_impact(scale: int, test_parameters := [[100], [1000], [10000]]):
+func test_query_disabled_entities_no_impact(
+	scale: int, test_parameters := [[100], [1000], [10000]]
+):
 	# Create mostly disabled entities
 	var enabled_count = 10  # Always use 10 enabled entities regardless of scale
 
 	# First, create disabled entities (scale - enabled_count)
-	for i in (scale - enabled_count):
+	for i in scale - enabled_count:
 		var entity = Entity.new()
 		entity.name = "DisabledEntity_%d" % i
 		entity.enabled = false
@@ -152,12 +168,13 @@ func test_query_disabled_entities_no_impact(scale: int, test_parameters := [[100
 		world.add_entity(entity, null, false)
 
 	# Time querying only enabled entities
-	var time_ms = PerfHelpers.time_it(func():
-		var entities = world.query.with_all([C_TestA]).enabled().execute()
+	var time_ms = PerfHelpers.time_it(
+		func(): var entities = world.query.with_all([C_TestA]).enabled().execute()
 	)
 
 	PerfHelpers.record_result("query_disabled_entities_no_impact", scale, time_ms)
 	world.purge(false)
+
 
 ## Baseline test: query with only enabled entities (no disabled ones)
 ## This should have similar performance to test_query_disabled_entities_no_impact
@@ -173,12 +190,13 @@ func test_query_only_enabled_baseline(scale: int, test_parameters := [[100], [10
 		world.add_entity(entity, null, false)
 
 	# Time querying enabled entities
-	var time_ms = PerfHelpers.time_it(func():
-		var entities = world.query.with_all([C_TestA]).enabled().execute()
+	var time_ms = PerfHelpers.time_it(
+		func(): var entities = world.query.with_all([C_TestA]).enabled().execute()
 	)
 
 	PerfHelpers.record_result("query_only_enabled_baseline", scale, time_ms)
 	world.purge(false)
+
 
 ## Test group query performance using Godot's optimized get_nodes_in_group()
 ## This should be very fast since it uses Godot's native group indexing
@@ -192,12 +210,13 @@ func test_query_with_group(scale: int, test_parameters := [[100], [1000], [10000
 		entity.add_to_group("test_group")
 
 	# Time querying by group
-	var time_ms = PerfHelpers.time_it(func():
-		var entities = world.query.with_group(["test_group"]).execute()
+	var time_ms = PerfHelpers.time_it(
+		func(): var entities = world.query.with_group(["test_group"]).execute()
 	)
 
 	PerfHelpers.record_result("query_with_group", scale, time_ms)
 	world.purge(false)
+
 
 ## Test group query combined with component filtering
 ## This tests the common case of filtering entities by both group and components
@@ -217,12 +236,13 @@ func test_query_group_with_components(scale: int, test_parameters := [[100], [10
 		entity.add_to_group("test_group")
 
 	# Time querying by group + components
-	var time_ms = PerfHelpers.time_it(func():
-		var entities = world.query.with_group(["test_group"]).with_all([C_TestA]).execute()
+	var time_ms = PerfHelpers.time_it(
+		func(): var entities = world.query.with_group(["test_group"]).with_all([C_TestA]).execute()
 	)
 
 	PerfHelpers.record_result("query_group_with_components", scale, time_ms)
 	world.purge(false)
+
 
 ## Test relationship query (exact pair) vs component query — structural parity
 func test_query_with_relationship_exact(scale: int, test_parameters := [[100], [1000], [10000]]):
@@ -238,8 +258,11 @@ func test_query_with_relationship_exact(scale: int, test_parameters := [[100], [
 		entity.add_relationship(Relationship.new(C_TestA.new(), target))
 
 	# Measure structural exact-pair relationship query
-	var rel_time = PerfHelpers.time_it(func():
-		var _result = world.query.with_relationship([Relationship.new(C_TestA.new(), target)]).execute()
+	var rel_time = PerfHelpers.time_it(
+		func():
+			var _result = (
+				world.query.with_relationship([Relationship.new(C_TestA.new(), target)]).execute()
+			)
 	)
 	PerfHelpers.record_result("relationship_query_exact", scale, rel_time)
 
@@ -250,8 +273,8 @@ func test_query_with_relationship_exact(scale: int, test_parameters := [[100], [
 		entity.add_component(C_TestA.new())
 		world.add_entity(entity, null, false)
 
-	var comp_time = PerfHelpers.time_it(func():
-		var _result = world.query.with_all([C_TestA]).execute()
+	var comp_time = PerfHelpers.time_it(
+		func(): var _result = world.query.with_all([C_TestA]).execute()
 	)
 	PerfHelpers.record_result("component_query_for_rel_comparison", scale, comp_time)
 
@@ -271,8 +294,11 @@ func test_query_with_relationship_wildcard(scale: int, test_parameters := [[100]
 		world.add_entity(entity, null, false)
 		entity.add_relationship(Relationship.new(C_TestA.new(), target))
 
-	var time_ms = PerfHelpers.time_it(func():
-		var _result = world.query.with_relationship([Relationship.new(C_TestA.new(), null)]).execute()
+	var time_ms = PerfHelpers.time_it(
+		func():
+			var _result = (
+				world.query.with_relationship([Relationship.new(C_TestA.new(), null)]).execute()
+			)
 	)
 	PerfHelpers.record_result("relationship_query_wildcard", scale, time_ms)
 

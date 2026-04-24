@@ -18,7 +18,8 @@ func after_test():
 
 
 ## New-API observer for C_ObserverTest benchmarks.
-class PerfObserver extends Observer:
+class PerfObserver:
+	extends Observer
 	var added_count: int = 0
 	var removed_count: int = 0
 	var changed_count: int = 0
@@ -28,8 +29,10 @@ class PerfObserver extends Observer:
 
 	func each(event: Variant, _entity: Entity, payload: Variant = null) -> void:
 		match event:
-			Observer.Event.ADDED:   added_count += 1
-			Observer.Event.REMOVED: removed_count += 1
+			Observer.Event.ADDED:
+				added_count += 1
+			Observer.Event.REMOVED:
+				removed_count += 1
 			Observer.Event.CHANGED:
 				changed_count += 1
 				# Simulate some processing
@@ -43,7 +46,8 @@ class PerfObserver extends Observer:
 
 
 ## Observer filtering on both C_ObserverTest + C_ObserverHealth — complex-query benchmark.
-class PerfHealthObserver extends Observer:
+class PerfHealthObserver:
+	extends Observer
 	var health_changed_count: int = 0
 
 	func query() -> QueryBuilder:
@@ -84,10 +88,11 @@ func test_system_continuous_processing(scale: int, test_parameters := [[100], [1
 	var system = S_VelocitySystem.new()
 	world.add_system(system)
 
-	var time_ms = PerfHelpers.time_it(func():
-		# Simulate 60 frames of processing
-		for i in range(60):
-			world.process(0.016)
+	var time_ms = PerfHelpers.time_it(
+		func():
+			# Simulate 60 frames of processing
+			for i in range(60):
+				world.process(0.016)
 	)
 
 	PerfHelpers.record_result("system_continuous_velocity", scale, time_ms)
@@ -101,12 +106,13 @@ func test_observer_component_additions(scale: int, test_parameters := [[100], [1
 	var observer = PerfObserver.new()
 	world.add_observer(observer)
 
-	var time_ms = PerfHelpers.time_it(func():
-		# Add components to entities (observers react to additions)
-		for i in range(scale):
-			var entity = Entity.new()
-			entity.add_component(C_ObserverTest.new(i))
-			world.add_entity(entity, null, false)
+	var time_ms = PerfHelpers.time_it(
+		func():
+			# Add components to entities (observers react to additions)
+			for i in range(scale):
+				var entity = Entity.new()
+				entity.add_component(C_ObserverTest.new(i))
+				world.add_entity(entity, null, false)
 	)
 
 	PerfHelpers.record_result("observer_component_additions", scale, time_ms)
@@ -129,10 +135,11 @@ func test_observer_component_removals(scale: int, test_parameters := [[100], [10
 	# for-loop to skip every other entry.
 	var entities = world.query.with_all([C_ObserverTest]).execute().duplicate()
 
-	var time_ms = PerfHelpers.time_it(func():
-		# Remove components (observers react to removals)
-		for entity in entities:
-			entity.remove_component(C_ObserverTest)
+	var time_ms = PerfHelpers.time_it(
+		func():
+			# Remove components (observers react to removals)
+			for entity in entities:
+				entity.remove_component(C_ObserverTest)
 	)
 
 	PerfHelpers.record_result("observer_component_removals", scale, time_ms)
@@ -152,11 +159,12 @@ func test_observer_property_changes(scale: int, test_parameters := [[100], [1000
 
 	var entities = world.query.with_all([C_ObserverTest]).execute()
 
-	var time_ms = PerfHelpers.time_it(func():
-		# Change properties (observers react to changes)
-		for entity in entities:
-			var comp = entity.get_component(C_ObserverTest)
-			comp.value = comp.value + 1  # Triggers property_changed signal
+	var time_ms = PerfHelpers.time_it(
+		func():
+			# Change properties (observers react to changes)
+			for entity in entities:
+				var comp = entity.get_component(C_ObserverTest)
+				comp.value = comp.value + 1  # Triggers property_changed signal
 	)
 
 	PerfHelpers.record_result("observer_property_changes", scale, time_ms)
@@ -173,9 +181,10 @@ func test_system_batch_property_reads(scale: int, test_parameters := [[100], [10
 	var system = PerformanceTestSystem.new()
 	world.add_system(system)
 
-	var time_ms = PerfHelpers.time_it(func():
-		# Single process call reads all entities
-		world.process(0.016)
+	var time_ms = PerfHelpers.time_it(
+		func():
+			# Single process call reads all entities
+			world.process(0.016)
 	)
 
 	PerfHelpers.record_result("system_batch_property_reads", scale, time_ms)
@@ -194,23 +203,31 @@ func test_observer_frequent_changes(scale: int, test_parameters := [[100], [1000
 
 	var entities = world.query.with_all([C_ObserverTest]).execute()
 
-	var time_ms = PerfHelpers.time_it(func():
-		# Each entity changes multiple times
-		for entity in entities:
-			var comp = entity.get_component(C_ObserverTest)
-			for j in range(10):  # 10 changes per entity
-				comp.value = comp.value + 1
+	var time_ms = PerfHelpers.time_it(
+		func():
+			# Each entity changes multiple times
+			for entity in entities:
+				var comp = entity.get_component(C_ObserverTest)
+				for j in range(10):  # 10 changes per entity
+					comp.value = comp.value + 1
 	)
 
 	PerfHelpers.record_result("observer_frequent_changes", scale, time_ms)
-	prints("Observer detected %d property changes (%d entities × 10 changes)" % [observer.changed_count, scale])
+	prints(
+		(
+			"Observer detected %d property changes (%d entities × 10 changes)"
+			% [observer.changed_count, scale]
+		)
+	)
 	assert_int(observer.changed_count).is_equal(scale * 10)
 	world.purge(false)
 
 
 ## Test system processing the same frequent changes scenario
 ## Compares continuous polling vs reactive observation
-func test_system_simulating_frequent_changes(scale: int, test_parameters := [[100], [1000], [10000]]):
+func test_system_simulating_frequent_changes(
+	scale: int, test_parameters := [[100], [1000], [10000]]
+):
 	setup_observer_test_entities(scale)
 
 	var system = PerformanceTestSystem.new()
@@ -218,16 +235,17 @@ func test_system_simulating_frequent_changes(scale: int, test_parameters := [[10
 
 	var entities = world.query.with_all([C_ObserverTest]).execute()
 
-	var time_ms = PerfHelpers.time_it(func():
-		# Make the changes
-		for entity in entities:
-			var comp = entity.get_component(C_ObserverTest)
-			for j in range(10):
-				# Direct property change without signal
-				comp.value = comp.value + 1
+	var time_ms = PerfHelpers.time_it(
+		func():
+			# Make the changes
+			for entity in entities:
+				var comp = entity.get_component(C_ObserverTest)
+				for j in range(10):
+					# Direct property change without signal
+					comp.value = comp.value + 1
 
-		# System processes once (doesn't know about individual changes)
-		world.process(0.016)
+			# System processes once (doesn't know about individual changes)
+			world.process(0.016)
 	)
 
 	PerfHelpers.record_result("system_simulating_frequent_changes", scale, time_ms)
@@ -237,7 +255,9 @@ func test_system_simulating_frequent_changes(scale: int, test_parameters := [[10
 
 ## Test multiple observers watching the same component
 ## Shows overhead of multiple reactive systems
-func test_multiple_observers_same_component(scale: int, test_parameters := [[100], [1000], [10000]]):
+func test_multiple_observers_same_component(
+	scale: int, test_parameters := [[100], [1000], [10000]]
+):
 	setup_observer_test_entities(scale)
 
 	var observer1 = PerfObserver.new()
@@ -251,11 +271,12 @@ func test_multiple_observers_same_component(scale: int, test_parameters := [[100
 
 	var entities = world.query.with_all([C_ObserverTest]).execute()
 
-	var time_ms = PerfHelpers.time_it(func():
-		# Change properties (all 3 observers react)
-		for entity in entities:
-			var comp = entity.get_component(C_ObserverTest)
-			comp.value = comp.value + 1
+	var time_ms = PerfHelpers.time_it(
+		func():
+			# Change properties (all 3 observers react)
+			for entity in entities:
+				var comp = entity.get_component(C_ObserverTest)
+				comp.value = comp.value + 1
 	)
 
 	PerfHelpers.record_result("multiple_observers_same_component", scale, time_ms)
@@ -284,15 +305,21 @@ func test_observer_with_complex_query(scale: int, test_parameters := [[100], [10
 
 	var entities_matching = world.query.with_all([C_ObserverTest, C_ObserverHealth]).execute()
 
-	var time_ms = PerfHelpers.time_it(func():
-		# Change health on matching entities
-		for entity in entities_matching:
-			var health = entity.get_component(C_ObserverHealth)
-			health.health = health.health - 1
+	var time_ms = PerfHelpers.time_it(
+		func():
+			# Change health on matching entities
+			for entity in entities_matching:
+				var health = entity.get_component(C_ObserverHealth)
+				health.health = health.health - 1
 	)
 
 	PerfHelpers.record_result("observer_complex_query", scale, time_ms)
-	prints("Observer with complex query detected %d changes (out of %d total entities)" % [observer.health_changed_count, scale])
+	prints(
+		(
+			"Observer with complex query detected %d changes (out of %d total entities)"
+			% [observer.health_changed_count, scale]
+		)
+	)
 	world.purge(false)
 
 
@@ -307,12 +334,13 @@ func test_observer_baseline_overhead(scale: int, test_parameters := [[100], [100
 
 	var entities = world.query.with_all([C_ObserverTest]).execute()
 
-	var time_ms = PerfHelpers.time_it(func():
-		# Make changes WITHOUT triggering property_changed signals
-		for entity in entities:
-			var comp = entity.get_component(C_ObserverTest)
-			# Direct property access without signal emission
-			comp.value = comp.value + 1
+	var time_ms = PerfHelpers.time_it(
+		func():
+			# Make changes WITHOUT triggering property_changed signals
+			for entity in entities:
+				var comp = entity.get_component(C_ObserverTest)
+				# Direct property access without signal emission
+				comp.value = comp.value + 1
 	)
 
 	PerfHelpers.record_result("observer_baseline_overhead", scale, time_ms)
@@ -323,7 +351,9 @@ func test_observer_baseline_overhead(scale: int, test_parameters := [[100], [100
 
 ## Test comparison: Observer vs System for sporadic changes
 ## Real-world scenario: only 10% of entities change per frame
-func test_observer_vs_system_sporadic_changes(scale: int, test_parameters := [[100], [1000], [10000]]):
+func test_observer_vs_system_sporadic_changes(
+	scale: int, test_parameters := [[100], [1000], [10000]]
+):
 	setup_observer_test_entities(scale)
 
 	var observer = PerfObserver.new()
@@ -333,13 +363,14 @@ func test_observer_vs_system_sporadic_changes(scale: int, test_parameters := [[1
 	var entities = world.query.with_all([C_ObserverTest]).execute()
 	var changes_per_frame = max(1, scale / 10)  # 10% of entities change
 
-	var time_ms_observer = PerfHelpers.time_it(func():
-		# Simulate 60 frames where only 10% of entities change per frame
-		for frame in range(60):
-			for i in range(changes_per_frame):
-				var entity = entities[i % scale]
-				var comp = entity.get_component(C_ObserverTest)
-				comp.value = comp.value + 1  # Triggers observer
+	var time_ms_observer = PerfHelpers.time_it(
+		func():
+			# Simulate 60 frames where only 10% of entities change per frame
+			for frame in range(60):
+				for i in range(changes_per_frame):
+					var entity = entities[i % scale]
+					var comp = entity.get_component(C_ObserverTest)
+					comp.value = comp.value + 1  # Triggers observer
 	)
 
 	PerfHelpers.record_result("observer_sporadic_changes", scale, time_ms_observer)
@@ -354,19 +385,25 @@ func test_observer_vs_system_sporadic_changes(scale: int, test_parameters := [[1
 
 	entities = world.query.with_all([C_ObserverTest]).execute()
 
-	var time_ms_system = PerfHelpers.time_it(func():
-		# Same scenario but system processes ALL entities every frame
-		for frame in range(60):
-			# Make the same changes
-			for i in range(changes_per_frame):
-				var entity = entities[i % scale]
-				var comp = entity.get_component(C_ObserverTest)
-				comp.value = comp.value + 1
+	var time_ms_system = PerfHelpers.time_it(
+		func():
+			# Same scenario but system processes ALL entities every frame
+			for frame in range(60):
+				# Make the same changes
+				for i in range(changes_per_frame):
+					var entity = entities[i % scale]
+					var comp = entity.get_component(C_ObserverTest)
+					comp.value = comp.value + 1
 
-			# System processes ALL entities every frame
-			world.process(0.016)
+				# System processes ALL entities every frame
+				world.process(0.016)
 	)
 
 	PerfHelpers.record_result("system_sporadic_changes", scale, time_ms_system)
-	prints("System processed %d total entities over 60 frames (even though only 10%% changed)" % system.process_count)
+	prints(
+		(
+			"System processed %d total entities over 60 frames (even though only 10%% changed)"
+			% system.process_count
+		)
+	)
 	world.purge(false)

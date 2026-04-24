@@ -6,7 +6,7 @@
 ## The name of the SystemGroup node will be set to [member System.group] for
 ## all child [System]s.
 @tool
-@icon('res://addons/gecs/assets/system_folder.svg')
+@icon("res://addons/gecs/assets/system_folder.svg")
 class_name SystemGroup
 extends Node
 

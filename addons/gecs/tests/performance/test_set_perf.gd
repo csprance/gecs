@@ -48,9 +48,7 @@ func test_set_intersect(scale: int, test_parameters := [[100], [1000], [10000]])
 	var set1 = Set.new(arrays[0])
 	var set2 = Set.new(arrays[1])
 
-	var time_ms = PerfHelpers.time_it(func():
-		var result = set1.intersect(set2)
-	)
+	var time_ms = PerfHelpers.time_it(func(): var result = set1.intersect(set2))
 
 	PerfHelpers.record_result("set_intersect", scale, time_ms)
 
@@ -61,9 +59,7 @@ func test_set_union(scale: int, test_parameters := [[100], [1000], [10000]]):
 	var set1 = Set.new(arrays[0])
 	var set2 = Set.new(arrays[1])
 
-	var time_ms = PerfHelpers.time_it(func():
-		var result = set1.union(set2)
-	)
+	var time_ms = PerfHelpers.time_it(func(): var result = set1.union(set2))
 
 	PerfHelpers.record_result("set_union", scale, time_ms)
 
@@ -74,9 +70,7 @@ func test_set_difference(scale: int, test_parameters := [[100], [1000], [10000]]
 	var set1 = Set.new(arrays[0])
 	var set2 = Set.new(arrays[1])
 
-	var time_ms = PerfHelpers.time_it(func():
-		var result = set1.difference(set2)
-	)
+	var time_ms = PerfHelpers.time_it(func(): var result = set1.difference(set2))
 
 	PerfHelpers.record_result("set_difference", scale, time_ms)
 
@@ -87,8 +81,8 @@ func test_array_intersect(scale: int, test_parameters := [[100], [1000], [10000]
 	var array1 = arrays[0]
 	var array2 = arrays[1]
 
-	var time_ms = PerfHelpers.time_it(func():
-		var result = ArrayExtensions.intersect(array1, array2)
+	var time_ms = PerfHelpers.time_it(
+		func(): var result = ArrayExtensions.intersect(array1, array2)
 	)
 
 	PerfHelpers.record_result("array_intersect", scale, time_ms)
@@ -100,9 +94,7 @@ func test_array_union(scale: int, test_parameters := [[100], [1000], [10000]]):
 	var array1 = arrays[0]
 	var array2 = arrays[1]
 
-	var time_ms = PerfHelpers.time_it(func():
-		var result = ArrayExtensions.union(array1, array2)
-	)
+	var time_ms = PerfHelpers.time_it(func(): var result = ArrayExtensions.union(array1, array2))
 
 	PerfHelpers.record_result("array_union", scale, time_ms)
 
@@ -113,8 +105,8 @@ func test_array_difference(scale: int, test_parameters := [[100], [1000], [10000
 	var array1 = arrays[0]
 	var array2 = arrays[1]
 
-	var time_ms = PerfHelpers.time_it(func():
-		var result = ArrayExtensions.difference(array1, array2)
+	var time_ms = PerfHelpers.time_it(
+		func(): var result = ArrayExtensions.difference(array1, array2)
 	)
 
 	PerfHelpers.record_result("array_difference", scale, time_ms)
@@ -128,10 +120,11 @@ func test_set_erase(scale: int, test_parameters := [[100], [1000], [10000]]):
 
 	var test_set := Set.new(array1)
 
-	var time_ms = PerfHelpers.time_it(func():
-		# erase half the elements
-		for i in scale / 2:
-			test_set.erase("Entity_%d" % i)
+	var time_ms = PerfHelpers.time_it(
+		func():
+			# erase half the elements
+			for i in scale / 2:
+				test_set.erase("Entity_%d" % i)
 	)
 
 	PerfHelpers.record_result("set_erase", scale, time_ms)
@@ -139,21 +132,19 @@ func test_set_erase(scale: int, test_parameters := [[100], [1000], [10000]]):
 
 ## Test Set vs Array operations with no overlap
 func test_set_vs_array_no_overlap(scale: int, test_parameters := [[100], [1000]]):
-	var arrays = create_test_arrays(scale, scale, 0.0) # No overlap
+	var arrays = create_test_arrays(scale, scale, 0.0)  # No overlap
 	var array1 = arrays[0]
 	var array2 = arrays[1]
 	var set1 = Set.new(array1)
 	var set2 = Set.new(array2)
 
 	# Test array intersect
-	var array_time = PerfHelpers.time_it(func():
-		var result = ArrayExtensions.intersect(array1, array2)
+	var array_time = PerfHelpers.time_it(
+		func(): var result = ArrayExtensions.intersect(array1, array2)
 	)
 
 	# Test set intersect
-	var set_time = PerfHelpers.time_it(func():
-		var result = set1.intersect(set2)
-	)
+	var set_time = PerfHelpers.time_it(func(): var result = set1.intersect(set2))
 
 	PerfHelpers.record_result("array_intersect_no_overlap", scale, array_time)
 	PerfHelpers.record_result("set_intersect_no_overlap", scale, set_time)
@@ -161,21 +152,19 @@ func test_set_vs_array_no_overlap(scale: int, test_parameters := [[100], [1000]]
 
 ## Test Set vs Array operations with complete overlap
 func test_set_vs_array_complete_overlap(scale: int, test_parameters := [[100], [1000]]):
-	var arrays = create_test_arrays(scale, scale, 1.0) # Complete overlap
+	var arrays = create_test_arrays(scale, scale, 1.0)  # Complete overlap
 	var array1 = arrays[0]
 	var array2 = arrays[1]
 	var set1 = Set.new(array1)
 	var set2 = Set.new(array2)
 
 	# Test array intersect
-	var array_time = PerfHelpers.time_it(func():
-		var result = ArrayExtensions.intersect(array1, array2)
+	var array_time = PerfHelpers.time_it(
+		func(): var result = ArrayExtensions.intersect(array1, array2)
 	)
 
 	# Test set intersect
-	var set_time = PerfHelpers.time_it(func():
-		var result = set1.intersect(set2)
-	)
+	var set_time = PerfHelpers.time_it(func(): var result = set1.intersect(set2))
 
 	PerfHelpers.record_result("array_intersect_complete_overlap", scale, array_time)
 	PerfHelpers.record_result("set_intersect_complete_overlap", scale, set_time)

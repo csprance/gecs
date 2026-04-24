@@ -1,5 +1,4 @@
 extends GdUnitTestSuite
-
 ## Test suite for CN_NetworkIdentity
 ## Tests pure logic methods (is_server_owned, is_player)
 ## and adapter-based methods (is_local, has_authority).

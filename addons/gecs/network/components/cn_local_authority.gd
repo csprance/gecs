@@ -1,6 +1,5 @@
 class_name CN_LocalAuthority
 extends Component
-
 ## Marker component indicating this entity is controlled by the local peer.
 ##
 ## Automatically assigned by NetworkSync when CN_NetworkIdentity.peer_id matches local peer.

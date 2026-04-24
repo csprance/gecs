@@ -31,14 +31,22 @@ func add_project_setting(
 	value_type: int,
 	type_hint: int = PROPERTY_HINT_NONE,
 	hint_string: String = "",
-	documentation: String = ""
+	documentation: String = "",
 ):
 	if !ProjectSettings.has_setting(setting_name):
 		ProjectSettings.set_setting(setting_name, default_value)
 
 	ProjectSettings.set_initial_value(setting_name, default_value)
-	ProjectSettings.add_property_info(
-		{"name": setting_name, "type": value_type, "hint": type_hint, "hint_string": hint_string}
+	(
+		ProjectSettings
+		.add_property_info(
+			{
+				"name": setting_name,
+				"type": value_type,
+				"hint": type_hint,
+				"hint_string": hint_string
+			},
+		)
 	)
 	ProjectSettings.set_as_basic(setting_name, true)
 
@@ -57,7 +65,7 @@ func add_gecs_project_settings():
 			setting["type"],
 			setting["hint"],
 			setting["hint_string"],
-			setting["doc"]
+			setting["doc"],
 		)
 	add_gecs_network_project_settings()
 

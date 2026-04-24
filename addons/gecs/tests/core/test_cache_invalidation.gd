@@ -5,7 +5,6 @@
 ## CACHE-04: End-to-end regression — no stale results after enable/disable or archetype moves.
 extends GdUnitTestSuite
 
-
 var runner: GdUnitSceneRunner
 var world: World
 

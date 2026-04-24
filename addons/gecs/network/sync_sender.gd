@@ -12,7 +12,7 @@ extends RefCounted
 ##   MEDIUM:   10 Hz  (0.10 s)
 ##   LOW:       2 Hz  (0.50 s)
 
-var _ns # NetworkSync reference (untyped to avoid circular deps)
+var _ns  # NetworkSync reference (untyped to avoid circular deps)
 
 ## Timer accumulators (seconds since last dispatch) per priority.
 var _timers: Dictionary = {
@@ -107,7 +107,7 @@ func _flush_due_priorities() -> void:
 func _should_flush(priority: int) -> bool:
 	var interval: float = _get_interval(priority)
 	if interval <= 0.0:
-		return true # REALTIME always flushes every tick
+		return true  # REALTIME always flushes every tick
 	return _timers[priority] >= interval
 
 
@@ -136,7 +136,7 @@ func _poll_entities_for_priority(priority: int) -> void:
 
 		var net_id: CN_NetworkIdentity = entity.get_component(CN_NetworkIdentity)
 		if net_id == null:
-			continue # Non-networked entity
+			continue  # Non-networked entity
 
 		# Spawn-only: entities without CN_NetSync are not continuously synced
 		var net_sync: CN_NetSync = entity.get_component(CN_NetSync)
@@ -158,12 +158,12 @@ func _poll_entities_for_priority(priority: int) -> void:
 					continue
 				var result = _custom_send_handlers[comp_type].call(entity, comp, priority)
 				if result == null:
-					pass # Keep default dirty-check result already in changes
+					pass  # Keep default dirty-check result already in changes
 				elif result is Dictionary:
 					if result.is_empty():
-						changes.erase(comp_type) # {} means suppress
+						changes.erase(comp_type)  # {} means suppress
 					else:
-						changes[comp_type] = result # Override with custom data
+						changes[comp_type] = result  # Override with custom data
 
 		if changes.is_empty():
 			continue
@@ -198,7 +198,7 @@ func _dispatch_batch(priority: int) -> void:
 	var batch: Dictionary = _pending[priority].duplicate(true)
 	_pending[priority].clear()
 
-	var is_unreliable: bool = priority <= CN_NetSync.Priority.HIGH # REALTIME or HIGH
+	var is_unreliable: bool = priority <= CN_NetSync.Priority.HIGH  # REALTIME or HIGH
 
 	if _ns.net_adapter.is_server():
 		if is_unreliable:

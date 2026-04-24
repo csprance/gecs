@@ -11,7 +11,6 @@ extends GdUnitTestSuite
 ## 3. Entity B gets same component -> uses cached edge to archetype X
 ## 4. BUG: archetype X not in world.archetypes, so queries can't find Entity B
 
-
 var runner: GdUnitSceneRunner
 var world: World
 
@@ -76,7 +75,7 @@ func test_query_finds_entities_in_edge_cached_archetype():
 	# This reproduces the exact projectile bug scenario
 	# ARRANGE: Create 3 projectiles
 	var projectile1 = Entity.new()
-	projectile1.add_component(C_TestA.new()) # Simulates C_Projectile
+	projectile1.add_component(C_TestA.new())  # Simulates C_Projectile
 	world.add_entities([projectile1])
 
 	var projectile2 = Entity.new()

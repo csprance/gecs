@@ -1,4 +1,5 @@
 extends Component
+
 class_name C_SerializationTest
 
 @export var int_value: int = 42
@@ -9,6 +10,7 @@ class_name C_SerializationTest
 @export var vector3_value: Vector3 = Vector3(1.0, 2.0, 3.0)
 @export var color_value: Color = Color.RED
 
+
 func _init(
 	_int_value: int = 42,
 	_float_value: float = 3.14,
@@ -16,7 +18,7 @@ func _init(
 	_bool_value: bool = true,
 	_vector2_value: Vector2 = Vector2(1.0, 2.0),
 	_vector3_value: Vector3 = Vector3(1.0, 2.0, 3.0),
-	_color_value: Color = Color.RED
+	_color_value: Color = Color.RED,
 ):
 	int_value = _int_value
 	float_value = _float_value

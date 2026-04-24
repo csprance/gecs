@@ -1,5 +1,4 @@
 extends GdUnitTestSuite
-
 ## Test suite for plugin.gd ProjectSettings registration (Wave 3 — GREEN phase)
 ## Tests verify the behavioral contract for SYNC-01 (hz settings).
 ## before_test() manually calls _register_project_settings() because the headless

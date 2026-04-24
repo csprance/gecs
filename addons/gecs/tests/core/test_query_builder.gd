@@ -1,6 +1,5 @@
 extends GdUnitTestSuite
 
-
 var runner: GdUnitSceneRunner
 var world: World
 
@@ -378,25 +377,40 @@ func test_query_matches():
 	)
 	(
 		assert_bool(
-			q.with_all([C_TestA]).matches([entitya, entityb, entityc, entityd, entitye]).has(
-				entitya
-			)
+			(
+				q
+				.with_all([C_TestA])
+				.matches([entitya, entityb, entityc, entityd, entitye])
+				.has(
+					entitya,
+				)
+			),
 		)
 		.is_true()
 	)
 	(
 		assert_bool(
-			q.with_all([C_TestA]).matches([entitya, entityb, entityc, entityd, entitye]).has(
-				entityb
-			)
+			(
+				q
+				.with_all([C_TestA])
+				.matches([entitya, entityb, entityc, entityd, entitye])
+				.has(
+					entityb,
+				)
+			),
 		)
 		.is_true()
 	)
 	(
 		assert_bool(
-			q.with_all([C_TestA]).matches([entitya, entityb, entityc, entityd, entitye]).has(
-				entitye
-			)
+			(
+				q
+				.with_all([C_TestA])
+				.matches([entitya, entityb, entityc, entityd, entitye])
+				.has(
+					entitye,
+				)
+			),
 		)
 		.is_true()
 	)
@@ -405,7 +419,7 @@ func test_query_matches():
 	# Test multiple with_all
 	(
 		assert_array(
-			q.with_all([C_TestA, C_TestD]).matches([entitya, entityb, entityc, entityd, entitye])
+			q.with_all([C_TestA, C_TestD]).matches([entitya, entityb, entityc, entityd, entitye]),
 		)
 		.has_size(1)
 	)
@@ -416,7 +430,7 @@ func test_query_matches():
 				.with_all([C_TestA, C_TestD])
 				.matches([entitya, entityb, entityc, entityd, entitye])
 				.has(entityb)
-			)
+			),
 		)
 		.is_true()
 	)
@@ -430,7 +444,7 @@ func test_query_matches():
 	# Test with_any
 	(
 		assert_array(
-			q.with_any([C_TestA, C_TestD]).matches([entitya, entityb, entityc, entityd, entitye])
+			q.with_any([C_TestA, C_TestD]).matches([entitya, entityb, entityc, entityd, entitye]),
 		)
 		.has_size(4)
 	)
@@ -441,7 +455,7 @@ func test_query_matches():
 				.with_any([C_TestA, C_TestD])
 				.matches([entitya, entityb, entityc, entityd, entitye])
 				.has(entityc)
-			)
+			),
 		)
 		.is_true()
 	)
@@ -452,7 +466,7 @@ func test_query_matches():
 				.with_any([C_TestA, C_TestD])
 				.matches([entitya, entityb, entityc, entityd, entitye])
 				.has(entityd)
-			)
+			),
 		)
 		.is_false()
 	)
@@ -461,9 +475,14 @@ func test_query_matches():
 	# Test combination of with_all and with_any
 	(
 		assert_array(
-			q.with_all([C_TestA]).with_any([C_TestB, C_TestC]).matches(
-				[entitya, entityb, entityc, entityd, entitye]
-			)
+			(
+				q
+				.with_all([C_TestA])
+				.with_any([C_TestB, C_TestC])
+				.matches(
+					[entitya, entityb, entityc, entityd, entitye],
+				)
+			),
 		)
 		.has_size(1)
 	)
@@ -475,7 +494,7 @@ func test_query_matches():
 				.with_any([C_TestB, C_TestC])
 				.matches([entitya, entityb, entityc, entityd, entitye])
 				.has(entitye)
-			)
+			),
 		)
 		.is_true()
 	)
@@ -484,9 +503,14 @@ func test_query_matches():
 	# Test combination of with_all and with_none
 	(
 		assert_array(
-			q.with_all([C_TestA]).with_none([C_TestD]).matches(
-				[entitya, entityb, entityc, entityd, entitye]
-			)
+			(
+				q
+				.with_all([C_TestA])
+				.with_none([C_TestD])
+				.matches(
+					[entitya, entityb, entityc, entityd, entitye],
+				)
+			),
 		)
 		.has_size(2)
 	)
@@ -498,7 +522,7 @@ func test_query_matches():
 				.with_none([C_TestD])
 				.matches([entitya, entityb, entityc, entityd, entitye])
 				.has(entitya)
-			)
+			),
 		)
 		.is_true()
 	)
@@ -510,7 +534,7 @@ func test_query_matches():
 				.with_none([C_TestD])
 				.matches([entitya, entityb, entityc, entityd, entitye])
 				.has(entitye)
-			)
+			),
 		)
 		.is_true()
 	)
@@ -519,9 +543,15 @@ func test_query_matches():
 	# Test combination of all three query types
 	(
 		assert_array(
-			q.with_all([C_TestA]).with_any([C_TestB, C_TestC]).with_none([C_TestD]).matches(
-				[entitya, entityb, entityc, entityd, entitye]
-			)
+			(
+				q
+				.with_all([C_TestA])
+				.with_any([C_TestB, C_TestC])
+				.with_none([C_TestD])
+				.matches(
+					[entitya, entityb, entityc, entityd, entitye],
+				)
+			),
 		)
 		.has_size(1)
 	)
@@ -534,7 +564,7 @@ func test_query_matches():
 				.with_none([C_TestD])
 				.matches([entitya, entityb, entityc, entityd, entitye])
 				.has(entitye)
-			)
+			),
 		)
 		.is_true()
 	)
@@ -559,16 +589,24 @@ func test_query_matches_with_relationships():
 	var q = QueryBuilder.new(world)
 
 	# Test with_relationship
-	var result = q.with_relationship([Relationship.new(C_TestA.new(), ECS.wildcard)]).matches(
-		[entitya, entityb, entityc]
+	var result = (
+		q
+		.with_relationship([Relationship.new(C_TestA.new(), ECS.wildcard)])
+		.matches(
+			[entitya, entityb, entityc],
+		)
 	)
 	assert_array(result).has_size(1)
 	assert_bool(result.has(entitya)).is_true()
 	q.clear()
 
 	# Test without_relationship
-	result = q.without_relationship([Relationship.new(C_TestA.new(), Entity)]).matches(
-		[entitya, entityb, entityc]
+	result = (
+		q
+		.without_relationship([Relationship.new(C_TestA.new(), Entity)])
+		.matches(
+			[entitya, entityb, entityc],
+		)
 	)
 	assert_array(result).has_size(2)
 	assert_bool(result.has(entityb)).is_true()
@@ -577,8 +615,13 @@ func test_query_matches_with_relationships():
 
 	# Test combination of relationships and components
 	entitya.add_component(test_a.duplicate())
-	result = q.with_all([C_TestA]).with_relationship([Relationship.new(C_TestA.new())]).matches(
-		[entitya, entityb, entityc]
+	result = (
+		q
+		.with_all([C_TestA])
+		.with_relationship([Relationship.new(C_TestA.new())])
+		.matches(
+			[entitya, entityb, entityc],
+		)
 	)
 	assert_array(result).has_size(1)
 	assert_bool(result.has(entitya)).is_true()
@@ -611,7 +654,7 @@ func test_query_with_component_query():
 
 	# Query excluding entities with TestC or TestD
 	var result = (
-		QueryBuilder.new(world).with_all([ {C_TestC: {"value": {"_eq": 25}}}, C_TestA]).execute()
+		QueryBuilder.new(world).with_all([{C_TestC: {"value": {"_eq": 25}}}, C_TestA]).execute()
 	)
 	assert_array(result).has_size(1)
 	assert_bool(result.has(entity1)).is_true()
@@ -650,7 +693,7 @@ func test_query_with_component_queries():
 	var result = (
 		QueryBuilder
 		.new(world)
-		.with_all([ {C_TestC: {"value": {"_eq": 25}}}, {C_TestD: {"points": {"_gt": 50}}}])
+		.with_all([{C_TestC: {"value": {"_eq": 25}}}, {C_TestD: {"points": {"_gt": 50}}}])
 		.execute()
 	)
 	assert_array(result).has_size(1)
@@ -660,7 +703,7 @@ func test_query_with_component_queries():
 	result = (
 		QueryBuilder
 		.new(world)
-		.with_any([ {C_TestC: {"value": {"_lt": 15}}}, {C_TestD: {"points": {"_gte": 100}}}])
+		.with_any([{C_TestC: {"value": {"_lt": 15}}}, {C_TestD: {"points": {"_gte": 100}}}])
 		.execute()
 	)
 	assert_array(result).has_size(2)
@@ -674,7 +717,7 @@ func test_query_with_component_queries():
 
 	# Test multiple operators in same query
 	result = (
-		QueryBuilder.new(world).with_all([ {C_TestC: {"value": {"_gte": 20, "_lte": 25}}}]).execute()
+		QueryBuilder.new(world).with_all([{C_TestC: {"value": {"_gte": 20, "_lte": 25}}}]).execute()
 	)
 	assert_array(result).has_size(2)
 	assert_bool(result.has(entity1)).is_true()
@@ -689,7 +732,7 @@ func test_query_with_component_queries():
 	assert_bool(result.has(entity3)).is_true()
 
 	# Test _in and _nin operators
-	result = QueryBuilder.new(world).with_all([ {C_TestC: {"value": {"_in": [10, 25]}}}]).execute()
+	result = QueryBuilder.new(world).with_all([{C_TestC: {"value": {"_in": [10, 25]}}}]).execute()
 	assert_array(result).has_size(3)
 	assert_bool(result.has(entity1)).is_true()
 	assert_bool(result.has(entity2)).is_true()
@@ -699,31 +742,31 @@ func test_query_with_component_queries():
 	result = (
 		QueryBuilder
 		.new(world)
-		.with_all([ {C_TestC: {"value": {"_gte": 25}}}])
-		.with_any([ {C_TestD: {"points": {"_gt": 75}}}, {C_TestD: {"points": {"_lt": 30}}}])
+		.with_all([{C_TestC: {"value": {"_gte": 25}}}])
+		.with_any([{C_TestD: {"points": {"_gt": 75}}}, {C_TestD: {"points": {"_lt": 30}}}])
 		.with_none([C_TestE])
 		.execute()
-	) # Only use simple component exclusion
+	)  # Only use simple component exclusion
 	assert_array(result).has_size(2)
 	assert_bool(result.has(entity1)).is_true()
 	assert_bool(result.has(entity3)).is_true()
 
 	# Test empty value matching
-	result = QueryBuilder.new(world).with_all([ {C_TestC: {}}]).execute()
-	assert_array(result).has_size(4) # Should match all entities with TestC
+	result = QueryBuilder.new(world).with_all([{C_TestC: {}}]).execute()
+	assert_array(result).has_size(4)  # Should match all entities with TestC
 
 	# Test non-existent property
-	result = QueryBuilder.new(world).with_all([ {C_TestC: {"non_existent": {"_eq": 10}}}]).execute()
-	assert_array(result).has_size(0) # Should match no entities
+	result = QueryBuilder.new(world).with_all([{C_TestC: {"non_existent": {"_eq": 10}}}]).execute()
+	assert_array(result).has_size(0)  # Should match no entities
 
 	# Test empty world query with component query property
 	result = (
 		QueryBuilder
 		.new(world)
-		.with_all([ {C_TestC: {"non_existent": {"_eq": 10}}}, C_TestD, C_TestE, C_TestA])
+		.with_all([{C_TestC: {"non_existent": {"_eq": 10}}}, C_TestD, C_TestE, C_TestA])
 		.execute()
 	)
-	assert_array(result).has_size(0) # Should match no entities
+	assert_array(result).has_size(0)  # Should match no entities
 
 
 func test_query_entities_groups():
@@ -790,76 +833,78 @@ func test_query_entities_groups():
 	)
 	assert_array(check_enemy_c_no_npc).has_size(0)
 
-
-#func test_query_caching():
+	#func test_query_caching():
 	## Setup test entities
 	#var entities = []
 	#for i in range(1000): # Create a large number of entities for performance testing
-		#var entity = Entity.new()
-		#if i % 2 == 0:
-			#entity.add_component(C_TestA.new())
-		#if i % 3 == 0:
-			#entity.add_component(C_TestB.new())
-		#if i % 4 == 0:
-			#entity.add_component(C_TestC.new())
-		#entities.append(entity)
+	#var entity = Entity.new()
+	#if i % 2 == 0:
+	#entity.add_component(C_TestA.new())
+	#if i % 3 == 0:
+	#entity.add_component(C_TestB.new())
+	#if i % 4 == 0:
+	#entity.add_component(C_TestC.new())
+	#entities.append(entity)
 	#world.add_entities(entities)
-#
+	#
 	#var query = QueryBuilder.new(world)
 	#query.with_all([C_TestA, C_TestB])
-#
+	#
 	## First execution - uncached
 	#var time_start = Time.get_ticks_usec()
 	#var result1 = query.execute()
 	#var uncached_time = Time.get_ticks_usec() - time_start
-#
+	#
 	## Second execution - should use cache
 	#time_start = Time.get_ticks_usec()
 	#var result2 = query.execute()
 	#var cached_time = Time.get_ticks_usec() - time_start
-#
+	#
 	## Verify results are identical
 	#assert_array(result1).is_equal(result2)
-#
+	#
 	## Verify cache is faster (should be significantly faster)
 	#assert_bool(cached_time < uncached_time).is_true()
 	#print("Uncached query time: %d ns" % uncached_time)
 	#print("Cached query time: %d ns" % cached_time)
 	#print("Cache speedup: %.2fx" % (float(uncached_time) / max(cached_time, 1)))
-#
+	#
 	## Test cache invalidation
 	#var new_entity = Entity.new()
 	#new_entity.add_component(C_TestA.new())
 	#new_entity.add_component(C_TestB.new())
 	#world.add_entity(new_entity)
-#
+	#
 	#query.invalidate_cache()
 	#var result3 = query.execute()
 	## Verify new entity is included after cache invalidation
 	#assert_bool(result3.has(new_entity)).is_true()
 	#assert_int(result3.size()).is_equal(result2.size() + 1)
-#
+	#
 	## Test that modifying an entity's components invalidates relevant queries
 	#var test_entity = result2[0]
 	#test_entity.remove_component(C_TestA)
-#
+	#
 	#query.invalidate_cache()
 	#var result4 = query.execute()
 	#assert_bool(result4.has(test_entity)).is_false()
 	#assert_int(result4.size()).is_equal(result3.size() - 1)
+
+
 #
+
 
 func test_query_cache_with_component_queries():
 	# Setup test entities with varying component values
 	var entities = []
 	for i in range(100):
 		var entity = Entity.new()
-		entity.add_component(C_TestC.new(i)) # Each entity has unique TestC value
+		entity.add_component(C_TestC.new(i))  # Each entity has unique TestC value
 		world.add_entity(entity)
 		entities.append(entity)
 
 	var query = QueryBuilder.new(world)
-	query.with_all([ {C_TestC: {"value": {"_gt": 50}}}])
+	query.with_all([{C_TestC: {"value": {"_gt": 50}}}])
 
 	# First execution - uncached
 	var time_start = Time.get_ticks_usec()
@@ -873,7 +918,7 @@ func test_query_cache_with_component_queries():
 
 	# Verify results
 	assert_array(result1).is_equal(result2)
-	assert_int(result1.size()).is_equal(49) # Should have entities with values 51-99
+	assert_int(result1.size()).is_equal(49)  # Should have entities with values 51-99
 
 	# Verify cache is faster
 	assert_bool(cached_time < uncached_time).is_true()
@@ -884,7 +929,7 @@ func test_query_cache_with_component_queries():
 	# Test cache invalidation with component value changes
 	var target_entity = result1[0]
 	var comp = target_entity.get_component(C_TestC)
-	comp.value = 25 # Change to value that shouldn't match query
+	comp.value = 25  # Change to value that shouldn't match query
 
 	query.invalidate_cache()
 	var result3 = query.execute()
@@ -907,13 +952,20 @@ func test_with_relationship_vs_without_relationship_basic():
 	world.add_entity(target)
 
 	# Test with_relationship - should only return entity_with_rel
-	var with_result = QueryBuilder.new(world).with_relationship([Relationship.new(C_TestA.new(), null)]).execute()
+	var with_result = (
+		QueryBuilder.new(world).with_relationship([Relationship.new(C_TestA.new(), null)]).execute()
+	)
 	assert_array(with_result).has_size(1)
 	assert_bool(with_result.has(entity_with_rel)).is_true()
 	assert_bool(with_result.has(entity_without_rel)).is_false()
 
 	# Test without_relationship - should only return entity_without_rel (and target)
-	var without_result = QueryBuilder.new(world).without_relationship([Relationship.new(C_TestA.new(), null)]).execute()
+	var without_result = (
+		QueryBuilder
+		.new(world)
+		.without_relationship([Relationship.new(C_TestA.new(), null)])
+		.execute()
+	)
 	assert_bool(without_result.has(entity_with_rel)).is_false()
 	assert_bool(without_result.has(entity_without_rel)).is_true()
 
@@ -939,7 +991,9 @@ func test_with_relationship_null_target():
 	world.add_entity(target)
 
 	# Query with null target (wildcard) should find entities with ANY target for this relationship
-	var result = QueryBuilder.new(world).with_relationship([Relationship.new(C_TestA.new(), null)]).execute()
+	var result = (
+		QueryBuilder.new(world).with_relationship([Relationship.new(C_TestA.new(), null)]).execute()
+	)
 
 	# Should only find entity1 and entity2
 	assert_array(result).has_size(2)
@@ -967,7 +1021,12 @@ func test_without_relationship_null_target():
 	world.add_entity(target)
 
 	# Query WITHOUT this relationship should find only entity3 and target
-	var result = QueryBuilder.new(world).without_relationship([Relationship.new(C_TestA.new(), null)]).execute()
+	var result = (
+		QueryBuilder
+		.new(world)
+		.without_relationship([Relationship.new(C_TestA.new(), null)])
+		.execute()
+	)
 
 	# Should NOT find entity1 or entity2
 	assert_bool(result.has(entity1)).is_false()
@@ -993,7 +1052,12 @@ func test_with_relationship_wildcard_target():
 	world.add_entity(target)
 
 	# Use ECS.wildcard explicitly
-	var result = QueryBuilder.new(world).with_relationship([Relationship.new(C_TestA.new(), ECS.wildcard)]).execute()
+	var result = (
+		QueryBuilder
+		.new(world)
+		.with_relationship([Relationship.new(C_TestA.new(), ECS.wildcard)])
+		.execute()
+	)
 
 	assert_array(result).has_size(2)
 	assert_bool(result.has(entity1)).is_true()
@@ -1020,7 +1084,12 @@ func test_with_relationship_specific_entity_target():
 	world.add_entity(target_b)
 
 	# Query for entities with relationship to target_a specifically
-	var result = QueryBuilder.new(world).with_relationship([Relationship.new(C_TestA.new(), target_a)]).execute()
+	var result = (
+		QueryBuilder
+		.new(world)
+		.with_relationship([Relationship.new(C_TestA.new(), target_a)])
+		.execute()
+	)
 
 	assert_array(result).has_size(1)
 	assert_bool(result.has(entity1)).is_true()
@@ -1033,7 +1102,7 @@ func test_with_relationship_entity_archetype_target():
 	var entity1 = Entity.new()
 	var entity2 = Entity.new()
 	var entity3 = Entity.new()
-	var target = Entity.new() # Generic Entity type
+	var target = Entity.new()  # Generic Entity type
 
 	entity1.add_relationship(Relationship.new(C_TestA.new(), Entity))
 	entity2.add_relationship(Relationship.new(C_TestA.new(), target))
@@ -1045,7 +1114,12 @@ func test_with_relationship_entity_archetype_target():
 	world.add_entity(target)
 
 	# Query for entities with relationship to Entity archetype
-	var result = QueryBuilder.new(world).with_relationship([Relationship.new(C_TestA.new(), Entity)]).execute()
+	var result = (
+		QueryBuilder
+		.new(world)
+		.with_relationship([Relationship.new(C_TestA.new(), Entity)])
+		.execute()
+	)
 
 	# Should find both entity1 and entity2 (entity2's target is an Entity instance)
 	assert_bool(result.has(entity1)).is_true()
@@ -1118,7 +1192,7 @@ func test_with_group_vs_without_group():
 	assert_bool(without_result.has(entity_not_in_group)).is_true()
 
 	# These should be DIFFERENT!
-	assert_bool(with_result.size() == without_result.size()).is_true() # Both have 1 entity
+	assert_bool(with_result.size() == without_result.size()).is_true()  # Both have 1 entity
 	assert_bool(with_result.has(entity_in_group)).is_true()
 	assert_bool(without_result.has(entity_not_in_group)).is_true()
 	# But they should not contain the same entities
@@ -1150,7 +1224,8 @@ func test_with_all_and_with_relationship_combination():
 
 	# Query for entities with both component A and the relationship
 	var result = (
-		QueryBuilder.new(world)
+		QueryBuilder
+		.new(world)
 		.with_all([C_TestA])
 		.with_relationship([Relationship.new(C_TestB.new(), null)])
 		.execute()
@@ -1208,12 +1283,12 @@ func test_with_any_filters_instead_of_broadening():
 	# If no entity had C_TestC then result would become empty
 	var e1 = Entity.new()
 	var e2 = Entity.new()
-	var target = Entity.new() # Relationship target entity
+	var target = Entity.new()  # Relationship target entity
 
 	# Components analogous to C_Health and C_Breakable
 	e1.add_component(C_TestA.new())
 	e2.add_component(C_TestA.new())
-	e2.add_component(C_TestC.new()) # Only e2 is "breakable"
+	e2.add_component(C_TestC.new())  # Only e2 is "breakable"
 
 	# Relationship marker analogous to R_Damaged_Any (using C_TestB as marker)
 	e1.add_relationship(Relationship.new(C_TestB.new(), target))
@@ -1225,25 +1300,31 @@ func test_with_any_filters_instead_of_broadening():
 
 	# Baseline query: both entities match (have C_TestA + damage relationship)
 	var baseline = (
-		QueryBuilder
-		.new(world)
-		.with_all([C_TestA])
-		.with_relationship([Relationship.new(C_TestB.new(), null)])
-		.execute()
-	) as Array[Entity]
+		(
+			QueryBuilder
+			.new(world)
+			.with_all([C_TestA])
+			.with_relationship([Relationship.new(C_TestB.new(), null)])
+			.execute()
+		)
+		as Array[Entity]
+	)
 	assert_int(baseline.size()).is_equal(2)
 	assert_bool(baseline.has(e1)).is_true()
 	assert_bool(baseline.has(e2)).is_true()
 
 	# Adding with_any([C_TestC]) NARROWS results to just e2 (must have at least one any-component)
 	var narrowed = (
-		QueryBuilder
-		.new(world)
-		.with_all([C_TestA])
-		.with_relationship([Relationship.new(C_TestB.new(), null)])
-		.with_any([C_TestC])
-		.execute()
-	) as Array[Entity]
+		(
+			QueryBuilder
+			.new(world)
+			.with_all([C_TestA])
+			.with_relationship([Relationship.new(C_TestB.new(), null)])
+			.with_any([C_TestC])
+			.execute()
+		)
+		as Array[Entity]
+	)
 	assert_int(narrowed.size()).is_equal(1)
 	assert_bool(narrowed.has(e2)).is_true()
 	assert_bool(narrowed.has(e1)).is_false()

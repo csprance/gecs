@@ -1,9 +1,9 @@
-extends GdUnitTestSuite  # Assuming GutTest is the correct base class in your setup
+extends GdUnitTestSuite
+
+# Assuming GutTest is the correct base class in your setup
 
 var runner: GdUnitSceneRunner
 var world: World
-
-
 
 
 func before():
@@ -62,4 +62,3 @@ func test_purge():
 	# Should be no entities and systems now
 	assert_int(world.entities.size()).is_equal(0)
 	assert_int(world.systems.size()).is_equal(0)
-	

@@ -1,5 +1,4 @@
 extends GdUnitTestSuite
-
 ## Test archetype-based system execution
 
 var runner: GdUnitSceneRunner

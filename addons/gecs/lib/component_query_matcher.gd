@@ -30,6 +30,7 @@
 class_name ComponentQueryMatcher
 extends RefCounted
 
+
 ## Checks if a component matches the given query criteria.
 ## All query operators must pass for the component to match.
 ##
@@ -83,6 +84,7 @@ static func matches_query(component: Component, query: Dictionary) -> bool:
 
 	return true
 
+
 ## Separates component types from query dictionaries in a mixed array.
 ## Used by QueryBuilder to process component lists that may contain queries.
 ##
@@ -103,6 +105,6 @@ static func process_component_list(components: Array) -> Dictionary:
 		else:
 			# Handle regular component case
 			result.components.append(component)
-			result.queries.append({}) # Empty query for regular components (matches all)
+			result.queries.append({})  # Empty query for regular components (matches all)
 
 	return result

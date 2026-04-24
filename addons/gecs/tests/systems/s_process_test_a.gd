@@ -3,8 +3,8 @@
 class_name ProcessTestSystem_A
 extends System
 
-
 var process_count: int = 0
+
 
 func _init(_process_empty: bool = false):
 	process_empty = _process_empty
@@ -28,6 +28,7 @@ func process(entities: Array[Entity], components: Array, delta: float):
 			# components after completing the task for better performance.
 			entities[i].remove_component(C_TestA)
 	return true
+
 
 func reset_count():
 	process_count = 0

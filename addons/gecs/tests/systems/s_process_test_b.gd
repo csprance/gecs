@@ -2,12 +2,12 @@
 class_name ProcessTestSystem_B
 extends System
 
-
 var process_count: int = 0
+
 
 func _init(_process_empty: bool = false):
 	process_empty = _process_empty
-	
+
 
 func query():
 	return ECS.world.query.with_all([C_TestB])
@@ -25,6 +25,7 @@ func process(entities: Array[Entity], components: Array, delta: float):
 				# Simulates a task/action execution system, it clears some task-specific
 				# components after completing the task for better performance.
 				entity.remove_component(C_TestB)
-	
+
+
 func reset_count():
 	process_count = 0

@@ -31,9 +31,9 @@ var _exclude_components: Array = []
 var _relationships: Array = []
 var _exclude_relationships: Array = []
 # Structural relationship classification (populated by with_relationship/without_relationship)
-var _structural_rel_keys: Array = [] # Exact rel:// slot keys for archetype matching
-var _wildcard_rel_types: Array = [] # Relation paths for wildcard index lookup
-var _post_filter_relationships: Array = [] # Property-query and script-target rels (entity-level)
+var _structural_rel_keys: Array = []  # Exact rel:// slot keys for archetype matching
+var _wildcard_rel_types: Array = []  # Relation paths for wildcard index lookup
+var _post_filter_relationships: Array = []  # Property-query and script-target rels (entity-level)
 var _structural_ex_rel_keys: Array = []
 var _wildcard_ex_rel_types: Array = []
 var _post_filter_ex_relationships: Array = []
@@ -398,6 +398,8 @@ func _collect_script_paths(components: Array, out: Array[String]) -> void:
 	for c in components:
 		if c is Script and c.resource_path != "" and not out.has(c.resource_path):
 			out.append(c.resource_path)
+
+
 #endregion Observer Event Declarations
 
 
@@ -414,8 +416,10 @@ func execute_one() -> Entity:
 func execute() -> Array:
 	# For relationship or group filters we need fresh filtering every call (no stale cached filtered result)
 	# Only post-filter relationships and groups prevent caching
-	var has_post_filter_rels := (not _post_filter_relationships.is_empty() or not _post_filter_ex_relationships.is_empty())
-	var uses_group_filters := (not _groups.is_empty() or not _exclude_groups.is_empty())
+	var has_post_filter_rels := (
+		not _post_filter_relationships.is_empty() or not _post_filter_ex_relationships.is_empty()
+	)
+	var uses_group_filters := not _groups.is_empty() or not _exclude_groups.is_empty()
 
 	# Detect stale cache via world version counter (robust fallback for signal delivery)
 	if _cache_valid and _world and _cached_world_version != _world.cache_version:
@@ -434,14 +438,16 @@ func execute() -> Array:
 			_cache_valid = true
 			_cached_world_version = _world.cache_version if _world else -1
 		else:
-			_cache_valid = false # force recompute next call
+			_cache_valid = false  # force recompute next call
 
 	var result = structural_result
 	# Apply component property queries (post structural)
 	if not _all_components_queries.is_empty() and _has_actual_queries(_all_components_queries):
 		result = _filter_entities_by_queries(result, _all_components, _all_components_queries, true)
 	if not _any_components_queries.is_empty() and _has_actual_queries(_any_components_queries):
-		result = _filter_entities_by_queries(result, _any_components, _any_components_queries, false)
+		result = _filter_entities_by_queries(
+			result, _any_components, _any_components_queries, false
+		)
 
 	return result
 
@@ -475,12 +481,21 @@ func _internal_execute() -> Array:
 			# If no required groups but we have exclude_groups, start with ALL entities from component query
 			# This handles the case of "without_group" queries
 			entities_in_group = (
-				_world._query(
-					_all_components, _any_components, _exclude_components,
-					_enabled_filter, get_cache_key(),
-					_structural_rel_keys, _wildcard_rel_types,
-					_structural_ex_rel_keys, _wildcard_ex_rel_types
-				) as Array[Entity]
+				(
+					_world
+					._query(
+						_all_components,
+						_any_components,
+						_exclude_components,
+						_enabled_filter,
+						get_cache_key(),
+						_structural_rel_keys,
+						_wildcard_rel_types,
+						_structural_ex_rel_keys,
+						_wildcard_ex_rel_types,
+					)
+				)
+				as Array[Entity]
 			)
 
 		# Filter out entities in excluded groups
@@ -502,12 +517,21 @@ func _internal_execute() -> Array:
 	# OPTIMIZATION: Pass pre-calculated cache key to avoid rehashing
 	# Pass structural relationship info to world._query() for archetype-level filtering
 	var result = (
-		_world._query(
-			_all_components, _any_components, _exclude_components,
-			_enabled_filter, get_cache_key(),
-			_structural_rel_keys, _wildcard_rel_types,
-			_structural_ex_rel_keys, _wildcard_ex_rel_types
-		) as Array[Entity]
+		(
+			_world
+			._query(
+				_all_components,
+				_any_components,
+				_exclude_components,
+				_enabled_filter,
+				get_cache_key(),
+				_structural_rel_keys,
+				_wildcard_rel_types,
+				_structural_ex_rel_keys,
+				_wildcard_ex_rel_types,
+			)
+		)
+		as Array[Entity]
 	)
 
 	# Post-filter: only property-query and script-target relationships
@@ -543,7 +567,10 @@ func _has_actual_queries(queries: Array) -> bool:
 
 ## Filter entities based on component queries
 func _filter_entities_by_queries(
-	entities: Array, components: Array, queries: Array, require_all: bool
+	entities: Array,
+	components: Array,
+	queries: Array,
+	require_all: bool,
 ) -> Array:
 	var filtered = []
 	for entity in entities:
@@ -668,7 +695,7 @@ func as_array() -> Array:
 		_any_components,
 		_exclude_components,
 		_relationships,
-		_exclude_relationships
+		_exclude_relationships,
 	]
 
 
@@ -713,10 +740,14 @@ func _to_string() -> String:
 			parts.append("disabled()")
 
 	if not _all_components_queries.is_empty():
-		parts.append("component_queries(" + _format_component_queries(_all_components_queries) + ")")
+		parts.append(
+			"component_queries(" + _format_component_queries(_all_components_queries) + ")"
+		)
 
 	if not _any_components_queries.is_empty():
-		parts.append("any_component_queries(" + _format_component_queries(_any_components_queries) + ")")
+		parts.append(
+			"any_component_queries(" + _format_component_queries(_any_components_queries) + ")"
+		)
 
 	if parts.is_empty():
 		return "ECS.world.query"
@@ -779,15 +810,27 @@ func get_cache_key() -> int:
 			# Filter to structural relationships for cache key
 			var structural_rels: Array = []
 			for rel in _relationships:
-				if not rel._is_query_relationship and _world._get_relationship_relation_path(rel) != "":
+				if (
+					not rel._is_query_relationship
+					and _world._get_relationship_relation_path(rel) != ""
+				):
 					structural_rels.append(rel)
 			var structural_ex_rels: Array = []
 			for rel in _exclude_relationships:
-				if not rel._is_query_relationship and _world._get_relationship_relation_path(rel) != "":
+				if (
+					not rel._is_query_relationship
+					and _world._get_relationship_relation_path(rel) != ""
+				):
 					structural_ex_rels.append(rel)
-			_cache_key = QueryCacheKey.build(
-				_all_components, _any_components, _exclude_components,
-				structural_rels, structural_ex_rels
+			_cache_key = (
+				QueryCacheKey
+				.build(
+					_all_components,
+					_any_components,
+					_exclude_components,
+					structural_rels,
+					structural_ex_rels,
+				)
 			)
 			_cache_key_valid = true
 		else:
@@ -807,4 +850,4 @@ func get_cache_key() -> int:
 ##             # Process transform directly from packed array
 ## [/codeblock]
 func archetypes() -> Array[Archetype]:
-	return _world.get_matching_archetypes(self )
+	return _world.get_matching_archetypes(self)

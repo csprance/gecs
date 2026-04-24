@@ -1,5 +1,4 @@
 extends GdUnitTestSuite
-
 ## Test suite for verifying topological sorting of systems and their execution order in the World.
 ## This test demonstrates how system dependencies (Runs.Before and Runs.After) affect the order
 ## in which systems are executed during World.process().
@@ -40,14 +39,14 @@ func test_topological_sort_basic_execution_order():
 	# Verify the systems are now sorted correctly
 	var sorted_systems = world.systems_by_group[""]
 	assert_int(sorted_systems.size()).is_equal(4)
-	assert_object(sorted_systems[0]).is_same(sys_a) # A runs first
-	assert_object(sorted_systems[1]).is_same(sys_b) # B runs after A
-	assert_object(sorted_systems[2]).is_same(sys_c) # C runs after B
-	assert_object(sorted_systems[3]).is_same(sys_d) # D runs last
+	assert_object(sorted_systems[0]).is_same(sys_a)  # A runs first
+	assert_object(sorted_systems[1]).is_same(sys_b)  # B runs after A
+	assert_object(sorted_systems[2]).is_same(sys_c)  # C runs after B
+	assert_object(sorted_systems[3]).is_same(sys_d)  # D runs last
 
 	# Process the world - systems should execute in dependency order
 	world.process(0.016)
-	
+
 	var comp := entity.get_component(C_TestOrderComponent) as C_TestOrderComponent
 
 	# Verify execution order in the log
@@ -192,7 +191,21 @@ func test_topological_sort_complex_dependencies():
 	print("Systems after sorting (count: ", sorted_systems.size(), "):")
 	for i in range(sorted_systems.size()):
 		var sys = sorted_systems[i]
-		print("  [", i, "]: ", sys.get_script().get_global_name(), " (same as original? E:", sys == sys_e, " F:", sys == sys_f, " G:", sys == sys_g, " H:", sys == sys_h, ")")
+		print(
+			"  [",
+			i,
+			"]: ",
+			sys.get_script().get_global_name(),
+			" (same as original? E:",
+			sys == sys_e,
+			" F:",
+			sys == sys_f,
+			" G:",
+			sys == sys_g,
+			" H:",
+			sys == sys_h,
+			")"
+		)
 
 	# Verify if the sort actually happened by checking if order changed
 	var original_order = [sys_f, sys_h, sys_g, sys_e]
@@ -212,31 +225,31 @@ func test_topological_sort_complex_dependencies():
 	# Debug: Check execution
 	print("Raw execution log: ", log)
 	print("Log size: ", log.size())
-	
+
 	if log.is_empty():
 		print("ERROR: No systems executed! Log is empty.")
 		print("Entity has component: ", entity.has_component(C_TestOrderComponent))
 		print("Component value: ", comp.value)
-		assert_bool(false).is_true() # Force test failure with debug info
+		assert_bool(false).is_true()  # Force test failure with debug info
 		return
 
 	# Simple verification without processing - just check the raw log
 	print("Expected order should be: E first, H last, F and G in middle")
-	
+
 	# Verify the correct execution order
 	assert_int(log.size()).is_equal(4)
-	
+
 	# E must run first (no dependencies)
 	assert_str(log[0]).is_equal("E")
-	
+
 	# H must run last (depends on both F and G)
 	assert_str(log[3]).is_equal("H")
-	
+
 	# F and G must run after E but before H (they can be in any order)
 	var middle_systems = [log[1], log[2]]
 	assert_bool(middle_systems.has("F")).is_true()
 	assert_bool(middle_systems.has("G")).is_true()
-	
+
 	print("Topological sort is working correctly!")
 
 
@@ -247,23 +260,23 @@ func test_topological_sort_partial_dependencies():
 	entity.name = "TestEntity_Partial"
 	entity.add_component(C_TestOrderComponent.new())
 	world.add_entity(entity)
-	
+
 	# Add systems: E (no deps), F (depends on E), G (depends on E)
-	world.add_system(S_TestOrderE.new(), true) # Enable topo_sort
+	world.add_system(S_TestOrderE.new(), true)  # Enable topo_sort
 	world.add_system(S_TestOrderF.new(), true)
 	world.add_system(S_TestOrderG.new(), true)
-	
+
 	world.process(0.016)
-	
+
 	var comp := entity.get_component(C_TestOrderComponent) as C_TestOrderComponent
 	var log = comp.execution_log
-	
+
 	print("Partial dependencies test - Log: ", log)
-	
+
 	# Should be: E first, then F and G (in any order)
 	assert_int(log.size()).is_equal(3)
 	assert_str(log[0]).is_equal("E")
-	
+
 	var middle_systems = [log[1], log[2]]
 	assert_bool(middle_systems.has("F")).is_true()
 	assert_bool(middle_systems.has("G")).is_true()
@@ -276,20 +289,20 @@ func test_topological_sort_linear_chain():
 	entity.name = "TestEntity_Linear"
 	entity.add_component(C_TestOrderComponent.new())
 	world.add_entity(entity)
-	
+
 	# Add systems in reverse order to test sorting
-	world.add_system(S_TestOrderD.new(), true) # D depends on C - Enable topo_sort
-	world.add_system(S_TestOrderC.new(), true) # C depends on B
-	world.add_system(S_TestOrderB.new(), true) # B depends on A
-	world.add_system(S_TestOrderA.new(), true) # A has no deps
-	
+	world.add_system(S_TestOrderD.new(), true)  # D depends on C - Enable topo_sort
+	world.add_system(S_TestOrderC.new(), true)  # C depends on B
+	world.add_system(S_TestOrderB.new(), true)  # B depends on A
+	world.add_system(S_TestOrderA.new(), true)  # A has no deps
+
 	world.process(0.016)
-	
+
 	var comp := entity.get_component(C_TestOrderComponent) as C_TestOrderComponent
 	var log = comp.execution_log
-	
+
 	print("Linear chain test - Log: ", log)
-	
+
 	# Should be exactly: A, B, C, D
 	assert_int(log.size()).is_equal(4)
 	assert_str(log[0]).is_equal("A")
@@ -305,22 +318,22 @@ func test_topological_sort_no_dependencies_order_preserved():
 	entity.name = "TestEntity_NoDeps"
 	entity.add_component(C_TestOrderComponent.new())
 	world.add_entity(entity)
-	
+
 	# Add systems with no dependencies
-	world.add_system(S_TestOrderE.new(), true) # No deps - Enable topo_sort
-	world.add_system(S_TestOrderA.new(), true) # No deps
-	
+	world.add_system(S_TestOrderE.new(), true)  # No deps - Enable topo_sort
+	world.add_system(S_TestOrderA.new(), true)  # No deps
+
 	world.process(0.016)
-	
+
 	var comp := entity.get_component(C_TestOrderComponent) as C_TestOrderComponent
 	var log = comp.execution_log
-	
+
 	print("No dependencies test - Log: ", log)
-	
+
 	# Should execute in dependency order: A runs before all (wildcard), then E
 	assert_int(log.size()).is_equal(2)
-	assert_str(log[0]).is_equal("A") # A runs first (has Runs.Before: [ECS.wildcard])
-	assert_str(log[1]).is_equal("E") # E runs after A
+	assert_str(log[0]).is_equal("A")  # A runs first (has Runs.Before: [ECS.wildcard])
+	assert_str(log[1]).is_equal("E")  # E runs after A
 
 
 func test_topological_sort_mixed_scenarios():
@@ -330,46 +343,46 @@ func test_topological_sort_mixed_scenarios():
 	entity.name = "TestEntity_Mixed"
 	entity.add_component(C_TestOrderComponent.new())
 	world.add_entity(entity)
-	
+
 	# Add all systems in random order to test sorting
-	world.add_system(S_TestOrderH.new(), true) # H depends on F,G - Enable topo_sort
-	world.add_system(S_TestOrderB.new(), true) # B depends on A
-	world.add_system(S_TestOrderF.new(), true) # F depends on E
-	world.add_system(S_TestOrderD.new(), true) # D depends on C
-	world.add_system(S_TestOrderE.new(), true) # E has no deps
-	world.add_system(S_TestOrderA.new(), true) # A has no deps
-	world.add_system(S_TestOrderG.new(), true) # G depends on E
-	world.add_system(S_TestOrderC.new(), true) # C depends on B
-	
+	world.add_system(S_TestOrderH.new(), true)  # H depends on F,G - Enable topo_sort
+	world.add_system(S_TestOrderB.new(), true)  # B depends on A
+	world.add_system(S_TestOrderF.new(), true)  # F depends on E
+	world.add_system(S_TestOrderD.new(), true)  # D depends on C
+	world.add_system(S_TestOrderE.new(), true)  # E has no deps
+	world.add_system(S_TestOrderA.new(), true)  # A has no deps
+	world.add_system(S_TestOrderG.new(), true)  # G depends on E
+	world.add_system(S_TestOrderC.new(), true)  # C depends on B
+
 	world.process(0.016)
-	
+
 	var comp := entity.get_component(C_TestOrderComponent) as C_TestOrderComponent
 	var log = comp.execution_log
-	
+
 	print("Mixed scenarios test - Log: ", log)
 	print("Expected constraints:")
 	print("  - Chain A->B->C->D must be in order")
 	print("  - Chain E->F,G->H must be in order")
 	print("  - A and E can be in any order (both have no deps)")
-	
+
 	assert_int(log.size()).is_equal(8)
-	
+
 	# Find positions of each system
 	var positions = {}
 	for i in range(log.size()):
 		positions[log[i]] = i
-	
+
 	# Verify chain A->B->C->D
 	assert_bool(positions["A"] < positions["B"]).is_true()
 	assert_bool(positions["B"] < positions["C"]).is_true()
 	assert_bool(positions["C"] < positions["D"]).is_true()
-	
+
 	# Verify chain E->F,G->H
 	assert_bool(positions["E"] < positions["F"]).is_true()
 	assert_bool(positions["E"] < positions["G"]).is_true()
 	assert_bool(positions["F"] < positions["H"]).is_true()
 	assert_bool(positions["G"] < positions["H"]).is_true()
-	
+
 	print("All dependency constraints satisfied!")
 
 
@@ -380,29 +393,29 @@ func test_no_topological_sort_preserves_order():
 	entity.name = "TestEntity_NoTopoSort"
 	entity.add_component(C_TestOrderComponent.new())
 	world.add_entity(entity)
-	
+
 	# Add systems with dependencies but WITHOUT topo_sort enabled
 	# This should execute in the order they were added, not dependency order
-	world.add_system(S_TestOrderH.new()) # H depends on F,G (topo_sort=false by default)
-	world.add_system(S_TestOrderF.new()) # F depends on E
-	world.add_system(S_TestOrderE.new()) # E has no deps
-	world.add_system(S_TestOrderG.new()) # G depends on E
-	
+	world.add_system(S_TestOrderH.new())  # H depends on F,G (topo_sort=false by default)
+	world.add_system(S_TestOrderF.new())  # F depends on E
+	world.add_system(S_TestOrderE.new())  # E has no deps
+	world.add_system(S_TestOrderG.new())  # G depends on E
+
 	world.process(0.016)
-	
+
 	var comp := entity.get_component(C_TestOrderComponent) as C_TestOrderComponent
 	var log = comp.execution_log
-	
+
 	print("No topo sort test - Log: ", log)
 	print("Systems should execute in add order: H, F, E, G")
-	
+
 	# Should execute in the exact order they were added, ignoring dependencies
 	assert_int(log.size()).is_equal(4)
-	assert_str(log[0]).is_equal("H") # First added
-	assert_str(log[1]).is_equal("F") # Second added
-	assert_str(log[2]).is_equal("E") # Third added
-	assert_str(log[3]).is_equal("G") # Fourth added
-	
+	assert_str(log[0]).is_equal("H")  # First added
+	assert_str(log[1]).is_equal("F")  # Second added
+	assert_str(log[2]).is_equal("E")  # Third added
+	assert_str(log[3]).is_equal("G")  # Fourth added
+
 	print("✓ Systems executed in add order, ignoring dependencies (as expected)")
 
 
@@ -413,28 +426,28 @@ func test_mixed_topological_sort_flags():
 	entity.name = "TestEntity_MixedFlags"
 	entity.add_component(C_TestOrderComponent.new())
 	world.add_entity(entity)
-	
+
 	# Add some systems with topo_sort=true, others with false
-	world.add_system(S_TestOrderE.new(), true) # E: topo_sort=true
-	world.add_system(S_TestOrderH.new(), false) # H: topo_sort=false
-	world.add_system(S_TestOrderF.new(), true) # F: topo_sort=true
-	world.add_system(S_TestOrderG.new(), false) # G: topo_sort=false
-	
+	world.add_system(S_TestOrderE.new(), true)  # E: topo_sort=true
+	world.add_system(S_TestOrderH.new(), false)  # H: topo_sort=false
+	world.add_system(S_TestOrderF.new(), true)  # F: topo_sort=true
+	world.add_system(S_TestOrderG.new(), false)  # G: topo_sort=false
+
 	world.process(0.016)
-	
+
 	var comp := entity.get_component(C_TestOrderComponent) as C_TestOrderComponent
 	var log = comp.execution_log
-	
+
 	print("Mixed topo sort flags test - Log: ", log)
-	
+
 	# This test documents the current behavior - exact order may depend on implementation
 	# The main point is that it should execute without errors
 	assert_int(log.size()).is_equal(4)
-	
+
 	# All systems should have executed
 	assert_bool(log.has("E")).is_true()
 	assert_bool(log.has("F")).is_true()
 	assert_bool(log.has("G")).is_true()
 	assert_bool(log.has("H")).is_true()
-	
+
 	print("✓ Mixed topo_sort flags handled without errors")

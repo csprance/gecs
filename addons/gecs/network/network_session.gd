@@ -52,6 +52,7 @@ var _signals_connected: bool = false
 # Lifecycle
 # ---------------------------------------------------------------------------
 
+
 func _ready() -> void:
 	if transport == null:
 		transport = ENetTransportProvider.new()
@@ -88,6 +89,7 @@ func _exit_tree() -> void:
 # Public API
 # ---------------------------------------------------------------------------
 
+
 ## Start hosting a session. Uses default_port if port == -1.
 ## Returns OK on success, or ERR_CANT_CONNECT if transport returns null.
 func host(port: int = -1) -> Error:
@@ -100,7 +102,7 @@ func host(port: int = -1) -> Error:
 	var config: Dictionary = {
 		"port": port,
 		"max_players": max_players,
-		"bind_address": "0.0.0.0"
+		"bind_address": "0.0.0.0",
 	}
 	var peer = transport.create_host_peer(config)
 	if peer == null:
@@ -200,6 +202,7 @@ func end_session() -> void:
 # Internal signal wiring
 # ---------------------------------------------------------------------------
 
+
 func _connect_multiplayer_signals() -> void:
 	if _signals_connected:
 		return
@@ -266,6 +269,7 @@ func _on_server_disconnected() -> void:
 # ---------------------------------------------------------------------------
 # Internal helpers
 # ---------------------------------------------------------------------------
+
 
 func _update_session_state(connected: bool, hosting: bool, peer_count: int) -> void:
 	if _session_entity == null or not is_instance_valid(_session_entity):

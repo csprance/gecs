@@ -9,4 +9,4 @@ func query():
 
 func process(entities: Array[Entity], components: Array, delta: float):
 	for entity in entities:
-		pass # Do nothing - used for measuring pure framework overhead
+		pass  # Do nothing - used for measuring pure framework overhead

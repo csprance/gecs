@@ -1,5 +1,4 @@
 extends GdUnitTestSuite
-
 ## Test suite for NetAdapter
 ## Tests singleplayer defaults, peer lists, and cache invalidation.
 

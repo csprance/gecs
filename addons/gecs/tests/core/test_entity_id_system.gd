@@ -1,19 +1,21 @@
 extends GdUnitTestSuite
-
 ## Test suite for the Entity ID system functionality
 ## Tests auto-generation, custom IDs, singleton behavior, and world-level enforcement
 
 var runner: GdUnitSceneRunner
 var world: World
 
+
 func before():
 	runner = scene_runner("res://addons/gecs/tests/test_scene.tscn")
 	world = runner.get_property("world")
 	ECS.world = world
 
+
 func after_test():
 	if world:
 		world.purge(false)
+
 
 func test_entity_id_auto_generation():
 	# Test that entities auto-generate IDs in _enter_tree
@@ -35,6 +37,7 @@ func test_entity_id_auto_generation():
 	var second_id = entity.id
 	assert_str(second_id).is_equal(first_id)
 
+
 func test_entity_custom_id():
 	# Test custom ID functionality for singleton entities
 	var entity = Entity.new()
@@ -51,6 +54,7 @@ func test_entity_custom_id():
 	# Custom ID should not change on subsequent access
 	var same_id = entity.id
 	assert_str(same_id).is_equal("singleton_player")
+
 
 func test_world_id_tracking():
 	# Test that World tracks IDs and provides lookup functionality
@@ -75,6 +79,7 @@ func test_world_id_tracking():
 	assert_bool(world.has_entity_with_id("test_id_1")).is_true()
 	assert_bool(world.has_entity_with_id("test_id_2")).is_true()
 	assert_bool(world.has_entity_with_id("nonexistent")).is_false()
+
 
 func test_world_id_replacement():
 	# Test singleton behavior - entities with same ID replace existing ones
@@ -113,6 +118,7 @@ func test_world_id_replacement():
 	var comp = found_entity.get_component(C_TestA) as C_TestA
 	assert_int(comp.value).is_equal(200)
 
+
 func test_auto_generated_id_tracking():
 	# Test that auto-generated IDs are also tracked by the world
 	var entity = Entity.new()
@@ -127,6 +133,7 @@ func test_auto_generated_id_tracking():
 	# Should be trackable by ID
 	assert_object(world.get_entity_by_id(entity.id)).is_same(entity)
 	assert_bool(world.has_entity_with_id(entity.id)).is_true()
+
 
 func test_id_generation_format():
 	# Test that generated IDs follow expected GUID format
@@ -145,6 +152,7 @@ func test_id_generation_format():
 	# All parts should be valid hex strings
 	for part in parts:
 		assert_bool(part.is_valid_hex_number()).is_true()
+
 
 func test_id_uniqueness():
 	# Test that multiple entities get unique IDs
@@ -165,6 +173,7 @@ func test_id_uniqueness():
 	# All IDs should be unique
 	assert_int(ids.size()).is_equal(100)
 
+
 func test_remove_entity_clears_id_registry():
 	# Test that removing entities clears them from ID registry
 	var entity = Entity.new()
@@ -178,6 +187,7 @@ func test_remove_entity_clears_id_registry():
 	assert_bool(world.has_entity_with_id("test_remove_id")).is_false()
 	assert_object(world.get_entity_by_id("test_remove_id")).is_null()
 
+
 func test_id_system_comprehensive_demo():
 	# Comprehensive test demonstrating all ID system features
 	# Test 1: Auto ID generation
@@ -186,8 +196,8 @@ func test_id_system_comprehensive_demo():
 	world.add_entity(auto_entity)
 
 	var generated_id = auto_entity.id
-	assert_str(generated_id).is_not_empty() # Should auto-generate
-	assert_bool(generated_id.contains("-")).is_true() # Should have correct GUID format
+	assert_str(generated_id).is_not_empty()  # Should auto-generate
+	assert_bool(generated_id.contains("-")).is_true()  # Should have correct GUID format
 
 	# Should still have the same ID
 	assert_str(auto_entity.id).is_equal(generated_id)
@@ -201,7 +211,7 @@ func test_id_system_comprehensive_demo():
 	player1.add_component(comp1)
 	world.add_entity(player1)
 
-	assert_int(world.entities.size()).is_equal(2) # auto_entity + player1
+	assert_int(world.entities.size()).is_equal(2)  # auto_entity + player1
 	assert_object(world.get_entity_by_id("singleton_player")).is_same(player1)
 
 	# Add second entity with same ID - should replace first
@@ -213,13 +223,13 @@ func test_id_system_comprehensive_demo():
 	player2.add_component(comp2)
 	world.add_entity(player2)
 
-	assert_int(world.entities.size()).is_equal(2) # Should still be 2 (replacement occurred)
+	assert_int(world.entities.size()).is_equal(2)  # Should still be 2 (replacement occurred)
 	var found_entity = world.get_entity_by_id("singleton_player")
-	assert_object(found_entity).is_same(player2) # Should be the new entity
+	assert_object(found_entity).is_same(player2)  # Should be the new entity
 	assert_str(found_entity.name).is_equal("Player2")
 
 	var found_comp = found_entity.get_component(C_TestA) as C_TestA
-	assert_int(found_comp.value).is_equal(200) # Should have new entity's data
+	assert_int(found_comp.value).is_equal(200)  # Should have new entity's data
 
 	# Test 3: Multiple entity tracking
 	var tracked_entities = []

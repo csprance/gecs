@@ -37,12 +37,11 @@ func test_system_processing(scale: int, test_parameters := [[100], [1000], [1000
 	var test_system = PerformanceTestSystem.new()
 	world.add_system(test_system)
 
-	var time_ms = PerfHelpers.time_it(func():
-		world.process(0.016)  # 60 FPS delta
-	)
+	var time_ms = PerfHelpers.time_it(func(): world.process(0.016))  # 60 FPS delta
 
 	PerfHelpers.record_result("system_processing", scale, time_ms)
 	world.purge(false)
+
 
 ## Test multiple systems processing
 func test_multiple_systems(scale: int, test_parameters := [[100], [1000], [10000]]):
@@ -52,12 +51,11 @@ func test_multiple_systems(scale: int, test_parameters := [[100], [1000], [10000
 	var system_b = ComplexPerformanceTestSystem.new()
 	world.add_systems([system_a, system_b])
 
-	var time_ms = PerfHelpers.time_it(func():
-		world.process(0.016)
-	)
+	var time_ms = PerfHelpers.time_it(func(): world.process(0.016))
 
 	PerfHelpers.record_result("multiple_systems", scale, time_ms)
 	world.purge(false)
+
 
 ## Test system processing with no matches
 func test_system_no_matches(scale: int, test_parameters := [[100], [1000], [10000]]):
@@ -71,12 +69,11 @@ func test_system_no_matches(scale: int, test_parameters := [[100], [1000], [1000
 	for entity in world.entities:
 		entity.remove_component(C_TestA)
 
-	var time_ms = PerfHelpers.time_it(func():
-		world.process(0.016)
-	)
+	var time_ms = PerfHelpers.time_it(func(): world.process(0.016))
 
 	PerfHelpers.record_result("system_no_matches", scale, time_ms)
 	world.purge(false)
+
 
 ## Test system processing with different groups
 func test_system_groups(scale: int, test_parameters := [[100], [1000], [10000]]):
@@ -89,13 +86,15 @@ func test_system_groups(scale: int, test_parameters := [[100], [1000], [10000]])
 
 	world.add_systems([physics_system, render_system])
 
-	var time_ms = PerfHelpers.time_it(func():
-		world.process(0.016, "physics")
-		world.process(0.016, "render")
+	var time_ms = PerfHelpers.time_it(
+		func():
+			world.process(0.016, "physics")
+			world.process(0.016, "render")
 	)
 
 	PerfHelpers.record_result("system_groups", scale, time_ms)
 	world.purge(false)
+
 
 ## Test system processing with entity changes mid-frame
 func test_system_dynamic_entities(scale: int, test_parameters := [[100], [1000], [10000]]):
@@ -105,18 +104,19 @@ func test_system_dynamic_entities(scale: int, test_parameters := [[100], [1000],
 	var test_system = PerformanceTestSystem.new()
 	world.add_system(test_system)
 
-	var time_ms = PerfHelpers.time_it(func():
-		# Process
-		world.process(0.016)
+	var time_ms = PerfHelpers.time_it(
+		func():
+			# Process
+			world.process(0.016)
 
-		# Add more entities mid-frame
-		for i in range(scale / 2, scale):
-			var entity = Entity.new()
-			entity.add_component(C_TestA.new())
-			world.add_entity(entity, null, false)
+			# Add more entities mid-frame
+			for i in range(scale / 2, scale):
+				var entity = Entity.new()
+				entity.add_component(C_TestA.new())
+				world.add_entity(entity, null, false)
 
-		# Process again with more entities
-		world.process(0.016)
+			# Process again with more entities
+			world.process(0.016)
 	)
 
 	PerfHelpers.record_result("system_dynamic_entities", scale, time_ms)

@@ -21,6 +21,7 @@ const project_settings = {
 		"type": TYPE_BOOL,
 		"hint": PROPERTY_HINT_NONE,
 		"hint_string": "",
-		"doc": "Enable debug mode for GECS operations. Enables editor debugger integration but impacts performance significantly.",
-	}
+		"doc":
+		"Enable debug mode for GECS operations. Enables editor debugger integration but impacts performance significantly.",
+	},
 }

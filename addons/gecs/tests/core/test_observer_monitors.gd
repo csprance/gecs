@@ -2,7 +2,6 @@
 ## on the observer's QueryBuilder.
 extends GdUnitTestSuite
 
-
 var runner: GdUnitSceneRunner
 var world: World
 
@@ -17,7 +16,8 @@ func after_test():
 	world.purge(false)
 
 
-class AliveMonitor extends Observer:
+class AliveMonitor:
+	extends Observer
 	var matched: Array[Entity] = []
 	var unmatched: Array[Entity] = []
 
@@ -26,11 +26,14 @@ class AliveMonitor extends Observer:
 
 	func each(event: Variant, entity: Entity, payload: Variant = null) -> void:
 		match event:
-			Observer.Event.MATCH:   matched.append(entity)
-			Observer.Event.UNMATCH: unmatched.append(entity)
+			Observer.Event.MATCH:
+				matched.append(entity)
+			Observer.Event.UNMATCH:
+				unmatched.append(entity)
 
 
-class YieldMonitor extends Observer:
+class YieldMonitor:
+	extends Observer
 	var matched: Array[Entity] = []
 
 	func query() -> QueryBuilder:
@@ -131,7 +134,8 @@ func test_monitor_without_yield_existing_does_not_fire_for_preexisting():
 	assert_int(obs.matched.size()).is_equal(0)
 
 
-class HealthThresholdMonitor extends Observer:
+class HealthThresholdMonitor:
+	extends Observer
 	var matched: Array[Entity] = []
 	var unmatched: Array[Entity] = []
 
@@ -140,8 +144,10 @@ class HealthThresholdMonitor extends Observer:
 
 	func each(event: Variant, entity: Entity, _payload: Variant = null) -> void:
 		match event:
-			Observer.Event.MATCH:   matched.append(entity)
-			Observer.Event.UNMATCH: unmatched.append(entity)
+			Observer.Event.MATCH:
+				matched.append(entity)
+			Observer.Event.UNMATCH:
+				unmatched.append(entity)
 
 
 func test_natural_dispatch_covers_entities_added_after_observer_registers():
@@ -188,7 +194,8 @@ func test_monitor_fires_on_property_transition():
 	assert_int(obs.matched.size()).is_equal(2)
 
 
-class GroupScopedMonitor extends Observer:
+class GroupScopedMonitor:
+	extends Observer
 	var matched: Array[Entity] = []
 	var unmatched: Array[Entity] = []
 
@@ -197,8 +204,10 @@ class GroupScopedMonitor extends Observer:
 
 	func each(event: Variant, entity: Entity, _payload: Variant = null) -> void:
 		match event:
-			Observer.Event.MATCH:   matched.append(entity)
-			Observer.Event.UNMATCH: unmatched.append(entity)
+			Observer.Event.MATCH:
+				matched.append(entity)
+			Observer.Event.UNMATCH:
+				unmatched.append(entity)
 
 
 func test_monitor_group_changes_do_not_transition():

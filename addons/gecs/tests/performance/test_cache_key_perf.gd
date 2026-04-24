@@ -26,7 +26,9 @@ func test_cache_key_generation(num_components: int, test_parameters := [[1], [5]
 	var exclude_components = []
 
 	# Use available test components
-	var available_components = [C_TestA, C_TestB, C_TestC, C_TestD, C_TestE, C_TestF, C_TestG, C_TestH]
+	var available_components = [
+		C_TestA, C_TestB, C_TestC, C_TestD, C_TestE, C_TestF, C_TestG, C_TestH
+	]
 
 	# Distribute components across all/any/exclude
 	for i in num_components:
@@ -39,9 +41,10 @@ func test_cache_key_generation(num_components: int, test_parameters := [[1], [5]
 			exclude_components.append(comp)
 
 	# Time generating cache keys 10000 times
-	var time_ms = PerfHelpers.time_it(func():
-		for i in 10000:
-			var key = QueryCacheKey.build(all_components, any_components, exclude_components)
+	var time_ms = PerfHelpers.time_it(
+		func():
+			for i in 10000:
+				var key = QueryCacheKey.build(all_components, any_components, exclude_components)
 	)
 
 	PerfHelpers.record_result("cache_key_generation", num_components, time_ms)
@@ -64,9 +67,10 @@ func test_cache_hit_performance(scale: int, test_parameters := [[100], [1000], [
 	var __ = world.query.with_all([C_TestA, C_TestB]).execute()
 
 	# Time 1000 cache hit queries
-	var time_ms = PerfHelpers.time_it(func():
-		for i in 1000:
-			var entities = world.query.with_all([C_TestA, C_TestB]).execute()
+	var time_ms = PerfHelpers.time_it(
+		func():
+			for i in 1000:
+				var entities = world.query.with_all([C_TestA, C_TestB]).execute()
 	)
 
 	PerfHelpers.record_result("cache_hit_performance", scale, time_ms)
@@ -86,13 +90,13 @@ func test_cache_miss_vs_hit(scale: int, test_parameters := [[100], [1000], [1000
 		world.add_entity(entity, null, false)
 
 	# Measure cache miss (first query)
-	var miss_time_ms = PerfHelpers.time_it(func():
-		var entities = world.query.with_all([C_TestA, C_TestB]).execute()
+	var miss_time_ms = PerfHelpers.time_it(
+		func(): var entities = world.query.with_all([C_TestA, C_TestB]).execute()
 	)
 
 	# Measure cache hit (subsequent query)
-	var hit_time_ms = PerfHelpers.time_it(func():
-		var entities = world.query.with_all([C_TestA, C_TestB]).execute()
+	var hit_time_ms = PerfHelpers.time_it(
+		func(): var entities = world.query.with_all([C_TestA, C_TestB]).execute()
 	)
 
 	PerfHelpers.record_result("cache_miss", scale, miss_time_ms)
@@ -100,9 +104,17 @@ func test_cache_miss_vs_hit(scale: int, test_parameters := [[100], [1000], [1000
 
 	# Print comparison
 	var speedup = miss_time_ms / hit_time_ms if hit_time_ms > 0 else 0
-	print("  Cache speedup at scale %d: %.1fx (miss=%.3fms, hit=%.3fms)" % [
-		scale, speedup, miss_time_ms, hit_time_ms
-	])
+	print(
+		(
+			"  Cache speedup at scale %d: %.1fx (miss=%.3fms, hit=%.3fms)"
+			% [
+				scale,
+				speedup,
+				miss_time_ms,
+				hit_time_ms,
+			]
+		),
+	)
 
 
 ## Test cache key stability across query builder instances
@@ -128,9 +140,16 @@ func test_cache_key_stability():
 	var hits = final_stats.cache_hits - initial_stats.cache_hits
 	var misses = final_stats.cache_misses - initial_stats.cache_misses
 
-	print("  Cache key stability: %d hits, %d misses (%.1f%% hit rate)" % [
-		hits, misses, (hits * 100.0 / (hits + misses)) if (hits + misses) > 0 else 0
-	])
+	print(
+		(
+			"  Cache key stability: %d hits, %d misses (%.1f%% hit rate)"
+			% [
+				hits,
+				misses,
+				(hits * 100.0 / (hits + misses)) if (hits + misses) > 0 else 0,
+			]
+		),
+	)
 
 	# We expect 1 miss (first query) and 99 hits (all subsequent queries)
 	assert_int(misses).is_equal(1)
@@ -151,22 +170,32 @@ func test_cache_invalidation_impact(scale: int, test_parameters := [[100], [1000
 		world.add_entity(entity, null, false)
 
 	# Time queries with cache invalidation after each query
-	var with_invalidation_ms = PerfHelpers.time_it(func():
-		for i in 100:
-			var entities = world.query.with_all([C_TestA, C_TestB]).execute()
-			world._query_archetype_cache.clear() # Force cache miss on next query
+	var with_invalidation_ms = PerfHelpers.time_it(
+		func():
+			for i in 100:
+				var entities = world.query.with_all([C_TestA, C_TestB]).execute()
+				world._query_archetype_cache.clear()  # Force cache miss on next query
 	)
 
 	# Time queries without invalidation (all cache hits after first)
-	var without_invalidation_ms = PerfHelpers.time_it(func():
-		for i in 100:
-			var entities = world.query.with_all([C_TestA, C_TestB]).execute()
+	var without_invalidation_ms = PerfHelpers.time_it(
+		func():
+			for i in 100:
+				var entities = world.query.with_all([C_TestA, C_TestB]).execute()
 	)
 
 	PerfHelpers.record_result("cache_invalidation_impact_with", scale, with_invalidation_ms)
 	PerfHelpers.record_result("cache_invalidation_impact_without", scale, without_invalidation_ms)
 
 	var overhead = (with_invalidation_ms - without_invalidation_ms) / without_invalidation_ms * 100
-	print("  Cache invalidation overhead at scale %d: %.1f%% (with=%.2fms, without=%.2fms)" % [
-		scale, overhead, with_invalidation_ms, without_invalidation_ms
-	])
+	print(
+		(
+			"  Cache invalidation overhead at scale %d: %.1f%% (with=%.2fms, without=%.2fms)"
+			% [
+				scale,
+				overhead,
+				with_invalidation_ms,
+				without_invalidation_ms,
+			]
+		),
+	)

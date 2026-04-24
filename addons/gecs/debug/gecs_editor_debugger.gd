@@ -4,7 +4,9 @@ extends EditorDebuggerPlugin
 ## The Debugger session for the current game
 var session: EditorDebuggerSession
 ## The tab that will be added to the debugger window
-var debugger_tab: GECSEditorDebuggerTab = preload("res://addons/gecs/debug/gecs_editor_debugger_tab.tscn").instantiate()
+var debugger_tab: GECSEditorDebuggerTab = (
+	preload("res://addons/gecs/debug/gecs_editor_debugger_tab.tscn").instantiate()
+)
 
 ## The debugger messages that will be sent to the editor debugger
 var Msg := GECSEditorDebuggerMessages.Msg
@@ -103,7 +105,7 @@ func _capture(message: String, data: Array, session_id: int) -> bool:
 
 func _setup_session(session_id):
 	# Add a new tab in the debugger session UI containing a label.
-	debugger_tab.name = "GECS" # Will be used as the tab title.
+	debugger_tab.name = "GECS"  # Will be used as the tab title.
 	session = get_session(session_id)
 	# Pass session reference to the tab for sending messages
 	debugger_tab.set_debugger_session(session)

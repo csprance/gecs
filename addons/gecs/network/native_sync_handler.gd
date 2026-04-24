@@ -50,14 +50,14 @@ func setup_native_sync(entity: Entity) -> void:
 
 	var synchronizer := MultiplayerSynchronizer.new()
 	synchronizer.name = "_NetSync"
-	synchronizer.replication_config = config                        # BEFORE add_child
+	synchronizer.replication_config = config  # BEFORE add_child
 	synchronizer.replication_interval = native_sync.replication_interval
 
 	# CRITICAL: peer_id=0 means server-owned in GECS v2; Godot uses 1 for server
 	var authority: int = net_id.peer_id if net_id.peer_id > 0 else 1
-	synchronizer.set_multiplayer_authority(authority)               # BEFORE add_child
+	synchronizer.set_multiplayer_authority(authority)  # BEFORE add_child
 
-	entity.add_child(synchronizer)                                  # Activates replication
+	entity.add_child(synchronizer)  # Activates replication
 
 
 ## Remove the MultiplayerSynchronizer child from entity.

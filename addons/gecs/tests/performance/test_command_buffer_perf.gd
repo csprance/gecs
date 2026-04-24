@@ -32,7 +32,7 @@ func _write_perf_result(test_name: String, scale: int, time_ms: float) -> void:
 			"test": test_name,
 			"scale": scale,
 			"time_ms": time_ms,
-			"godot_version": Engine.get_version_info()["string"]
+			"godot_version": Engine.get_version_info()["string"],
 		}
 		file.store_line(JSON.stringify(result))
 		file.close()
@@ -65,7 +65,9 @@ func test_bulk_removal_backwards(scale: int, test_parameters := [[100], [1000], 
 
 
 ## Test bulk entity removal with CommandBuffer (NEW WAY)
-func test_bulk_removal_command_buffer(scale: int, test_parameters := [[100], [1000], [10000]]) -> void:
+func test_bulk_removal_command_buffer(
+	scale: int, test_parameters := [[100], [1000], [10000]]
+) -> void:
 	# Create entities
 	var entities: Array[Entity] = []
 	for i in scale:
@@ -94,7 +96,9 @@ func test_bulk_removal_command_buffer(scale: int, test_parameters := [[100], [10
 
 
 ## Test bulk component additions with individual calls (OLD WAY)
-func test_bulk_component_add_individual(scale: int, test_parameters := [[100], [1000], [10000]]) -> void:
+func test_bulk_component_add_individual(
+	scale: int, test_parameters := [[100], [1000], [10000]]
+) -> void:
 	# Create entities
 	var entities: Array[Entity] = []
 	for i in scale:
@@ -115,7 +119,9 @@ func test_bulk_component_add_individual(scale: int, test_parameters := [[100], [
 
 
 ## Test bulk component additions with CommandBuffer (NEW WAY)
-func test_bulk_component_add_command_buffer(scale: int, test_parameters := [[100], [1000], [10000]]) -> void:
+func test_bulk_component_add_command_buffer(
+	scale: int, test_parameters := [[100], [1000], [10000]]
+) -> void:
 	# Create entities
 	var entities: Array[Entity] = []
 	for i in scale:
@@ -139,7 +145,9 @@ func test_bulk_component_add_command_buffer(scale: int, test_parameters := [[100
 
 
 ## Test state transitions (remove + add) with individual calls (OLD WAY)
-func test_state_transition_individual(scale: int, test_parameters := [[100], [1000], [10000]]) -> void:
+func test_state_transition_individual(
+	scale: int, test_parameters := [[100], [1000], [10000]]
+) -> void:
 	# Create entities with initial state
 	var entities: Array[Entity] = []
 	for i in scale:
@@ -162,7 +170,9 @@ func test_state_transition_individual(scale: int, test_parameters := [[100], [10
 
 
 ## Test state transitions with CommandBuffer (NEW WAY)
-func test_state_transition_command_buffer(scale: int, test_parameters := [[100], [1000], [10000]]) -> void:
+func test_state_transition_command_buffer(
+	scale: int, test_parameters := [[100], [1000], [10000]]
+) -> void:
 	# Create entities with initial state
 	var entities: Array[Entity] = []
 	for i in scale:
@@ -188,7 +198,9 @@ func test_state_transition_command_buffer(scale: int, test_parameters := [[100],
 
 
 ## Test cache invalidation count (verify optimization)
-func test_cache_invalidation_optimization(scale: int, test_parameters := [[100], [1000], [10000]]) -> void:
+func test_cache_invalidation_optimization(
+	scale: int, test_parameters := [[100], [1000], [10000]]
+) -> void:
 	# Create entities
 	var entities: Array[Entity] = []
 	for i in scale:

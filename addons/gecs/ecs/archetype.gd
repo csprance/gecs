@@ -46,7 +46,7 @@ var entities: Array[Entity] = []
 
 ## Fast lookup: Entity -> index in entities array
 ## Enables O(1) entity removal using swap-remove technique
-var entity_to_index: Dictionary = {} # Entity -> int
+var entity_to_index: Dictionary = {}  # Entity -> int
 
 ## OPTIMIZATION: Bitset for enabled/disabled state instead of archetype splitting
 ## Uses PackedInt64Array where each bit represents whether entity at that index is enabled
@@ -56,23 +56,23 @@ var enabled_bitset: PackedInt64Array = []
 ## OPTIMIZATION: Structure of Arrays (SoA) column storage for cache-friendly iteration
 ## Maps script_instance_id (int) -> Array of component instances
 ## Enables Flecs-style direct array iteration without dictionary lookups
-var columns: Dictionary = {} # int (script_instance_id) -> Array of components
+var columns: Dictionary = {}  # int (script_instance_id) -> Array of components
 
 ## Archetype edges for fast component add/remove
 ## Maps: Variant (int for components, String for relationships) -> Archetype
-var add_edges: Dictionary = {} # Variant (int|String) -> Archetype
-var remove_edges: Dictionary = {} # Variant (int|String) -> Archetype
+var add_edges: Dictionary = {}  # Variant (int|String) -> Archetype
+var remove_edges: Dictionary = {}  # Variant (int|String) -> Archetype
 
 ## Reverse-edge tracking: which archetypes hold an add_edge or remove_edge pointing to this one.
 ## Keyed by source archetype instance_id for O(1) operations.
-var neighbors: Dictionary = {} # int (get_instance_id()) -> Archetype
+var neighbors: Dictionary = {}  # int (get_instance_id()) -> Archetype
 
 
 ## Initialize archetype with signature and component types
 func _init(p_signature: int, p_component_types: Array):
 	signature = p_signature
 	component_types = p_component_types.duplicate()
-	component_types.sort() # Ensure sorted for consistent matching
+	component_types.sort()  # Ensure sorted for consistent matching
 
 	# Separate relationship slot keys (Strings) from component keys (ints)
 	for comp_type in component_types:
@@ -99,8 +99,7 @@ func add_entity(entity: Entity) -> void:
 	# Iterate columns keys (skips rel:// keys which have no columns)
 	for comp_key in columns:
 		if entity.components.has(comp_key):
-			(columns[comp_key]
-				.append(entity.components[comp_key]))
+			columns[comp_key].append(entity.components[comp_key])
 		else:
 			# Entity doesn't have this component yet (might be mid-initialization)
 			# Push null placeholder, will be fixed when component is added
@@ -241,11 +240,14 @@ func _to_string() -> String:
 		else:
 			comp_names.append(str(comp_type))
 
-	return "Archetype[sig=%d, comps=%s, entities=%d]" % [
-		signature,
-		str(comp_names),
-		entities.size()
-	]
+	return (
+		"Archetype[sig=%d, comps=%s, entities=%d]"
+		% [
+			signature,
+			str(comp_names),
+			entities.size(),
+		]
+	)
 
 
 ## Set up an edge to another archetype when a component is added
@@ -311,7 +313,7 @@ func update_entity_enabled_state(entity: Entity, enabled: bool) -> void:
 
 ## OPTIMIZATION: Ensure bitset has enough capacity for the given number of entities
 func _ensure_bitset_capacity(required_size: int) -> void:
-	var required_int64s = (required_size + 63) / 64 # Round up to nearest 64-bit boundary
+	var required_int64s = (required_size + 63) / 64  # Round up to nearest 64-bit boundary
 	while enabled_bitset.size() < required_int64s:
 		enabled_bitset.append(0)
 

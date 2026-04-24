@@ -10,8 +10,8 @@
 class_name TestPropertyQueryPreservation
 extends GdUnitTestSuite
 
-const C_Likes = preload("res://addons/gecs/tests/components/c_test_a.gd") # value: int
-const C_Eats = preload("res://addons/gecs/tests/components/c_test_c.gd") # value: int
+const C_Likes = preload("res://addons/gecs/tests/components/c_test_a.gd")  # value: int
+const C_Eats = preload("res://addons/gecs/tests/components/c_test_c.gd")  # value: int
 
 var runner: GdUnitSceneRunner
 var world: World
@@ -33,9 +33,16 @@ func test_property_query_classified_as_post_filter():
 	var target = Entity.new()
 	world.add_entity(target)
 
-	var qb = ECS.world.query.with_relationship([
-		Relationship.new({C_Eats: {"value": {"_gt": 5}}}, target)
-	])
+	var qb = (
+		ECS
+		.world
+		.query
+		.with_relationship(
+			[
+				Relationship.new({C_Eats: {"value": {"_gt": 5}}}, target),
+			],
+		)
+	)
 
 	assert_int(qb._post_filter_relationships.size()).is_equal(1)
 	assert_bool(qb._structural_rel_keys.is_empty()).is_true()
@@ -48,9 +55,16 @@ func test_query_has_non_structural_filters_with_property_query():
 	var target = Entity.new()
 	world.add_entity(target)
 
-	var qb = ECS.world.query.with_relationship([
-		Relationship.new({C_Eats: {"value": {"_gt": 5}}}, target)
-	])
+	var qb = (
+		ECS
+		.world
+		.query
+		.with_relationship(
+			[
+				Relationship.new({C_Eats: {"value": {"_gt": 5}}}, target),
+			],
+		)
+	)
 
 	# Non-empty _post_filter_relationships is equivalent to _query_has_non_structural_filters == true
 	assert_bool(qb._post_filter_relationships.is_empty()).is_false()
@@ -63,9 +77,16 @@ func test_query_has_non_structural_filters_without_property_query():
 	world.add_entity(target)
 
 	# Plain type-match relationship: entity target → structural path only
-	var qb = ECS.world.query.with_relationship([
-		Relationship.new(C_Likes.new(), target)
-	])
+	var qb = (
+		ECS
+		.world
+		.query
+		.with_relationship(
+			[
+				Relationship.new(C_Likes.new(), target),
+			],
+		)
+	)
 
 	assert_bool(qb._post_filter_relationships.is_empty()).is_true()
 
@@ -102,10 +123,20 @@ func test_mixed_structural_and_post_filter_correctness():
 	e5.add_relationship(Relationship.new(C_Likes.new(), target_a))
 	e5.add_relationship(Relationship.new(C_Eats.new(10), null))
 
-	var result = Array(ECS.world.query.with_relationship([
-		Relationship.new(C_Likes.new(), target_a),
-		Relationship.new({C_Eats: {"value": {"_gt": 50}}}, null)
-	]).execute())
+	var result = Array(
+		(
+			ECS
+			.world
+			.query
+			.with_relationship(
+				[
+					Relationship.new(C_Likes.new(), target_a),
+					Relationship.new({C_Eats: {"value": {"_gt": 50}}}, null),
+				],
+			)
+			.execute()
+		),
+	)
 
 	assert_bool(result.has(e1)).is_true()
 	assert_bool(result.has(e2)).is_true()
@@ -137,10 +168,20 @@ func test_post_filter_runs_on_narrowed_set():
 	entities[2].add_relationship(Relationship.new(C_Eats.new(20), null))
 	entities[3].add_relationship(Relationship.new(C_Eats.new(10), null))
 
-	var result = Array(ECS.world.query.with_relationship([
-		Relationship.new(C_Likes.new(), target_a),
-		Relationship.new({C_Eats: {"value": {"_gt": 50}}}, null)
-	]).execute())
+	var result = Array(
+		(
+			ECS
+			.world
+			.query
+			.with_relationship(
+				[
+					Relationship.new(C_Likes.new(), target_a),
+					Relationship.new({C_Eats: {"value": {"_gt": 50}}}, null),
+				],
+			)
+			.execute()
+		),
+	)
 
 	# Post-filter reduced 4 structural matches to 2
 	assert_int(result.size()).is_equal(2)
@@ -162,9 +203,19 @@ func test_property_query_in_without_relationship():
 	e_low.add_relationship(Relationship.new(C_Eats.new(10), null))
 
 	# Exclude entities with a C_Eats relationship where value > 50
-	var result = Array(ECS.world.query.without_relationship([
-		Relationship.new({C_Eats: {"value": {"_gt": 50}}}, null)
-	]).execute())
+	var result = Array(
+		(
+			ECS
+			.world
+			.query
+			.without_relationship(
+				[
+					Relationship.new({C_Eats: {"value": {"_gt": 50}}}, null),
+				],
+			)
+			.execute()
+		),
+	)
 
-	assert_bool(result.has(e_high)).is_false() # excluded: C_Eats(100) matches value > 50
-	assert_bool(result.has(e_low)).is_true() # included: C_Eats(10) does not match value > 50
+	assert_bool(result.has(e_high)).is_false()  # excluded: C_Eats(100) matches value > 50
+	assert_bool(result.has(e_low)).is_true()  # included: C_Eats(10) does not match value > 50

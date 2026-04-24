@@ -80,9 +80,9 @@ func test_multiple_component_changes_invalidate_cache():
 	assert_array(initial_result).has_size(1)
 
 	# Make multiple changes in same frame
-	entity2.add_component(C_TestA.new()) # Add to entity2
-	entity3.add_component(C_TestA.new()) # Add to entity3
-	entity1.remove_component(C_TestA) # Remove from entity1
+	entity2.add_component(C_TestA.new())  # Add to entity2
+	entity3.add_component(C_TestA.new())  # Add to entity3
+	entity1.remove_component(C_TestA)  # Remove from entity1
 
 	# Execute query - should reflect all changes
 	var final_result = query.execute()
@@ -113,25 +113,26 @@ func test_complex_query_cache_invalidation():
 	# Complex query: has TestA AND (TestB OR TestC) but NOT TestD
 	var query = world.query.with_all([C_TestA]).with_any([C_TestB, C_TestC]).with_none([C_TestD])
 	var initial_result = query.execute()
-	assert_array(initial_result).has_size(2) # entity1 and entity2
+	assert_array(initial_result).has_size(2)  # entity1 and entity2
 
 	# Add TestD to entity1 - should remove it from results
 	entity1.add_component(C_TestD.new())
 
 	var updated_result = query.execute()
-	assert_array(updated_result).has_size(1) # only entity2
+	assert_array(updated_result).has_size(1)  # only entity2
 	assert_bool(updated_result.has(entity2)).is_true()
 	assert_bool(updated_result.has(entity1)).is_false()
 
 
 ## Test that cache invalidation signal is properly emitted
 func test_cache_invalidation_signal_emission():
-	var signal_count = [0] # Use array to avoid closure issues
+	var signal_count = [0]  # Use array to avoid closure issues
 
 	# Connect to cache invalidation signal
-	world.cache_invalidated.connect(func():
-		signal_count[0] += 1
-		print("[TEST] Signal count incremented to: ", signal_count[0])
+	world.cache_invalidated.connect(
+		func():
+			signal_count[0] += 1
+			print("[TEST] Signal count incremented to: ", signal_count[0])
 	)
 
 	var entity = Entity.new()
@@ -139,7 +140,7 @@ func test_cache_invalidation_signal_emission():
 	print("[TEST] About to add entity, current signal_count: ", signal_count[0])
 	world.add_entity(entity)
 	print("[TEST] After add entity, signal_count: ", signal_count[0])
-	assert_int(signal_count[0]).is_greater_equal(1) # At least one for adding entity
+	assert_int(signal_count[0]).is_greater_equal(1)  # At least one for adding entity
 
 	var initial_count = signal_count[0]
 
@@ -195,8 +196,12 @@ func test_cache_performance_benefit():
 
 	# Cache should be significantly faster
 	assert_bool(cached_time < uncached_time).is_true()
-	print("Cache performance test - Uncached: %d us, Cached: %d us, Speedup: %.2fx" %
-		[uncached_time, cached_time, float(uncached_time) / max(cached_time, 1)])
+	print(
+		(
+			"Cache performance test - Uncached: %d us, Cached: %d us, Speedup: %.2fx"
+			% [uncached_time, cached_time, float(uncached_time) / max(cached_time, 1)]
+		),
+	)
 
 
 ## Test that world cache clearing works correctly
@@ -206,7 +211,7 @@ func test_manual_cache_clearing():
 	world.add_entity(entity)
 
 	var query = world.query.with_all([C_TestA])
-	var result1 = query.execute() # Cache the result
+	var result1 = query.execute()  # Cache the result
 
 	# Manually clear cache (now using archetype cache)
 	world._query_archetype_cache.clear()
@@ -214,6 +219,7 @@ func test_manual_cache_clearing():
 	# Should not affect correctness
 	var result2 = query.execute()
 	assert_array(result1).is_equal(result2)
+
 
 ## ===============================
 ## RELATIONSHIP QUERY TESTS
@@ -289,19 +295,21 @@ func test_relationship_removal_stale_cache_bug():
 	world.add_entities([entity1, entity2, interactable_entity])
 
 	# Create relationships representing "can interact with anything"
-	var interact_rel1 = Relationship.new(C_TestA.new(), ECS.wildcard) # Using TestA as interaction relation
+	var interact_rel1 = Relationship.new(C_TestA.new(), ECS.wildcard)  # Using TestA as interaction relation
 	var interact_rel2 = Relationship.new(C_TestA.new(), ECS.wildcard)
 	entity1.add_relationship(interact_rel1)
 	entity2.add_relationship(interact_rel2)
 
 	# First subsystem queries for entities that can interact
-	var interaction_query = world.query.with_relationship([Relationship.new(C_TestA.new(), ECS.wildcard)])
+	var interaction_query = world.query.with_relationship(
+		[Relationship.new(C_TestA.new(), ECS.wildcard)]
+	)
 	var interaction_entities = interaction_query.execute()
 	assert_array(interaction_entities).has_size(2)
 
 	# Simulate first entity processing: removes its interaction capability
 	assert_bool(interaction_entities.has(entity1)).is_true()
-	var first_entity = interaction_entities[0] # Could be entity1 or entity2
+	var first_entity = interaction_entities[0]  # Could be entity1 or entity2
 
 	# Remove relationship (simulating "used up" interaction)
 	if first_entity == entity1:
@@ -340,9 +348,9 @@ func test_multiple_relationship_changes_query_correctly():
 	# Make multiple relationship changes in same frame
 	var rel2 = Relationship.new(C_TestA.new(), target_entity)
 	var rel3 = Relationship.new(C_TestA.new(), target_entity)
-	entity2.add_relationship(rel2) # Add to entity2
-	entity3.add_relationship(rel3) # Add to entity3
-	entity1.remove_relationship(rel1) # Remove from entity1
+	entity2.add_relationship(rel2)  # Add to entity2
+	entity3.add_relationship(rel3)  # Add to entity3
+	entity1.remove_relationship(rel1)  # Remove from entity1
 
 	# Execute query - should reflect all changes
 	var final_result = query.execute()
@@ -399,7 +407,9 @@ func test_mixed_component_relationship_cache_invalidation():
 
 	# Complex query: has component AND relationship
 	var component_query = world.query.with_all([C_TestA])
-	var relationship_query = world.query.with_relationship([Relationship.new(C_TestB.new(), ECS.wildcard)])
+	var relationship_query = world.query.with_relationship(
+		[Relationship.new(C_TestB.new(), ECS.wildcard)]
+	)
 
 	# Cache both queries
 	var comp_result1 = component_query.execute()
@@ -412,16 +422,16 @@ func test_mixed_component_relationship_cache_invalidation():
 
 	var comp_result2 = component_query.execute()
 	var rel_result2 = relationship_query.execute()
-	assert_array(comp_result2).has_size(2) # Component query sees change
-	assert_array(rel_result2).has_size(1) # Relationship query unchanged
+	assert_array(comp_result2).has_size(2)  # Component query sees change
+	assert_array(rel_result2).has_size(1)  # Relationship query unchanged
 
 	# Add relationship to entity2 - should invalidate relationship query
 	entity2.add_relationship(Relationship.new(C_TestB.new(), target_entity))
 
 	var comp_result3 = component_query.execute()
 	var rel_result3 = relationship_query.execute()
-	assert_array(comp_result3).has_size(2) # Component query unchanged
-	assert_array(rel_result3).has_size(2) # Relationship query sees change
+	assert_array(comp_result3).has_size(2)  # Component query unchanged
+	assert_array(rel_result3).has_size(2)  # Relationship query sees change
 
 
 ## Regression test: moving an entity between two EXISTING archetypes must

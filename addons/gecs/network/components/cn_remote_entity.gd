@@ -1,6 +1,5 @@
 class_name CN_RemoteEntity
 extends Component
-
 ## Marker component indicating this entity is controlled by a remote peer or server.
 ##
 ## Automatically assigned by NetworkSync when CN_NetworkIdentity.peer_id does NOT match local peer.

@@ -7,7 +7,8 @@ var world: World
 
 
 # Test system that uses PER_SYSTEM flush mode
-class TestSystemPerSystem extends System:
+class TestSystemPerSystem:
+	extends System
 	var entities_to_remove: Array[Entity] = []
 
 	func query():
@@ -22,7 +23,8 @@ class TestSystemPerSystem extends System:
 
 
 # Test system that uses PER_GROUP flush mode
-class TestSystemPerGroup extends System:
+class TestSystemPerGroup:
+	extends System
 	var spawned_count: int = 0
 
 	func _init():
@@ -41,7 +43,8 @@ class TestSystemPerGroup extends System:
 
 
 # Test system that uses MANUAL flush mode
-class TestSystemManual extends System:
+class TestSystemManual:
+	extends System
 	var spawned_count: int = 0
 
 	func _init():
@@ -60,7 +63,8 @@ class TestSystemManual extends System:
 
 
 # Test system that depends on command buffer results
-class TestSystemDependent extends System:
+class TestSystemDependent:
+	extends System
 	var processed_count: int = 0
 
 	func query():

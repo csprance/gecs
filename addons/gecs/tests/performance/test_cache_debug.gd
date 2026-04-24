@@ -3,14 +3,17 @@ extends GdUnitTestSuite
 var runner: GdUnitSceneRunner
 var world: World
 
+
 func before():
 	runner = scene_runner("res://addons/gecs/tests/test_scene.tscn")
 	world = runner.get_property("world")
 	ECS.world = world
 
+
 func after_test():
 	if world:
 		world.purge(false)
+
 
 ## Test to debug cache behavior
 func test_cache_hits_with_repeated_queries():
@@ -28,9 +31,14 @@ func test_cache_hits_with_repeated_queries():
 	for i in 10:
 		var entities = world.query.with_all([C_TestA, C_TestB]).execute()
 		var stats = world.get_cache_stats()
-		print("Query %d: found %d entities | Cache hits=%d misses=%d" % [
-			i + 1,
-			entities.size(),
-			stats.cache_hits,
-			stats.cache_misses
-		])
+		print(
+			(
+				"Query %d: found %d entities | Cache hits=%d misses=%d"
+				% [
+					i + 1,
+					entities.size(),
+					stats.cache_hits,
+					stats.cache_misses,
+				]
+			),
+		)

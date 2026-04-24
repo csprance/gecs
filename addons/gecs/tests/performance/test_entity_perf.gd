@@ -16,11 +16,12 @@ func before():
 func test_entity_creation(scale: int, test_parameters := [[100], [1000], [10000]]):
 	var entities = []
 
-	var time_ms = PerfHelpers.time_it(func():
-		for i in scale:
-			var entity = auto_free(Entity.new())
-			entity.name = "PerfEntity_%d" % i
-			entities.append(entity)
+	var time_ms = PerfHelpers.time_it(
+		func():
+			for i in scale:
+				var entity = auto_free(Entity.new())
+				entity.name = "PerfEntity_%d" % i
+				entities.append(entity)
 	)
 
 	PerfHelpers.record_result("entity_creation", scale, time_ms)
@@ -30,19 +31,21 @@ func test_entity_creation(scale: int, test_parameters := [[100], [1000], [10000]
 func test_entity_with_components(scale: int, test_parameters := [[100], [1000], [10000]]):
 	var entities = []
 
-	var time_ms = PerfHelpers.time_it(func():
-		for i in scale:
-			var entity =  auto_free(Entity.new())
-			entity.name = "PerfEntity_%d" % i
-			entity.add_component(C_TestA.new())
-			entity.add_component(C_TestB.new())
-			if i % 2 == 0:
-				entity.add_component(C_TestC.new())
-			entities.append(entity)
+	var time_ms = PerfHelpers.time_it(
+		func():
+			for i in scale:
+				var entity = auto_free(Entity.new())
+				entity.name = "PerfEntity_%d" % i
+				entity.add_component(C_TestA.new())
+				entity.add_component(C_TestB.new())
+				if i % 2 == 0:
+					entity.add_component(C_TestC.new())
+				entities.append(entity)
 	)
 
 	PerfHelpers.record_result("entity_with_components", scale, time_ms)
 	world.purge(false)
+
 
 ## Test adding entities to world
 func test_entity_world_addition(scale: int, test_parameters := [[100], [1000], [10000]]):
@@ -55,13 +58,15 @@ func test_entity_world_addition(scale: int, test_parameters := [[100], [1000], [
 		entities.append(entity)
 
 	# Time just the world addition
-	var time_ms = PerfHelpers.time_it(func():
-		for entity in entities:
-			world.add_entity(entity, null, false)
+	var time_ms = PerfHelpers.time_it(
+		func():
+			for entity in entities:
+				world.add_entity(entity, null, false)
 	)
 
 	PerfHelpers.record_result("entity_world_addition", scale, time_ms)
 	world.purge(false)
+
 
 ## Test removing entities from world
 func test_entity_removal(scale: int, test_parameters := [[100], [1000], [10000]]):
@@ -75,14 +80,16 @@ func test_entity_removal(scale: int, test_parameters := [[100], [1000], [10000]]
 		world.add_entity(entity, null, false)
 
 	# Time removal of half the entities
-	var time_ms = PerfHelpers.time_it(func():
-		var to_remove = entities.slice(0, scale / 2)
-		for entity in to_remove:
-			world.remove_entity(entity)
+	var time_ms = PerfHelpers.time_it(
+		func():
+			var to_remove = entities.slice(0, scale / 2)
+			for entity in to_remove:
+				world.remove_entity(entity)
 	)
 
 	PerfHelpers.record_result("entity_removal", scale, time_ms)
 	world.purge(false)
+
 
 ## Test bulk entity operations
 func test_bulk_entity_operations(scale: int, test_parameters := [[100], [1000], [10000]]):
@@ -95,9 +102,7 @@ func test_bulk_entity_operations(scale: int, test_parameters := [[100], [1000], 
 		entities.append(entity)
 
 	# Time bulk addition to world
-	var time_ms = PerfHelpers.time_it(func():
-		world.add_entities(entities)
-	)
+	var time_ms = PerfHelpers.time_it(func(): world.add_entities(entities))
 
 	PerfHelpers.record_result("bulk_entity_operations", scale, time_ms)
 	world.purge(false)

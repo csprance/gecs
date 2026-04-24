@@ -4,8 +4,8 @@ extends System
 
 func deps():
 	return {
-		Runs.After: [TestBSystem], # Runs after SystemA
-		Runs.Before: [TestDSystem], # This system rubs before SystemC
+		Runs.After: [TestBSystem],  # Runs after SystemA
+		Runs.Before: [TestDSystem],  # This system rubs before SystemC
 	}
 
 

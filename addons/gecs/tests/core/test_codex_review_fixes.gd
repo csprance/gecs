@@ -23,6 +23,7 @@ func after_test():
 
 #region P1: Exact relationship exclusion over-matching
 
+
 ## without_relationship with a specific target must NOT exclude entities that
 ## have the same relation type pointing to a DIFFERENT target.
 func test_without_relationship_exact_target_does_not_exclude_other_targets():
@@ -44,9 +45,15 @@ func test_without_relationship_exact_target_does_not_exclude_other_targets():
 	entity_b.add_relationship(Relationship.new(C_TestB.new(), target_b))
 
 	# Exclude entities that like target_a — entity_b should still be found
-	var result = world.query.with_all([C_TestA]).without_relationship(
-		[Relationship.new(C_TestB.new(), target_a)]
-	).execute()
+	var result = (
+		world
+		.query
+		.with_all([C_TestA])
+		.without_relationship(
+			[Relationship.new(C_TestB.new(), target_a)],
+		)
+		.execute()
+	)
 
 	assert_int(result.size()).is_equal(1)
 	assert_object(result[0]).is_same(entity_b)
@@ -68,17 +75,24 @@ func test_without_relationship_wildcard_excludes_all_targets():
 	entity_a.add_relationship(Relationship.new(C_TestB.new(), target))
 
 	# Wildcard exclusion: exclude any entity with ANY C_TestB relationship
-	var result = world.query.with_all([C_TestA]).without_relationship(
-		[Relationship.new(C_TestB.new(), null)]
-	).execute()
+	var result = (
+		world
+		.query
+		.with_all([C_TestA])
+		.without_relationship(
+			[Relationship.new(C_TestB.new(), null)],
+		)
+		.execute()
+	)
 
 	assert_int(result.size()).is_equal(1)
 	assert_object(result[0]).is_same(entity_b)
 
+
 #endregion
 
-
 #region P1: Cache invalidation in batch relationship moves
+
 
 ## After batch relationship addition, queries must reflect the change immediately.
 func test_batch_add_relationships_invalidates_cache():
@@ -93,21 +107,38 @@ func test_batch_add_relationships_invalidates_cache():
 	entity.add_component(C_TestA.new())
 
 	# Pre-query to populate cache
-	var before = world.query.with_all([C_TestA]).with_relationship(
-		[Relationship.new(C_TestB.new(), target_a)]
-	).execute()
+	var before = (
+		world
+		.query
+		.with_all([C_TestA])
+		.with_relationship(
+			[Relationship.new(C_TestB.new(), target_a)],
+		)
+		.execute()
+	)
 	assert_int(before.size()).is_equal(0)
 
 	# Batch add relationships
-	entity.add_relationships([
-		Relationship.new(C_TestB.new(), target_a),
-		Relationship.new(C_TestB.new(), target_b),
-	])
+	(
+		entity
+		.add_relationships(
+			[
+				Relationship.new(C_TestB.new(), target_a),
+				Relationship.new(C_TestB.new(), target_b),
+			],
+		)
+	)
 
 	# Query should now find the entity (cache must be invalidated)
-	var after = world.query.with_all([C_TestA]).with_relationship(
-		[Relationship.new(C_TestB.new(), target_a)]
-	).execute()
+	var after = (
+		world
+		.query
+		.with_all([C_TestA])
+		.with_relationship(
+			[Relationship.new(C_TestB.new(), target_a)],
+		)
+		.execute()
+	)
 	assert_int(after.size()).is_equal(1)
 	assert_object(after[0]).is_same(entity)
 
@@ -127,27 +158,45 @@ func test_batch_remove_relationships_invalidates_cache():
 	entity.add_relationship(Relationship.new(C_TestB.new(), target_b))
 
 	# Pre-query to populate cache
-	var before = world.query.with_all([C_TestA]).with_relationship(
-		[Relationship.new(C_TestB.new(), target_a)]
-	).execute()
+	var before = (
+		world
+		.query
+		.with_all([C_TestA])
+		.with_relationship(
+			[Relationship.new(C_TestB.new(), target_a)],
+		)
+		.execute()
+	)
 	assert_int(before.size()).is_equal(1)
 
 	# Batch remove
-	entity.remove_relationships([
-		Relationship.new(C_TestB.new(), target_a),
-		Relationship.new(C_TestB.new(), target_b),
-	])
+	(
+		entity
+		.remove_relationships(
+			[
+				Relationship.new(C_TestB.new(), target_a),
+				Relationship.new(C_TestB.new(), target_b),
+			],
+		)
+	)
 
 	# Query should no longer find the entity
-	var after = world.query.with_all([C_TestA]).with_relationship(
-		[Relationship.new(C_TestB.new(), target_a)]
-	).execute()
+	var after = (
+		world
+		.query
+		.with_all([C_TestA])
+		.with_relationship(
+			[Relationship.new(C_TestB.new(), target_a)],
+		)
+		.execute()
+	)
 	assert_int(after.size()).is_equal(0)
+
 
 #endregion
 
-
 #region P1: Per-relationship signals from batch helpers
+
 
 ## add_relationships() must emit per-relationship entity signals for external listeners.
 func test_batch_add_emits_per_entity_signals():
@@ -160,14 +209,17 @@ func test_batch_add_emits_per_entity_signals():
 	world.add_entity(target_b)
 
 	var received_additions: Array = []
-	entity.relationship_added.connect(
-		func(_e, rel): received_additions.append(rel)
-	)
+	entity.relationship_added.connect(func(_e, rel): received_additions.append(rel))
 
-	entity.add_relationships([
-		Relationship.new(C_TestA.new(), target_a),
-		Relationship.new(C_TestB.new(), target_b),
-	])
+	(
+		entity
+		.add_relationships(
+			[
+				Relationship.new(C_TestA.new(), target_a),
+				Relationship.new(C_TestB.new(), target_b),
+			],
+		)
+	)
 
 	assert_int(received_additions.size()).is_equal(2)
 
@@ -188,14 +240,17 @@ func test_batch_remove_emits_per_entity_signals():
 	entity.add_relationship(rel_b)
 
 	var received_removals: Array = []
-	entity.relationship_removed.connect(
-		func(_e, rel): received_removals.append(rel)
-	)
+	entity.relationship_removed.connect(func(_e, rel): received_removals.append(rel))
 
-	entity.remove_relationships([
-		Relationship.new(C_TestA.new(), target_a),
-		Relationship.new(C_TestB.new(), target_b),
-	])
+	(
+		entity
+		.remove_relationships(
+			[
+				Relationship.new(C_TestA.new(), target_a),
+				Relationship.new(C_TestB.new(), target_b),
+			],
+		)
+	)
 
 	assert_int(received_removals.size()).is_equal(2)
 
@@ -215,20 +270,26 @@ func test_batch_add_single_archetype_transition():
 
 	var old_archetype = world.entity_to_archetype[entity]
 
-	entity.add_relationships([
-		Relationship.new(C_TestB.new(), target_a),
-		Relationship.new(C_TestC.new(), target_b),
-	])
+	(
+		entity
+		.add_relationships(
+			[
+				Relationship.new(C_TestB.new(), target_a),
+				Relationship.new(C_TestC.new(), target_b),
+			],
+		)
+	)
 
 	var new_archetype = world.entity_to_archetype[entity]
 	assert_object(new_archetype).is_not_same(old_archetype)
 	# Should have both relationship types
 	assert_bool(new_archetype.relationship_types.size() >= 2).is_true()
 
+
 #endregion
 
-
 #region P2: Relationship keys in batched component operations
+
 
 ## add_components() on an entity WITH relationships must include rel:// keys
 ## in the new archetype.
@@ -253,9 +314,15 @@ func test_add_components_preserves_relationship_keys():
 	assert_bool(arch_after.relationship_types.size() > 0).is_true()
 
 	# Relationship query should still find the entity
-	var result = world.query.with_all([C_TestA, C_TestC]).with_relationship(
-		[Relationship.new(C_TestB.new(), target)]
-	).execute()
+	var result = (
+		world
+		.query
+		.with_all([C_TestA, C_TestC])
+		.with_relationship(
+			[Relationship.new(C_TestB.new(), target)],
+		)
+		.execute()
+	)
 	assert_int(result.size()).is_equal(1)
 
 
@@ -282,15 +349,22 @@ func test_remove_components_preserves_relationship_keys():
 	assert_bool(arch_after.relationship_types.size() > 0).is_true()
 
 	# Relationship query should still find the entity
-	var result = world.query.with_all([C_TestA]).with_relationship(
-		[Relationship.new(C_TestB.new(), target)]
-	).execute()
+	var result = (
+		world
+		.query
+		.with_all([C_TestA])
+		.with_relationship(
+			[Relationship.new(C_TestB.new(), target)],
+		)
+		.execute()
+	)
 	assert_int(result.size()).is_equal(1)
+
 
 #endregion
 
-
 #region Regression: combine() must reclassify relationship buckets
+
 
 ## When two QueryBuilders are combined, the structural/wildcard/post-filter
 ## classification arrays must be rebuilt so that relationship queries work
@@ -351,10 +425,11 @@ func test_combine_reclassifies_exclusion_relationship_buckets():
 	assert_int(result.size()).is_equal(1)
 	assert_object(result[0]).is_same(entity_b)
 
+
 #endregion
 
-
 #region Regression: purge(keep) must not reset _next_entity_id
+
 
 ## When purging with a keep list, _next_entity_id must not reset to 1
 ## or new entities would get colliding ecs_ids with retained entities,
@@ -395,10 +470,11 @@ func test_full_purge_resets_entity_id_counter():
 	world.add_entity(newcomer)
 	assert_int(newcomer.ecs_id).is_equal(1)
 
+
 #endregion
 
-
 #region Regression: without_group + with_relationship must pass structural args
+
 
 ## Queries combining without_group() and with_relationship() must use
 ## archetype-level structural filtering, not just component-only filtering.
@@ -427,9 +503,16 @@ func test_without_group_with_relationship_uses_structural_filtering():
 	entity_both.add_to_group("Excluded")
 
 	# Query: has relationship, NOT in excluded group
-	var result = world.query.with_all([C_TestA]).with_relationship(
-		[Relationship.new(C_TestB.new(), target)]
-	).without_group(["Excluded"]).execute()
+	var result = (
+		world
+		.query
+		.with_all([C_TestA])
+		.with_relationship(
+			[Relationship.new(C_TestB.new(), target)],
+		)
+		.without_group(["Excluded"])
+		.execute()
+	)
 
 	# Only entity_with_rel qualifies (has rel, not in group)
 	assert_int(result.size()).is_equal(1)
@@ -459,9 +542,16 @@ func test_with_group_with_relationship():
 	entity_both.add_to_group("Players")
 
 	# Query: has relationship AND in group
-	var result = world.query.with_all([C_TestA]).with_relationship(
-		[Relationship.new(C_TestB.new(), target)]
-	).with_group(["Players"]).execute()
+	var result = (
+		world
+		.query
+		.with_all([C_TestA])
+		.with_relationship(
+			[Relationship.new(C_TestB.new(), target)],
+		)
+		.with_group(["Players"])
+		.execute()
+	)
 
 	# Only entity_both qualifies (has rel AND in group)
 	assert_int(result.size()).is_equal(1)

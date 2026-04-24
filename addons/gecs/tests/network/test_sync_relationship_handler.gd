@@ -1,5 +1,4 @@
 extends GdUnitTestSuite
-
 ## Test suite for SyncRelationshipHandler
 ## Tests round-trip serialization/deserialization of relationship creation recipes,
 ## deferred Entity target resolution, sync loop prevention, and authority filtering.
@@ -368,6 +367,8 @@ func test_deserialize_unknown_target_type():
 
 
 func test_deserialize_entity_target_not_found():
-	var recipe = {"r": "res://addons/gecs/tests/components/c_test_a.gd", "tt": "E", "t": "nonexistent"}
+	var recipe = {
+		"r": "res://addons/gecs/tests/components/c_test_a.gd", "tt": "E", "t": "nonexistent"
+	}
 	var result = handler.deserialize_relationship(recipe)
 	assert_object(result).is_null()

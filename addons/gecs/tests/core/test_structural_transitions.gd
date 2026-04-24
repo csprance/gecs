@@ -86,11 +86,16 @@ func test_add_relationships_batch_single_transition():
 
 	world.reset_cache_stats()
 
-	entity.add_relationships([
-		Relationship.new(C_TestA.new(), t1),
-		Relationship.new(C_TestB.new(), t2),
-		Relationship.new(C_TestA.new(), t3),
-	])
+	(
+		entity
+		.add_relationships(
+			[
+				Relationship.new(C_TestA.new(), t1),
+				Relationship.new(C_TestB.new(), t2),
+				Relationship.new(C_TestA.new(), t3),
+			],
+		)
+	)
 
 	var final_archetype = world.entity_to_archetype[entity]
 	# All 3 relationship slot keys should be present

@@ -16,6 +16,7 @@ func after_test():
 
 #region SystemTimer Unit Tests
 
+
 func test_timer_does_not_tick_before_interval():
 	var timer = SystemTimer.new()
 	timer.interval = 1.0
@@ -103,10 +104,11 @@ func test_ticked_resets_each_advance():
 	timer.advance(0.1)
 	assert_bool(timer.ticked).is_false()
 
+
 #endregion SystemTimer Unit Tests
 
-
 #region System + Timer Integration Tests
+
 
 func test_system_without_timer_runs_every_frame():
 	var sys = STimerTest.new()
@@ -210,6 +212,7 @@ func test_timer_overshoot_prevents_drift():
 	world.process(0.4)
 	assert_int(sys.run_count).is_equal(2)
 
+
 func test_subsystem_timer_gates_execution():
 	# Create a system with two subsystems — one timed, one not
 	var sys = SubsystemTimerTestSystem.new()
@@ -238,12 +241,14 @@ func test_subsystem_timer_gates_execution():
 	assert_int(sys.always_count).is_equal(6)
 	assert_int(sys.timed_count).is_equal(1)
 
-#endregion System + Timer Integration Tests
 
+#endregion System + Timer Integration Tests
 
 #region Subsystem Timer Test Helper
 
-class SubsystemTimerTestSystem extends System:
+
+class SubsystemTimerTestSystem:
+	extends System
 	var always_count: int = 0
 	var timed_count: int = 0
 	var _timer: SystemTimer

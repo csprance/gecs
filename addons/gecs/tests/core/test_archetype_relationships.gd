@@ -5,7 +5,6 @@ extends GdUnitTestSuite
 ## Verifies that Archetype correctly handles rel:// prefixed slot keys
 ## alongside component int keys (ARCH-01 through ARCH-05).
 
-
 # Test component keys (script instance ids, initialized in before())
 var COMP_A: int
 var COMP_B: int
@@ -13,9 +12,11 @@ var COMP_B: int
 var _script_a: GDScript = preload("res://addons/gecs/tests/components/c_test_a.gd")
 var _script_b: GDScript = preload("res://addons/gecs/tests/components/c_test_b.gd")
 
+
 func before():
 	COMP_A = _script_a.get_instance_id()
 	COMP_B = _script_b.get_instance_id()
+
 
 # Relationship slot keys using the rel:// format
 const REL_A_ENTITY := "rel://res://addons/gecs/tests/components/c_test_a.gd::entity#99999"
@@ -50,9 +51,12 @@ func test_rel_key_format_and_sorting():
 	# component_types is a mix of ints (components) and Strings (rel:// keys)
 	# After sorting: ints come before Strings in Godot's Variant comparison
 	for ct in arch.component_types:
-		assert_bool(
-			ct is int or (ct is String and (ct as String).begins_with("rel://"))
-		).is_true()
+		(
+			assert_bool(
+				ct is int or (ct is String and (ct as String).begins_with("rel://")),
+			)
+			.is_true()
+		)
 
 	# Should contain all keys
 	assert_bool(arch.component_types.has(COMP_A)).is_true()

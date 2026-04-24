@@ -1,8 +1,6 @@
 extends GdUnitTestSuite
-
 ## Test suite for NativeSyncHandler (SYNC-04).
 ## Validates MultiplayerSynchronizer lifecycle: setup, cleanup, authority, idempotency.
-
 
 # ============================================================================
 # MOCK OBJECTS

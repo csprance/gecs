@@ -1,5 +1,4 @@
 extends GdUnitTestSuite
-
 ## Test suite for CN_NetSync (SYNC-02 and SYNC-03).
 
 # ============================================================================
@@ -87,7 +86,6 @@ class MockNetworkSync:
 # ============================================================================
 # SETUP / TEARDOWN
 # ============================================================================
-
 
 var world: World
 var mock_ns: MockNetworkSync

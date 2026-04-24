@@ -1,5 +1,4 @@
 extends GdUnitTestSuite
-
 ## Comprehensive test suite for System.sub_systems() functionality
 ## Tests execution methods, callable signatures, caching, error handling, and execution order
 
@@ -21,6 +20,7 @@ func after_test():
 ## ===============================
 ## SUBSYSTEM EXECUTION WITH DIFFERENT EXECUTION METHODS
 ## ===============================
+
 
 ## Test subsystem with PROCESS execution method
 func test_subsystem_process_execution():
@@ -81,7 +81,7 @@ func test_subsystem_archetype_execution():
 	world.process(0.016)
 
 	# Verify: process_batch_subsystem called with component arrays
-	assert_int(system.call_count).is_greater_equal(1) # At least once per archetype
+	assert_int(system.call_count).is_greater_equal(1)  # At least once per archetype
 	assert_int(system.total_entities_processed).is_equal(2)
 	assert_bool(system.received_component_arrays).is_true()
 
@@ -109,14 +109,15 @@ func test_subsystem_mixed_execution_methods():
 	# Subsystem callables are invoked per-archetype in the structural fast path.
 	# entity1 (A only) and entity3 (A+B) live in different archetypes, so process_sub is called twice.
 	# entity2 (B only) and entity3 (A+B) also live in different archetypes, so process_all_sub is called twice.
-	assert_int(system.process_count).is_equal(2) # entity1 + entity3 via C_SubsystemTestA (2 entities across 2 archetypes)
-	assert_int(system.process_all_count).is_equal(2) # entity2 + entity3 via C_SubsystemTestB (2 archetypes, called once each)
-	assert_int(system.archetype_count).is_greater_equal(1) # At least once for C_SubsystemTestA archetypes
+	assert_int(system.process_count).is_equal(2)  # entity1 + entity3 via C_SubsystemTestA (2 entities across 2 archetypes)
+	assert_int(system.process_all_count).is_equal(2)  # entity2 + entity3 via C_SubsystemTestB (2 archetypes, called once each)
+	assert_int(system.archetype_count).is_greater_equal(1)  # At least once for C_SubsystemTestA archetypes
 
 
 ## ===============================
 ## CALLABLE SIGNATURES MATCH EXECUTION METHOD
 ## ===============================
+
 
 ## Test PROCESS subsystem receives correct parameters
 func test_subsystem_process_signature():
@@ -174,6 +175,7 @@ func test_subsystem_archetype_signature():
 ## SUBSYSTEM QUERY CACHING
 ## ===============================
 
+
 ## Test that subsystem queries are cached and reused
 func test_subsystem_query_caching():
 	# Create entities
@@ -213,12 +215,13 @@ func test_subsystem_cache_invalidation():
 
 	# Second process should see new entity
 	world.process(0.016)
-	assert_int(system.call_count).is_equal(3) # 1 + 2
+	assert_int(system.call_count).is_equal(3)  # 1 + 2
 
 
 ## ===============================
 ## ERROR HANDLING FOR ARCHETYPE MODE
 ## ===============================
+
 
 ## Test subsystem without .iterate() - now works fine with unified signature
 func test_subsystem_archetype_missing_iterate_error():
@@ -259,6 +262,7 @@ func test_subsystem_archetype_with_iterate():
 ## SUBSYSTEM EXECUTION ORDER
 ## ===============================
 
+
 ## Test multiple subsystems execute in defined order
 func test_subsystem_execution_order():
 	var entity = Entity.new()
@@ -296,6 +300,7 @@ func test_subsystem_order_consistency():
 ## ===============================
 ## EDGE CASES
 ## ===============================
+
 
 ## Test empty subsystems array (should fallback to regular system execution)
 func test_empty_subsystems():
@@ -348,14 +353,16 @@ func test_subsystem_performance():
 ## TEST HELPER SYSTEMS
 ## ===============================
 
+
 ## System with PROCESS subsystem
-class SubsystemProcessTest extends System:
+class SubsystemProcessTest:
+	extends System
 	var call_count = 0
 	var entities_processed = []
 
 	func sub_systems() -> Array[Array]:
 		return [
-			[ECS.world.query.with_all([C_SubsystemTestA]), process_subsystem]
+			[ECS.world.query.with_all([C_SubsystemTestA]), process_subsystem],
 		]
 
 	func process_subsystem(entities: Array[Entity], components: Array, delta: float):
@@ -365,13 +372,14 @@ class SubsystemProcessTest extends System:
 
 
 ## System with PROCESS_ALL subsystem
-class SubsystemProcessAllTest extends System:
+class SubsystemProcessAllTest:
+	extends System
 	var call_count = 0
 	var all_entities = []
 
 	func sub_systems() -> Array[Array]:
 		return [
-			[ECS.world.query.with_all([C_SubsystemTestA]), process_all_subsystem]
+			[ECS.world.query.with_all([C_SubsystemTestA]), process_all_subsystem],
 		]
 
 	func process_all_subsystem(entities: Array[Entity], components: Array, delta: float):
@@ -381,14 +389,18 @@ class SubsystemProcessAllTest extends System:
 
 
 ## System with ARCHETYPE subsystem
-class SubsystemArchetypeTest extends System:
+class SubsystemArchetypeTest:
+	extends System
 	var call_count = 0
 	var total_entities_processed = 0
 	var received_component_arrays = false
 
 	func sub_systems() -> Array[Array]:
 		return [
-			[ECS.world.query.with_all([C_SubsystemTestA]).iterate([C_SubsystemTestA]), process_batch_subsystem]
+			[
+				ECS.world.query.with_all([C_SubsystemTestA]).iterate([C_SubsystemTestA]),
+				process_batch_subsystem
+			],
 		]
 
 	func process_batch_subsystem(entities: Array[Entity], components: Array, delta: float):
@@ -399,7 +411,8 @@ class SubsystemArchetypeTest extends System:
 
 
 ## System with mixed execution methods
-class SubsystemMixedTest extends System:
+class SubsystemMixedTest:
+	extends System
 	var process_count = 0
 	var process_all_count = 0
 	var archetype_count = 0
@@ -408,7 +421,10 @@ class SubsystemMixedTest extends System:
 		return [
 			[ECS.world.query.with_all([C_SubsystemTestA]), process_sub],
 			[ECS.world.query.with_all([C_SubsystemTestB]), process_all_sub],
-			[ECS.world.query.with_all([C_SubsystemTestA]).iterate([C_SubsystemTestA]), process_batch_sub]
+			[
+				ECS.world.query.with_all([C_SubsystemTestA]).iterate([C_SubsystemTestA]),
+				process_batch_sub
+			],
 		]
 
 	func process_sub(entities: Array[Entity], components: Array, delta: float):
@@ -423,7 +439,8 @@ class SubsystemMixedTest extends System:
 
 
 ## System to test callable signatures
-class SubsystemSignatureTest extends System:
+class SubsystemSignatureTest:
+	extends System
 	var process_signature_correct = false
 	var process_entity = null
 	var process_delta = 0.0
@@ -441,7 +458,10 @@ class SubsystemSignatureTest extends System:
 		return [
 			[ECS.world.query.with_all([C_SubsystemTestA]), test_process],
 			[ECS.world.query.with_all([C_SubsystemTestB]), test_process_all],
-			[ECS.world.query.with_all([C_SubsystemTestC]).iterate([C_SubsystemTestC]), test_archetype]
+			[
+				ECS.world.query.with_all([C_SubsystemTestC]).iterate([C_SubsystemTestC]),
+				test_archetype
+			],
 		]
 
 	func test_process(entities: Array[Entity], components: Array, delta: float):
@@ -460,17 +480,20 @@ class SubsystemSignatureTest extends System:
 		archetype_entities = entities
 		archetype_components = components
 		archetype_delta = delta
-		archetype_signature_correct = entities is Array and components is Array and typeof(delta) == TYPE_FLOAT
+		archetype_signature_correct = (
+			entities is Array and components is Array and typeof(delta) == TYPE_FLOAT
+		)
 
 
 ## System with ARCHETYPE but missing .iterate()
-class SubsystemArchetypeMissingIterateTest extends System:
+class SubsystemArchetypeMissingIterateTest:
+	extends System
 	var call_count = 0
 
 	func sub_systems() -> Array[Array]:
 		return [
 			# Missing .iterate() - should error
-			[ECS.world.query.with_all([C_SubsystemTestA]), process_batch_subsystem]
+			[ECS.world.query.with_all([C_SubsystemTestA]), process_batch_subsystem],
 		]
 
 	func process_batch_subsystem(entities: Array[Entity], components: Array, delta: float):
@@ -478,14 +501,15 @@ class SubsystemArchetypeMissingIterateTest extends System:
 
 
 ## System to test execution order
-class SubsystemOrderTest extends System:
+class SubsystemOrderTest:
+	extends System
 	var execution_order = []
 
 	func sub_systems() -> Array[Array]:
 		return [
 			[ECS.world.query.with_all([C_SubsystemTestA]), subsystem1],
 			[ECS.world.query.with_all([C_SubsystemTestB]), subsystem2],
-			[ECS.world.query.with_all([C_SubsystemTestC]), subsystem3]
+			[ECS.world.query.with_all([C_SubsystemTestC]), subsystem3],
 		]
 
 	func subsystem1(entities: Array[Entity], components: Array, delta: float):
@@ -502,11 +526,12 @@ class SubsystemOrderTest extends System:
 
 
 ## System with empty subsystems (fallback behavior)
-class SubsystemEmptyTest extends System:
+class SubsystemEmptyTest:
+	extends System
 	var call_count = 0
 
 	func sub_systems() -> Array[Array]:
-		return [] # Empty - should not use subsystem execution
+		return []  # Empty - should not use subsystem execution
 
 	# No process(), archetype(), or process_all() override
 	# System should do nothing
@@ -516,11 +541,17 @@ class SubsystemEmptyTest extends System:
 ## TEST HELPER COMPONENTS
 ## ===============================
 
-class C_SubsystemTestA extends Component:
+
+class C_SubsystemTestA:
+	extends Component
 	@export var value: float = 0.0
 
-class C_SubsystemTestB extends Component:
+
+class C_SubsystemTestB:
+	extends Component
 	@export var count: int = 0
 
-class C_SubsystemTestC extends Component:
+
+class C_SubsystemTestC:
+	extends Component
 	@export var data: String = ""

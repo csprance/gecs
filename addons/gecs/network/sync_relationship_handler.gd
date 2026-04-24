@@ -160,7 +160,12 @@ func apply_entity_relationships(entity: Entity, data: Array) -> void:
 				_pending_relationships[entity.id] = []
 			_pending_relationships[entity.id].append(recipe)
 		else:
-			push_warning("SyncRelationshipHandler: Failed to deserialize relationship recipe: %s" % str(recipe))
+			push_warning(
+				(
+					"SyncRelationshipHandler: Failed to deserialize relationship recipe: %s"
+					% str(recipe)
+				)
+			)
 
 	_applying_relationship_data = false
 
@@ -230,7 +235,9 @@ func on_relationship_removed(entity: Entity, relationship: Relationship) -> void
 
 ## Shared guard/authority/serialize/broadcast logic for relationship changes.
 ## rpc_callable is the bound RPC function to invoke (e.g. _ns._sync_relationship_add).
-func _broadcast_relationship_change(entity: Entity, relationship: Relationship, rpc_callable: Callable) -> void:
+func _broadcast_relationship_change(
+	entity: Entity, relationship: Relationship, rpc_callable: Callable
+) -> void:
 	# Guard against sync loops
 	if _applying_relationship_data or _ns._applying_network_data:
 		return
@@ -405,7 +412,12 @@ func handle_relationship_remove(payload: Dictionary) -> void:
 					found = true
 					break
 		if not found:
-			push_warning("handle_relationship_remove: no matching relationship found for entity_id=%s recipe=%s" % [entity_id, recipe])
+			push_warning(
+				(
+					"handle_relationship_remove: no matching relationship found for entity_id=%s recipe=%s"
+					% [entity_id, recipe]
+				)
+			)
 	_applying_relationship_data = false
 
 

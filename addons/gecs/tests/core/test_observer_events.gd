@@ -1,7 +1,6 @@
 ## Custom event dispatch tests: World.emit_event(...) + query().on_event(name).
 extends GdUnitTestSuite
 
-
 var runner: GdUnitSceneRunner
 var world: World
 
@@ -16,7 +15,8 @@ func after_test():
 	world.purge(false)
 
 
-class DamageObserver extends Observer:
+class DamageObserver:
+	extends Observer
 	var event_count: int = 0
 	var last_entity: Entity
 	var last_data: Variant
@@ -30,7 +30,8 @@ class DamageObserver extends Observer:
 		last_data = payload
 
 
-class UnfilteredEventObserver extends Observer:
+class UnfilteredEventObserver:
+	extends Observer
 	var event_count: int = 0
 
 	func query() -> QueryBuilder:
@@ -40,7 +41,8 @@ class UnfilteredEventObserver extends Observer:
 		event_count += 1
 
 
-class MultiEventObserver extends Observer:
+class MultiEventObserver:
+	extends Observer
 	var damage_events: int = 0
 	var heal_events: int = 0
 

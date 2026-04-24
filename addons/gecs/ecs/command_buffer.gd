@@ -33,81 +33,100 @@ var _world: World = null
 var _stats := {
 	"commands_queued": 0,
 	"commands_executed": 0,
-	"last_execution_time_ms": 0.0
+	"last_execution_time_ms": 0.0,
 }
+
 
 func _init(world: World = null):
 	_world = world if world else ECS.world
 
+
 ## Queue adding a component to an entity
 func add_component(entity: Entity, component: Resource) -> void:
-	_commands.append(func():
-		if is_instance_valid(entity):
-			entity.add_component(component)
+	_commands.append(
+		func():
+			if is_instance_valid(entity):
+				entity.add_component(component)
 	)
 	_stats["commands_queued"] += 1
+
 
 ## Queue removing a component from an entity
 func remove_component(entity: Entity, component_type: Variant) -> void:
-	_commands.append(func():
-		if is_instance_valid(entity):
-			entity.remove_component(component_type)
+	_commands.append(
+		func():
+			if is_instance_valid(entity):
+				entity.remove_component(component_type)
 	)
 	_stats["commands_queued"] += 1
+
 
 ## Queue adding multiple components to an entity (batched per-entity)
 func add_components(entity: Entity, components: Array) -> void:
-	_commands.append(func():
-		if is_instance_valid(entity):
-			entity.add_components(components)
+	_commands.append(
+		func():
+			if is_instance_valid(entity):
+				entity.add_components(components)
 	)
 	_stats["commands_queued"] += 1
+
 
 ## Queue removing multiple components from an entity (batched per-entity)
 func remove_components(entity: Entity, component_types: Array) -> void:
-	_commands.append(func():
-		if is_instance_valid(entity):
-			entity.remove_components(component_types)
+	_commands.append(
+		func():
+			if is_instance_valid(entity):
+				entity.remove_components(component_types)
 	)
 	_stats["commands_queued"] += 1
+
 
 ## Queue adding an entity to the world
 func add_entity(entity: Entity) -> void:
-	_commands.append(func():
-		if is_instance_valid(entity):
-			_world.add_entity(entity)
+	_commands.append(
+		func():
+			if is_instance_valid(entity):
+				_world.add_entity(entity)
 	)
 	_stats["commands_queued"] += 1
+
 
 ## Queue removing an entity from the world
 func remove_entity(entity: Entity) -> void:
-	_commands.append(func():
-		if is_instance_valid(entity):
-			_world.remove_entity(entity)
+	_commands.append(
+		func():
+			if is_instance_valid(entity):
+				_world.remove_entity(entity)
 	)
 	_stats["commands_queued"] += 1
+
 
 ## Queue adding a relationship to an entity
 func add_relationship(entity: Entity, relationship: Relationship) -> void:
-	_commands.append(func():
-		if is_instance_valid(entity):
-			entity.add_relationship(relationship)
+	_commands.append(
+		func():
+			if is_instance_valid(entity):
+				entity.add_relationship(relationship)
 	)
 	_stats["commands_queued"] += 1
 
+
 ## Queue removing a relationship from an entity
 func remove_relationship(entity: Entity, relationship: Relationship, limit: int = -1) -> void:
-	_commands.append(func():
-		if is_instance_valid(entity):
-			entity.remove_relationship(relationship, limit)
+	_commands.append(
+		func():
+			if is_instance_valid(entity):
+				entity.remove_relationship(relationship, limit)
 	)
 	_stats["commands_queued"] += 1
+
 
 ## Queue a custom operation (for complex multi-step operations)
 ## The callable should take no parameters and perform the desired operation
 func add_custom(callable: Callable) -> void:
 	_commands.append(callable)
 	_stats["commands_queued"] += 1
+
 
 ## Execute all queued commands in the order they were queued.[br]
 ## Cache invalidation is deferred until all commands complete for performance.
@@ -141,17 +160,21 @@ func execute() -> void:
 	_stats["commands_executed"] += to_run.size()
 	_stats["last_execution_time_ms"] = (Time.get_ticks_usec() - start_time) / 1000.0
 
+
 ## Clear all queued commands without executing them
 func clear() -> void:
 	_commands.clear()
+
 
 ## Check if there are any queued commands
 func is_empty() -> bool:
 	return _commands.is_empty()
 
+
 ## Get the number of queued commands
 func size() -> int:
 	return _commands.size()
+
 
 ## Get statistics for debugging (only useful when commands have been executed)
 func get_stats() -> Dictionary:

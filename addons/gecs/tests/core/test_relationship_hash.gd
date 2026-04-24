@@ -6,13 +6,16 @@ const C_TestB = preload("res://addons/gecs/tests/components/c_test_b.gd")
 var runner: GdUnitSceneRunner
 var world: World
 
+
 func before():
 	runner = scene_runner("res://addons/gecs/tests/test_scene.tscn")
 	world = runner.get_property("world")
 	ECS.world = world
 
+
 func after_test():
 	world.purge(false)
+
 
 func test_relationship_string_representation():
 	# Test that two semantically identical relationships produce the same string
@@ -36,6 +39,7 @@ func test_relationship_string_representation():
 	# This breaks query caching
 	print("Strings equal? ", str1 == str2)
 
+
 func test_relationship_with_entity_targets():
 	var entity1 = Entity.new()
 	var entity2 = Entity.new()
@@ -57,6 +61,7 @@ func test_relationship_with_entity_targets():
 	# Should not match different entity
 	assert_bool(rel1.matches(rel3)).is_false()
 
+
 func test_query_cache_key_with_relationships():
 	# This test shows the actual problem with query caching
 	var entity = Entity.new()
@@ -77,6 +82,7 @@ func test_query_cache_key_with_relationships():
 	# These SHOULD be the same for proper caching
 	# But they're probably not because Relationship lacks to_string()
 	print("Cache keys equal? ", key1 == key2)
+
 
 func test_relationship_matching_with_multiple_relationships():
 	# Test that relationship matching works regardless of order in relationships list
@@ -118,9 +124,20 @@ func test_relationship_matching_with_multiple_relationships():
 		var rel = entity.relationships[i]
 		var test_rel = Relationship.new(C_TestB.new(), target_entity)
 		print("Relationship[", i, "] matches test_rel: ", rel.matches(test_rel))
-		print("  - Relation types: ", rel.relation.get_script().resource_path, " vs ", test_rel.relation.get_script().resource_path)
-		print("  - Target IDs: ", rel.target.id if rel.target else "null", " vs ", test_rel.target.id if test_rel.target else "null")
+		print(
+			"  - Relation types: ",
+			rel.relation.get_script().resource_path,
+			" vs ",
+			test_rel.relation.get_script().resource_path
+		)
+		print(
+			"  - Target IDs: ",
+			rel.target.id if rel.target else "null",
+			" vs ",
+			test_rel.target.id if test_rel.target else "null"
+		)
 		print("  - Targets same instance: ", rel.target == test_rel.target)
+
 
 func test_query_with_multiple_relationships():
 	# Test that queries find entities even when they have multiple relationships

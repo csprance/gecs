@@ -1,8 +1,6 @@
 extends GdUnitTestSuite
-
 ## Tests for LIFE-05 authority marker injection in SpawnManager._inject_authority_markers().
 ## All 5 tests verify the remove-then-add idempotency pattern and correct authority assignment.
-
 
 # ============================================================================
 # MOCK OBJECTS

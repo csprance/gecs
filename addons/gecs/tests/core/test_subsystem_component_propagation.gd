@@ -1,5 +1,4 @@
 extends GdUnitTestSuite
-
 ## Test suite for subsystem component modification propagation
 ## Tests that when subsystem A modifies entity components (causing archetype moves),
 ## subsystem B can see those changes in the same frame
@@ -22,6 +21,7 @@ func after_test():
 ## ===============================
 ## COMPONENT ADDITION PROPAGATION
 ## ===============================
+
 
 ## Test that components added by subsystem A are visible to subsystem B in the same frame
 func test_subsystem_component_addition_propagation():
@@ -223,15 +223,17 @@ func test_subsystem_archetype_move_at_scale():
 ## TEST HELPER SYSTEMS
 ## ===============================
 
+
 ## System that adds components in subsystem 1 and checks them in subsystem 2
-class ComponentAdditionPropagationSystem extends System:
+class ComponentAdditionPropagationSystem:
+	extends System
 	var subsystem1_count = 0
 	var subsystem2_count = 0
 
 	func sub_systems() -> Array[Array]:
 		return [
 			[ECS.world.query.with_all([C_OrderTestA]), add_component_b],
-			[ECS.world.query.with_all([C_OrderTestB]), count_component_b]
+			[ECS.world.query.with_all([C_OrderTestB]), count_component_b],
 		]
 
 	func add_component_b(entities: Array[Entity], components: Array, delta: float):
@@ -246,14 +248,15 @@ class ComponentAdditionPropagationSystem extends System:
 
 
 ## System that removes components in subsystem 1 and checks them in subsystem 2
-class ComponentRemovalPropagationSystem extends System:
+class ComponentRemovalPropagationSystem:
+	extends System
 	var subsystem1_count = 0
 	var subsystem2_count = 0
 
 	func sub_systems() -> Array[Array]:
 		return [
 			[ECS.world.query.with_all([C_OrderTestA]), remove_component_a],
-			[ECS.world.query.with_all([C_OrderTestA]), count_component_a]
+			[ECS.world.query.with_all([C_OrderTestA]), count_component_a],
 		]
 
 	func remove_component_a(entities: Array[Entity], components: Array, delta: float):
@@ -266,7 +269,8 @@ class ComponentRemovalPropagationSystem extends System:
 
 
 ## System that moves entities between archetypes
-class ArchetypeMovePropagationSystem extends System:
+class ArchetypeMovePropagationSystem:
+	extends System
 	var subsystem1_count = 0
 	var subsystem2_count = 0
 	var subsystem3_count = 0
@@ -275,7 +279,7 @@ class ArchetypeMovePropagationSystem extends System:
 		return [
 			[ECS.world.query.with_all([C_OrderTestA]).with_none([C_OrderTestB]), add_b_to_a],
 			[ECS.world.query.with_all([C_OrderTestB]).with_none([C_OrderTestA]), add_a_to_b],
-			[ECS.world.query.with_all([C_OrderTestA, C_OrderTestB]), count_both]
+			[ECS.world.query.with_all([C_OrderTestA, C_OrderTestB]), count_both],
 		]
 
 	func add_b_to_a(entities: Array[Entity], components: Array, delta: float):
@@ -293,14 +297,15 @@ class ArchetypeMovePropagationSystem extends System:
 
 
 ## System that tracks individual entity processing to detect double-processing
-class NoDoubleProcessingSystem extends System:
+class NoDoubleProcessingSystem:
+	extends System
 	var entity1_process_count = 0
 	var entity2_process_count = 0
 	var tracked_entities = {}
 
 	func sub_systems() -> Array[Array]:
 		return [
-			[ECS.world.query.with_all([C_OrderTestA]), process_entities]
+			[ECS.world.query.with_all([C_OrderTestA]), process_entities],
 		]
 
 	func process_entities(entities: Array[Entity], components: Array, delta: float):
@@ -323,7 +328,8 @@ class NoDoubleProcessingSystem extends System:
 
 
 ## System that performs multiple sequential archetype moves
-class MultipleArchetypeMovesSystem extends System:
+class MultipleArchetypeMovesSystem:
+	extends System
 	var subsystem1_count = 0
 	var subsystem2_count = 0
 	var subsystem3_count = 0
@@ -331,8 +337,11 @@ class MultipleArchetypeMovesSystem extends System:
 	func sub_systems() -> Array[Array]:
 		return [
 			[ECS.world.query.with_all([C_OrderTestA]).with_none([C_OrderTestB]), add_b],
-			[ECS.world.query.with_all([C_OrderTestA, C_OrderTestB]).with_none([C_OrderTestC]), add_c],
-			[ECS.world.query.with_all([C_OrderTestA, C_OrderTestB, C_OrderTestC]), count_all]
+			[
+				ECS.world.query.with_all([C_OrderTestA, C_OrderTestB]).with_none([C_OrderTestC]),
+				add_c
+			],
+			[ECS.world.query.with_all([C_OrderTestA, C_OrderTestB, C_OrderTestC]), count_all],
 		]
 
 	func add_b(entities: Array[Entity], components: Array, delta: float):
@@ -347,7 +356,6 @@ class MultipleArchetypeMovesSystem extends System:
 
 	func count_all(entities: Array[Entity], components: Array, delta: float):
 		subsystem3_count += entities.size()
-
 
 ## ===============================
 ## TEST HELPER COMPONENTS

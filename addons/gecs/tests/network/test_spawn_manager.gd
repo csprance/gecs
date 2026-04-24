@@ -1,5 +1,4 @@
 extends GdUnitTestSuite
-
 ## Test suite for SpawnManager (Wave 1 — GREEN phase)
 ## Tests verify the behavioral contract for LIFE-01, LIFE-02, LIFE-03, LIFE-04.
 ##
@@ -75,7 +74,6 @@ class MockNetworkSync:
 # ============================================================================
 # SETUP / TEARDOWN
 # ============================================================================
-
 
 var world: World
 var mock_ns: MockNetworkSync
@@ -291,15 +289,20 @@ func test_apply_component_data_scans_cn_net_sync():
 	assert_int(net_sync._comp_refs.size()).is_equal(0)
 
 	# Trigger the update path in handle_spawn_entity (entity already in registry)
-	manager.handle_spawn_entity({
-		"id": "e_scan_test",
-		"name": "ScanEntity",
-		"scene_path": "",
-		"components": {},
-		"script_paths": {},
-		"session_id": 42,
-		"relationships": [],
-	})
+	(
+		manager
+		.handle_spawn_entity(
+			{
+				"id": "e_scan_test",
+				"name": "ScanEntity",
+				"scene_path": "",
+				"components": {},
+				"script_paths": {},
+				"session_id": 42,
+				"relationships": [],
+			},
+		)
+	)
 
 	# After: scan_entity_components() was called — MockSyncComp is not excluded
 	# (not CN_NetSync, not CN_NetworkIdentity, not CN_NativeSync), so it appears

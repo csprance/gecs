@@ -1,5 +1,4 @@
 extends GdUnitTestSuite
-
 ## Test suite for custom sync handler hooks (ADV-03).
 ## Tests verify that SyncSender._custom_send_handlers and
 ## SyncReceiver._custom_receive_handlers work correctly.
@@ -150,8 +149,8 @@ func test_custom_send_handler_replaces_default() -> void:
 	var comp_key: String = _comp_type_name(mock_comp)
 
 	# Register a custom send handler for MockComponent that returns a fixed value
-	sender.register_send_handler(comp_key, func(e: Entity, c: Component, priority: int) -> Dictionary:
-		return {"health": 42}
+	sender.register_send_handler(
+		comp_key, func(e: Entity, c: Component, priority: int) -> Dictionary: return {"health": 42}
 	)
 
 	# Poll — the custom handler should fire and put {"health": 42} into pending
@@ -160,7 +159,9 @@ func test_custom_send_handler_replaces_default() -> void:
 	# Verify entity has an entry in _pending for HIGH priority
 	assert_bool(sender._pending[CN_NetSync.Priority.HIGH].has(entity.id)).is_true()
 	# Verify the value was set by our custom handler (42, not 50)
-	assert_int(sender._pending[CN_NetSync.Priority.HIGH][entity.id][comp_key]["health"]).is_equal(42)
+	assert_int(sender._pending[CN_NetSync.Priority.HIGH][entity.id][comp_key]["health"]).is_equal(
+		42
+	)
 
 
 func test_custom_send_handler_suppress() -> void:
@@ -176,8 +177,8 @@ func test_custom_send_handler_suppress() -> void:
 	var comp_key: String = _comp_type_name(mock_comp)
 
 	# Register a send handler that returns {} to suppress
-	sender.register_send_handler(comp_key, func(_e: Entity, _c: Component, _priority: int) -> Dictionary:
-		return {}
+	sender.register_send_handler(
+		comp_key, func(_e: Entity, _c: Component, _priority: int) -> Dictionary: return {}
 	)
 
 	sender._poll_entities_for_priority(CN_NetSync.Priority.HIGH)
@@ -197,9 +198,11 @@ func test_custom_receive_handler_replaces_default() -> void:
 
 	# Use an Array for handler_called so lambda captures the reference, not a copy
 	var handler_tracker: Array = [false]
-	receiver.register_receive_handler(comp_key, func(_e: Entity, _c: Component, _props: Dictionary) -> bool:
-		handler_tracker[0] = true
-		return true  # Handled — skip default comp.set()
+	receiver.register_receive_handler(
+		comp_key,
+		func(_e: Entity, _c: Component, _props: Dictionary) -> bool:
+			handler_tracker[0] = true
+			return true  # Handled — skip default comp.set()
 	)
 
 	# Apply data using the actual wire-format type name
@@ -230,11 +233,13 @@ func test_custom_receive_handler_still_updates_cache() -> void:
 
 	# Register a receive handler that applies the value AND returns true.
 	# The framework must still call update_cache_silent() even though handler returned true.
-	receiver.register_receive_handler(comp_key, func(_e: Entity, c: Component, props: Dictionary) -> bool:
-		# Custom apply — simulates a blend or custom logic that DOES set the property
-		if props.has("health"):
-			c.health = props["health"]
-		return true  # Handled — framework must still call update_cache_silent()
+	receiver.register_receive_handler(
+		comp_key,
+		func(_e: Entity, c: Component, props: Dictionary) -> bool:
+			# Custom apply — simulates a blend or custom logic that DOES set the property
+			if props.has("health"):
+				c.health = props["health"]
+			return true  # Handled — framework must still call update_cache_silent()
 	)
 
 	# Apply data — both the handler sets health=99 AND update_cache_silent sets cache=99
@@ -260,8 +265,8 @@ func test_custom_receive_handler_fallthrough() -> void:
 	var comp_key: String = _comp_type_name(mock_comp)
 
 	# Register a receive handler that returns false (fallthrough)
-	receiver.register_receive_handler(comp_key, func(_e: Entity, _c: Component, _props: Dictionary) -> bool:
-		return false
+	receiver.register_receive_handler(
+		comp_key, func(_e: Entity, _c: Component, _props: Dictionary) -> bool: return false
 	)
 
 	receiver._apply_component_data(entity, {comp_key: {"health": 99}})

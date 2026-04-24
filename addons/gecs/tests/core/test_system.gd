@@ -1,10 +1,16 @@
 extends GdUnitTestSuite
 
-const TestSystemWithRelationship = preload("res://addons/gecs/tests/systems/s_test_with_relationship.gd")
-const TestSystemWithoutRelationship = preload("res://addons/gecs/tests/systems/s_test_without_relationship.gd")
+const TestSystemWithRelationship = preload(
+	"res://addons/gecs/tests/systems/s_test_with_relationship.gd"
+)
+const TestSystemWithoutRelationship = preload(
+	"res://addons/gecs/tests/systems/s_test_without_relationship.gd"
+)
 const TestSystemWithGroup = preload("res://addons/gecs/tests/systems/s_test_with_group.gd")
 const TestSystemWithoutGroup = preload("res://addons/gecs/tests/systems/s_test_without_group.gd")
-const TestSystemNonexistentGroup = preload("res://addons/gecs/tests/systems/s_test_nonexistent_group.gd")
+const TestSystemNonexistentGroup = preload(
+	"res://addons/gecs/tests/systems/s_test_nonexistent_group.gd"
+)
 
 var runner: GdUnitSceneRunner
 var world: World
@@ -61,7 +67,7 @@ func test_system_processes_entities_with_required_components():
 	world.process(0.1)
 
 	# Check the values of the components
-	assert_int(entity_a.get_component(C_TestA).value).is_equal(1) # This is one because we added a new component which replaced the old one
+	assert_int(entity_a.get_component(C_TestA).value).is_equal(1)  # This is one because we added a new component which replaced the old one
 	assert_int(entity_b.get_component(C_TestB).value).is_equal(2)
 	assert_int(entity_c.get_component(C_TestC).value).is_equal(2)
 
@@ -117,7 +123,7 @@ func test_system_group_processes_entities_with_required_components():
 	world.process(0.1)
 
 	# Check the values of the components
-	assert_int(entity_a.get_component(C_TestA).value).is_equal(0) # This is one because we added a new component which replaced the old one
+	assert_int(entity_a.get_component(C_TestA).value).is_equal(0)  # This is one because we added a new component which replaced the old one
 	assert_int(entity_b.get_component(C_TestB).value).is_equal(1)
 	assert_int(entity_c.get_component(C_TestC).value).is_equal(1)
 

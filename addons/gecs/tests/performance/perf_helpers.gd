@@ -8,7 +8,7 @@ static func time_it(callable: Callable) -> float:
 	var start_time = Time.get_ticks_usec()
 	callable.call()
 	var end_time = Time.get_ticks_usec()
-	return (end_time - start_time) / 1000.0 # Return milliseconds
+	return (end_time - start_time) / 1000.0  # Return milliseconds
 
 
 ## Record performance result to test-specific JSONL file
@@ -18,7 +18,7 @@ static func record_result(test_name: String, scale: int, time_ms: float) -> void
 		"test": test_name,
 		"scale": scale,
 		"time_ms": time_ms,
-		"godot_version": Engine.get_version_info().string
+		"godot_version": Engine.get_version_info().string,
 	}
 
 	# Ensure perf directory exists
@@ -41,7 +41,12 @@ static func record_result(test_name: String, scale: int, time_ms: float) -> void
 		file.store_line(JSON.stringify(result))
 		file.close()
 	else:
-		push_error("Failed to open performance log file: %s (Error: %s)" % [filepath, error_string(FileAccess.get_open_error())])
+		push_error(
+			(
+				"Failed to open performance log file: %s (Error: %s)"
+				% [filepath, error_string(FileAccess.get_open_error())]
+			)
+		)
 
 	# Print result for console visibility
 	prints("📊 %s (scale=%d): %.2f ms" % [test_name, scale, time_ms])

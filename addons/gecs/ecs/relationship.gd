@@ -124,25 +124,26 @@ func _init(_relation = null, _target = null):
 	if not _relation is Dictionary:
 		assert(
 			not (_relation != null and (_relation is GDScript or _relation is Script)),
-			"Relation must be an instance of Component (did you forget to call .new()?)"
+			"Relation must be an instance of Component (did you forget to call .new()?)",
 		)
 
 	# Assert for relation type
 	assert(
-		_relation == null or _relation is Component, "Relation must be null or a Component instance"
+		_relation == null or _relation is Component,
+		"Relation must be null or a Component instance",
 	)
 
 	# Assert for class reference vs instance for target (skip for dictionaries)
 	if not _target is Dictionary:
 		assert(
 			not (_target != null and _target is GDScript and _target is Component),
-			"Target must be an instance of Component (did you forget to call .new()?)"
+			"Target must be an instance of Component (did you forget to call .new()?)",
 		)
 
 	# Assert for target type
 	assert(
 		_target == null or _target is Entity or _target is Script or _target is Component,
-		"Target must be null, an Entity instance, a Script archetype, or a Component instance"
+		"Target must be null, an Entity instance, a Script archetype, or a Component instance",
 	)
 
 	relation = _relation
@@ -284,7 +285,9 @@ func _to_string() -> String:
 			parts.append(target.get_script().resource_path + str(target_query))
 		else:
 			# Type matching - use Script instance ID (consistent with query caching)
-			parts.append(target.get_script().resource_path + "#" + str(target.get_script().get_instance_id()))
+			parts.append(
+				target.get_script().resource_path + "#" + str(target.get_script().get_instance_id())
+			)
 	elif target is Script:
 		# Archetype target
 		parts.append("Archetype:" + target.resource_path)

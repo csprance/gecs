@@ -29,13 +29,14 @@ func _init(
 	_target_type: String = "",
 	_target_entity_id: String = "",
 	_target_component_data: Component = null,
-	_target_script_path: String = ""
+	_target_script_path: String = "",
 ):
 	relation_data = _relation_data
 	target_type = _target_type
 	target_entity_id = _target_entity_id
 	target_component_data = _target_component_data
 	target_script_path = _target_script_path
+
 
 ## Creates GecsRelationshipData from a Relationship instance
 static func from_relationship(relationship: Relationship) -> GecsRelationshipData:
@@ -58,7 +59,12 @@ static func from_relationship(relationship: Relationship) -> GecsRelationshipDat
 		data.target_type = "Script"
 		data.target_script_path = relationship.target.resource_path
 	else:
-		push_warning("GecsRelationshipData: Unknown target type: " + str(type_string(typeof(relationship.target))))
+		push_warning(
+			(
+				"GecsRelationshipData: Unknown target type: "
+				+ str(type_string(typeof(relationship.target)))
+			)
+		)
 		data.target_type = "unknown"
 
 	return data
@@ -80,7 +86,9 @@ func to_relationship(entity_mapping: Dictionary = {}) -> Relationship:
 			if target_entity_id in entity_mapping:
 				relationship.target = entity_mapping[target_entity_id]
 			else:
-				push_warning("GecsRelationshipData: Could not resolve entity with ID: " + target_entity_id)
+				push_warning(
+					"GecsRelationshipData: Could not resolve entity with ID: " + target_entity_id
+				)
 				return null
 		"Component":
 			if target_component_data:
@@ -89,7 +97,9 @@ func to_relationship(entity_mapping: Dictionary = {}) -> Relationship:
 			if target_script_path != "":
 				relationship.target = load(target_script_path)
 		_:
-			push_warning("GecsRelationshipData: Unknown target type during deserialization: " + target_type)
+			push_warning(
+				"GecsRelationshipData: Unknown target type during deserialization: " + target_type
+			)
 			return null
 
 	return relationship

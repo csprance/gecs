@@ -16,6 +16,6 @@ extends Component
 
 @export var sync_position: bool = true
 @export var sync_rotation: bool = true
-@export var root_path: NodePath = ".."          ## target node; ".." = entity node itself
-@export var replication_interval: float = 0.0   ## 0.0 = every frame
-@export var replication_mode: int = 1           ## 1 = REPLICATION_MODE_ALWAYS
+@export var root_path: NodePath = ".."  ## target node; ".." = entity node itself
+@export var replication_interval: float = 0.0  ## 0.0 = every frame
+@export var replication_mode: int = 1  ## 1 = REPLICATION_MODE_ALWAYS

@@ -2,7 +2,6 @@
 ## optional relation-type filters.
 extends GdUnitTestSuite
 
-
 var runner: GdUnitSceneRunner
 var world: World
 
@@ -17,7 +16,8 @@ func after_test():
 	world.purge(false)
 
 
-class RelAddedObserver extends Observer:
+class RelAddedObserver:
+	extends Observer
 	var added_count: int = 0
 	var last_relationship: Relationship
 
@@ -30,7 +30,8 @@ class RelAddedObserver extends Observer:
 			last_relationship = payload
 
 
-class RelRemovedObserver extends Observer:
+class RelRemovedObserver:
+	extends Observer
 	var removed_count: int = 0
 
 	func query() -> QueryBuilder:
@@ -41,7 +42,8 @@ class RelRemovedObserver extends Observer:
 			removed_count += 1
 
 
-class FilteredRelObserver extends Observer:
+class FilteredRelObserver:
+	extends Observer
 	## Fires only for relationships whose relation component is C_TestA.
 	var count: int = 0
 
@@ -85,7 +87,8 @@ func test_on_relationship_removed_fires_when_relationship_removed():
 	assert_int(obs.removed_count).is_equal(1)
 
 
-class InstanceFilterRelObserver extends Observer:
+class InstanceFilterRelObserver:
+	extends Observer
 	var count: int = 0
 
 	func query() -> QueryBuilder:
@@ -131,14 +134,21 @@ func test_relationship_type_filter_respected():
 	assert_int(obs.count).is_equal(1)
 
 
-class PropertyQueryRelRemovedObserver extends Observer:
+class PropertyQueryRelRemovedObserver:
+	extends Observer
 	## Fires only for C_TestA relationships whose value > 50.
 	var removed_count: int = 0
 
 	func query() -> QueryBuilder:
-		return q.with_relationship([
-			Relationship.new({C_TestA: {"value": {"_gt": 50}}}, null)
-		]).on_relationship_removed()
+		return (
+			q
+			.with_relationship(
+				[
+					Relationship.new({C_TestA: {"value": {"_gt": 50}}}, null),
+				],
+			)
+			.on_relationship_removed()
+		)
 
 	func each(event: Variant, entity: Entity, payload: Variant = null) -> void:
 		if event == Observer.Event.RELATIONSHIP_REMOVED:
@@ -170,15 +180,22 @@ func test_on_relationship_removed_property_query_evaluated_before_removal():
 	assert_int(obs.removed_count).is_equal(1)
 
 
-class MultiRelRemovedObserver extends Observer:
+class MultiRelRemovedObserver:
+	extends Observer
 	## Requires BOTH C_TestA and C_TestB relationships; fires on any removal.
 	var removed_count: int = 0
 
 	func query() -> QueryBuilder:
-		return q.with_relationship([
-			Relationship.new(C_TestA.new(), null),
-			Relationship.new(C_TestB.new(), null),
-		]).on_relationship_removed()
+		return (
+			q
+			.with_relationship(
+				[
+					Relationship.new(C_TestA.new(), null),
+					Relationship.new(C_TestB.new(), null),
+				],
+			)
+			.on_relationship_removed()
+		)
 
 	func each(event: Variant, entity: Entity, payload: Variant = null) -> void:
 		if event == Observer.Event.RELATIONSHIP_REMOVED:

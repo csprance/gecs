@@ -30,8 +30,8 @@ func setup_velocity_entities(count: int) -> void:
 func test_query_execution_only(scale: int, test_parameters := [[100], [1000], [10000]]):
 	setup_velocity_entities(scale)
 
-	var time_ms = PerfHelpers.time_it(func():
-		var _result = world.query.with_all([C_Velocity]).execute()
+	var time_ms = PerfHelpers.time_it(
+		func(): var _result = world.query.with_all([C_Velocity]).execute()
 	)
 
 	PerfHelpers.record_result("hotpath_query_execution", scale, time_ms)
@@ -45,9 +45,10 @@ func test_component_access(scale: int, test_parameters := [[100], [1000], [10000
 	var entities = world.query.with_all([C_Velocity]).execute()
 	var c_velocity_key = (C_Velocity as GDScript).get_instance_id()
 
-	var time_ms = PerfHelpers.time_it(func():
-		for entity in entities:
-			var _component = entity.components.get(c_velocity_key, null) as C_Velocity
+	var time_ms = PerfHelpers.time_it(
+		func():
+			for entity in entities:
+				var _component = entity.components.get(c_velocity_key, null) as C_Velocity
 	)
 
 	PerfHelpers.record_result("hotpath_component_access", scale, time_ms)
@@ -61,12 +62,13 @@ func test_component_data_read(scale: int, test_parameters := [[100], [1000], [10
 	var entities = world.query.with_all([C_Velocity]).execute()
 	var c_velocity_key = (C_Velocity as GDScript).get_instance_id()
 
-	var time_ms = PerfHelpers.time_it(func():
-		for entity in entities:
-			var component = entity.components.get(c_velocity_key, null) as C_Velocity
-			if component:
-				# Read the velocity data
-				var _vel = component.velocity
+	var time_ms = PerfHelpers.time_it(
+		func():
+			for entity in entities:
+				var component = entity.components.get(c_velocity_key, null) as C_Velocity
+				if component:
+					# Read the velocity data
+					var _vel = component.velocity
 	)
 
 	PerfHelpers.record_result("hotpath_data_read", scale, time_ms)
@@ -80,14 +82,15 @@ func test_simulated_system_loop(scale: int, test_parameters := [[100], [1000], [
 	var c_velocity_key = (C_Velocity as GDScript).get_instance_id()
 	var delta = 0.016
 
-	var time_ms = PerfHelpers.time_it(func():
-		# Simulate what a system does: query + iterate + component access + work
-		var entities = world.query.with_all([C_Velocity]).execute()
-		for entity in entities:
-			var component = entity.components.get(c_velocity_key, null) as C_Velocity
-			if component:
-				# Simulate typical work (reading velocity, calculating new position)
-				var _new_pos = component.velocity * delta
+	var time_ms = PerfHelpers.time_it(
+		func():
+			# Simulate what a system does: query + iterate + component access + work
+			var entities = world.query.with_all([C_Velocity]).execute()
+			for entity in entities:
+				var component = entity.components.get(c_velocity_key, null) as C_Velocity
+				if component:
+					# Simulate typical work (reading velocity, calculating new position)
+					var _new_pos = component.velocity * delta
 	)
 
 	PerfHelpers.record_result("hotpath_simulated_system", scale, time_ms)
@@ -106,9 +109,7 @@ func test_actual_system_processing(scale: int, test_parameters := [[100], [1000]
 	var test_system = PerformanceTestSystem.new()
 	world.add_system(test_system)
 
-	var time_ms = PerfHelpers.time_it(func():
-		world.process(0.016)
-	)
+	var time_ms = PerfHelpers.time_it(func(): world.process(0.016))
 
 	PerfHelpers.record_result("hotpath_actual_system", scale, time_ms)
 	world.purge(false)
@@ -123,10 +124,11 @@ func test_multiple_queries_per_frame(scale: int, test_parameters := [[100], [100
 		entity.add_component(C_TestA.new())
 		entity.add_component(C_TestB.new())
 
-	var time_ms = PerfHelpers.time_it(func():
-		var _r1 = world.query.with_all([C_Velocity]).execute()
-		var _r2 = world.query.with_all([C_TestA]).execute()
-		var _r3 = world.query.with_all([C_TestB]).execute()
+	var time_ms = PerfHelpers.time_it(
+		func():
+			var _r1 = world.query.with_all([C_Velocity]).execute()
+			var _r2 = world.query.with_all([C_TestA]).execute()
+			var _r3 = world.query.with_all([C_TestB]).execute()
 	)
 
 	PerfHelpers.record_result("hotpath_multiple_queries", scale, time_ms)
@@ -141,15 +143,17 @@ func test_component_access_patterns(scale: int, test_parameters := [[100], [1000
 
 	# Test with cached key (current best practice)
 	var c_velocity_key = (C_Velocity as GDScript).get_instance_id()
-	var time_cached = PerfHelpers.time_it(func():
-		for entity in entities:
-			var _component = entity.components.get(c_velocity_key, null) as C_Velocity
+	var time_cached = PerfHelpers.time_it(
+		func():
+			for entity in entities:
+				var _component = entity.components.get(c_velocity_key, null) as C_Velocity
 	)
 
 	# Test with get_component() helper
-	var time_helper = PerfHelpers.time_it(func():
-		for entity in entities:
-			var _component = entity.get_component(C_Velocity)
+	var time_helper = PerfHelpers.time_it(
+		func():
+			for entity in entities:
+				var _component = entity.get_component(C_Velocity)
 	)
 
 	PerfHelpers.record_result("hotpath_component_access_cached", scale, time_cached)

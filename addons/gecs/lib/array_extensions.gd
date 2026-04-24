@@ -1,5 +1,6 @@
 class_name ArrayExtensions
 
+
 ## Intersects two arrays of entities.[br]
 ## In common terms, use this to find items appearing in both arrays.
 ## [param array1] The first array to intersect.[br]
@@ -20,6 +21,7 @@ static func intersect(array1: Array, array2: Array) -> Array:
 		if lookup.has(entity):
 			result.append(entity)
 	return result
+
 
 ## Unions two arrays of entities.[br]
 ## In common terms, use this to combine items without duplicates.[br]
@@ -45,6 +47,7 @@ static func union(array1: Array, array2: Array) -> Array:
 
 	return result
 
+
 ## Differences two arrays of entities.[br]
 ## In common terms, use this to find items only in the first array.[br]
 ## [param array1] The first array to difference.[br]
@@ -61,6 +64,7 @@ static func difference(array1: Array, array2: Array) -> Array:
 		if not lookup.has(entity):
 			result.append(entity)
 	return result
+
 
 ## systems_by_group is a dictionary of system groups and their systems
 ## { "Group1": [SystemA, SystemB], "Group2": [SystemC, SystemD] }
@@ -172,12 +176,13 @@ static func topological_sort(systems_by_group: Dictionary) -> void:
 				(
 					"Topological sort failed for group '%s'. Possible cycle or mismatch in dependencies."
 					% group
-				)
+				),
 			)
 			# Otherwise, we found a cycle or mismatch. Fallback to the original unsorted array
 			systems_by_group[group] = systems
 
 	# The function modifies 'systems_by_group' in-place with a topologically sorted order
+
 
 ## Helper function to find a system instance by its type/class
 static func _find_system_by_type(systems: Array, target_type) -> System:
@@ -186,6 +191,9 @@ static func _find_system_by_type(systems: Array, target_type) -> System:
 		if system.get_script() == target_type:
 			return system
 		# Also check class name matching for backward compatibility
-		if system.get_script() and system.get_script().get_global_name() == str(target_type).get_file().get_basename():
+		if (
+			system.get_script()
+			and system.get_script().get_global_name() == str(target_type).get_file().get_basename()
+		):
 			return system
 	return null

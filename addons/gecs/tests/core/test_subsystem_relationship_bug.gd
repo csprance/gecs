@@ -13,26 +13,38 @@ var test_system: TestSubsystemRelationships
 var subsystem1_found = []
 var subsystem2_found = []
 
+
 func before():
 	runner = scene_runner("res://addons/gecs/tests/test_scene.tscn")
 	world = runner.get_property("world")
 	ECS.world = world
+
 
 func after_test():
 	subsystem1_found.clear()
 	subsystem2_found.clear()
 	world.purge(false)
 
+
 # Test system that uses subsystems (like InteractionsSystem)
-class TestSubsystemRelationships extends System:
+class TestSubsystemRelationships:
+	extends System
 	var test_suite
 
 	func sub_systems():
 		return [
 			# Subsystem 1: Check for entities with C_TestB and NO C_Interacting
-			[ECS.world.query.with_relationship([Relationship.new(C_TestB.new())]).with_none([C_Interacting]), process_can_interact],
+			[
+				ECS.world.query.with_relationship([Relationship.new(C_TestB.new())]).with_none(
+					[C_Interacting]
+				),
+				process_can_interact
+			],
 			# Subsystem 2: Check for entities with C_TestA (any)
-			[ECS.world.query.with_relationship([Relationship.new(C_TestA.new())]), process_being_interacted],
+			[
+				ECS.world.query.with_relationship([Relationship.new(C_TestA.new())]),
+				process_being_interacted
+			],
 		]
 
 	func process_can_interact(entities: Array[Entity], components: Array, delta: float):
@@ -47,10 +59,11 @@ class TestSubsystemRelationships extends System:
 			print("  - Subsystem 2 found: ", entity.name)
 			test_suite.subsystem2_found.append(entity)
 
+
 func test_subsystem_with_existing_relationship_blocks_new_relationship_query():
 	# Exact scenario: Player has C_HasActiveItem, walks into area getting C_CanInteractWith
 	# Subsystem queries for C_CanInteractWith but doesn't find player!
-	
+
 	# Create and add our test system with subsystems
 	test_system = TestSubsystemRelationships.new()
 	test_system.test_suite = self
@@ -98,10 +111,11 @@ func test_subsystem_with_existing_relationship_blocks_new_relationship_query():
 	# CRITICAL: Subsystem1 should have found the player!
 	assert_bool(subsystem1_found.has(player)).is_true()
 
+
 func test_subsystem_without_existing_relationship_works():
 	# Control test: Same scenario but WITHOUT the C_HasActiveItem first
 	# This should work fine
-		# Create and add our test system with subsystems
+	# Create and add our test system with subsystems
 	test_system = TestSubsystemRelationships.new()
 	test_system.test_suite = self
 	world.add_system(test_system)

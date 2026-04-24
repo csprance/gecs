@@ -84,7 +84,8 @@ func test_on_event_dedupes_same_name():
 
 func test_fluent_chain_returns_self_for_all_methods():
 	var q = _make_query()
-	var chained = (q
+	var chained = (
+		q
 		.with_all([C_TestA])
 		.on_added()
 		.on_removed()
@@ -93,14 +94,17 @@ func test_fluent_chain_returns_self_for_all_methods():
 		.on_unmatch()
 		.on_relationship_added()
 		.on_relationship_removed()
-		.on_event(&"custom"))
+		.on_event(&"custom")
+	)
 	assert_object(chained).is_same(q)
 
 
 func test_combined_events_mask():
 	var q = _make_query().on_added().on_removed().on_match()
 	# Event values are sequential (0, 1, 2, ...); the mask stores 1 << event bits.
-	var expected = (1 << Observer.Event.ADDED) | (1 << Observer.Event.REMOVED) | (1 << Observer.Event.MATCH)
+	var expected = (
+		(1 << Observer.Event.ADDED) | (1 << Observer.Event.REMOVED) | (1 << Observer.Event.MATCH)
+	)
 	assert_int(q._observer_events_mask).is_equal(expected)
 	# Prefer has_event() over raw mask comparisons in new code.
 	assert_bool(q.has_event(Observer.Event.ADDED)).is_true()
@@ -130,7 +134,9 @@ func test_plain_filter_query_has_no_events():
 func test_component_sensitivity_captures_all_components():
 	var q = _make_query().with_all([C_TestA]).with_any([C_TestB]).with_none([C_TestC])
 	var paths = q._component_sensitivity()
-	assert_array(paths).contains([C_TestA.resource_path, C_TestB.resource_path, C_TestC.resource_path])
+	assert_array(paths).contains(
+		[C_TestA.resource_path, C_TestB.resource_path, C_TestC.resource_path]
+	)
 
 
 func test_component_sensitivity_dedupes():
@@ -152,10 +158,9 @@ func test_clear_resets_observer_event_state():
 ## P2-2 regression: chained on_changed calls accumulate filter properties
 ## (append-and-dedup) rather than replacing. Mirrors on_event semantics.
 func test_on_changed_chained_accumulates_and_dedupes():
-	var q = _make_query().with_all([C_TestA]) \
-		.on_changed([&"a"]) \
-		.on_changed([&"b"]) \
-		.on_changed([&"a"])   # duplicate — should be deduped
+	var q = _make_query().with_all([C_TestA]).on_changed([&"a"]).on_changed([&"b"]).on_changed(
+		[&"a"]
+	)  # duplicate — should be deduped
 	assert_int(q._observer_changed_props.size()).is_equal(2)
 	assert_bool(q._observer_changed_props.has(&"a")).is_true()
 	assert_bool(q._observer_changed_props.has(&"b")).is_true()
@@ -164,10 +169,12 @@ func test_on_changed_chained_accumulates_and_dedupes():
 ## P2-2 regression: chained on_relationship_added/removed calls accumulate type
 ## filters (append-and-dedup) rather than replacing.
 func test_on_relationship_added_chained_accumulates_and_dedupes():
-	var q = _make_query() \
-		.on_relationship_added([C_TestA]) \
-		.on_relationship_added([C_TestB]) \
-		.on_relationship_added([C_TestA])   # duplicate — should be deduped
+	var q = (
+		_make_query()
+		.on_relationship_added([C_TestA])
+		.on_relationship_added([C_TestB])
+		.on_relationship_added([C_TestA])
+	)  # duplicate — should be deduped
 	assert_int(q._observer_rel_add_types.size()).is_equal(2)
 	assert_bool(q._observer_rel_add_types.has(C_TestA)).is_true()
 	assert_bool(q._observer_rel_add_types.has(C_TestB)).is_true()

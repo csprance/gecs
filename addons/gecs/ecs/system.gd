@@ -173,12 +173,12 @@ func query() -> QueryBuilder:
 ##         health.regenerate(delta)
 ## [/codeblock]
 func sub_systems() -> Array[Array]:
-	return [] # Base returns empty - overridden systems return populated Array[Array]
+	return []  # Base returns empty - overridden systems return populated Array[Array]
 
 
 ## Runs once after the system has been added to the [World] to setup anything on the system one time[br]
 func setup():
-	pass # Override in subclasses if needed
+	pass  # Override in subclasses if needed
 
 
 ## The main processing function for the system.[br]
@@ -189,7 +189,7 @@ func setup():
 ## [b]Simple approach:[/b] Loop through entities and use get_component()[br]
 ## [b]Fast approach:[/b] Use iterate() in query and access component arrays directly
 func process(entities: Array[Entity], components: Array, delta: float) -> void:
-	pass # Override in subclasses - base implementation does nothing
+	pass  # Override in subclasses - base implementation does nothing
 
 
 ## Create and assign an interval [SystemTimer] for this system.[br]
@@ -216,9 +216,11 @@ func set_tick_rate(interval_seconds: float, single_shot: bool = false) -> System
 func has_pending_commands() -> bool:
 	return cmd != null and not cmd.is_empty()
 
+
 #endregion Public Methods
 
 #region Private Methods
+
 
 ## INTERNAL: Called by World.add_system() to initialize the system
 ## DO NOT CALL OR OVERRIDE - this is framework code
@@ -238,14 +240,20 @@ func _warn_if_query_has_observer_events() -> void:
 	var main_q: QueryBuilder = query()
 	if main_q != null and main_q.has_observer_events():
 		push_warning(
-			"%s: System.query() declares observer event modifiers (on_added/on_removed/on_changed/on_match/on_unmatch/on_relationship_*/on_event). These have NO effect on Systems — the System still runs every frame. Did you mean to extend Observer instead?" % path
+			(
+				"%s: System.query() declares observer event modifiers (on_added/on_removed/on_changed/on_match/on_unmatch/on_relationship_*/on_event). These have NO effect on Systems — the System still runs every frame. Did you mean to extend Observer instead?"
+				% path
+			),
 		)
 	for tuple in sub_systems():
 		if tuple.size() >= 1:
 			var sq: QueryBuilder = tuple[0] as QueryBuilder
 			if sq != null and sq.has_observer_events():
 				push_warning(
-					"%s: sub_systems() tuple query declares observer event modifiers. These have NO effect on Systems — use sub_observers() on an Observer instead." % path
+					(
+						"%s: sub_systems() tuple query declares observer event modifiers. These have NO effect on Systems — use sub_observers() on an Observer instead."
+						% path
+					),
 				)
 
 
@@ -270,7 +278,9 @@ func _process_parallel(entities: Array[Entity], components: Array, delta: float)
 		for comp_array in components:
 			batch_components.append(comp_array.slice(batch_start, batch_end))
 
-		var task_id = WorkerThreadPool.add_task(_process_batch_callable.bind(batch_entities, batch_components, delta))
+		var task_id = WorkerThreadPool.add_task(
+			_process_batch_callable.bind(batch_entities, batch_components, delta)
+		)
 		tasks.append(task_id)
 
 	# Wait for all tasks to complete
@@ -327,8 +337,12 @@ func _run_subsystems(delta: float) -> void:
 		_subsystem_timers_cache.clear()
 		for subsystem_tuple in _subsystems_cache:
 			var sq := subsystem_tuple[0] as QueryBuilder
-			_subsystem_non_structural_cache.append(1 if _query_has_non_structural_filters(sq) else 0)
-			_subsystem_timers_cache.append(subsystem_tuple[2] if subsystem_tuple.size() > 2 else null)
+			_subsystem_non_structural_cache.append(
+				1 if _query_has_non_structural_filters(sq) else 0
+			)
+			_subsystem_timers_cache.append(
+				subsystem_tuple[2] if subsystem_tuple.size() > 2 else null
+			)
 	var subsystem_index := 0
 	for subsystem_tuple in _subsystems_cache:
 		var subsystem_query := subsystem_tuple[0] as QueryBuilder
@@ -347,11 +361,15 @@ func _run_subsystems(delta: float) -> void:
 			var all_entities: Array[Entity] = []
 			for arch in subsystem_query.archetypes():
 				if not arch.entities.is_empty():
-					all_entities.append_array(arch.entities) # no snapshot to allow mid-frame changes visible to later subsystems
+					all_entities.append_array(arch.entities)  # no snapshot to allow mid-frame changes visible to later subsystems
 			var filtered = _filter_entities_global(subsystem_query, all_entities)
 			if filtered.is_empty():
 				if ECS.debug:
-					lastRunData[subsystem_index] = {"subsystem_index": subsystem_index, "entity_count": 0, "fallback_execute": true}
+					lastRunData[subsystem_index] = {
+						"subsystem_index": subsystem_index,
+						"entity_count": 0,
+						"fallback_execute": true
+					}
 				subsystem_index += 1
 				continue
 			var components := []
@@ -360,7 +378,11 @@ func _run_subsystems(delta: float) -> void:
 					components.append(_build_component_column_from_entities(filtered, comp_type))
 			subsystem_callable.call(filtered, components, delta)
 			if ECS.debug:
-				lastRunData[subsystem_index] = {"subsystem_index": subsystem_index, "entity_count": filtered.size(), "fallback_execute": true}
+				lastRunData[subsystem_index] = {
+					"subsystem_index": subsystem_index,
+					"entity_count": filtered.size(),
+					"fallback_execute": true
+				}
 		else:
 			# Structural fast path archetype iteration
 			var total_entity_count := 0
@@ -382,14 +404,24 @@ func _run_subsystems(delta: float) -> void:
 					if enabled_filter != null:
 						# Filtered subset — build columns from entities (can't use archetype columns directly)
 						for comp_type in iterate_comps:
-							components.append(_build_component_column_from_entities(arch_entities, comp_type))
+							components.append(
+								_build_component_column_from_entities(arch_entities, comp_type)
+							)
 					else:
 						for comp_type in iterate_comps:
-							var comp_key = comp_type.get_instance_id() if comp_type is Script else comp_type.get_script().get_instance_id()
+							var comp_key = (
+								comp_type.get_instance_id()
+								if comp_type is Script
+								else comp_type.get_script().get_instance_id()
+							)
 							components.append(archetype.get_column(comp_key))
 				subsystem_callable.call(arch_entities, components, delta)
 			if ECS.debug:
-				lastRunData[subsystem_index] = {"subsystem_index": subsystem_index, "entity_count": total_entity_count, "fallback_execute": false}
+				lastRunData[subsystem_index] = {
+					"subsystem_index": subsystem_index,
+					"entity_count": total_entity_count,
+					"fallback_execute": false
+				}
 		subsystem_index += 1
 
 
@@ -400,7 +432,11 @@ func _run_process(delta: float) -> void:
 	if _component_keys.is_empty():
 		var iterate_comps = _query_cache._iterate_components
 		for comp_type in iterate_comps:
-			var comp_key = comp_type.get_instance_id() if comp_type is Script else comp_type.get_script().get_instance_id()
+			var comp_key = (
+				comp_type.get_instance_id()
+				if comp_type is Script
+				else comp_type.get_script().get_instance_id()
+			)
 			_component_keys.append(comp_key)
 	if _uses_non_structural_cached == -1:
 		_uses_non_structural_cached = 1 if _query_has_non_structural_filters(_query_cache) else 0
@@ -431,8 +467,7 @@ func _run_process(delta: float) -> void:
 			process(filtered, components, delta)
 		if ECS.debug:
 			lastRunData["entity_count"] = filtered.size()
-			lastRunData["archetype_count"
-				] = _query_cache.archetypes().size()
+			lastRunData["archetype_count"] = _query_cache.archetypes().size()
 			lastRunData["fallback_execute"] = true
 			lastRunData["parallel"] = parallel_processing and filtered.size() >= parallel_threshold
 		return
@@ -453,12 +488,18 @@ func _run_process(delta: float) -> void:
 		# When safe_iteration is false the system uses CommandBuffer for ALL structural
 		# changes so the snapshot copy is unnecessary — use the archetype array directly.
 		# When enabled_filter is set, arch_entities is already a new array from get_entities_by_enabled_state.
-		var snapshot_entities = arch_entities if enabled_filter != null else (arch_entities.duplicate() if safe_iteration else arch_entities)
+		var snapshot_entities = (
+			arch_entities
+			if enabled_filter != null
+			else (arch_entities.duplicate() if safe_iteration else arch_entities)
+		)
 		var components = []
 		if not iterate_comps.is_empty():
 			if enabled_filter != null:
 				for comp_type in _query_cache._iterate_components:
-					components.append(_build_component_column_from_entities(snapshot_entities, comp_type))
+					components.append(
+						_build_component_column_from_entities(snapshot_entities, comp_type)
+					)
 			else:
 				for comp_key in _component_keys:
 					components.append(arch.get_column(comp_key))
@@ -534,19 +575,23 @@ func _filter_entities_global(qb: QueryBuilder, entities: Array[Entity]) -> Array
 		var include := true
 		for rel in qb._post_filter_relationships:
 			if not e.has_relationship(rel):
-				include = false; break
+				include = false
+				break
 		if include:
 			for ex_rel in qb._post_filter_ex_relationships:
 				if e.has_relationship(ex_rel):
-					include = false; break
+					include = false
+					break
 		if include and not qb._groups.is_empty():
 			for g in qb._groups:
 				if not e.is_in_group(g):
-					include = false; break
+					include = false
+					break
 		if include and not qb._exclude_groups.is_empty():
 			for g in qb._exclude_groups:
 				if e.is_in_group(g):
-					include = false; break
+					include = false
+					break
 		if include and not qb._all_components_queries.is_empty():
 			for i in range(qb._all_components.size()):
 				if i >= qb._all_components_queries.size():
@@ -556,7 +601,8 @@ func _filter_entities_global(qb: QueryBuilder, entities: Array[Entity]) -> Array
 				if not query.is_empty():
 					var comp = e.get_component(comp_type)
 					if comp == null or not ComponentQueryMatcher.matches_query(comp, query):
-						include = false; break
+						include = false
+						break
 		if include and not qb._any_components_queries.is_empty():
 			var any_match := qb._any_components_queries.is_empty()
 			for i in range(qb._any_components.size()):
@@ -567,7 +613,8 @@ func _filter_entities_global(qb: QueryBuilder, entities: Array[Entity]) -> Array
 				if not query.is_empty():
 					var comp = e.get_component(comp_type)
 					if comp and ComponentQueryMatcher.matches_query(comp, query):
-						any_match = true; break
+						any_match = true
+						break
 			if not any_match and not qb._any_components.is_empty():
 				include = false
 		if include:

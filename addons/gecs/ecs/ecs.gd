@@ -48,16 +48,17 @@ var world: World:
 				get_tree().root.get_node("./Root").add_child(world)
 			if not world.is_connected("tree_exited", _on_world_exited):
 				world.connect("tree_exited", _on_world_exited)
-			
+
 			# TIMING FIX: Now that ECS.world is set, finalize any deferred system setup
 			# This ensures system setup() methods can safely access ECS.world
 			world.finalize_system_setup()
 		world_changed.emit(world)
-		assert(GECSEditorDebuggerMessages.set_world(world) if debug else true, 'Debug Data')
+		assert(GECSEditorDebuggerMessages.set_world(world) if debug else true, "Debug Data")
 
 ## Are we in debug mode? Controlled by project setting gecs/debug_mode.
 ## Can be overridden per-instance with CLI args: --gecs-debug / --no-gecs-debug
 var debug := _resolve_debug_mode()
+
 
 static func _resolve_debug_mode() -> bool:
 	var args = OS.get_cmdline_args() + OS.get_cmdline_user_args()
@@ -66,6 +67,8 @@ static func _resolve_debug_mode() -> bool:
 	if "--gecs-debug" in args:
 		return true
 	return ProjectSettings.get_setting(GecsSettings.SETTINGS_DEBUG_MODE, false)
+
+
 ## This is an array of functions that get called on the entities when they get added to the world (after they are ready)
 var entity_preprocessors: Array[Callable] = []
 ## This is an array of functions that get called on the entities right before they get removed from the world
@@ -89,7 +92,14 @@ func process(delta: float, group: String = "") -> void:
 func get_components(entities, component_type, default_component = null) -> Array:
 	var components = []
 	for entity in entities:
-		var component = entity.components.get(component_type.get_instance_id() if component_type is Script else component_type.get_script().get_instance_id(), null)
+		var component = entity.components.get(
+			(
+				component_type.get_instance_id()
+				if component_type is Script
+				else component_type.get_script().get_instance_id()
+			),
+			null
+		)
 		if not component and not default_component:
 			assert(component, "Entity does not have component: " + str(component_type))
 		if not component and default_component:
@@ -103,7 +113,7 @@ func get_components(entities, component_type, default_component = null) -> Array
 func _on_world_exited() -> void:
 	world = null
 	world_exited.emit()
-	assert(GECSEditorDebuggerMessages.exit_world() if debug else true, 'Debug Data')
+	assert(GECSEditorDebuggerMessages.exit_world() if debug else true, "Debug Data")
 
 
 func serialize(query: QueryBuilder, config: GECSSerializeConfig = null) -> GecsData:

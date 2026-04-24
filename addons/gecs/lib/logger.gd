@@ -4,9 +4,11 @@ extends RefCounted
 
 const disabled := true
 
-enum LogLevel {TRACE, DEBUG, INFO, WARNING, ERROR}
+enum LogLevel { TRACE, DEBUG, INFO, WARNING, ERROR }
 
-var current_level: LogLevel = ProjectSettings.get_setting(GecsSettings.SETTINGS_LOG_LEVEL, LogLevel.ERROR)
+var current_level: LogLevel = ProjectSettings.get_setting(
+	GecsSettings.SETTINGS_LOG_LEVEL, LogLevel.ERROR
+)
 var current_domain: String = ""
 
 
@@ -59,6 +61,7 @@ func warning(msg = "", arg1 = null, arg2 = null, arg3 = null, arg4 = null, arg5 
 func error(msg = "", arg1 = null, arg2 = null, arg3 = null, arg4 = null, arg5 = null):
 	self.log(LogLevel.ERROR, concatenate_msg_and_args(msg, arg1, arg2, arg3, arg4, arg5))
 
+
 ## Concatenates all given args into one single string, in consecutive order starting with 'msg'.[br]
 ## Stolen from Loggie
 static func concatenate_msg_and_args(
@@ -68,7 +71,7 @@ static func concatenate_msg_and_args(
 	arg3: Variant = null,
 	arg4: Variant = null,
 	arg5: Variant = null,
-	arg6: Variant = null
+	arg6: Variant = null,
 ) -> String:
 	var final_msg = convert_to_string(msg)
 	var arguments = [arg1, arg2, arg3, arg4, arg5, arg6]
@@ -76,6 +79,7 @@ static func concatenate_msg_and_args(
 		if arg != null:
 			final_msg += (" " + convert_to_string(arg))
 	return final_msg
+
 
 ## Converts [param something] into a string.[br]
 ## If [param something] is a Dictionary, uses a special way to convert it into a string.[br]

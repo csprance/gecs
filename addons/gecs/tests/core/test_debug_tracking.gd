@@ -4,16 +4,19 @@ extends GdUnitTestSuite
 
 var world: World
 
+
 func before_test():
 	world = World.new()
 	world.name = "TestWorld"
 	Engine.get_main_loop().root.add_child(world)
 	ECS.world = world
 
+
 func after_test():
 	ECS.world = null
 	if is_instance_valid(world):
 		world.queue_free()
+
 
 func test_debug_tracking_process_mode():
 	# Enable debug mode for these tests
@@ -129,7 +132,9 @@ func test_debug_disabled_has_no_data():
 
 
 # Test system - PROCESS mode
-class ProcessSystem extends System:
+class ProcessSystem:
+	extends System
+
 	func query() -> QueryBuilder:
 		return ECS.world.query.with_all([C_DebugTrackingTestA])
 
@@ -138,8 +143,11 @@ class ProcessSystem extends System:
 			var comp = entity.get_component(C_DebugTrackingTestA)
 			comp.value += delta
 
+
 # Test system - unified process
-class ProcessAllSystem extends System:
+class ProcessAllSystem:
+	extends System
+
 	func query() -> QueryBuilder:
 		return ECS.world.query.with_all([C_DebugTrackingTestB])
 
@@ -148,8 +156,11 @@ class ProcessAllSystem extends System:
 			var comp = entity.get_component(C_DebugTrackingTestB)
 			comp.count += 1
 
+
 # Test system - batch processing with iterate
-class ProcessBatchSystem extends System:
+class ProcessBatchSystem:
+	extends System
+
 	func query() -> QueryBuilder:
 		return ECS.world.query.with_all([C_DebugTrackingTestA]).iterate([C_DebugTrackingTestA])
 
@@ -158,12 +169,18 @@ class ProcessBatchSystem extends System:
 		for i in range(entities.size()):
 			test_a_components[i].value += delta
 
+
 # Test system - SUBSYSTEMS mode
-class SubsystemsTestSystem extends System:
+class SubsystemsTestSystem:
+	extends System
+
 	func sub_systems() -> Array[Array]:
 		return [
 			[ECS.world.query.with_all([C_DebugTrackingTestA]), process_sub],
-			[ECS.world.query.with_all([C_DebugTrackingTestB]).iterate([C_DebugTrackingTestB]), batch_sub]
+			[
+				ECS.world.query.with_all([C_DebugTrackingTestB]).iterate([C_DebugTrackingTestB]),
+				batch_sub
+			],
 		]
 
 	func process_sub(entities: Array[Entity], components: Array, delta: float) -> void:

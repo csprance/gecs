@@ -18,22 +18,22 @@ extends Component
 # SYNC TIER CONSTANTS — use with @export_group() for autocomplete & typo safety
 # ============================================================================
 
-const REALTIME = "REALTIME" ## ~60 Hz, unreliable — critical real-time data
-const HIGH = "HIGH" ## 20 Hz, unreliable — velocity, input, animation
-const MEDIUM = "MEDIUM" ## 10 Hz, reliable — health, AI state
-const LOW = "LOW" ## 2 Hz, reliable — inventory, stats
-const SPAWN_ONLY = "SPAWN_ONLY" ## Once at spawn, reliable — initial position/velocity
-const LOCAL = "LOCAL" ## Never synced — client-only state
+const REALTIME = "REALTIME"  ## ~60 Hz, unreliable — critical real-time data
+const HIGH = "HIGH"  ## 20 Hz, unreliable — velocity, input, animation
+const MEDIUM = "MEDIUM"  ## 10 Hz, reliable — health, AI state
+const LOW = "LOW"  ## 2 Hz, reliable — inventory, stats
+const SPAWN_ONLY = "SPAWN_ONLY"  ## Once at spawn, reliable — initial position/velocity
+const LOCAL = "LOCAL"  ## Never synced — client-only state
 
 # ============================================================================
 # PRIORITY ENUM & CONSTANTS
 # ============================================================================
 
 enum Priority {
-	REALTIME = 0, ## Every frame (~60 FPS)
-	HIGH = 1, ## 20 FPS
-	MEDIUM = 2, ## 10 FPS
-	LOW = 3, ## 2 FPS
+	REALTIME = 0,  ## Every frame (~60 FPS)
+	HIGH = 1,  ## 20 FPS
+	MEDIUM = 2,  ## 10 FPS
+	LOW = 3,  ## 2 FPS
 }
 
 ## Maps @export_group name strings to Priority int values.
@@ -44,8 +44,8 @@ const PRIORITY_MAP: Dictionary = {
 	HIGH: Priority.HIGH,
 	MEDIUM: Priority.MEDIUM,
 	LOW: Priority.LOW,
-	SPAWN_ONLY: - 2, # Sentinel — excluded from dirty cache; SpawnManager handles
-	LOCAL: - 1, # Sentinel — never synced
+	SPAWN_ONLY: -2,  # Sentinel — excluded from dirty cache; SpawnManager handles
+	LOCAL: -1,  # Sentinel — never synced
 }
 
 # ============================================================================
@@ -67,7 +67,6 @@ var _comp_type_names: Dictionary = {}
 ## Sync interval seconds by priority (populated from ProjectSettings in _init)
 var _intervals: Dictionary = {}
 
-
 # ============================================================================
 # INITIALIZATION
 # ============================================================================
@@ -77,7 +76,8 @@ func _init() -> void:
 	_intervals = {
 		Priority.REALTIME: 0.0,
 		Priority.HIGH: 1.0 / maxf(ProjectSettings.get_setting(GECSNetworkSettings.HIGH_HZ, 20), 1),
-		Priority.MEDIUM: 1.0 / maxf(ProjectSettings.get_setting(GECSNetworkSettings.MEDIUM_HZ, 10), 1),
+		Priority.MEDIUM:
+		1.0 / maxf(ProjectSettings.get_setting(GECSNetworkSettings.MEDIUM_HZ, 10), 1),
 		Priority.LOW: 1.0 / maxf(ProjectSettings.get_setting(GECSNetworkSettings.LOW_HZ, 2), 1),
 	}
 
@@ -100,14 +100,14 @@ func scan_entity_components(entity: Entity) -> void:
 		if not is_instance_valid(comp):
 			continue
 		if comp is CN_NetSync:
-			continue # Never scan ourselves
+			continue  # Never scan ourselves
 		if comp is CN_NetworkIdentity:
-			continue # Ownership spoofing prevention — CRITICAL
+			continue  # Ownership spoofing prevention — CRITICAL
 		if comp is CN_NativeSync:
-			continue # Native sync handles its own target node — don't batch-RPC its config
+			continue  # Native sync handles its own target node — don't batch-RPC its config
 		var script = comp.get_script()
 		if script == null:
-			continue # Built-in resource, no exported script properties
+			continue  # Built-in resource, no exported script properties
 
 		var inst_id: int = comp.get_instance_id()
 		_comp_refs[inst_id] = comp
@@ -130,7 +130,7 @@ func scan_entity_components(entity: Entity) -> void:
 ## Returns: { priority_int: [prop_name, ...] }
 func _scan_component(comp: Component) -> Dictionary:
 	var result: Dictionary = {}
-	var current_priority: int = Priority.HIGH # Default when no @export_group set
+	var current_priority: int = Priority.HIGH  # Default when no @export_group set
 
 	for prop_info in comp.get_script().get_script_property_list():
 		var usage: int = prop_info.usage
@@ -145,7 +145,7 @@ func _scan_component(comp: Component) -> Dictionary:
 					(
 						"[CN_NetSync] Unrecognized @export_group '%s' — defaulting to HIGH priority"
 						% group_name
-					)
+					),
 				)
 				current_priority = Priority.HIGH
 			continue
@@ -270,12 +270,12 @@ func _has_changed(old_value: Variant, new_value: Variant) -> bool:
 func _deep_copy(value: Variant) -> Variant:
 	match typeof(value):
 		TYPE_VECTOR2, TYPE_VECTOR3, TYPE_VECTOR4:
-			return value # Value types in Godot — no copy needed
+			return value  # Value types in Godot — no copy needed
 		TYPE_TRANSFORM2D, TYPE_TRANSFORM3D, TYPE_QUATERNION:
-			return value # Value types
+			return value  # Value types
 		TYPE_ARRAY:
 			return value.duplicate(true)
 		TYPE_DICTIONARY:
 			return value.duplicate(true)
 		_:
-			return value # Primitives (int, float, bool, String) are value types
+			return value  # Primitives (int, float, bool, String) are value types

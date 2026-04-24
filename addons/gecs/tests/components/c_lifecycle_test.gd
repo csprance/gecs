@@ -1,6 +1,5 @@
 class_name C_LifecycleTest
 extends Component
-
 ## Test component for COMP-01 / COMP-03 lifecycle regression tests.
 ##
 ## Exposes one @export property (preserved by duplicate(true)) and one

@@ -15,23 +15,29 @@ const ALL = [C_PermA, C_PermB]
 const ANY = [C_PermC, C_PermD]
 const NONE = [C_PermE, C_PermF]
 
+
 func before():
 	runner = scene_runner("res://addons/gecs/tests/test_scene.tscn")
 	world = runner.get_property("world")
 	ECS.world = world
 
+
 func after_test():
 	if world:
 		world.purge(false)
 
+
 func _both_orders(arr: Array) -> Array:
 	if arr.size() < 2:
 		return [arr]
-	var rev = arr.duplicate(); rev.reverse()
+	var rev = arr.duplicate()
+	rev.reverse()
 	return [arr, rev]
+
 
 func _cache_key(all: Array, any: Array, none: Array) -> int:
 	return world.query.with_all(all).with_any(any).with_none(none).get_cache_key()
+
 
 func test_permutation_invariance_all_any_none():
 	var keys = []
@@ -43,11 +49,13 @@ func test_permutation_invariance_all_any_none():
 	for k in keys:
 		assert_int(k).is_equal(first)
 
+
 func test_cross_domain_differentiation():
 	var k1 = _cache_key([C_PermA, C_PermB], [C_PermC, C_PermD], [C_PermE, C_PermF])
 	# Move C_PermB to ANY domain should change key
 	var k2 = _cache_key([C_PermA], [C_PermB, C_PermC, C_PermD], [C_PermE, C_PermF])
 	assert_int(k1).is_not_equal(k2)
+
 
 func test_empty_domain_variants_unique():
 	var k_all_only = world.query.with_all([C_PermA, C_PermB]).get_cache_key()
@@ -57,20 +65,26 @@ func test_empty_domain_variants_unique():
 	assert_int(k_all_only).is_not_equal(k_none_only)
 	assert_int(k_any_only).is_not_equal(k_none_only)
 
+
 func test_domain_swaps_stability():
 	# Swapping order inside a single domain should not change key
 	var k_orig = _cache_key(ALL, ANY, NONE)
-	var all_rev = ALL.duplicate(); all_rev.reverse()
-	var any_rev = ANY.duplicate(); any_rev.reverse()
-	var none_rev = NONE.duplicate(); none_rev.reverse()
+	var all_rev = ALL.duplicate()
+	all_rev.reverse()
+	var any_rev = ANY.duplicate()
+	any_rev.reverse()
+	var none_rev = NONE.duplicate()
+	none_rev.reverse()
 	var k_rev_combo = _cache_key(all_rev, any_rev, none_rev)
 	assert_int(k_orig).is_equal(k_rev_combo)
+
 
 func test_single_component_domains_invariance():
 	# Reduce domains to single components, permutations collapse
 	var k1 = _cache_key([C_PermA], [C_PermC], [C_PermE])
 	var k2 = _cache_key([C_PermA], [C_PermC], [C_PermE])
 	assert_int(k1).is_equal(k2)
+
 
 func test_mixed_add_remove_domain_changes():
 	# Adding a component to ANY changes key; removing restores original

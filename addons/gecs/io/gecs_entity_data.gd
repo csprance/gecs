@@ -9,7 +9,14 @@ extends Resource
 @export var id: String = ""
 
 
-func _init(_name: String = "", _scene_path: String = "", _components: Array[Component] = [], _relationships: Array[GecsRelationshipData] = [], _auto_included: bool = false, _id: String = ""):
+func _init(
+	_name: String = "",
+	_scene_path: String = "",
+	_components: Array[Component] = [],
+	_relationships: Array[GecsRelationshipData] = [],
+	_auto_included: bool = false,
+	_id: String = ""
+):
 	entity_name = _name
 	scene_path = _scene_path
 	components = _components

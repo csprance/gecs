@@ -4,47 +4,72 @@
 ## and saving/loading [GecsData] to/from files.
 class_name GECSIO
 
+
 ## Generates a custom GUID using random bytes.[br]
 ## The format uses 16 random bytes encoded to hex and formatted with hyphens.
 static func uuid() -> String:
 	const BYTE_MASK: int = 0b11111111
 	# 16 random bytes with the bytes on index 6 and 8 modified
 	var b = [
-		randi() & BYTE_MASK, randi() & BYTE_MASK, randi() & BYTE_MASK, randi() & BYTE_MASK,
-		randi() & BYTE_MASK, randi() & BYTE_MASK, ((randi() & BYTE_MASK) & 0x0f) | 0x40, randi() & BYTE_MASK,
-		((randi() & BYTE_MASK) & 0x3f) | 0x80, randi() & BYTE_MASK, randi() & BYTE_MASK, randi() & BYTE_MASK,
-		randi() & BYTE_MASK, randi() & BYTE_MASK, randi() & BYTE_MASK, randi() & BYTE_MASK,
+		randi() & BYTE_MASK,
+		randi() & BYTE_MASK,
+		randi() & BYTE_MASK,
+		randi() & BYTE_MASK,
+		randi() & BYTE_MASK,
+		randi() & BYTE_MASK,
+		((randi() & BYTE_MASK) & 0x0f) | 0x40,
+		randi() & BYTE_MASK,
+		((randi() & BYTE_MASK) & 0x3f) | 0x80,
+		randi() & BYTE_MASK,
+		randi() & BYTE_MASK,
+		randi() & BYTE_MASK,
+		randi() & BYTE_MASK,
+		randi() & BYTE_MASK,
+		randi() & BYTE_MASK,
+		randi() & BYTE_MASK,
 	]
 
-	return '%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x' % [
-		# low
-		b[0], b[1], b[2], b[3],
+	return (
+		"%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x"
+		% [
+			# low
+			b[0],
+			b[1],
+			b[2],
+			b[3],
+			# mid
+			b[4],
+			b[5],
+			# hi
+			b[6],
+			b[7],
+			# clock
+			b[8],
+			b[9],
+			# clock
+			b[10],
+			b[11],
+			b[12],
+			b[13],
+			b[14],
+			b[15],
+		]
+	)
 
-		# mid
-		b[4], b[5],
-
-		# hi
-		b[6], b[7],
-
-		# clock
-		b[8], b[9],
-
-		# clock
-		b[10], b[11], b[12], b[13], b[14], b[15]
-	]
 
 ## Serialize a [QueryBuilder] of [Entity](s) to [GecsData] format.[br]
 ## Optionally takes a [GECSSerializeConfig] to customize what gets serialized.
 static func serialize(query: QueryBuilder, config: GECSSerializeConfig = null) -> GecsData:
 	return serialize_entities(query.execute() as Array[Entity], config)
 
+
 ## Serialize a list of [Entity](s) to [GecsData] format.[br]
 ## Optionally takes a [GECSSerializeConfig] to customize what gets serialized.
 static func serialize_entities(entities: Array, config: GECSSerializeConfig = null) -> GecsData:
 	# Pass 1: Serialize entities from original query
 	var entity_data_array: Array[GecsEntityData] = []
-	var processed_entities: Dictionary = {} # id -> bool
-	var entity_id_mapping: Dictionary = {} # id -> Entity
+	var processed_entities: Dictionary = {}  # id -> bool
+	var entity_id_mapping: Dictionary = {}  # id -> Entity
 	for entity in entities:
 		var effective_config = _resolve_config(entity, config)
 		var entity_data = _serialize_entity(entity, false, effective_config)
@@ -83,6 +108,7 @@ static func serialize_entities(entities: Array, config: GECSSerializeConfig = nu
 
 	return GecsData.new(entity_data_array)
 
+
 ## Save [GecsData] to a file at the specified path.[br]
 ## If binary is true, saves in binary format (.res), otherwise text format (.tres).
 static func save(gecs_data: GecsData, filepath: String, binary: bool = false) -> bool:
@@ -92,7 +118,7 @@ static func save(gecs_data: GecsData, filepath: String, binary: bool = false) ->
 	if binary:
 		# Convert .tres to .res for binary format
 		final_path = filepath.replace(".tres", ".res")
-		flags = ResourceSaver.FLAG_COMPRESS # Binary format uses no flags, .res extension determines format
+		flags = ResourceSaver.FLAG_COMPRESS  # Binary format uses no flags, .res extension determines format
 	# else: text format (default flags = 0)
 
 	var result = ResourceSaver.save(gecs_data, final_path, flags)
@@ -100,6 +126,7 @@ static func save(gecs_data: GecsData, filepath: String, binary: bool = false) ->
 		push_error("GECS save: Failed to save resource to: " + final_path)
 		return false
 	return true
+
 
 ## Load and deserialize [Entity](s) from a file at the specified path.[br]
 ## Supports both binary (.res) and text (.tres) formats, tries binary first.
@@ -115,11 +142,12 @@ static func deserialize(gecs_filepath: String) -> Array[Entity]:
 		push_error("GECS deserialize: File not found: " + gecs_filepath)
 		return []
 
+
 ## Deserialize [GecsData] into a list of [Entity](s).[br]
 ## This can be used so you can serialize entities to GECS Data and then Deserailize that [GecsSData] later
 static func deserialize_gecs_data(gecs_data: GecsData) -> Array[Entity]:
 	var entities: Array[Entity] = []
-	var id_to_entity: Dictionary = {} # id -> Entity
+	var id_to_entity: Dictionary = {}  # id -> Entity
 
 	# Pass 1: Create all entities and build ID mapping
 	for entity_data in gecs_data.entities:
@@ -141,15 +169,21 @@ static func deserialize_gecs_data(gecs_data: GecsData) -> Array[Entity]:
 
 	return entities
 
+
 ## Helper function to resolve the effective configuration for an entity
 ## Priority: provided_config > entity.serialize_config > world.default_serialize_config > fallback
-static func _resolve_config(entity: Entity, provided_config: GECSSerializeConfig) -> GECSSerializeConfig:
+static func _resolve_config(
+	entity: Entity, provided_config: GECSSerializeConfig
+) -> GECSSerializeConfig:
 	if provided_config != null:
 		return provided_config
 	return entity.get_effective_serialize_config()
 
+
 ## Helper function to serialize a single entity with its components and relationships
-static func _serialize_entity(entity: Entity, auto_included: bool, config: GECSSerializeConfig) -> GecsEntityData:
+static func _serialize_entity(
+	entity: Entity, auto_included: bool, config: GECSSerializeConfig
+) -> GecsEntityData:
 	# Serialize components (filtered by config)
 	var components: Array[Component] = []
 	for component in entity.components.values():
@@ -164,14 +198,18 @@ static func _serialize_entity(entity: Entity, auto_included: bool, config: GECSS
 			var rel_data = GecsRelationshipData.from_relationship(relationship)
 			relationships.append(rel_data)
 
-	return GecsEntityData.new(
-		entity.name,
-		entity.scene_file_path if entity.scene_file_path != "" else "",
-		components,
-		relationships,
-		auto_included,
-		entity.id
+	return (
+		GecsEntityData
+		.new(
+			entity.name,
+			entity.scene_file_path if entity.scene_file_path != "" else "",
+			components,
+			relationships,
+			auto_included,
+			entity.id,
+		)
 	)
+
 
 ## Helper function to load and deserialize entities from a given file path
 static func _load_from_path(file_path: String) -> Array[Entity]:
@@ -185,6 +223,7 @@ static func _load_from_path(file_path: String) -> Array[Entity]:
 
 	return deserialize_gecs_data(gecs_data)
 
+
 ## Helper function to deserialize a single entity with its components and uuid
 static func _deserialize_entity(entity_data: GecsEntityData) -> Entity:
 	var entity: Entity
@@ -197,10 +236,18 @@ static func _deserialize_entity(entity_data: GecsEntityData) -> Entity:
 			if packed_scene:
 				entity = packed_scene.instantiate() as Entity
 			else:
-				push_warning("GECS deserialize: Could not load scene: " + scene_path + ", creating new entity")
+				push_warning(
+					(
+						"GECS deserialize: Could not load scene: "
+						+ scene_path
+						+ ", creating new entity"
+					)
+				)
 				entity = Entity.new()
 		else:
-			push_warning("GECS deserialize: Scene file not found: " + scene_path + ", creating new entity")
+			push_warning(
+				"GECS deserialize: Scene file not found: " + scene_path + ", creating new entity"
+			)
 			entity = Entity.new()
 	else:
 		# Create new entity

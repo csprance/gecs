@@ -38,9 +38,15 @@ func test_exact_pair_archetype_lookup():
 	# Only entity1 has the relationship
 	entity1.add_relationship(Relationship.new(C_TestA.new(), target))
 
-	var result = world.query.with_all([C_TestA]).with_relationship(
-		[Relationship.new(C_TestA.new(), target)]
-	).execute()
+	var result = (
+		world
+		.query
+		.with_all([C_TestA])
+		.with_relationship(
+			[Relationship.new(C_TestA.new(), target)],
+		)
+		.execute()
+	)
 
 	assert_int(result.size()).is_equal(1)
 	assert_bool(result.has(entity1)).is_true()
@@ -80,9 +86,14 @@ func test_wildcard_query_via_index():
 	entity2.add_relationship(Relationship.new(C_TestA.new(), target2))
 	# entity3 has no relationships
 
-	var result = world.query.with_relationship(
-		[Relationship.new(C_TestA.new(), null)]
-	).execute()
+	var result = (
+		world
+		.query
+		.with_relationship(
+			[Relationship.new(C_TestA.new(), null)],
+		)
+		.execute()
+	)
 
 	assert_bool(result.has(entity1)).is_true()
 	assert_bool(result.has(entity2)).is_true()
@@ -104,9 +115,15 @@ func test_without_relationship_exact_exclusion():
 
 	entity1.add_relationship(Relationship.new(C_TestA.new(), target))
 
-	var result = world.query.with_all([C_TestA]).without_relationship(
-		[Relationship.new(C_TestA.new(), target)]
-	).execute()
+	var result = (
+		world
+		.query
+		.with_all([C_TestA])
+		.without_relationship(
+			[Relationship.new(C_TestA.new(), target)],
+		)
+		.execute()
+	)
 
 	assert_bool(result.has(entity2)).is_true()
 	assert_bool(result.has(entity1)).is_false()
@@ -128,9 +145,15 @@ func test_without_relationship_wildcard_exclusion():
 
 	entity1.add_relationship(Relationship.new(C_TestA.new(), target))
 
-	var result = world.query.with_all([C_TestA]).without_relationship(
-		[Relationship.new(C_TestA.new(), null)]
-	).execute()
+	var result = (
+		world
+		.query
+		.with_all([C_TestA])
+		.without_relationship(
+			[Relationship.new(C_TestA.new(), null)],
+		)
+		.execute()
+	)
 
 	assert_bool(result.has(entity2)).is_true()
 	assert_bool(result.has(entity1)).is_false()
@@ -173,9 +196,15 @@ func test_script_archetype_subsumption():
 	entity1.add_relationship(Relationship.new(C_TestA.new(), food_entity))
 
 	# Query using Script target — should find entity1 via wildcard + post-filter
-	var result = world.query.with_all([C_TestA]).with_relationship(
-		[Relationship.new(C_TestA.new(), GecsFood)]
-	).execute()
+	var result = (
+		world
+		.query
+		.with_all([C_TestA])
+		.with_relationship(
+			[Relationship.new(C_TestA.new(), GecsFood)],
+		)
+		.execute()
+	)
 
 	assert_int(result.size()).is_equal(1)
 	assert_bool(result.has(entity1)).is_true()
@@ -223,16 +252,28 @@ func test_structural_relationship_query_cached():
 	world.reset_cache_stats()
 
 	# First call: cache miss
-	var result1 = world.query.with_all([C_TestA]).with_relationship(
-		[Relationship.new(C_TestA.new(), target)]
-	).execute()
+	var result1 = (
+		world
+		.query
+		.with_all([C_TestA])
+		.with_relationship(
+			[Relationship.new(C_TestA.new(), target)],
+		)
+		.execute()
+	)
 
 	var stats1 = world.get_cache_stats()
 
 	# Second call: should hit cache
-	var result2 = world.query.with_all([C_TestA]).with_relationship(
-		[Relationship.new(C_TestA.new(), target)]
-	).execute()
+	var result2 = (
+		world
+		.query
+		.with_all([C_TestA])
+		.with_relationship(
+			[Relationship.new(C_TestA.new(), target)],
+		)
+		.execute()
+	)
 
 	var stats2 = world.get_cache_stats()
 
