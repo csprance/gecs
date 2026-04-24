@@ -139,6 +139,7 @@ Anything that changes world state, spawns/destroys entities, or encodes gameplay
 8. **Tag components are free.** Don't encode "is this entity a player" as a bool on some other component. Create `C_Player` with zero fields. Queries are faster, intent is clearer, and removing the tag cleanly "demotes" the entity.
 9. **`serialize()` is for the debugger.** It iterates exported properties only. Non-`@export` vars are excluded from serialization. Don't stuff runtime-only caches into `@export`.
 10. **Don't mix gameplay and network concerns in one component.** If a component is purely network-layer infrastructure, prefix it `CN_` and put it under `addons/gecs/network/components/` (or your project's network folder). Gameplay components stay `C_` and can be sync'd by adding `@export_group` tiers to them — they don't need to become `CN_`.
+11. **Don't make a component out of something that's really entity glue.** A reference to the entity's own scene child (e.g. `NavigationAgent3D`, `AnimationPlayer`, `CollisionShape3D`, camera anchor) is glue — it belongs on the `Entity` subclass as an `@onready var`, not wrapped in a `C_*` component. A `Resource` can't cleanly serialize a Node reference, no system filters by it, and wrapping it just adds a `get_component()` Dictionary lookup in the hot loop. The test: **if no query (`with_all` / `with_none` / property-filter) would ever use the field, it's glue — not a component.** See `addons/gecs/docs/BEST_PRACTICES.md` → "Entity Glue Code".
 
 ## Workflow when asked to design a component
 
@@ -156,6 +157,7 @@ Anything that changes world state, spawns/destroys entities, or encodes gameplay
 - **Shared nested resources.** If your component has `@export var config: SomeResource`, all duplicated instances share the same `config` object. Mutating `entity_a.get_component(C).config.x = 1` mutates entity B's too. Duplicate in `_init` or design `config` as immutable.
 - **Wrong network tier.** Putting player transform on `LOW` (2 Hz) makes movement look jittery. Putting inventory on `REALTIME` wastes 60× the bandwidth. Match tier to actual change frequency and criticality.
 - **Using a bool field instead of a tag component.** `C_Player` (tag) is always preferable to `is_player: bool` on some other component — queries are faster, and removing the bool from a query is less error-prone than `.with_all([{C_Thing: {"is_player": {"_eq": true}}}])`.
+- **Wrapping a scene-child Node in a component.** A `C_NavAgent` that holds a `NavigationAgent3D` reference is almost always wrong — no system queries by it, `Resource.duplicate()` can't safely copy Node references, and the hot loop pays a `get_component()` lookup for nothing. Put `@onready var nav_agent: NavigationAgent3D = ...` on the Entity subclass and let systems cast to that type when they need it.
 - **Relying on `_init` side effects during deserialization.** When a component is loaded from a saved scene/`.tres`, `_init` runs with defaulted args before the serialized values are applied. Don't put side-effecting work in `_init` beyond assigning parameters to fields.
 
 ## Testing

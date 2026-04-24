@@ -37,8 +37,9 @@ func process(entities: Array[Entity], components: Array, delta: float) -> void:
 
 	for i in entities.size():
 		var entity := entities[i]
+		var sheep_entity := entity as Sheep
 		var sheep := (entity as Node) as Node3D
-		if sheep == null:
+		if sheep == null or sheep_entity == null:
 			continue
 		var c_move: C_SheepMovement = moves[i]
 		var c_threat: C_SheepThreat = threats[i]
@@ -58,7 +59,7 @@ func process(entities: Array[Entity], components: Array, delta: float) -> void:
 			c_vel.velocity = Vector3.ZERO
 			continue
 
-		var agent := sheep.get_node_or_null(^"NavigationAgent3D") as NavigationAgent3D
+		var agent := sheep_entity.nav_agent
 
 		# Arrived? Pick a new target and rest.
 		var xz_to_target := c_wander.target - sheep.global_position

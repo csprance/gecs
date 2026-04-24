@@ -239,6 +239,60 @@ project/
     └── o_transform.gd   # Reactive systems
 ```
 
+## Entity Glue Code: What Belongs on the Entity vs. a Component
+
+An `Entity` subclass is the bridge between Godot's scene tree and the ECS world. It's the right home for **glue** — handles and setup logic that don't meet the bar for becoming a component. Getting this split right keeps components lean (and serializable) and keeps systems fast (no unnecessary indirection).
+
+**Put it on the Entity subclass as glue when:**
+
+- It's a reference to the entity's OWN scene-tree child (`NavigationAgent3D`, `CollisionShape3D`, `AnimationPlayer`, camera anchor, skeleton attachment).
+- It never changes at runtime — no system ever adds, removes, or swaps it.
+- No system ever queries by it. You will never write `q.with_all([C_ThatThing])`.
+- It can't serialize as data anyway — Node references aren't `Resource`-safe.
+
+**Put it in a `C_*` component instead when:**
+
+- Multiple entity types share the concept and should be queried uniformly.
+- A system filters on its presence/absence (`with_all`, `with_none`).
+- It can appear, disappear, or be hot-swapped at runtime.
+- It's pure data (numbers, vectors, enums, arrays, strings).
+
+**Canonical example — caching a child node once at `_ready`:**
+
+```gdscript
+class_name Sheep
+extends Entity
+
+## Cached handle to our own scene child. Resolved once; systems read it
+## directly instead of doing get_node_or_null(...) per frame per sheep.
+@onready var nav_agent: NavigationAgent3D = get_node_or_null(^"NavigationAgent3D")
+
+func define_components() -> Array:
+    return [C_Sheep.new(), C_Wander.new(), C_Velocity.new()]
+```
+
+```gdscript
+# In the system — no per-frame scene-tree walk, no Dictionary lookup.
+func process(entities: Array[Entity], components: Array, delta: float) -> void:
+    for i in entities.size():
+        var sheep := entities[i] as Sheep
+        var agent := sheep.nav_agent
+        ...
+```
+
+**Anti-pattern — making it a component for no reason:**
+
+```gdscript
+# DON'T: C_NavAgent with a NavigationAgent3D field. Resource can't serialize
+# a Node reference cleanly, no system queries by presence of this, and the
+# hot loop now pays an entity.get_component() Dictionary lookup to unwrap it.
+class_name C_NavAgent
+extends Component
+@export var agent: NavigationAgent3D  # ← don't
+```
+
+**Rule of thumb:** if you removed the field from the Entity subclass, would any system's **query** break? If yes → component. If no (only a specific system's *internals* change) → entity glue.
+
 ## Common Game Patterns
 
 ### Player Character Pattern

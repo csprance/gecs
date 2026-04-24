@@ -34,6 +34,7 @@ Read these files for current API details before designing:
 9. **Use SystemTimer** for systems that don't need to run every frame (AI decisions, cleanup)
 10. **Use `.iterate()` in every System query that reads components in its process loop** — batch-extracts component arrays so the process body avoids per-entity `entity.get_component(...)` Dictionary lookups. This is the single biggest per-frame perf win available in GECS. Make it the default, not an optimization step.
 11. **Cache relationship patterns as module-level statics with `R_*` naming** — e.g. `static var R_AnyFlockmate := Relationship.new(C_Flockmate.new(), null)`. A "relationship pattern" here means a `Relationship` instance passed into `get_relationships()` / `has_relationship()` / `with_relationship()` to match against existing relationships (it's never stored on an entity — only read via `rel.matches(pattern)`). Passing a fresh `Relationship.new(...)` each call allocates a Relationship **and** a Component per call; cache once and reuse. Mirrors the `C_*` convention for components.
+12. **Entity subclasses are glue — put scene-child references there, not in components.** Handles to the entity's own `NavigationAgent3D`, `AnimationPlayer`, `CollisionShape3D`, camera anchor, etc. belong as `@onready var` fields on the `Entity` subclass. Resolve them once at `_ready` so hot-loop systems read `(entity as Sheep).nav_agent` instead of calling `sheep.get_node_or_null(^"NavigationAgent3D")` per frame. Test: if no query would ever filter by the field, it's glue — not a component. See `addons/gecs/docs/BEST_PRACTICES.md` → "Entity Glue Code".
 
 ## Performance: `.iterate()` for batch component access
 
@@ -84,8 +85,9 @@ When asked to design a feature:
 4. Identify what queries connect systems to the right entities
 5. **For every per-frame system with a `process()` body, declare `.iterate([...])` on the query** and use the `components[]` array instead of `get_component()` calls in the loop. Explicitly justify the exception if you skip it (e.g. system reads zero components; runs at 1Hz via SystemTimer).
 6. Identify any `Relationship` patterns the system passes into `get_relationships()` / `has_relationship()` / `with_relationship()` — cache them as `R_*` module-level statics rather than allocating per call.
-7. Consider edge cases: entity lifecycle, enable/disable, relationships
-8. Present the design with code examples showing the component definitions, system queries (including `.iterate()` and any cached `R_*` patterns), and processing logic
-9. Call out any remaining performance considerations (query complexity, system ordering, tick rates)
+7. If the system calls `entity.get_node(...)` or `get_node_or_null(...)` in its process loop, push that lookup up to an `@onready var` on the `Entity` subclass instead. The system reads `(entity as MyEntity).cached_field` — not a component, not a per-frame scene-tree walk.
+8. Consider edge cases: entity lifecycle, enable/disable, relationships
+9. Present the design with code examples showing the component definitions, system queries (including `.iterate()` and any cached `R_*` patterns), and processing logic
+10. Call out any remaining performance considerations (query complexity, system ordering, tick rates)
 
 Always check `addons/gecs/docs/` for documentation on patterns and best practices.
