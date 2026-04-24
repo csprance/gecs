@@ -1,6 +1,7 @@
 class_name SimpleVelocitySystem
 extends System
 
+
 func setup():
 	safe_iteration = false
 

@@ -4,6 +4,7 @@ extends System
 @export var random_mover_scene: PackedScene
 @export var spawn_area: float = 5.0
 
+
 func setup():
 	command_buffer_flush_mode = FlushMode.PER_GROUP
 	safe_iteration = false

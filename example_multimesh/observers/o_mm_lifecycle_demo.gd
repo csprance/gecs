@@ -41,12 +41,16 @@ func _on_despawn(_event: Variant, _entity: Entity, _payload: Variant) -> void:
 
 func _on_tracked_state(event: Variant, _entity: Entity, _payload: Variant) -> void:
 	match event:
-		Observer.Event.MATCH:   currently_tracked += 1
-		Observer.Event.UNMATCH: currently_tracked -= 1
+		Observer.Event.MATCH:
+			currently_tracked += 1
+		Observer.Event.UNMATCH:
+			currently_tracked -= 1
 
 
 func _on_milestone(_event: Variant, _entity: Entity, data: Variant) -> void:
 	print(
-		"[mm-observer-demo] spawned=%d  despawned=%d  tracked-now=%d"
-		% [data.count, despawn_count, currently_tracked]
+		(
+			"[mm-observer-demo] spawned=%d  despawned=%d  tracked-now=%d"
+			% [data.count, despawn_count, currently_tracked]
+		)
 	)

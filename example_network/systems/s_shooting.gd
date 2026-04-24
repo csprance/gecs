@@ -4,11 +4,10 @@
 class_name S_NetworkShooting
 extends System
 
-
 var _projectile_scene: PackedScene = preload("res://example_network/entities/e_projectile.tscn")
-var _cooldown_tracker: Dictionary = {} # entity_id -> time_since_shot
+var _cooldown_tracker: Dictionary = {}  # entity_id -> time_since_shot
 
-const FIRE_RATE := 0.3 # Seconds between shots
+const FIRE_RATE := 0.3  # Seconds between shots
 const PROJECTILE_SPEED := 10.0
 
 
@@ -86,8 +85,13 @@ func _spawn_projectile(shooter: Entity, direction: Vector3, player_number: int) 
 func _get_player_color(player_number: int) -> Color:
 	# Fixed color rotation: Blue, Red, Green, Yellow (max 4 players)
 	match player_number:
-		1: return Color.CORNFLOWER_BLUE
-		2: return Color.INDIAN_RED
-		3: return Color.MEDIUM_SEA_GREEN
-		4: return Color.GOLD
-		_: return Color.WHITE
+		1:
+			return Color.CORNFLOWER_BLUE
+		2:
+			return Color.INDIAN_RED
+		3:
+			return Color.MEDIUM_SEA_GREEN
+		4:
+			return Color.GOLD
+		_:
+			return Color.WHITE

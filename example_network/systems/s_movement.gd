@@ -5,9 +5,8 @@
 class_name S_NetworkMovement
 extends System
 
-
 const MOVE_SPEED := 5.0
-const ARENA_BOUND := 4.5 # Half of 10x10 arena minus player size
+const ARENA_BOUND := 4.5  # Half of 10x10 arena minus player size
 ## How fast remote entities correct toward the authoritative network position.
 ## Higher = snappier correction, lower = smoother but more drift.
 const CORRECTION_SPEED := 10.0
@@ -53,7 +52,9 @@ func _on_receive_position(entity: Entity, comp: Component, props: Dictionary) ->
 
 func query() -> QueryBuilder:
 	# Process ALL entities with velocity and position - local AND remote
-	return q.with_all([C_NetVelocity, C_PlayerInput, C_NetPosition]).iterate([C_NetVelocity, C_PlayerInput, C_NetPosition])
+	return q.with_all([C_NetVelocity, C_PlayerInput, C_NetPosition]).iterate(
+		[C_NetVelocity, C_PlayerInput, C_NetPosition]
+	)
 
 
 func process(entities: Array[Entity], components: Array, delta: float) -> void:
@@ -74,7 +75,13 @@ func process(entities: Array[Entity], components: Array, delta: float) -> void:
 			_process_remote(entity, velocity, net_pos, delta)
 
 
-func _process_local(entity: Entity, velocity: C_NetVelocity, player_input: C_PlayerInput, net_pos: C_NetPosition, delta: float) -> void:
+func _process_local(
+	entity: Entity,
+	velocity: C_NetVelocity,
+	player_input: C_PlayerInput,
+	net_pos: C_NetPosition,
+	delta: float
+) -> void:
 	# Calculate velocity from input
 	var move_input = player_input.move_direction
 	velocity.direction = Vector3(move_input.x, 0, move_input.y) * MOVE_SPEED
@@ -89,7 +96,9 @@ func _process_local(entity: Entity, velocity: C_NetVelocity, player_input: C_Pla
 		net_pos.position = entity.global_position
 
 
-func _process_remote(entity: Entity, velocity: C_NetVelocity, net_pos: C_NetPosition, delta: float) -> void:
+func _process_remote(
+	entity: Entity, velocity: C_NetVelocity, net_pos: C_NetPosition, delta: float
+) -> void:
 	if not (entity is Player):
 		return
 
@@ -97,7 +106,9 @@ func _process_remote(entity: Entity, velocity: C_NetVelocity, net_pos: C_NetPosi
 	entity.global_position += velocity.direction * delta
 
 	# Correct toward authoritative network position to prevent drift
-	entity.global_position = entity.global_position.lerp(net_pos.position, clamp(CORRECTION_SPEED * delta, 0.0, 1.0))
+	entity.global_position = entity.global_position.lerp(
+		net_pos.position, clamp(CORRECTION_SPEED * delta, 0.0, 1.0)
+	)
 
 	# Clamp to arena bounds
 	entity.global_position.x = clamp(entity.global_position.x, -ARENA_BOUND, ARENA_BOUND)

@@ -3,8 +3,10 @@ extends System
 
 @export var time_between_updates: float = 0.1
 
+
 func setup():
 	safe_iteration = false
+
 
 func query() -> QueryBuilder:
 	return q.with_all([C_Velocity, C_Timer]).iterate([C_Velocity, C_Timer])
@@ -24,4 +26,6 @@ func process(entities: Array[Entity], components: Array, delta: float) -> void:
 		c_timer.time = 0.0
 		var c_velocity = velocities[i]
 		if c_velocity != null:
-			c_velocity.velocity += Vector3(randf_range(-1, 1), randf_range(-1, 1), randf_range(-1, 1))
+			c_velocity.velocity += Vector3(
+				randf_range(-1, 1), randf_range(-1, 1), randf_range(-1, 1)
+			)

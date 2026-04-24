@@ -5,5 +5,6 @@ extends Component
 
 @export var player_number: int = 0
 
+
 func _init(number: int = 0) -> void:
 	player_number = number

@@ -7,6 +7,7 @@ extends System
 var _multi_mesh: MultiMesh
 var _multi_mesh_instance: MultiMeshInstance3D
 
+
 func setup():
 	safe_iteration = false
 	process_empty = true

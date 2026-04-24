@@ -12,7 +12,6 @@ extends Area3D
 ## the component's type; the instance is never mutated.
 static var _FLOCKMATE_COMPONENT: C_Flockmate = C_Flockmate.new()
 
-
 var _owner_entity: Entity
 
 

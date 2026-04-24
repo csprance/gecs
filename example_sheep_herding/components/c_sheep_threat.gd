@@ -13,4 +13,9 @@ extends Component
 func _init() -> void:
 	# Invariant: hysteresis requires safe_radius > flee_radius.
 	if safe_radius <= flee_radius:
-		push_warning("C_SheepThreat: safe_radius (%s) must be > flee_radius (%s)" % [safe_radius, flee_radius])
+		push_warning(
+			(
+				"C_SheepThreat: safe_radius (%s) must be > flee_radius (%s)"
+				% [safe_radius, flee_radius]
+			)
+		)

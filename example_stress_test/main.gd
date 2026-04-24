@@ -13,5 +13,6 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	world.process(delta, "physics")
 
+
 func _physics_process(delta: float) -> void:
 	world.process(delta, "gameplay")

@@ -6,7 +6,6 @@
 class_name PenArea3D
 extends Area3D
 
-
 ## Cached owning pen entity (walked up the scene tree in _ready).
 var _owner_entity: Entity
 

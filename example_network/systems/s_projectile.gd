@@ -3,11 +3,10 @@
 class_name S_NetworkProjectile
 extends System
 
+const LIFETIME := 3.0  # Seconds before projectile is removed
+const ARENA_BOUND := 10.0  # Remove if outside this bound
 
-const LIFETIME := 3.0 # Seconds before projectile is removed
-const ARENA_BOUND := 10.0 # Remove if outside this bound
-
-var _lifetime_tracker: Dictionary = {} # entity_id -> time_alive
+var _lifetime_tracker: Dictionary = {}  # entity_id -> time_alive
 
 
 func query() -> QueryBuilder:

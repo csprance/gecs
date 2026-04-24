@@ -60,6 +60,8 @@ func _on_special_state(event: Variant, _entity: Entity, _payload: Variant) -> vo
 
 func _on_milestone(_event: Variant, _entity: Entity, data: Variant) -> void:
 	print(
-		"[observer-demo] spawned=%d  despawned=%d  special-now=%d"
-		% [data.count, despawn_count, currently_special]
+		(
+			"[observer-demo] spawned=%d  despawned=%d  special-now=%d"
+			% [data.count, despawn_count, currently_special]
+		)
 	)

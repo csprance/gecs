@@ -4,7 +4,6 @@
 ## alignment, and cohesion on the XZ plane.
 class_name Flocking
 
-
 ## Cached "any flockmate" relationship pattern — wildcard target, passed to
 ## [method Entity.get_relationships] so it matches every C_Flockmate
 ## relationship on the entity regardless of which sheep it points to.

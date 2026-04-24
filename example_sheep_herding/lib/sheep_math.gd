@@ -1,7 +1,6 @@
 ## Small static helpers shared between sheep systems.
 class_name SheepMath
 
-
 ## Cached shepherd reference for WanderSystem / FleeSystem. Re-queried on
 ## invalidation instead of per-frame to avoid repeated ECS lookups.
 static var _shepherd: Node3D

@@ -7,20 +7,29 @@ extends System
 
 
 func query() -> QueryBuilder:
-	return q.with_all([
-		C_Sheep,
-		C_SheepMovement,
-		C_SheepThreat,
-		C_Flocking,
-		C_Wander,
-		C_Velocity,
-	]).with_none([C_Flee, C_Penned]).iterate([
-		C_SheepMovement,
-		C_SheepThreat,
-		C_Flocking,
-		C_Wander,
-		C_Velocity,
-	])
+	return (
+		q
+		.with_all(
+			[
+				C_Sheep,
+				C_SheepMovement,
+				C_SheepThreat,
+				C_Flocking,
+				C_Wander,
+				C_Velocity,
+			]
+		)
+		.with_none([C_Flee, C_Penned])
+		.iterate(
+			[
+				C_SheepMovement,
+				C_SheepThreat,
+				C_Flocking,
+				C_Wander,
+				C_Velocity,
+			]
+		)
+	)
 
 
 func process(entities: Array[Entity], components: Array, delta: float) -> void:

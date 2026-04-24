@@ -1,7 +1,55 @@
 {
   // GECS custom tasks
+  //
+  // GDScript formatter options (try them and pick a favorite):
+  //   1. gdformat — from Scony's gdtoolkit. Python-based, most established.
+  //       Install: `pipx install gdtoolkit` (or `pip install gdtoolkit`)
+  //       Supports directory input natively.
+  //   2. gdscript-formatter — from GDQuest. Rust/tree-sitter, faster.
+  //       Install on Windows: `scoop bucket add extras && scoop install extras/gdscript-formatter`
+  //       Or grab a binary from https://github.com/GDQuest/GDScript-formatter/releases
+  //       CLI takes single files, so the task loops over *.gd with find (via Git Bash).
   "version": "2.0.0",
   "tasks": [
+    {
+      // gdformat parses a leading `.` on a continuation line as an infix operator
+      // (Godot 3 super-call syntax) and inserts a space — `. new(world)` instead
+      // of `.new(world)`. The post-pass regex stitches that back together.
+      "label": "Format: gdformat (gdtoolkit)",
+      "type": "shell",
+      "command": "$paths = 'addons/gecs','example_multimesh','example_network','example_sheep_herding','example_stress_test'; gdformat @paths; Get-ChildItem -Path $paths -Recurse -Filter *.gd | ForEach-Object { ((Get-Content $_.FullName -Raw) -replace '(?m)^(\\s+)\\. ', '$1.') | Set-Content $_.FullName -NoNewline }",
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": [],
+      "group": { "kind": "build", "isDefault": false },
+      "presentation": { "reveal": "always", "panel": "shared" }
+    },
+    {
+      "label": "Format: gdformat --check (dry run)",
+      "type": "shell",
+      "command": "gdformat --check addons/gecs example_multimesh example_network example_sheep_herding example_stress_test",
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": [],
+      "group": { "kind": "test", "isDefault": false },
+      "presentation": { "reveal": "always", "panel": "shared" }
+    },
+    {
+      "label": "Format: gdscript-formatter (GDQuest)",
+      "type": "shell",
+      "command": "Get-ChildItem -Path addons/gecs,example_multimesh,example_network,example_sheep_herding,example_stress_test -Recurse -Filter *.gd | ForEach-Object { gdscript-formatter $_.FullName }",
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": [],
+      "group": { "kind": "build", "isDefault": false },
+      "presentation": { "reveal": "always", "panel": "shared" }
+    },
+    {
+      "label": "Format: gdscript-formatter --check (dry run)",
+      "type": "shell",
+      "command": "Get-ChildItem -Path addons/gecs,example_multimesh,example_network,example_sheep_herding,example_stress_test -Recurse -Filter *.gd | ForEach-Object { gdscript-formatter --check $_.FullName }",
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": [],
+      "group": { "kind": "test", "isDefault": false },
+      "presentation": { "reveal": "always", "panel": "shared" }
+    },
     {
       "label": "Grafana: Start",
       "type": "shell",

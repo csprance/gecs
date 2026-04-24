@@ -1,6 +1,7 @@
 class_name MMVelocitySystem
 extends System
 
+
 func setup():
 	safe_iteration = false
 
