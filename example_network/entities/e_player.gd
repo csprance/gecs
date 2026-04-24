@@ -15,11 +15,10 @@ func define_components() -> Array:
 		C_NetVelocity.new(),
 		C_PlayerInput.new(),
 		C_PlayerNumber.new(),
-		C_NewPlayer.new(),
 	]
 
 
-# Help function to set visual color based on player number (called from PlayerInitSystem)
+# Help function to set visual color based on player number (called from PlayerInitObserver)
 func set_visual_color(color: Color) -> void:
 	if visual.material_override == null:
 		visual.material_override = StandardMaterial3D.new()

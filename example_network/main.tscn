@@ -3,8 +3,8 @@
 [ext_resource type="Script" uid="uid://dr2fms7bejad5" path="res://example_network/main.gd" id="1_main"]
 [ext_resource type="Script" uid="uid://cdu5tlyk72uu4" path="res://addons/gecs/ecs/world.gd" id="2_world"]
 [ext_resource type="Script" uid="uid://b3vi2ingux88g" path="res://addons/gecs/lib/system_group.gd" id="3_sysgroup"]
-[ext_resource type="Script" uid="uid://bm7pspa0aadw2" path="res://example_network/systems/s_player_init.gd" id="4_cpak6"]
 [ext_resource type="Script" uid="uid://dww2wfip0uq7k" path="res://example_network/systems/s_input.gd" id="4_input"]
+[ext_resource type="Script" uid="uid://rek28mybpibs" path="res://example_network/observers/o_player_init.gd" id="4_observer"]
 [ext_resource type="Script" uid="uid://b30rleaob260h" path="res://example_network/systems/s_movement.gd" id="5_movement"]
 [ext_resource type="Script" uid="uid://cqb7ug3cw1vbh" path="res://example_network/systems/s_shooting.gd" id="6_shooting"]
 [ext_resource type="Script" uid="uid://bn41hwmgw5iix" path="res://example_network/systems/s_projectile.gd" id="7_projectile"]
@@ -34,16 +34,16 @@ system_nodes_root = NodePath("Systems")
 
 [node name="Systems" type="Node" parent="World" unique_id=1840593994]
 
+[node name="PlayerInitObserver" type="Node" parent="World/Systems" unique_id=969841161]
+script = ExtResource("4_observer")
+
 [node name="input" type="Node" parent="World/Systems" unique_id=2067052569]
 script = ExtResource("3_sysgroup")
-
-[node name="PlayerInitSystem" type="Node" parent="World/Systems/input" unique_id=969841161]
-script = ExtResource("4_cpak6")
-group = &"input"
 
 [node name="InputSystem" type="Node" parent="World/Systems/input" unique_id=1403171772]
 script = ExtResource("4_input")
 group = &"input"
+performance_monitor = true
 
 [node name="gameplay" type="Node" parent="World/Systems" unique_id=1667023385]
 script = ExtResource("3_sysgroup")
@@ -51,6 +51,7 @@ script = ExtResource("3_sysgroup")
 [node name="ShootingSystem" type="Node" parent="World/Systems/gameplay" unique_id=1126892736]
 script = ExtResource("6_shooting")
 group = &"gameplay"
+performance_monitor = true
 
 [node name="physics" type="Node" parent="World/Systems" unique_id=68079083]
 script = ExtResource("3_sysgroup")
@@ -58,10 +59,12 @@ script = ExtResource("3_sysgroup")
 [node name="MovementSystem" type="Node" parent="World/Systems/physics" unique_id=992513254]
 script = ExtResource("5_movement")
 group = &"physics"
+performance_monitor = true
 
 [node name="ProjectileSystem" type="Node" parent="World/Systems/physics" unique_id=430850156]
 script = ExtResource("7_projectile")
 group = &"physics"
+performance_monitor = true
 
 [node name="NetworkSession" type="Node" parent="." unique_id=1234567890]
 script = ExtResource("8_network_session")
