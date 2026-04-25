@@ -78,6 +78,17 @@ enum FlushMode { PER_SYSTEM, PER_GROUP, MANUAL }
 ## since deferred commands never mutate during iteration — skipping the copy entirely.
 @export var safe_iteration: bool = true
 
+@export_group("Profiling")
+## When true, registers a custom entry under [code]gecs/systems/<name>[/code]
+## in Godot's built-in Debugger → Monitors panel, graphing this system's
+## current-frame execution time in [b]milliseconds[/b] with decimals — same
+## formatting as Godot's built-in [code]Process[/code] / [code]Physics Process[/code]
+## monitors. Off by default — enable it per system only for the handful you're
+## actively profiling to keep the Monitors list manageable. Toggling at runtime
+## registers/unregisters automatically.
+@export var performance_monitor: bool = false:
+	set = _set_performance_monitor
+
 #endregion Exported Variables
 
 #region Public Variables
@@ -127,6 +138,20 @@ var _uses_non_structural_cached: int = -1
 var _subsystem_non_structural_cache: Array[int] = []
 ## Cached per-subsystem timers (null if no timer for that subsystem index)
 var _subsystem_timers_cache: Array = []
+
+## Cached last execution time in ms — mirrored from lastRunData["execution_time_ms"]
+## so the Performance monitor callable returns a primitive float with no Dict lookup.
+var _last_execution_time_ms: float = 0.0
+## Registered Performance custom monitor id, empty when not registered.
+var _perf_monitor_id: StringName = &""
+
+## Running min/max/avg execution time, aggregated on the runtime side so the
+## numbers stay correct even when the editor debugger drops messages under heavy
+## entity churn. Shipped via lastRunData; displayed directly by the GECS tab.
+var _metric_min_ms: float = 0.0
+var _metric_max_ms: float = 0.0
+var _metric_avg_ms: float = 0.0
+var _metric_sample_count: int = 0
 
 #endregion Public Variables
 
@@ -217,6 +242,16 @@ func has_pending_commands() -> bool:
 	return cmd != null and not cmd.is_empty()
 
 
+## Clear accumulated min/max/avg timing data for this system. Called by the
+## GECS debugger tab's Reset Metrics button via a remote debugger message so
+## a one-time spike (e.g. first-frame scene load) no longer pollutes the max.
+func reset_performance_metrics() -> void:
+	_metric_min_ms = 0.0
+	_metric_max_ms = 0.0
+	_metric_avg_ms = 0.0
+	_metric_sample_count = 0
+
+
 #endregion Public Methods
 
 #region Private Methods
@@ -227,12 +262,89 @@ func has_pending_commands() -> bool:
 func _internal_setup():
 	# Call user setup
 	setup()
+	# If the export flag was ticked in the inspector, register the monitor now that
+	# the system is in the tree and the world has given us a resolvable name.
+	if performance_monitor and _perf_monitor_id == &"":
+		_register_performance_monitor()
 	# Editor-only sanity check: warn if the system's query declares observer event
 	# modifiers (on_added/on_match/etc.). Those flags have no effect on Systems —
 	# the user probably meant to extend Observer. Stripped from release exports via
 	# `OS.has_feature("editor")`, which is false in exported builds.
 	if OS.has_feature("editor"):
 		_warn_if_query_has_observer_events()
+
+
+func _exit_tree() -> void:
+	if _perf_monitor_id != &"":
+		_unregister_performance_monitor()
+
+
+## Setter for [member performance_monitor]. Registers/unregisters the custom
+## Performance monitor when the flag flips at runtime (including via the Remote
+## inspector during a debug session).
+func _set_performance_monitor(value: bool) -> void:
+	if value == performance_monitor:
+		return
+	performance_monitor = value
+	# Only (un)register when we're actually in the tree. If the setter fires
+	# during scene deserialization before _ready(), _internal_setup() picks it up.
+	if not is_inside_tree():
+		return
+	if value:
+		if _perf_monitor_id == &"":
+			_register_performance_monitor()
+	else:
+		if _perf_monitor_id != &"":
+			_unregister_performance_monitor()
+
+
+## Resolve a unique id for this system's Performance monitor. Uses the script
+## basename (same shape as [code]lastRunData.system_name[/code]); appends
+## [code]#N[/code] if another monitor with that id is already registered so two
+## instances of the same system script don't collide.
+func _resolve_monitor_name() -> String:
+	var base := "unknown"
+	var script := get_script()
+	if script and script.resource_path:
+		base = script.resource_path.get_file().get_basename()
+	var candidate := base
+	var suffix := 1
+	while Performance.has_custom_monitor(&"%s - [GECS]" % candidate):
+		suffix += 1
+		candidate = "%s#%d" % [base, suffix]
+	return candidate
+
+
+func _register_performance_monitor() -> void:
+	var id := &"%s - [GECS]" % _resolve_monitor_name()
+	_perf_monitor_id = id
+	# MONITOR_TYPE_TIME formats as "X.XX ms" in the Monitors panel — matches the
+	# built-in Process / Physics Process monitors. The callable must return the
+	# value in [b]seconds[/b]; Godot multiplies internally for the ms display.
+	# Available in Godot 4.5+ (the GECS framework is 4.5+ only).
+	(
+		Performance
+		.add_custom_monitor(
+			id,
+			Callable(self, "_get_perf_monitor_time"),
+			[],
+			Performance.MONITOR_TYPE_TIME,
+		)
+	)
+
+
+func _unregister_performance_monitor() -> void:
+	if Performance.has_custom_monitor(_perf_monitor_id):
+		Performance.remove_custom_monitor(_perf_monitor_id)
+	_perf_monitor_id = &""
+
+
+## Callback invoked by Godot's Performance singleton. Must return a primitive
+## float and allocate nothing — hot path during Monitors panel sampling.
+## Returns the current-frame execution time in [b]seconds[/b]; Godot's
+## MONITOR_TYPE_TIME formatter converts it to "X.XX ms" for display.
+func _get_perf_monitor_time() -> float:
+	return _last_execution_time_ms / 1000.0
 
 
 func _warn_if_query_has_observer_events() -> void:
@@ -301,9 +413,13 @@ func _handle(delta: float) -> void:
 	# Timer gate: only run when tick source fires (null = every frame)
 	if tick_source and not tick_source.ticked:
 		return
+	# Always measure time when the Performance monitor is on, even without ECS.debug,
+	# so the monitor callable has a live value to return.
+	var measure_time := ECS.debug or performance_monitor
 	var start_time_usec := 0
-	if ECS.debug:
+	if measure_time:
 		start_time_usec = Time.get_ticks_usec()
+	if ECS.debug:
 		lastRunData = {
 			"system_name": get_script().resource_path.get_file().get_basename(),
 			"frame_delta": delta,
@@ -318,9 +434,27 @@ func _handle(delta: float) -> void:
 	if command_buffer_flush_mode == FlushMode.PER_SYSTEM and has_pending_commands():
 		cmd.execute()
 
-	if ECS.debug:
+	if measure_time:
 		var end_time_usec = Time.get_ticks_usec()
-		lastRunData["execution_time_ms"] = (end_time_usec - start_time_usec) / 1000.0
+		_last_execution_time_ms = (end_time_usec - start_time_usec) / 1000.0
+		# Aggregate min/max/avg on the runtime side — every frame contributes even
+		# when editor debugger messages are dropped, so peaks are never lost.
+		if _metric_sample_count == 0:
+			_metric_min_ms = _last_execution_time_ms
+			_metric_max_ms = _last_execution_time_ms
+		else:
+			_metric_min_ms = min(_metric_min_ms, _last_execution_time_ms)
+			_metric_max_ms = max(_metric_max_ms, _last_execution_time_ms)
+		_metric_sample_count += 1
+		_metric_avg_ms = (
+			_metric_avg_ms + (_last_execution_time_ms - _metric_avg_ms) / _metric_sample_count
+		)
+		if ECS.debug:
+			lastRunData["execution_time_ms"] = _last_execution_time_ms
+			lastRunData["min_ms"] = _metric_min_ms
+			lastRunData["max_ms"] = _metric_max_ms
+			lastRunData["avg_ms"] = _metric_avg_ms
+			lastRunData["sample_count"] = _metric_sample_count
 
 
 ## UNIFIED execution function for both main systems and subsystems

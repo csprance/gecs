@@ -2519,6 +2519,11 @@ func _handle_debugger_message(message: String, data: Array) -> bool:
 				return true
 
 		return false
+	elif message == "reset_system_metrics":
+		# Editor requested to clear accumulated min/max/avg across all systems.
+		for sys in systems:
+			sys.reset_performance_metrics()
+		return true
 	elif message == "poll_entity":
 		# Editor requested a component poll for a specific entity
 		var entity_id = data[0]

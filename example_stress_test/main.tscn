@@ -9,6 +9,7 @@
 [ext_resource type="Script" uid="uid://bhyk76gs76j8p" path="res://example_stress_test/systems/s_lifetime.gd" id="7_life"]
 [ext_resource type="PackedScene" uid="uid://d3ic6lh1dkiua" path="res://example_stress_test/entities/simple_mover.tscn" id="8_mover"]
 [ext_resource type="Script" uid="uid://0ote6bgdrspd" path="res://example_stress_test/observers/o_lifecycle_demo.gd" id="9_obs"]
+[ext_resource type="Script" uid="uid://c40uf8ax4yeor" path="res://example_stress_test/benchmark_hud.gd" id="10_hud"]
 
 [node name="Main" type="Node3D" unique_id=1548949468]
 script = ExtResource("1_main")
@@ -30,13 +31,13 @@ metadata/_custom_type_script = "uid://b3vi2ingux88g"
 [node name="RandomVelocitySystem" type="Node" parent="World/Systems/physics" unique_id=892779027]
 script = ExtResource("5_rvel")
 time_between_updates = 1.0
-group = &"physics"
 safe_iteration = false
+performance_monitor = true
 
 [node name="VelocitySystem" type="Node" parent="World/Systems/physics" unique_id=405055388]
 script = ExtResource("4_vel")
-group = &"physics"
 safe_iteration = false
+performance_monitor = true
 
 [node name="gameplay" type="Node" parent="World/Systems" unique_id=1350672065]
 script = ExtResource("3_group")
@@ -45,13 +46,13 @@ metadata/_custom_type_script = "uid://b3vi2ingux88g"
 [node name="RandomSpawnerSystem" type="Node" parent="World/Systems/gameplay" unique_id=477451062]
 script = ExtResource("6_spawn")
 random_mover_scene = ExtResource("8_mover")
-group = &"gameplay"
 safe_iteration = false
+performance_monitor = true
 
 [node name="LifetimeSystem" type="Node" parent="World/Systems/gameplay" unique_id=734996483]
 script = ExtResource("7_life")
-group = &"gameplay"
 safe_iteration = false
+performance_monitor = true
 
 [node name="LifecycleDemoObserver" type="Node" parent="World/Systems" unique_id=1995210837]
 script = ExtResource("9_obs")
@@ -62,3 +63,27 @@ transform = Transform3D(0.254029, 0.499719, -0.828101, -0.095908, 0.864981, 0.49
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=1278830736]
 transform = Transform3D(-0.02218, 0.716119, -0.697625, 0.022756, 0.697978, 0.715758, 0.999495, 0, -0.031777, -12.464, 14.089, -4.198)
+
+[node name="BenchmarkHUD" type="Control" parent="." unique_id=137508998]
+layout_mode = 3
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -420.0
+offset_top = 10.0
+offset_right = -10.0
+offset_bottom = 200.0
+grow_horizontal = 0
+script = ExtResource("10_hud")
+spawner_path = NodePath("../World/Systems/gameplay/RandomSpawnerSystem")
+
+[node name="Label" type="Label" parent="BenchmarkHUD" unique_id=1839262912]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 8.0
+offset_top = 8.0
+offset_right = -8.0
+offset_bottom = -8.0
+theme_type_variation = &"HeaderSmall"
+text = "Benchmark initializing..."

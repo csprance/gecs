@@ -27,6 +27,11 @@ func query() -> QueryBuilder:
 # 	pass
 
 
+## Tick the box to graph this system's per-frame execution time (ms) in
+## Godot's Debugger → Monitors panel under gecs/systems/<SystemName>.
+# @export var performance_monitor: bool = false
+
+
 ## Override this method to define any sub-systems that should be processed by this system.[br]
 ## Each tuple is [QueryBuilder, Callable] or [QueryBuilder, Callable, SystemTimer] for throttled subsystems.[br]
 # func sub_systems() -> Array[Array]:
@@ -55,3 +60,12 @@ func process(entities: Array[Entity], components: Array, delta: float) -> void:
 	# var your_components = components[0]
 	# for i in entities.size():
 	# 	# Process entities[i] with your_components[i]
+
+	# Casting tip: if your entities are a single class_name (e.g. Sheep), cast
+	# ONCE per iteration — `var sheep := entities[i] as Sheep` exposes both the
+	# Entity API (`get_component`, `get_relationships`) AND the scene-root
+	# Node3D properties (`global_position`, `nav_agent`, etc.) off the same
+	# variable. Don't double-cast through Node — that's the redundant pattern.
+	# Sibling casts like `Entity as Node3D` are rejected by the static checker,
+	# so if a helper takes `Node3D`, relax its param to `Node` and downcast
+	# inside. See addons/gecs/docs/BEST_PRACTICES.md → "Casting an Entity".

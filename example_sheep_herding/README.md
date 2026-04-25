@@ -45,8 +45,11 @@ Order matters — steering writes to `C_Velocity`, integration reads it:
    follows the main camera.
 2. **WanderSystem** — picks random targets, drives each sheep's
    NavigationAgent3D toward them, blends flocking into the path direction,
-   writes velocity. Escalates to `C_Flee` when a shepherd enters the
-   sheep's flee radius.
+   writes velocity. Uses `sub_systems()` to split free vs. penned wanderers
+   into two queries (`with_none([C_Penned])` vs. `with_all([C_Penned])`)
+   that share one loop with an `is_penned` flag — free sheep escalate to
+   `C_Flee` when the shepherd enters their flee radius and pick goals around
+   themselves; penned sheep ignore the shepherd and pick goals inside the pen.
 3. **FleeSystem** — writes a direct-away velocity at run speed. Strips
    `C_Flee` (via CommandBuffer) when the shepherd leaves the safe radius.
 4. **SheepVelocitySystem** — reads `C_Velocity` on every entity, calls
@@ -57,12 +60,14 @@ Order matters — steering writes to `C_Velocity`, integration reads it:
 
 Reactive — they don't run every frame, only fire on specific events.
 
-- **O_Penned** — `with_all([C_Sheep, C_Penned]).on_added()`. Strips
-  `C_Wander`, `C_Flee`, and `C_Velocity` via CommandBuffer when a sheep is
-  penned. Terminal transition (C_Penned is never removed).
 - **O_SheepEnteredPen** — subscribes to the custom
-  `&"sheep_entered_pen"` event emitted by `PenArea3D.body_entered`. Queues
-  `C_Penned` on the sheep via CommandBuffer.
+  `&"sheep_entered_pen"` event emitted by `PenArea3D.body_entered`. Tags the
+  sheep with `C_Penned`, copying the pen's center + radius onto the component,
+  and clears any active `C_Flee`. `C_Penned` doesn't spawn a new system: it
+  just flips two things in the existing wander/flee loop —
+  `WanderSystem` samples new goals inside the pen instead of around the sheep,
+  and `FleeSystem` (which uses `with_none([C_Penned])`) skips them entirely so
+  the shepherd can't scare them out.
 
 ## Flocking via Relationships
 
@@ -95,12 +100,11 @@ example_sheep_herding/
     e_pen.gd / .tscn                # Node3D + PenArea3D
   systems/
     s_shepherd.gd                   # Input → velocity
-    s_wander.gd                     # Pathfinding → velocity
+    s_wander.gd                     # Pathfinding → velocity (penned sheep too)
     s_flee.gd                       # Flee vector → velocity
     s_velocity.gd                   # velocity → move_and_slide
   observers/
-    o_penned.gd                     # On C_Penned add: strip behavior
-    o_sheep_entered_pen.gd          # On event: add C_Penned
+    o_sheep_entered_pen.gd          # On event: tag with C_Penned(center, radius)
   lib/
     flocking.gd                     # Static flocking helper
     sheep_math.gd                   # face(), xz_distance_sq, cached shepherd lookup

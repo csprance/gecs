@@ -1,7 +1,10 @@
 ## Flee System.
-## Sheep with C_Flee sprint directly away from the shepherd — no pathfinding
-## (panic mode). When the shepherd is outside the sheep's safe radius,
-## C_Flee is removed and the sheep drops back into wandering.
+## Sheep with C_Flee sprint away from the shepherd, pathing through the
+## NavigationMesh so they round obstacles instead of running into walls. The
+## flee target is the point `safe_radius` away from the shepherd in the
+## opposite direction, snapped to the navmesh. When the shepherd is outside
+## the sheep's safe radius, C_Flee is removed and the sheep drops back into
+## wandering.
 class_name FleeSystem
 extends System
 
@@ -46,11 +49,11 @@ func process(entities: Array[Entity], components: Array, delta: float) -> void:
 			cmd.remove_component(entity, C_Flee)
 		return
 
-	var shepherd_pos := shepherd.global_position
+	var shepherd_pos: Vector3 = shepherd.global_position
 
 	for i in entities.size():
 		var entity := entities[i]
-		var sheep := (entity as Node) as Node3D
+		var sheep := entity as Sheep
 		if sheep == null:
 			continue
 		var c_move: C_SheepMovement = moves[i]
@@ -58,7 +61,7 @@ func process(entities: Array[Entity], components: Array, delta: float) -> void:
 		var c_flock: C_Flocking = flocks[i]
 		var c_vel: C_Velocity = velocities[i]
 
-		var away := sheep.global_position - shepherd_pos
+		var away: Vector3 = sheep.global_position - shepherd_pos
 		away.y = 0.0
 		var dist := away.length()
 
@@ -68,10 +71,29 @@ func process(entities: Array[Entity], components: Array, delta: float) -> void:
 			continue
 
 		var flee_dir := away.normalized() if dist > 0.001 else Vector3.FORWARD
-		var flock: Vector3 = Flocking.compute(sheep, entity, c_flock)
-		var move_dir: Vector3 = flee_dir + flock * c_flock.flock_influence
+		var agent := sheep.nav_agent
+
+		# Aim for a point `safe_radius` away from the shepherd, snapped onto
+		# the navmesh so pathing actually respects walls and the pen geometry.
+		var flee_target: Vector3 = sheep.global_position + flee_dir * c_threat.safe_radius
+		flee_target = SheepMath.snap_to_navmesh(agent, flee_target)
+		if agent and agent.target_position.distance_to(flee_target) > 0.25:
+			agent.target_position = flee_target
+
+		# Follow the navmesh path when one exists, fall back to the raw
+		# away-vector on the first frame / when no path is active.
+		var desired: Vector3 = flee_dir
+		if agent and not agent.is_navigation_finished():
+			var next_path_pos := agent.get_next_path_position()
+			var path_dir: Vector3 = next_path_pos - sheep.global_position
+			path_dir.y = 0.0
+			if path_dir.length_squared() > 0.0:
+				desired = path_dir.normalized()
+
+		var flock: Vector3 = Flocking.compute(sheep, c_flock)
+		var move_dir: Vector3 = desired + flock * c_flock.flock_influence
 		if move_dir.is_zero_approx():
-			move_dir = flee_dir
+			move_dir = desired
 		else:
 			move_dir = move_dir.normalized()
 

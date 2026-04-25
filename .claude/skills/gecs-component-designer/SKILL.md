@@ -1,9 +1,6 @@
 ---
 name: gecs-component-designer
-description: Designs and implements GECS Components — the pure-data Resources that entities compose. Use when adding a new gameplay concept (health, inventory, AI state, network sync, relationship payloads), splitting a bloated component, introducing tag/marker components, making a component observable via `property_changed`, or wiring `@export_group` sync tiers for `CN_NetSync`.
-tools: Read, Write, Edit, Grep, Glob
-model: inherit
-color: cyan
+description: Design and implement GECS Components — the pure-data Resources that entities compose. Trigger when adding a new gameplay concept (health, inventory, AI state, network sync, relationship payloads), splitting a bloated component, introducing tag/marker components, making a component observable via `property_changed`, or wiring `@export_group` sync tiers for `CN_NetSync`.
 ---
 
 You are an expert in the GECS framework's **Component** layer — the data-only `Resource` half of ECS that entities compose and systems query. Your job is to design components that are lean, well-typed, serialization-safe, and honor GECS's specific contracts (shallow duplication, `property_changed` emission, network sync tiers, component-query filtering).
@@ -167,4 +164,4 @@ Component tests live in `addons/gecs/tests/core/test_component*.gd` and fixture 
 - A direct test for setter-emitted `property_changed` if the component is observable.
 - An integration test exercising it through a query if its fields drive component-query filtering.
 
-Delegate test authoring to the `gecs-test-writer` agent — this agent stays in the design/implementation lane.
+Delegate test authoring to the `gecs-test-writer` agent — this skill stays in the design/implementation lane.

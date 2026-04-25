@@ -9,6 +9,7 @@ extends Control
 @onready var expand_all_btn: Button = %ExpandAllBtn
 @onready var systems_collapse_all_btn: Button = %SystemsCollapseAllBtn
 @onready var systems_expand_all_btn: Button = %SystemsExpandAllBtn
+@onready var systems_reset_metrics_btn: Button = %SystemsResetMetricsBtn
 @onready var pop_out_btn: Button = %PopOutBtn
 @onready var poll_rate_spin_box: SpinBox = %PollRateSpinBox
 
@@ -51,19 +52,25 @@ const ICON_PIN = "📌"  # Pinned item icon
 func _ready() -> void:
 	_update_debug_mode_overlay()
 	if system_tree:
-		# Five columns: name, group, execution time, status, and order
-		system_tree.columns = 5
+		# Eight columns: name, group, current time, min, max, avg, status, order
+		system_tree.columns = 8
 		system_tree.set_column_expand(0, true)  # Name column expands
 		system_tree.set_column_expand(1, false)  # Group column resizable
-		system_tree.set_column_expand(2, false)  # Execution time column resizable
-		system_tree.set_column_expand(3, false)  # Status column resizable
-		system_tree.set_column_expand(4, false)  # Order column resizable
+		system_tree.set_column_expand(2, false)  # Time column resizable
+		system_tree.set_column_expand(3, false)  # Min column resizable
+		system_tree.set_column_expand(4, false)  # Max column resizable
+		system_tree.set_column_expand(5, false)  # Avg column resizable
+		system_tree.set_column_expand(6, false)  # Status column resizable
+		system_tree.set_column_expand(7, false)  # Order column resizable
 
 		# Set column widths
 		system_tree.set_column_custom_minimum_width(1, 100)  # Group: 100px min
-		system_tree.set_column_custom_minimum_width(2, 100)  # Execution time: 100px min
-		system_tree.set_column_custom_minimum_width(3, 100)  # Status: 100px min
-		system_tree.set_column_custom_minimum_width(4, 60)  # Order: 60px min
+		system_tree.set_column_custom_minimum_width(2, 90)  # Time: 90px min
+		system_tree.set_column_custom_minimum_width(3, 90)  # Min: 90px min
+		system_tree.set_column_custom_minimum_width(4, 90)  # Max: 90px min
+		system_tree.set_column_custom_minimum_width(5, 90)  # Avg: 90px min
+		system_tree.set_column_custom_minimum_width(6, 100)  # Status: 100px min
+		system_tree.set_column_custom_minimum_width(7, 60)  # Order: 60px min
 
 		# Enable column resizing (clip content allows manual resizing)
 		system_tree.set_column_clip_content(0, true)
@@ -71,13 +78,19 @@ func _ready() -> void:
 		system_tree.set_column_clip_content(2, true)
 		system_tree.set_column_clip_content(3, true)
 		system_tree.set_column_clip_content(4, true)
+		system_tree.set_column_clip_content(5, true)
+		system_tree.set_column_clip_content(6, true)
+		system_tree.set_column_clip_content(7, true)
 
 		# Set column titles (clickable for sorting)
 		system_tree.set_column_title(0, "Name")
 		system_tree.set_column_title(1, "Group")
 		system_tree.set_column_title(2, "Time (ms)")
-		system_tree.set_column_title(3, "Status")
-		system_tree.set_column_title(4, "Order")
+		system_tree.set_column_title(3, "Min (ms)")
+		system_tree.set_column_title(4, "Max (ms)")
+		system_tree.set_column_title(5, "Avg (ms)")
+		system_tree.set_column_title(6, "Status")
+		system_tree.set_column_title(7, "Order")
 		system_tree.set_column_titles_visible(true)
 
 		# Create root item
@@ -137,6 +150,11 @@ func _ready() -> void:
 		and not systems_expand_all_btn.pressed.is_connected(_on_systems_expand_all_pressed)
 	):
 		systems_expand_all_btn.pressed.connect(_on_systems_expand_all_pressed)
+	if (
+		systems_reset_metrics_btn
+		and not systems_reset_metrics_btn.pressed.is_connected(_on_systems_reset_metrics_pressed)
+	):
+		systems_reset_metrics_btn.pressed.connect(_on_systems_reset_metrics_pressed)
 	if pop_out_btn and not pop_out_btn.pressed.is_connected(_on_pop_out_pressed):
 		pop_out_btn.pressed.connect(_on_pop_out_pressed)
 	# Connect to system tree for clicking (single click to toggle)
@@ -506,18 +524,18 @@ func _toggle_system_active():
 
 
 func _update_system_active_display(system_item: TreeItem, is_active: bool):
-	# Update the visual display of the system in column 3 as a button
+	# Update the visual display of the system in column 6 (Status) as a button
 	if is_active:
-		system_item.set_text(3, "ACTIVE")
-		system_item.set_custom_color(3, Color(0.5, 1.0, 0.5))  # Green text
+		system_item.set_text(6, "ACTIVE")
+		system_item.set_custom_color(6, Color(0.5, 1.0, 0.5))  # Green text
 	else:
-		system_item.set_text(3, "INACTIVE")
-		system_item.set_custom_color(3, Color(1.0, 0.3, 0.3))  # Red text
+		system_item.set_text(6, "INACTIVE")
+		system_item.set_custom_color(6, Color(1.0, 0.3, 0.3))  # Red text
 
 	# Make the status column a clickable button
-	system_item.set_cell_mode(3, TreeItem.CELL_MODE_STRING)
-	system_item.set_selectable(3, true)
-	system_item.set_editable(3, false)
+	system_item.set_cell_mode(6, TreeItem.CELL_MODE_STRING)
+	system_item.set_selectable(6, true)
+	system_item.set_editable(6, false)
 
 
 func _on_system_tree_column_clicked(column: int, mouse_button_index: int):
@@ -547,28 +565,24 @@ func _on_system_tree_column_clicked(column: int, mouse_button_index: int):
 
 
 func _update_system_column_indicators():
-	# Clear all column indicators first
-	for i in range(5):
-		var title = ""
-		match i:
-			0:
-				title = "Name"
-			1:
-				title = "Group"
-			2:
-				title = "Time (ms)"
-			3:
-				title = "Status"
-			4:
-				title = "Order"
-
-		# Add arrow indicator if this is the sort column
+	# Keep this in sync with the 8-column layout set in _ready().
+	const TITLES := [
+		"Name",
+		"Group",
+		"Time (ms)",
+		"Min (ms)",
+		"Max (ms)",
+		"Avg (ms)",
+		"Status",
+		"Order",
+	]
+	for i in range(TITLES.size()):
+		var title: String = TITLES[i]
 		if i == _system_sort_column:
 			if _system_sort_ascending:
 				title += " ▲"
 			else:
 				title += " ▼"
-
 		system_tree.set_column_title(i, title)
 
 
@@ -591,16 +605,28 @@ func _sort_system_tree():
 			"name": child.get_text(0),
 			"group": child.get_text(1),
 			"time": 0.0,
-			"status": child.get_text(3),
-			"order": int(child.get_text(4)) if child.get_text(4).is_valid_int() else 0,
+			"min": 0.0,
+			"max": 0.0,
+			"avg": 0.0,
+			"status": child.get_text(6),
+			"order": int(child.get_text(7)) if child.get_text(7).is_valid_int() else 0,
 			"system_id": system_id,
 			"is_pinned": _pinned_systems.get(system_id, false),
 		}
 
-		# Get execution time from text (remove " ms" suffix if present)
+		# Parse ms values (strip " ms" suffix if present)
 		var time_text = child.get_text(2)
 		if time_text:
 			system_data["time"] = float(time_text.replace(" ms", ""))
+		var min_text = child.get_text(3)
+		if min_text:
+			system_data["min"] = float(min_text.replace(" ms", ""))
+		var max_text = child.get_text(4)
+		if max_text:
+			system_data["max"] = float(max_text.replace(" ms", ""))
+		var avg_text = child.get_text(5)
+		if avg_text:
+			system_data["avg"] = float(avg_text.replace(" ms", ""))
 
 		if system_data["is_pinned"]:
 			pinned_systems.append(system_data)
@@ -626,12 +652,27 @@ func _sort_system_tree():
 					systems.sort_custom(func(a, b): return a["time"] < b["time"])
 				else:
 					systems.sort_custom(func(a, b): return a["time"] > b["time"])
-			3:  # Status
+			3:  # Min
+				if _system_sort_ascending:
+					systems.sort_custom(func(a, b): return a["min"] < b["min"])
+				else:
+					systems.sort_custom(func(a, b): return a["min"] > b["min"])
+			4:  # Max
+				if _system_sort_ascending:
+					systems.sort_custom(func(a, b): return a["max"] < b["max"])
+				else:
+					systems.sort_custom(func(a, b): return a["max"] > b["max"])
+			5:  # Avg
+				if _system_sort_ascending:
+					systems.sort_custom(func(a, b): return a["avg"] < b["avg"])
+				else:
+					systems.sort_custom(func(a, b): return a["avg"] > b["avg"])
+			6:  # Status
 				if _system_sort_ascending:
 					systems.sort_custom(func(a, b): return a["status"] < b["status"])
 				else:
 					systems.sort_custom(func(a, b): return a["status"] > b["status"])
-			4:  # Order
+			7:  # Order
 				if _system_sort_ascending:
 					systems.sort_custom(func(a, b): return a["order"] < b["order"])
 				else:
@@ -1091,9 +1132,10 @@ func system_metric(system: int, system_name: String, time: float):
 	sys_entry["last_time"] = time
 	var sys_metrics = ecs_data["systems"][system]["metrics"]
 	if not sys_metrics:
-		# Initialize metrics if not present
+		# Initialize metrics if not present. count starts at 0 because the
+		# unconditional increment below produces count=1 for the first sample.
 		sys_metrics = {
-			"min_time": time, "max_time": time, "avg_time": time, "count": 1, "last_time": time
+			"min_time": time, "max_time": time, "avg_time": 0.0, "count": 0, "last_time": time
 		}
 
 	sys_metrics["min_time"] = min(sys_metrics["min_time"], time)
@@ -1112,6 +1154,11 @@ func system_last_run_data(system_id: int, system_name: String, last_run_data: Di
 	var systems_data := get_or_create_dict(ecs_data, "systems")
 	var sys_entry := get_or_create_dict(systems_data, system_id, default_system.duplicate())
 	sys_entry["last_run_data"] = last_run_data
+	# Runtime ships pre-aggregated min_ms / max_ms / avg_ms / sample_count inside
+	# last_run_data — no local aggregation needed. This is robust to debugger
+	# message drops (e.g. under heavy entity spawn bursts): every frame still
+	# contributes on the runtime side, so peaks are never lost.
+	var exec_ms = last_run_data.get("execution_time_ms", 0.0)
 	# Update or create tree item
 	if system_tree:
 		var root = system_tree.get_root()
@@ -1143,31 +1190,38 @@ func system_last_run_data(system_id: int, system_name: String, last_run_data: Di
 		existing.set_text(1, group)
 
 		# Set execution time in column 2
-		var exec_ms = last_run_data.get("execution_time_ms", 0.0)
 		existing.set_text(2, String.num(exec_ms, 3) + " ms")
 
-		# Set active status in column 3
+		# Set min/max/avg in columns 3/4/5 (pre-aggregated by the runtime)
+		var min_ms = last_run_data.get("min_ms", exec_ms)
+		var max_ms = last_run_data.get("max_ms", exec_ms)
+		var avg_ms = last_run_data.get("avg_ms", exec_ms)
+		existing.set_text(3, String.num(min_ms, 3) + " ms")
+		existing.set_text(4, String.num(max_ms, 3) + " ms")
+		existing.set_text(5, String.num(avg_ms, 3) + " ms")
+
+		# Set active status in column 6
 		var is_active = sys_entry.get("active", true)
 		_update_system_active_display(existing, is_active)
 
-		# Get execution order (index in systems array from last_run_data) - column 4
+		# Get execution order (index in systems array from last_run_data) - column 7
 		var execution_order = last_run_data.get("execution_order", -1)
 		if execution_order >= 0:
-			existing.set_text(4, str(execution_order))
+			existing.set_text(7, str(execution_order))
 		else:
-			existing.set_text(4, "-")
+			existing.set_text(7, "-")
 		# Clear previous children to avoid stale data
 		var prev_child = existing.get_first_child()
 		while prev_child:
 			var next_child = prev_child.get_next()
 			prev_child.free()
 			prev_child = next_child
-		# Create nested rows for key info
+		# Create nested rows for key info (min/max/avg now in columns — keep samples + entity/arch here)
 		var ent_count = last_run_data.get("entity_count", null)
 		var arch_count = last_run_data.get("archetype_count", null)
 		var parallel = last_run_data.get("parallel", false)
 		var nested_data := {
-			"execution_time_ms": String.num(exec_ms, 3),
+			"samples": last_run_data.get("sample_count", 1),
 			"entity_count": ent_count,
 			"archetype_count": arch_count,
 			"parallel": parallel,
@@ -1195,6 +1249,24 @@ func system_last_run_data(system_id: int, system_name: String, last_run_data: Di
 		_sort_system_tree()
 
 	# Update status bar with latest system data
+	_update_systems_status_bar()
+
+
+func _on_systems_reset_metrics_pressed() -> void:
+	# Tell the runtime to clear its per-system min/max/avg aggregates. Next frame's
+	# lastRunData will arrive with sample_count=1 and the UI will rebuild from there.
+	send_to_game("reset_system_metrics", [])
+	# Optimistically clear the cached metrics so the UI doesn't show stale data
+	# while we wait for the next telemetry frame.
+	var systems_data = ecs_data.get("systems", {})
+	for system_id in systems_data.keys():
+		var sys = systems_data[system_id]
+		var lrd = sys.get("last_run_data", {})
+		if lrd is Dictionary:
+			lrd["min_ms"] = lrd.get("execution_time_ms", 0.0)
+			lrd["max_ms"] = lrd.get("execution_time_ms", 0.0)
+			lrd["avg_ms"] = lrd.get("execution_time_ms", 0.0)
+			lrd["sample_count"] = 0
 	_update_systems_status_bar()
 
 
@@ -1569,10 +1641,13 @@ func _update_systems_status_bar():
 	var systems_data = ecs_data.get("systems", {})
 	var system_count = systems_data.size()
 
-	# Calculate total execution time and find most expensive system
+	# Calculate total execution time and find most expensive system (current frame)
 	var total_time_ms = 0.0
 	var most_expensive_name = ""
 	var most_expensive_time = 0.0
+	# Also find peak system across metrics history (max_time)
+	var peak_name = ""
+	var peak_time = 0.0
 
 	for system_id in systems_data.keys():
 		var system_data = systems_data[system_id]
@@ -1582,32 +1657,41 @@ func _update_systems_status_bar():
 
 		total_time_ms += exec_time_ms
 
+		# Resolve a display name once per system
+		var system_name = last_run_data.get("system_name", "")
+		if not system_name:
+			var path = system_data.get("path", "")
+			if path:
+				system_name = str(path).get_file().get_basename()
+			else:
+				system_name = "System_%d" % system_id
+
 		if exec_time_ms > most_expensive_time:
 			most_expensive_time = exec_time_ms
-			# Try to get a readable system name from last_run_data first, then path
-			var system_name = last_run_data.get("system_name", "")
-			if not system_name:
-				var path = system_data.get("path", "")
-				if path:
-					system_name = str(path).get_file().get_basename()
-				else:
-					system_name = "System_%d" % system_id
 			most_expensive_name = system_name
 
-	# Format the status bar text
+		var metric_peak = last_run_data.get("max_ms", 0.0)
+		if metric_peak > peak_time:
+			peak_time = metric_peak
+			peak_name = system_name
+
+	# Format the status bar text — use 3 decimals so sub-millisecond systems
+	# don't collapse to "0.0ms" and look broken.
 	if most_expensive_name:
 		systems_status_bar.text = (
-			"Systems: %d | Total ms: %.1fms | Most Expensive: %s (%.1fms)"
+			"Systems: %d | Total ms: %.3fms | Current Peak: %s (%.3fms) | All-Time Peak: %s (%.3fms)"
 			% [
 				system_count,
 				total_time_ms,
 				most_expensive_name,
 				most_expensive_time,
+				peak_name,
+				peak_time,
 			]
 		)
 	else:
 		systems_status_bar.text = (
-			"Systems: %d | Total ms: %.1fms"
+			"Systems: %d | Total ms: %.3fms"
 			% [
 				system_count,
 				total_time_ms,

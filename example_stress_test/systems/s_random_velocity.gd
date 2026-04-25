@@ -1,31 +1,24 @@
 class_name SimpleRandomVelocitySystem
 extends System
 
+## Interval between velocity perturbations, in seconds. Drives a SystemTimer so
+## the system only runs at this rate — removing the per-entity C_Timer
+## bookkeeping the old implementation needed to gate work on frame-time.
 @export var time_between_updates: float = 0.1
 
 
 func setup():
 	safe_iteration = false
+	set_tick_rate(time_between_updates)
 
 
 func query() -> QueryBuilder:
-	return q.with_all([C_Velocity, C_Timer]).iterate([C_Velocity, C_Timer])
+	return q.with_all([C_Velocity]).iterate([C_Velocity])
 
 
-func process(entities: Array[Entity], components: Array, delta: float) -> void:
+func process(entities: Array[Entity], components: Array, _delta: float) -> void:
 	var velocities = components[0]
-	var timers = components[1]
-
 	for i in entities.size():
-		var c_timer = timers[i]
-		if c_timer == null:
-			continue
-		c_timer.time += delta
-		if c_timer.time <= time_between_updates:
-			continue
-		c_timer.time = 0.0
-		var c_velocity = velocities[i]
-		if c_velocity != null:
-			c_velocity.velocity += Vector3(
-				randf_range(-1, 1), randf_range(-1, 1), randf_range(-1, 1)
-			)
+		velocities[i].velocity += Vector3(
+			randf_range(-1, 1), randf_range(-1, 1), randf_range(-1, 1)
+		)

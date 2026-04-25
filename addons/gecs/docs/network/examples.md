@@ -25,7 +25,6 @@ func define_components() -> Array:
         C_NetVelocity.new(),
         C_PlayerInput.new(),
         C_PlayerNumber.new(),
-        C_NewPlayer.new(),
     ]
 ```
 

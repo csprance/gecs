@@ -13,12 +13,13 @@ class_name Flocking
 static var R_AnyFlockmate: Relationship = Relationship.new(C_Flockmate.new(), null)
 
 
-## [param self_node] The sheep asking for steering.
-## [param self_entity] The sheep Entity — used to look up C_Flockmate relationships.
+## [param self_sheep] The sheep asking for steering — used both as a Node3D
+##   (for global_position) and an Entity (for C_Flockmate lookup). Sheep's
+##   class_name resolves both APIs against its CharacterBody3D scene root.
 ## [param c_flocking] The sheep's C_Flocking tuning (weights / separation distance).
 ## Returns: an XZ steering direction, magnitude ~ [0, 1+]. Vector3.ZERO when alone.
-static func compute(self_node: Node3D, self_entity: Entity, c_flocking: C_Flocking) -> Vector3:
-	var rels := self_entity.get_relationships(R_AnyFlockmate)
+static func compute(self_sheep: Sheep, c_flocking: C_Flocking) -> Vector3:
+	var rels := self_sheep.get_relationships(R_AnyFlockmate)
 	if rels.is_empty():
 		return Vector3.ZERO
 
@@ -28,26 +29,24 @@ static func compute(self_node: Node3D, self_entity: Entity, c_flocking: C_Flocki
 	var count := 0
 	var sep_count := 0
 	var sep_sq := c_flocking.separation_distance * c_flocking.separation_distance
-	var self_pos := self_node.global_position
+	var self_pos: Vector3 = self_sheep.global_position
 
 	for rel in rels:
-		var other_entity := rel.target as Entity
-		if other_entity == null or not is_instance_valid(other_entity):
+		var other := rel.target as Sheep
+		if other == null or not is_instance_valid(other):
 			continue
-		var other_node := (other_entity as Node) as Node3D
-		if other_node == null:
-			continue
+		var other_pos: Vector3 = other.global_position
 
-		var to_other := other_node.global_position - self_pos
+		var to_other := other_pos - self_pos
 		to_other.y = 0.0
 		var dist_sq := to_other.length_squared()
 		if dist_sq == 0.0:
 			continue
 
 		count += 1
-		cohesion_center += other_node.global_position
+		cohesion_center += other_pos
 
-		var other_forward := -other_node.global_transform.basis.z
+		var other_forward: Vector3 = -other.global_transform.basis.z
 		other_forward.y = 0.0
 		alignment += other_forward
 

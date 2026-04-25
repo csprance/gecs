@@ -159,6 +159,12 @@ unique_name_in_owner = true
 layout_mode = 2
 text = "Expand All"
 
+[node name="SystemsResetMetricsBtn" type="Button" parent="HSplit/HSplitContainer/SystemsVBox/HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Reset Metrics"
+tooltip_text = "Clear min/max/avg history for all systems. Useful after a one-time spike (e.g. scene load) has polluted the max."
+
 [node name="PopOutBtn" type="Button" parent="HSplit/HSplitContainer/SystemsVBox/HBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
@@ -168,7 +174,7 @@ text = "Pop Out"
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
-columns = 5
+columns = 8
 column_titles_visible = true
 hide_root = true
 select_mode = 2
@@ -181,5 +187,5 @@ layout_mode = 2
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-text = "Systems: 0 |  Total ms: 0.0ms | Most Expensive: (0.0ms)"
+text = "Systems: 0 | Total ms: 0.000ms"
 editable = false
