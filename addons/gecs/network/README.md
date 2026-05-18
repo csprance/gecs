@@ -88,7 +88,7 @@ addons/gecs_network/
 ├── transports/
 │   ├── enet_transport_provider.gd     # Default ENet transport
 │   └── steam_transport_provider.gd    # Steam transport (requires GodotSteam)
-├── docs/
+├── ../docs/network/
 │   ├── components.md              # CN_NetworkIdentity, CN_NetSync, CN_NativeSync, markers
 │   ├── architecture.md            # Handler architecture, sync pipeline diagram
 │   ├── authority.md               # Authority query patterns (CN_LocalAuthority, CN_ServerAuthority)
@@ -113,16 +113,16 @@ addons/gecs_network/
 
 ## Documentation
 
-- [Components](docs/components.md)
-- [Architecture](docs/architecture.md)
-- [Authority](docs/authority.md)
-- [Configuration](docs/configuration.md)
-- [Sync Patterns](docs/sync-patterns.md)
-- [Custom Sync Handlers](docs/custom-sync-handlers.md)
-- [Best Practices](docs/best-practices.md)
-- [Examples](docs/examples.md)
-- [Troubleshooting](docs/troubleshooting.md)
-- [Migration Guide](docs/migration-v1-to-v2.md)
+- [Components](../docs/network/components.md)
+- [Architecture](../docs/network/architecture.md)
+- [Authority](../docs/network/authority.md)
+- [Configuration](../docs/network/configuration.md)
+- [Sync Patterns](../docs/network/sync-patterns.md)
+- [Custom Sync Handlers](../docs/network/custom-sync-handlers.md)
+- [Best Practices](../docs/network/best-practices.md)
+- [Examples](../docs/network/examples.md)
+- [Troubleshooting](../docs/network/troubleshooting.md)
+- [Migration Guide](../docs/network/migration-v1-to-v2.md)
 
 ## License
 
