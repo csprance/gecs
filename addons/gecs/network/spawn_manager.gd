@@ -253,6 +253,10 @@ func _inject_authority_markers(entity: Entity, net_id: CN_NetworkIdentity) -> vo
 		or (_ns.net_adapter.is_server() and net_id.is_server_owned())
 	):
 		entity.add_component(CN_LocalAuthority.new())
+	
+	# CN_RemoteEntity: an entity owned by a remote peer (peer_id != multiplayer unique ID)
+	if net_id.peer_id != _ns.net_adapter.get_multiplayer().get_unique_id():
+		entity.add_component(CN_RemoteEntity.new())
 
 
 ## Find a component on an entity by its type name string.
