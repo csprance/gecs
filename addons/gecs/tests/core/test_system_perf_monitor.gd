@@ -41,8 +41,7 @@ func test_flag_on_registers_monitor_and_returns_last_exec_time():
 	var id = _monitor_id_for(s)
 	assert_str(String(id)).is_equal("gecs/systems/s_noop")
 	assert_bool(Performance.has_custom_monitor(id)).is_true()
-	# After one frame the callable should return current-frame time in seconds
-	# (Godot's MONITOR_TYPE_TIME formatter converts to ms for display).
+	# After one frame the callable should return current-frame time in seconds.
 	world.process(0.016)
 	var sample = Performance.get_custom_monitor(id)
 	assert_float(sample).is_equal(s._last_execution_time_ms / 1000.0)

@@ -81,20 +81,14 @@ var paused: bool = false
 ## world, so sub_observers can call [code]q.with_all(...)[/code] independently per tuple
 ## without them sharing mutable state. If the observer is not yet attached to a world,
 ## returns the global [code]ECS.world.query[/code] builder or null.
-# Vendor patch: ECS guard to break Observer→ECS→ecs.gd parse circle in headless mode
 var q: QueryBuilder:
 	get:
 		return _world.query if _world else (ECS.world.query if ECS and ECS.world else null)
 
 ## Reference to the [World] this observer belongs to (set by [method World.add_observer]).
-# Vendor patch: untyped to break World→Observer→World circular
-# class-graph dependency that blocks world.gd from parsing in
-# headless runtime mode. World methods are resolved dynamically.
 var _world = null
 
 ## Command buffer for queuing structural changes from event callbacks. Lazy — created on first access.
-# Vendor patch: untyped to break Observer→CommandBuffer→World circular
-# class-graph dependency. CommandBuffer methods are resolved dynamically.
 var cmd = null:
 	get:
 		if cmd == null:

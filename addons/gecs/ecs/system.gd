@@ -111,19 +111,13 @@ var systemLogger = GECSLogger.new().domain("System")
 var lastRunData := {}
 
 ## Reference to the world this system belongs to (set by World.add_system)
-# Vendor patch: untyped to break World→System→World circular
-# class-graph dependency that blocks world.gd from parsing in
-# headless runtime mode. World methods are resolved dynamically.
 var _world = null
 ## Convenience property for accessing query builder (returns _world.query or ECS.world.query)
-# Vendor patch: ECS guard to break System→ECS→ecs.gd parse circle in headless mode
 var q: QueryBuilder:
 	get:
 		return _world.query if _world else (ECS.world.query if ECS and ECS.world else null)
 ## Command buffer for queuing structural changes (add/remove components, entities, relationships)
 ## Commands are executed after the system completes based on command_buffer_flush_mode
-# Vendor patch: untyped to break System→CommandBuffer→World circular
-# class-graph dependency. CommandBuffer methods are resolved dynamically.
 var cmd = null:
 	get:
 		if cmd == null:
@@ -313,30 +307,21 @@ func _resolve_monitor_name() -> String:
 	var script := get_script()
 	if script and script.resource_path:
 		base = script.resource_path.get_file().get_basename()
+	base = "gecs/systems/%s" % base
 	var candidate := base
 	var suffix := 1
-	while Performance.has_custom_monitor(&"%s - [GECS]" % candidate):
+	while Performance.has_custom_monitor(candidate):
 		suffix += 1
 		candidate = "%s#%d" % [base, suffix]
 	return candidate
 
 
 func _register_performance_monitor() -> void:
-	var id := &"%s - [GECS]" % _resolve_monitor_name()
+	var id := StringName(_resolve_monitor_name())
 	_perf_monitor_id = id
-	# MONITOR_TYPE_TIME formats as "X.XX ms" in the Monitors panel — matches the
-	# built-in Process / Physics Process monitors. The callable must return the
-	# value in [b]seconds[/b]; Godot multiplies internally for the ms display.
-	# Available in Godot 4.5+ (the GECS framework is 4.5+ only).
-	(
-		Performance
-		.add_custom_monitor(
-			id,
-			Callable(self, "_get_perf_monitor_time"),
-			[],
-			Performance.MONITOR_TYPE_TIME,
-		)
-	)
+	# Use the Godot 4.5-compatible signature. Monitor type formatting was added
+	# after 4.5, while GECS still supports 4.5 as its minimum engine version.
+	Performance.add_custom_monitor(id, Callable(self, "_get_perf_monitor_time"))
 
 
 func _unregister_performance_monitor() -> void:
@@ -347,8 +332,7 @@ func _unregister_performance_monitor() -> void:
 
 ## Callback invoked by Godot's Performance singleton. Must return a primitive
 ## float and allocate nothing — hot path during Monitors panel sampling.
-## Returns the current-frame execution time in [b]seconds[/b]; Godot's
-## MONITOR_TYPE_TIME formatter converts it to "X.XX ms" for display.
+## Returns the current-frame execution time in [b]seconds[/b].
 func _get_perf_monitor_time() -> float:
 	return _last_execution_time_ms / 1000.0
 

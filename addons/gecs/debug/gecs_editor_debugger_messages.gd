@@ -29,8 +29,6 @@ static func can_send_message() -> bool:
 	return not Engine.is_editor_hint() and OS.has_feature("editor")
 
 
-# Vendor patch: world:World -> world:Node to break
-# gecs_editor_debugger_messages->World circular parse dep
 static func world_init(world: Node) -> bool:
 	if can_send_message():
 		(
@@ -46,7 +44,6 @@ static func world_init(world: Node) -> bool:
 	return true
 
 
-# Vendor patch: system:System -> untyped to break GECSEditorDebuggerMessages→System→ECS parse circle
 static func system_metric(system, time: float) -> bool:
 	if can_send_message():
 		(
@@ -63,7 +60,6 @@ static func system_metric(system, time: float) -> bool:
 	return true
 
 
-# Vendor patch: system:System -> untyped to break GECSEditorDebuggerMessages→System→ECS parse circle
 static func system_last_run_data(system, last_run_data: Dictionary) -> bool:
 	if can_send_message():
 		# Send trimmed data to avoid excessive payload; include execution time and entity count primarily
@@ -81,8 +77,6 @@ static func system_last_run_data(system, last_run_data: Dictionary) -> bool:
 	return true
 
 
-# Vendor patch: world:World -> world:Node to break
-# gecs_editor_debugger_messages->World circular parse dep
 static func set_world(world: Node) -> bool:
 	if can_send_message():
 		(
@@ -139,7 +133,6 @@ static func entity_enabled(ent: Entity) -> bool:
 	return true
 
 
-# Vendor patch: system:System -> untyped to break GECSEditorDebuggerMessages→System→ECS parse circle
 static func system_added(sys) -> bool:
 	if can_send_message():
 		(
@@ -159,7 +152,6 @@ static func system_added(sys) -> bool:
 	return true
 
 
-# Vendor patch: system:System -> untyped to break GECSEditorDebuggerMessages→System→ECS parse circle
 static func system_removed(sys) -> bool:
 	if can_send_message():
 		EngineDebugger.send_message(Msg.SYSTEM_REMOVED, [sys.get_instance_id(), sys.get_path()])

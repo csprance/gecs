@@ -27,14 +27,12 @@ class_name _ECS
 extends Node
 
 ## Emitted when the world is changed with a ref to the new world
-## Vendor patch: world:World -> world (untyped) to break ECS<->World circular parse dep (#187)
 signal world_changed(world)
 ##  Emitted when the world is exited
 signal world_exited
 
 ## The Current active [World] Instance[br]
 ## Holds a reference to the currently active [World], allowing access to the [member World.query] instance and any [Entity]s and [System]s within it.
-## Vendor patch: :World -> untyped to break ECS<->World circular parse dep (#187)
 var world:
 	get:
 		return world
@@ -55,8 +53,6 @@ var world:
 			# This ensures system setup() methods can safely access ECS.world
 			world.finalize_system_setup()
 		world_changed.emit(world)
-		# Vendor patch: removed GECSEditorDebuggerMessages parse dep from autoload; debug
-		# path re-added via world.gd initialize() which already calls world_init directly.
 
 ## Are we in debug mode? Controlled by project setting gecs/debug_mode.
 ## Can be overridden per-instance with CLI args: --gecs-debug / --no-gecs-debug
@@ -69,7 +65,6 @@ static func _resolve_debug_mode() -> bool:
 		return false
 	if "--gecs-debug" in args:
 		return true
-	# Vendor patch: raw string literal to break _ECS autoload parse dep on GecsSettings
 	return ProjectSettings.get_setting("gecs/debug_mode", false)
 
 
@@ -117,10 +112,9 @@ func get_components(entities, component_type, default_component = null) -> Array
 func _on_world_exited() -> void:
 	world = null
 	world_exited.emit()
-	# Vendor patch: removed GECSEditorDebuggerMessages parse dep from autoload
 
 
-## Vendor patch: lazy-load GECSIO to break _ECS autoload parse dep on GECSIO/GecsData
+## Serialization support loaded on first use.
 var _gecs_io = null
 
 func _lazy_gecs_io():

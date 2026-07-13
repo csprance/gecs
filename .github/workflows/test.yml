@@ -36,7 +36,10 @@ jobs:
         with:
           godot-version: "4.5"
           paths: |
-            res://addons/gecs/tests/
+            res://addons/gecs/tests/core/
+            res://addons/gecs/tests/debug/
+            res://addons/gecs/tests/network/
+            res://addons/gecs/tests/performance/
             res://addons/gecs_network/tests/
           timeout: 5
           report-name: test_report.xml

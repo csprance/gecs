@@ -20,9 +20,6 @@ class_name QueryBuilder
 extends RefCounted
 
 # The world instance to query against.
-# Vendor patch: untyped to break World→QueryBuilder→World circular
-# class-graph dependency that blocks world.gd from parsing in
-# headless runtime mode. World methods are resolved dynamically.
 var _world
 # Components that an entity must have all of.
 var _all_components: Array = []
@@ -81,17 +78,11 @@ var _cache_key_valid: bool = false
 
 
 ## Initializes the QueryBuilder with the specified [param world]
-# Vendor patch: world param untyped (was :World) to break
-# World→QueryBuilder→World circular class-graph dependency.
-# No as World cast — _world is untyped, dynamic dispatch handles World methods.
 func _init(world = null):
 	_world = world
 
 
 ## Allow setting the world after creation for editor time creation
-# Vendor patch: world param typed Node (was :World) to break
-# World→QueryBuilder→World circular class-graph dependency.
-# No as World cast — _world is untyped, dynamic dispatch handles World methods.
 func set_world(world: Node):
 	_world = world
 
