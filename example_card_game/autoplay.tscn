@@ -1,6 +1,0 @@
-[gd_scene format=3 uid="uid://dggfurxesx872"]
-
-[ext_resource type="Script" path="res://example_card_game/autoplay.gd" id="1_autoplay"]
-
-[node name="Autoplay" type="Node"]
-script = ExtResource("1_autoplay")
