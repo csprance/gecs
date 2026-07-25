@@ -1,6 +1,0 @@
-[gd_scene load_steps=2 format=3 uid="uid://bcardgame00spot"]
-
-[ext_resource type="Script" uid="uid://dk5af56lt8dd2" path="res://example_card_game/entities/e_spot.gd" id="1_spot"]
-
-[node name="ESpot" type="Node"]
-script = ExtResource("1_spot")
