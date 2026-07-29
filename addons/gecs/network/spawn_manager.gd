@@ -243,11 +243,16 @@ func _inject_authority_markers(entity: Entity, net_id: CN_NetworkIdentity) -> vo
 	# Remove stale markers first -- idempotent re-spawn safety
 	entity.remove_component(CN_LocalAuthority)
 	entity.remove_component(CN_ServerAuthority)
+	entity.remove_component(CN_RemoteEntity)
 
 	# CN_ServerAuthority: server-owned entities (peer_id == 0) on ALL peers
 	if net_id.is_server_owned():
 		entity.add_component(CN_ServerAuthority.new())
-
+	
+	# CN_RemoteEntity: an entity owned by a remote peer (peer_id != multiplayer unique ID)
+	elif net_id.peer_id != _ns.net_adapter.get_multiplayer().get_unique_id():
+		entity.add_component(CN_RemoteEntity.new())
+	
 	# CN_LocalAuthority: local peer's own entity
 	# Also: server gets CN_LocalAuthority on server-owned entities (server "is local" for them)
 	if (
