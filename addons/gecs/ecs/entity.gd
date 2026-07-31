@@ -260,6 +260,7 @@ func add_components(_components: Array):
 		var comp_key = _comp_key(component)
 		if not components.has(comp_key):
 			components[comp_key] = component
+			component.parent = self
 			added_components.append(component)
 
 	# If no new components were actually added, return early

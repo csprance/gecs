@@ -48,6 +48,15 @@ func test_add_multiple_components_and_has():
 	assert_bool(entity.has_component(C_TestC)).is_false()
 
 
+func test_add_components_sets_parent():
+	var entity = auto_free(TestB.new())
+	var comp1 = C_TestA.new()
+	var comp2 = C_TestB.new()
+	entity.add_components([comp1, comp2])
+	assert_object(comp1.parent).is_same(entity)
+	assert_object(comp2.parent).is_same(entity)
+
+
 func test_remove_component():
 	var entity = auto_free(TestB.new())
 	var comp = C_TestB.new()
