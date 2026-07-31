@@ -36,7 +36,7 @@
 
 ### Networking (Optional addon)
 
-- **[GECS Network Addon](../gecs_network/README.md)** - Multiplayer synchronization for GECS entities. Supports **transport providers** (ENet, Steam, or custom backends) that can be swapped without changing game code. See the addon docs for [Configuration & NetAdapter](../gecs_network/docs/configuration.md), [Examples](../gecs_network/docs/examples.md), and [Troubleshooting](../gecs_network/docs/troubleshooting.md).
+- **[GECS Network Addon](network/README.md)** - Multiplayer synchronization for GECS entities. Supports **transport providers** (ENet, Steam, or custom backends) that can be swapped without changing game code. See the addon docs for [Configuration & NetAdapter](docs/network/configuration.md), [Examples](docs/network/examples.md), and [Troubleshooting](docs/network/troubleshooting.md).
 
 ### Optimization & Advanced (As needed)
 
@@ -71,10 +71,10 @@
 
 | Topic               | Document                                                            | Description                                        |
 | ------------------- | ------------------------------------------------------------------- | -------------------------------------------------- |
-| **Overview**        | [GECS Network Addon](../gecs_network/README.md)                     | Multiplayer sync, transport providers (ENet/Steam) |
-| **Configuration**   | [Configuration & NetAdapter](../gecs_network/docs/configuration.md) | NetAdapter, priority tiers, ProjectSettings        |
-| **Examples**        | [Examples](../gecs_network/docs/examples.md)                        | Players, enemies, projectiles, abilities           |
-| **Troubleshooting** | [Troubleshooting](../gecs_network/docs/troubleshooting.md)          | Common networking issues and migration guide       |
+| **Overview**        | [GECS Network Addon](network/README.md)                     | Multiplayer sync, transport providers (ENet/Steam) |
+| **Configuration**   | [Configuration & NetAdapter](docs/network/configuration.md) | NetAdapter, priority tiers, ProjectSettings        |
+| **Examples**        | [Examples](docs/network/examples.md)                        | Players, enemies, projectiles, abilities           |
+| **Troubleshooting** | [Troubleshooting](docs/network/troubleshooting.md)          | Common networking issues and migration guide       |
 
 ### Optimization & Debugging
 
