@@ -133,4 +133,4 @@ MIT - See [LICENSE](LICENSE) for details.
 
 _GECS is provided as-is. If it breaks, you get to keep both pieces._
 
-[![Star History Chart](https://api.star-history.com/svg?repos=csprance/gecs&type=Date)](https://star-history.com/#csprance/gecs&Date)
+[![Star History Chart](https://star-history.dera.page/svg?repos=csprance/gecs&type=Date)](https://star-history.dera.page/#csprance/gecs&Date)
