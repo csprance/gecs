@@ -173,6 +173,14 @@ Relationships show how entities are connected to each other.
 - **Systems Collapse All** / **Systems Expand All** - Manage all systems at once
 - Individual items can be collapsed/expanded by clicking
 
+### Stepping the ECS and the Entity Graph
+
+The pane to the right of the two trees is the **step debugger**: pause the ECS (the scene keeps running) and step it forward one frame, group, system, archetype or entity at a time. Every step lists what it changed (component adds / removes, property writes, relationships, entities, events) and who caused it (the system, a CommandBuffer flush, an observer). Breakpoints pause a live game before a system runs or right after a component type is added / removed or an entity is touched. Below the step log a graph shows watched entities with their components and relationships and refreshes after every step (or live at the poll rate).
+
+Right-click an entity row for *Add to step set*, *Break when touched* and *Watch in graph*; a component row for *Break when added / removed*; a system row for *Break before run*. The systems tree shows the paused cursor in the **Step** column and a breakpoint checkbox in the **BP** column.
+
+See [Step Debugger](STEP_DEBUGGER.md) for the full guide, including the headless `World.debug_*` API.
+
 ## 🔧 Common Workflows
 
 ### Performance Optimization Workflow
@@ -331,6 +339,7 @@ Combine debug viewer with Godot's profiler:
 
 ## 📚 Related Documentation
 
+- **[Step Debugger](STEP_DEBUGGER.md)** - Pause and step the ECS with a mutation log, breakpoints and an entity graph
 - **[Core Concepts](CORE_CONCEPTS.md)** - Understanding entities, components, and systems
 - **[Performance Optimization](PERFORMANCE_OPTIMIZATION.md)** - Optimize systems identified as bottlenecks
 - **[Relationships](RELATIONSHIPS.md)** - Working with entity relationships

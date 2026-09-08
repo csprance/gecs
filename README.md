@@ -10,6 +10,7 @@ Build scalable, maintainable games with clean separation of data and logic. GECS
 - 🚀 **High Performance** - Optimized queries with automatic caching
 - 🔧 **Flexible Queries** - Find entities by components, relationships, or properties
 - 🔍 **Debug Viewer** - Real-time inspection and performance monitoring
+- ⏯️ **Step Debugger** - Pause and step the ECS forward with a per-step mutation log, breakpoints and an entity relationship graph
 - 📦 **Editor Support** - Visual component editing and scene integration
 - 🎮 **Battle Tested** - Used in games being actively developed
 - 🌐 **Multiplayer** - GECS goes Multiplayer! Check out the [GECS Network Module](addons/gecs/network/README.md)
@@ -104,6 +105,7 @@ func _process(delta: float) -> void:
 - **[Core Concepts](addons/gecs/docs/CORE_CONCEPTS.md)** - Understand Entities, Components, Systems, Relationships (20 min)
 - **[Best Practices](addons/gecs/docs/BEST_PRACTICES.md)** - Write maintainable ECS code (15 min)
 - **[Troubleshooting](addons/gecs/docs/TROUBLESHOOTING.md)** - Solve common issues quickly
+- **[Step Debugger](addons/gecs/docs/STEP_DEBUGGER.md)** - Step the ECS forward one system, archetype or entity at a time with a mutation log, breakpoints and an entity graph
 
 ### Advanced Features
 

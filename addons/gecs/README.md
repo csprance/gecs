@@ -41,6 +41,7 @@
 ### Optimization & Advanced (As needed)
 
 - **[Debug Viewer](docs/DEBUG_VIEWER.md)** - Real-time debugging and performance monitoring
+- **[Step Debugger](docs/STEP_DEBUGGER.md)** - Pause the ECS and step it forward a frame, group, system, archetype or entity at a time, with a mutation log, breakpoints and an entity graph
 - **[Performance Optimization](docs/PERFORMANCE_OPTIMIZATION.md)** - Make your games run fast and smooth
 - **[Troubleshooting](docs/TROUBLESHOOTING.md)** - Solve common issues quickly
 

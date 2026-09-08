@@ -462,6 +462,10 @@ func set_health(new_value: int) -> void:
 
 The legacy Observer API (`watch()`, `match()`, `on_component_added/removed/changed`) was removed in v8.0.0. Upgrading projects should consult `addons/gecs/docs/MIGRATION_LEGACY_OBSERVER.md` for the mechanical translation.
 
+### Step Debugger (v9.3)
+
+Forward-only stepping of the ECS: `world.debug_pause()`, `world.debug_step(GECSStepper.Kind.SYSTEM)` (also FRAME / GROUP / ARCHETYPE / ENTITY, the last with a step set from `debug_set_step_entities`), breakpoints via `debug_add_breakpoint({"kind": "system" | "component_added" | "component_removed" | "entity", ...})`, a per-step mutation journal delivered through `world.step_completed(kind, log)` (ops are `[op, entity_iid, entity_name, a, b, c, d, cause, system]`), a post-step diff sweep for writes that bypass emitting setters, and `GECSGraphState` for the editor graph pane. Steps run inside the game's own `ECS.process()` calls (paused calls return early unless a step is pending for that group), so headless tests drive them with `world.process(delta, group)`; FRAME steps need `world.debug_stepper().frame_id_provider` injected. The World hooks cost one bool each while no stepper exists and `System._handle` is untouched (the stepper uses the separate `_step_begin` / `_step_next_batch` / `_step_run` / `_step_end` path). Full guide: `addons/gecs/docs/STEP_DEBUGGER.md`; tests: `addons/gecs/tests/debug/test_stepper_*.gd`.
+
 ## Development Commands
 
 ### Running Tests with GdUnit4
@@ -684,6 +688,8 @@ The project provides script templates in `script_templates/Node/` for:
 - `addons/gecs/query_builder.gd` - Query system implementation
 - `addons/gecs/relationship.gd` - Entity relationship system
 - `addons/gecs/observer.gd` - Reactive systems for component changes
+- `addons/gecs/debug/step/gecs_stepper.gd` - Step debugger: pause / step / breakpoints / mutation journal (`gecs_diff_sweep.gd`, `gecs_graph_state.gd` alongside)
+- `addons/gecs/debug/gecs_editor_step_panel.gd`, `gecs_editor_graph_panel.gd` - The editor tab's step and graph panes
 - `addons/gecs/array_extensions.gd` - Optimized set operations for queries
 
 ## Relationships System

@@ -9,11 +9,11 @@ You are an expert in the GECS framework's **editor debugger plugin** — the `Ed
 
 The debugger has **three layers**, each in its own file:
 
-1. **Game-side emitter** (`gecs_editor_debugger_messages.gd`) — `static` helpers wrapped around `EngineDebugger.send_message(...)`. Called from `world.gd`, `entity.gd`, `system.gd`, `component.gd` whenever interesting state changes. Each helper guards on `can_send_message()` (`not Engine.is_editor_hint() and OS.has_feature("editor")`) so it's a no-op in shipping builds.
+1. **Game-side emitter** (`gecs_editor_debugger_messages.gd`) — `static` helpers wrapped around `EngineDebugger.send_message(...)`. Called from `world.gd`, `entity.gd`, `system.gd`, `component.gd` whenever interesting state changes. Each helper guards on `can_send_message()`, which is true only while the editor tab holds an active subscription (`GECSEditorDebuggerMessages.attached`, set by the `gecs:subscribe` handshake), so it is a no-op without a subscribed tab; `world.gd` call sites additionally wrap sends in `assert(...)` so they compile out of release builds. A test seam, `GECSEditorDebuggerMessages._test_sink`, routes every send to a Callable so headless suites can assert on payloads (see `tests/debug/test_debugger_subscription.gd`).
 
 2. **Editor-side router** (`gecs_editor_debugger.gd`) — extends `EditorDebuggerPlugin`. `_has_capture("gecs")` claims the `gecs:*` namespace; `_capture(message, data, session_id)` dispatches each `Msg.*` constant to a method on the tab. `_setup_session` creates and registers the tab Control.
 
-3. **UI tab** (`gecs_editor_debugger_tab.gd` + `gecs_editor_debugger_tab.tscn`) — extends `Control`. Holds two `Tree` nodes (entities + systems), filter `LineEdit`s, status bars, and a periodic poll timer that requests live component data via the `POLL_ENTITY` message. Mutates `ecs_data: Dictionary` (the in-editor mirror of game state) and refreshes the trees from it.
+3. **UI tab** (`gecs_editor_debugger_tab.gd` + `gecs_editor_debugger_tab.tscn`) — extends `Control`. Holds two `Tree` nodes (entities + systems), filter `LineEdit`s, status bars, and a `_process`-driven poll (`_poll_elapsed` / `poll_rate_spin_box`) that requests live component data via `gecs:poll_entity`. Mutates `ecs_data: Dictionary` (the in-editor mirror of game state) and patches the matching `TreeItem`s in place from each message handler. Two more panes live in their own scripts and build their controls in code: `gecs_editor_step_panel.gd` (step debugger transport, breakpoints, step log) and `gecs_editor_graph_panel.gd` (GraphEdit of watched entities); the tab injects `send_to_game` into them and mirrors step state onto its trees (`step_state`, `step_log`, `graph_state`).
 
 A new debugger feature usually touches **all three** layers: emit a new message from the game, route it in `_capture`, render it in the tab.
 
@@ -94,10 +94,12 @@ func system_query_results(system_id: int, system_name: String, entity_count: int
     if not sys:
         return
     sys["last_entity_count"] = entity_count
-    _refresh_systems_tree()
+    var row := _find_system_item(system_id)
+    if row:
+        row.set_text(7, str(entity_count))
 ```
 
-Update `ecs_data` (the editor-side mirror) and call the appropriate refresh method (`_refresh_systems_tree`, `_refresh_entities_tree`, etc.) — don't directly mutate `Tree` items from message handlers. The refresh methods reconcile `ecs_data` against the visible tree, preserving sort/pin/expand state.
+Update `ecs_data` (the editor-side mirror) and patch the matching row in place: find it with `_find_system_item(system_id)` / `_find_entity_item(ent_id)` and set its cells. There are no `_refresh_*_tree()` reconcile helpers; handlers create or update rows directly (`entity_added` and `system_last_run_data` are idempotent, see `tests/debug/test_editor_debugger_tab_dedup.gd`) and `clear_all_data()` rebuilds from scratch on a world swap.
 
 ### Phase 6 — Wire up UI affordances
 
@@ -135,9 +137,9 @@ If your new feature overlaps with one of these, **extend the existing message** 
 1. **One message, one purpose.** Don't multiplex unrelated state into a single message just to save one round-trip — debugging the dispatch table becomes painful. Add a new `Msg` constant.
 2. **Send ids, not objects.** `instance_id`s are stable and small. Object references either won't serialize or will arrive as opaque dictionaries. The tab's `ecs_data` is keyed by id; emitters should match.
 3. **Editor-side is reactive, not authoritative.** The game is the source of truth. The tab mirrors state via messages — never assume a tree node's data is in sync without checking `ecs_data`.
-4. **Refresh through `_refresh_*_tree()` helpers.** Direct `TreeItem` manipulation breaks sort, pin, filter, and expand state. The tree-refresh methods reconcile correctly.
-5. **No work on hot paths in the editor.** Tree refreshes are O(entities). Don't call `_refresh_entities_tree()` from a per-frame message handler — coalesce updates with the existing poll timer pattern (see `_poll_elapsed` and `poll_rate_spin_box`).
-6. **Debug mode is opt-in.** All `can_send_message()` calls early-out outside the editor. Don't add panels that require debug data and don't gracefully degrade — the overlay (`debug_mode_overlay`) handles the "Debug Mode disabled" case.
+4. **Patch rows in place, idempotently.** Find the row with `_find_entity_item` / `_find_system_item`, update its cells, and derive labels from state (see `_entity_display_name`) so replays cannot stack icons or suffixes. Pins, sort and highlights are keyed by instance id.
+5. **No work on hot paths in the editor.** Per-message handlers should be O(1) row patches; anything that walks the whole tree belongs behind the poll cadence (`_poll_elapsed` and `poll_rate_spin_box`), which the graph pane's "Show live" pull also uses.
+6. **Debug mode is opt-in.** All `can_send_message()` calls early-out without a subscribed tab. Don't add panels that require debug data and don't gracefully degrade — the overlay (`debug_mode_overlay`) handles the "Debug Mode disabled" case.
 7. **Match style — emoji icons, `_snake_case` private members, `%UniqueName` lookups.** Existing code uses Unicode icon constants (`ICON_ENTITY = "📦"`, etc.) for tree decorations. Continue that style; users have come to expect it.
 
 ## Common pitfalls
@@ -158,6 +160,10 @@ The debugger plugin runs in the editor process, not the game process — standar
 1. Reload the project (or toggle the GECS plugin off/on) so the editor picks up the new `EditorDebuggerPlugin` registration.
 2. Run a small example scene (`example_stress_test/main.tscn` is the canonical stress case — many entities, many systems).
 3. Open the GECS tab, exercise the new feature, watch for stale state, sort/pin/filter regressions, and editor performance issues.
-4. Toggle debug mode off in Project Settings to confirm the new code path is correctly gated by `can_send_message()`.
+4. Toggle debug mode off in Project Settings (or unsubscribe the tab) to confirm the new messages stop flowing.
 
-For game-side emitter logic that has testable branches (which payload shape, which guard), a focused unit test in `addons/gecs/tests/` can cover the helper — but the editor UI itself is verified manually.
+Game-side emitter logic is unit-testable through `GECSEditorDebuggerMessages._test_sink` and by driving commands with `ECS._on_debugger_message(name, data)` (see `tests/debug/test_debugger_subscription.gd`, `test_stepper_graph_and_commands.gd`). The tab itself can be instantiated headlessly (`load(TAB_SCENE).instantiate()` + `add_child`) and its handlers called directly, asserting on `ecs_data`, tree rows and the panes (`test_editor_debugger_tab_dedup.gd`, `test_editor_debugger_tab_step.gd`); GraphEdit works headless too. Visual behaviour (popups, layout, arrange) is still verified manually.
+
+## Step debugger and graph panes (v9.3)
+
+Game side: `addons/gecs/debug/step/gecs_stepper.gd` (`GECSStepper`) owns pause / step / breakpoints / journal and sends `gecs:step_state`, `gecs:step_log`, `gecs:graph_state`; editor commands (`step_pause`, `step_resume`, `step`, `step_set_entities`, `step_set_sweep`, `step_pull_state`, `breakpoint_*`, `graph_watch`, `graph_pull`) are routed by `World._handle_debugger_message` to `GECSStepper.handle_command`. `GECSGraphState.build` produces the graph payload; `GECSEditorDebuggerMessages.serialize_relationship` is shared with the lifecycle message. Editor side: `gecs_editor_step_panel.gd` renders state / logs, `gecs_editor_graph_panel.gd` renders the GraphEdit (node names are hashes of the payload keys, real keys in metadata; positions persist across updates). The tab keeps `_step_cursor_system_id` and `_system_bp_ids` for the systems tree's Step / BP columns and tints touched rows from each log. User doc: `addons/gecs/docs/STEP_DEBUGGER.md`.
