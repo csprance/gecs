@@ -260,6 +260,9 @@ func add_components(_components: Array):
 		var comp_key = _comp_key(component)
 		if not components.has(comp_key):
 			components[comp_key] = component
+			component.parent = self
+			if not component.property_changed.is_connected(_on_component_property_changed):
+				component.property_changed.connect(_on_component_property_changed)
 			added_components.append(component)
 
 	# If no new components were actually added, return early
@@ -612,12 +615,16 @@ func get_relationship(relationship: Relationship) -> Relationship:
 			for invalid_rel in to_remove:
 				relationships.erase(invalid_rel)
 				_rel_index_remove(invalid_rel)
+				if _world:
+					_world._on_entity_relationship_removed(self, invalid_rel)
 				relationship_removed.emit(self, invalid_rel)
 			return rel
 	# Remove invalid relationships
 	for rel in to_remove:
 		relationships.erase(rel)
 		_rel_index_remove(rel)
+		if _world:
+			_world._on_entity_relationship_removed(self, rel)
 		relationship_removed.emit(self, rel)
 	return null
 
@@ -639,6 +646,8 @@ func get_relationships(relationship: Relationship) -> Array[Relationship]:
 	for rel in to_remove:
 		relationships.erase(rel)
 		_rel_index_remove(rel)
+		if _world:
+			_world._on_entity_relationship_removed(self, rel)
 		relationship_removed.emit(self, rel)
 	return results
 

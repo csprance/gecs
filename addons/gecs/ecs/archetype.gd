@@ -199,6 +199,14 @@ func remove_entity(entity: Entity) -> bool:
 
 	var index = entity_to_index[entity]
 	var last_index = entities.size() - 1
+	# The tail can hold dangling refs from entities freed outside
+	# World.remove_entity (direct free()); the typed array refuses them on
+	# write, which would leave this entity behind in its slot. Drop those rows
+	# first, same as World.remove_entity does for the world entity list.
+	while last_index > index and not is_instance_valid(entities[last_index]):
+		entity_to_index.erase(entities[last_index])
+		_pop_last_row()
+		last_index -= 1
 
 	# Swap with last element in entities array
 	if index != last_index:
@@ -220,23 +228,24 @@ func remove_entity(entity: Entity) -> bool:
 		var last_enabled = _get_enabled_bit(last_index)
 		_set_enabled_bit(index, last_enabled)
 
-	# Remove last element from entities
-	entities.pop_back()
 	entity_to_index.erase(entity)
+	_pop_last_row()
+	# OPTIMIZATION: bitset logical size follows entities.size(); the stale bit is
+	# overwritten when a new entity is added.
 
-	# OPTIMIZATION: Remove last element from all columns
+	return true
+
+
+## Drop the last row from the entity array, every component column and every
+## change-tracking version column (they are kept index-aligned).
+func _pop_last_row() -> void:
+	entities.pop_back()
 	for comp_key in columns:
 		columns[comp_key].pop_back()
-
 	for comp_key in column_versions:
 		var versions: PackedInt64Array = column_versions[comp_key]
 		versions.resize(versions.size() - 1)
 		column_versions[comp_key] = versions
-
-	# OPTIMIZATION: Update bitset size (no need to clear the bit, just reduce logical size)
-	# The bit will be overwritten when a new entity is added
-
-	return true
 
 
 ## Check if this archetype has a specific entity

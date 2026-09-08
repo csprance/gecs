@@ -1,5 +1,33 @@
 # GECS Changelog
 
+## [9.3.0] - Unreleased - Step debugger, entity graph view, relationship cleanup fixes
+
+### Fixed
+
+- **Relationship read paths desynced the archetype index.** `Entity.get_relationship()`
+  and `get_relationships()` drop relationships whose target was freed outside
+  `World.remove_entity()`, but did so without telling the World. The entity's
+  archetype kept the stale pair key, so `with_relationship()` queries and Systems
+  kept matching an entity whose relationship was already gone, and neither
+  `World.relationship_removed` nor `on_relationship_removed()` observers fired.
+  Both read paths now notify the World in the same order as `remove_relationship()`,
+  and `World._on_entity_relationship_removed()` recomputes the archetype when the
+  target is freed (there is no slot key to walk an edge with in that case), which
+  also fixes `remove_relationship(rel)` by instance on a dangling target. Regression suite:
+  `tests/core/test_relationship_read_path_cleanup.gd`.
+- **Batch-added components never emitted change events.** `Entity.add_components()`
+  stored components without setting `component.parent` or connecting
+  `property_changed`, so writes through emitting setters on batch-added components
+  were invisible to `on_changed()` observers, `.changed()` change detection and
+  property-query monitors. `add_components()` now wires both, matching
+  `add_component()`. Regression suite: `tests/core/test_add_components_signals.gd`.
+- **Archetype swap-remove errored on a freed tail row.** `Archetype.remove_entity()`
+  moves the last row into the vacated slot; when that row belonged to an entity
+  freed outside `World.remove_entity()` the typed array refused the write
+  (`Attempted to set an invalid (previously freed?) object instance into a
+  'TypedArray'`) and the removed entity stayed behind in its slot. Dangling tail
+  rows are now dropped first, matching the existing guard on `World.entities`.
+
 ## [9.2.0] - 2026-07-28 - Relationship deserialization fix + dependency tracking
 
 ### Fixed

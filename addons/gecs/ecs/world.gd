@@ -1154,6 +1154,11 @@ func _on_entity_relationship_removed(entity: Entity, relationship: Relationship)
 				var slot_key = _relationship_slot_key(relationship)
 				if slot_key != "":
 					_move_entity_to_new_archetype_fast(entity, old_archetype, slot_key, false)
+				else:
+					# Freed target: no slot key to walk an edge with, but the archetype
+					# still carries the stale pair key. Recompute the signature so
+					# relationship queries stop matching an entity whose rel is gone.
+					_commit_move(entity)
 			_bump_membership("entity_relationship_removed")
 
 	relationship_removed.emit(entity, relationship)
