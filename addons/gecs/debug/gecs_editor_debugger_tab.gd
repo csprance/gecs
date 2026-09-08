@@ -18,6 +18,9 @@ extends Control
 @onready var prop_changes_check_box: CheckBox = %PropChangesCheckBox
 @onready var metrics_check_box: CheckBox = %MetricsCheckBox
 @onready var metrics_hz_spin_box: SpinBox = %MetricsHzSpinBox
+# Step debugger + graph panes (their scripts build their own controls).
+@onready var step_panel: GECSEditorStepPanel = %StepPanel
+@onready var graph_panel: GECSEditorGraphPanel = %GraphPanel
 
 var ecs_data: Dictionary = {}
 var default_system := {"path": "", "active": true, "metrics": {}, "group": ""}
@@ -72,13 +75,24 @@ var _query_result_ids: Dictionary = {}
 ## Transient query status (match count or error) appended to the entity status bar.
 var _query_status_text: String = ""
 
+# ---- Step debugger state mirrored from gecs:step_state ----
+## Instance id of the system the paused cursor points at (0 = none).
+var _step_cursor_system_id: int = 0
+## system instance id -> breakpoint id for system breakpoints (enabled or not).
+var _system_bp_ids: Dictionary = {}
+## Rows tinted by the last step log; cleared when the next one arrives.
+var _step_highlight_entities: Array = []
+var _step_highlight_system: int = 0
+const STEP_HIGHLIGHT_COLOR := Color(0.9, 0.55, 0.1, 0.28)
+
 
 func _ready() -> void:
 	_match_theme_to_editor_luminance()
 	_update_debug_mode_overlay()
 	if system_tree:
-		# Eight columns: name, group, current time, min, max, avg, status, order
-		system_tree.columns = 8
+		# Ten columns: name, group, current time, min, max, avg, status, order,
+		# step cursor, breakpoint toggle
+		system_tree.columns = 10
 		system_tree.set_column_expand(0, true)  # Name column expands
 		system_tree.set_column_expand(1, false)  # Group column resizable
 		system_tree.set_column_expand(2, false)  # Time column resizable
@@ -87,6 +101,8 @@ func _ready() -> void:
 		system_tree.set_column_expand(5, false)  # Avg column resizable
 		system_tree.set_column_expand(6, false)  # Status column resizable
 		system_tree.set_column_expand(7, false)  # Order column resizable
+		system_tree.set_column_expand(8, false)  # Step cursor marker
+		system_tree.set_column_expand(9, false)  # Breakpoint toggle
 
 		# Set column widths
 		system_tree.set_column_custom_minimum_width(1, 100)  # Group: 100px min
@@ -96,6 +112,8 @@ func _ready() -> void:
 		system_tree.set_column_custom_minimum_width(5, 90)  # Avg: 90px min
 		system_tree.set_column_custom_minimum_width(6, 100)  # Status: 100px min
 		system_tree.set_column_custom_minimum_width(7, 60)  # Order: 60px min
+		system_tree.set_column_custom_minimum_width(8, 44)  # Step: cursor marker
+		system_tree.set_column_custom_minimum_width(9, 36)  # BP: breakpoint toggle
 
 		# Enable column resizing (clip content allows manual resizing)
 		system_tree.set_column_clip_content(0, true)
@@ -106,6 +124,8 @@ func _ready() -> void:
 		system_tree.set_column_clip_content(5, true)
 		system_tree.set_column_clip_content(6, true)
 		system_tree.set_column_clip_content(7, true)
+		system_tree.set_column_clip_content(8, true)
+		system_tree.set_column_clip_content(9, true)
 
 		# Set column titles (clickable for sorting)
 		system_tree.set_column_title(0, "Name")
@@ -116,6 +136,8 @@ func _ready() -> void:
 		system_tree.set_column_title(5, "Avg (ms)")
 		system_tree.set_column_title(6, "Status")
 		system_tree.set_column_title(7, "Order")
+		system_tree.set_column_title(8, "Step")
+		system_tree.set_column_title(9, "BP")
 		system_tree.set_column_titles_visible(true)
 
 		# Create root item
@@ -241,6 +263,18 @@ func _ready() -> void:
 		_on_entities_query_submitted
 	):
 		entities_filter_line_edit.text_submitted.connect(_on_entities_query_submitted)
+	# Step debugger + graph panes: inject the game channel and the selection
+	# source, and mirror their state onto the entity / system trees.
+	if step_panel:
+		step_panel.send = send_to_game
+		step_panel.selected_entities_provider = get_selected_entity_ids
+		if not step_panel.state_applied.is_connected(_on_step_state_applied):
+			step_panel.state_applied.connect(_on_step_state_applied)
+	if graph_panel:
+		graph_panel.send = send_to_game
+		graph_panel.selected_entities_provider = get_selected_entity_ids
+	if system_tree and not system_tree.item_edited.is_connected(_on_system_tree_item_edited):
+		system_tree.item_edited.connect(_on_system_tree_item_edited)
 
 
 func _process(delta: float) -> void:
@@ -254,6 +288,9 @@ func _process(delta: float) -> void:
 		return
 	_poll_elapsed = 0.0
 	_poll_expanded_entities()
+	# Graph view "Show live": pull a fresh payload at the same cadence.
+	if graph_panel and graph_panel.wants_live_pull():
+		send_to_game("gecs:graph_pull", [])
 
 
 func _notification(what: int) -> void:
@@ -364,6 +401,15 @@ func clear_all_data():
 	_query_active = false
 	_query_result_ids.clear()
 	_query_status_text = ""
+	# Step debugger mirror + panes.
+	_step_cursor_system_id = 0
+	_system_bp_ids.clear()
+	_step_highlight_entities.clear()
+	_step_highlight_system = 0
+	if step_panel:
+		step_panel.clear()
+	if graph_panel:
+		graph_panel.clear()
 
 	# Clear system tree
 	if system_tree:
@@ -617,9 +663,11 @@ func _on_entities_tree_item_mouse_selected(position: Vector2, mouse_button_index
 	if not selected:
 		return
 
-	# Check if has entity_id metadata (top-level entity item)
+	# Component rows get their own menu (breakpoints on the component type).
 	var entity_id = selected.get_meta("entity_id", null)
 	if entity_id == null:
+		if selected.has_meta("component_id"):
+			_show_component_context_menu(selected, position)
 		return
 
 	# Only show context menu for top-level entity items
@@ -640,6 +688,10 @@ func _show_entity_context_menu(item: TreeItem, position: Vector2):
 		popup.add_item("Unpin Entity", 0)
 	else:
 		popup.add_item("Pin Entity", 0)
+	popup.add_separator()
+	popup.add_item("Add to step set", 1)
+	popup.add_item("Break when touched", 2)
+	popup.add_item("Watch in graph", 3)
 
 	# Position the popup at the mouse position (use get_screen_position for proper screen coords)
 	var screen_pos = entities_tree.get_screen_position() + position
@@ -649,8 +701,18 @@ func _show_entity_context_menu(item: TreeItem, position: Vector2):
 	# Connect the selection signal
 	popup.id_pressed.connect(
 		func(id):
-			if id == 0:
-				_toggle_entity_pin(entity_id, item)
+			match id:
+				0:
+					_toggle_entity_pin(entity_id, item)
+				1:
+					if step_panel:
+						step_panel.add_to_step_set(_selected_entities_or([entity_id]))
+				2:
+					if step_panel:
+						step_panel.add_breakpoint({"kind": "entity", "entity": entity_id})
+				3:
+					if graph_panel:
+						graph_panel.watch(_selected_entities_or([entity_id]))
 			popup.queue_free()
 	)
 
@@ -675,6 +737,11 @@ func _show_system_context_menu(item: TreeItem, position: Vector2):
 		popup.add_item("Unpin System", 0)
 	else:
 		popup.add_item("Pin System", 0)
+	popup.add_separator()
+	if _system_bp_ids.has(system_id):
+		popup.add_item("Remove breakpoint", 1)
+	else:
+		popup.add_item("Break before run", 1)
 
 	# Position the popup at the mouse position (use get_screen_position for proper screen coords)
 	var screen_pos = system_tree.get_screen_position() + position
@@ -686,6 +753,8 @@ func _show_system_context_menu(item: TreeItem, position: Vector2):
 		func(id):
 			if id == 0:
 				_toggle_system_pin(system_id, item)
+			elif id == 1:
+				_toggle_system_breakpoint(system_id)
 			popup.queue_free()
 	)
 
@@ -816,6 +885,8 @@ func _update_system_column_indicators():
 		"Avg (ms)",
 		"Status",
 		"Order",
+		"Step",
+		"BP",
 	]
 	for i in range(TITLES.size()):
 		var title: String = TITLES[i]
@@ -1511,6 +1582,7 @@ func system_last_run_data(system_id: int, system_name: String, last_run_data: Di
 			existing.set_text(7, str(execution_order))
 		else:
 			existing.set_text(7, "-")
+		_apply_step_columns(existing, system_id)
 		# Clear previous children to avoid stale data
 		var prev_child = existing.get_first_child()
 		while prev_child:
@@ -2041,3 +2113,169 @@ func _update_systems_status_bar():
 				total_time_ms,
 			]
 		)
+
+
+# ---- Step debugger + graph view ----
+
+
+## Instance ids of the top-level entity rows currently selected (multi-select).
+func get_selected_entity_ids() -> Array:
+	var ids: Array = []
+	if not entities_tree or entities_tree.get_root() == null:
+		return ids
+	var item := entities_tree.get_next_selected(null)
+	while item:
+		var eid = item.get_meta("entity_id", null)
+		if eid != null and item.get_parent() == entities_tree.get_root():
+			ids.append(eid)
+		item = entities_tree.get_next_selected(item)
+	return ids
+
+
+func _selected_entities_or(fallback: Array) -> Array:
+	var ids := get_selected_entity_ids()
+	return ids if not ids.is_empty() else fallback
+
+
+## gecs:step_state -> mirror the cursor / breakpoints onto the systems tree and
+## hand the full state to the step pane.
+func step_state(state: Dictionary) -> void:
+	var cursor: Dictionary = state.get("cursor", {})
+	_step_cursor_system_id = int(cursor.get("system_id", 0))
+	_system_bp_ids.clear()
+	for bp in state.get("breakpoints", []):
+		if int(bp.get("kind", -1)) == GECSStepper.BpKind.SYSTEM:
+			_system_bp_ids[int(bp.get("system_id", 0))] = int(bp.get("id", 0))
+	_refresh_step_columns()
+	if graph_panel:
+		graph_panel.set_paused(bool(state.get("paused", false)))
+	if step_panel:
+		step_panel.apply_state(state)
+
+
+## gecs:step_log -> append to the step pane, tint touched rows, mark the graph.
+func step_log(log: Dictionary) -> void:
+	if step_panel:
+		step_panel.append_log(log)
+	_apply_step_highlights(log)
+	if graph_panel:
+		var added_edges: Array = []
+		for op in log.get("ops", []):
+			if op is Array and op.size() > 5 and int(op[0]) == GECSStepper.Op.REL_ADD:
+				added_edges.append("r:%d" % int(op[5]))
+		graph_panel.highlight(log.get("touched", []), added_edges)
+
+
+## gecs:graph_state -> the graph pane.
+func graph_state(step_id: int, graph: Dictionary) -> void:
+	if graph_panel:
+		graph_panel.apply_graph(step_id, graph)
+
+
+func _on_step_state_applied(_state: Dictionary) -> void:
+	pass  # the trees are updated in step_state(); hook kept for future use
+
+
+## Step (col 8) cursor marker and BP (col 9) checkbox for one system row.
+func _apply_step_columns(item: TreeItem, system_id: int) -> void:
+	item.set_text(8, "\u25b6" if system_id != 0 and system_id == _step_cursor_system_id else "")
+	item.set_tooltip_text(8, "Next system to run while paused" if item.get_text(8) != "" else "")
+	item.set_cell_mode(9, TreeItem.CELL_MODE_CHECK)
+	item.set_editable(9, true)
+	item.set_checked(9, _system_bp_ids.has(system_id))
+	item.set_tooltip_text(9, "Break before this system runs")
+
+
+func _refresh_step_columns() -> void:
+	if not system_tree or system_tree.get_root() == null:
+		return
+	var child := system_tree.get_root().get_first_child()
+	while child:
+		var system_id = child.get_meta("system_id", null)
+		if system_id != null:
+			_apply_step_columns(child, system_id)
+		child = child.get_next()
+
+
+## BP checkbox toggled in the systems tree.
+func _on_system_tree_item_edited() -> void:
+	if not system_tree or system_tree.get_edited_column() != 9:
+		return
+	var item := system_tree.get_edited()
+	if item == null:
+		return
+	var system_id = item.get_meta("system_id", null)
+	if system_id == null:
+		return
+	if item.is_checked(9):
+		if not _system_bp_ids.has(system_id):
+			send_to_game("gecs:breakpoint_add", [{"kind": "system", "system_id": system_id}])
+	elif _system_bp_ids.has(system_id):
+		send_to_game("gecs:breakpoint_remove", [_system_bp_ids[system_id]])
+
+
+func _toggle_system_breakpoint(system_id: int) -> void:
+	if _system_bp_ids.has(system_id):
+		send_to_game("gecs:breakpoint_remove", [_system_bp_ids[system_id]])
+	else:
+		send_to_game("gecs:breakpoint_add", [{"kind": "system", "system_id": system_id}])
+
+
+func _show_component_context_menu(item: TreeItem, position: Vector2) -> void:
+	var comp_path = item.get_meta("component_path", null)
+	if comp_path == null:
+		return
+	var popup = PopupMenu.new()
+	add_child(popup)
+	popup.add_item("Break when added", 10)
+	popup.add_item("Break when removed", 11)
+	popup.position = entities_tree.get_screen_position() + position
+	popup.popup()
+	popup.id_pressed.connect(
+		func(id):
+			if step_panel:
+				if id == 10:
+					step_panel.add_breakpoint({"kind": "component_added", "component": comp_path})
+				elif id == 11:
+					step_panel.add_breakpoint({"kind": "component_removed", "component": comp_path})
+			popup.queue_free()
+	)
+	popup.popup_hide.connect(
+		func():
+			if is_instance_valid(popup):
+				popup.queue_free()
+	)
+
+
+## Tint the entity rows and the system row a step log touched; clear the
+## previous step's tint first.
+func _apply_step_highlights(log: Dictionary) -> void:
+	_clear_step_highlights()
+	for eid in log.get("touched", []):
+		var row := _find_entity_item(int(eid))
+		if row:
+			for c in entities_tree.columns:
+				row.set_custom_bg_color(c, STEP_HIGHLIGHT_COLOR)
+			_step_highlight_entities.append(int(eid))
+	var system_id := int(log.get("system_id", 0))
+	if system_id != 0:
+		var srow := _find_system_item(system_id)
+		if srow:
+			for c in system_tree.columns:
+				srow.set_custom_bg_color(c, STEP_HIGHLIGHT_COLOR)
+			_step_highlight_system = system_id
+
+
+func _clear_step_highlights() -> void:
+	for eid in _step_highlight_entities:
+		var row := _find_entity_item(int(eid))
+		if row:
+			for c in entities_tree.columns:
+				row.clear_custom_bg_color(c)
+	_step_highlight_entities = []
+	if _step_highlight_system != 0:
+		var srow := _find_system_item(_step_highlight_system)
+		if srow:
+			for c in system_tree.columns:
+				srow.clear_custom_bg_color(c)
+		_step_highlight_system = 0

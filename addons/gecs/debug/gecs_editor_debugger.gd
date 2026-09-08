@@ -112,6 +112,18 @@ func _capture(message: String, data: Array, session_id: int) -> bool:
 		# The game announced it has GECS: reply with a subscription.
 		debugger_tab.on_game_ready()
 		return true
+	elif message == Msg.STEP_STATE:
+		# data: [state] (GECSStepper.state())
+		debugger_tab.step_state(data[0])
+		return true
+	elif message == Msg.STEP_LOG:
+		# data: [log] (one step / break / external entry with its ops)
+		debugger_tab.step_log(data[0])
+		return true
+	elif message == Msg.GRAPH_STATE:
+		# data: [step_id, graph] (GECSGraphState.build)
+		debugger_tab.graph_state(data[0], data[1])
+		return true
 	return false
 
 

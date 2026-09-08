@@ -35,6 +35,19 @@
   `step_set_sweep`, `step_pull_state`, `breakpoint_add/remove/set_enabled/clear`,
   `graph_watch`, `graph_pull`. `GECSEditorDebuggerMessages.serialize_relationship()`
   is now shared by the lifecycle message and the graph feed.
+- **Debugger tab: step debugger + graph panes.** A new pane next to the entity /
+  system trees holds the transport (Pause, Resume, Step Frame / Group / System /
+  Archetype / Entity with a count), the step set, the breakpoint list and the step
+  log (one row per step, break or external bucket, expanding to the journaled ops
+  with their cause), and below it a GraphEdit graph of the watched entities with
+  components inside the nodes and relationships as connections ("Show live"
+  refreshes at the poll rate; every step refreshes it while paused). The systems
+  tree gained a Step cursor column and a BP checkbox column; entity rows are
+  multi-selectable and their context menu offers Add to step set, Break when
+  touched and Watch in graph; component rows offer Break when added / removed;
+  system rows offer Break before run. Rows touched by the last step are tinted.
+  New scripts `gecs_editor_step_panel.gd` and `gecs_editor_graph_panel.gd`; suite
+  `tests/debug/test_editor_debugger_tab_step.gd`.
 - Test suites under `tests/debug/`: `test_stepper_pause`, `test_stepper_unit_steps`,
   `test_stepper_frame_step`, `test_stepper_journal_and_sweep`,
   `test_stepper_breakpoints`, `test_stepper_graph_and_commands`.
