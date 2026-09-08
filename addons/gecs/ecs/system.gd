@@ -873,3 +873,288 @@ func _debug_data(_lrd: Dictionary, callable: Callable = func(): return {}) -> bo
 	return true
 
 #endregion Private Methods
+
+#region Step debugger (used only by GECSStepper; the hot path above is untouched)
+
+## Per-run state for the resumable execution used by [GECSStepper]. Mirrors
+## _run_subsystems / _run_process one batch (archetype) at a time so a step
+## debugger can stop between process() calls. Not used by the live loop.
+var _step_ctx: Dictionary = {}
+## Microseconds spent inside user callables during the current stepped run
+## (excludes the time the world sat paused between units).
+var _step_elapsed_usec: int = 0
+
+
+## Pre-work of [method _handle]. Returns false when the system would not run
+## this frame (inactive, paused or timer-gated).
+func _step_begin(delta: float) -> bool:
+	if not active or paused:
+		return false
+	if tick_source and not tick_source.ticked:
+		return false
+	_step_elapsed_usec = 0
+	if ECS.debug:
+		if _debug_name == "":
+			var script := get_script()
+			if script and script.resource_path:
+				_debug_name = script.resource_path.get_file().get_basename()
+		lastRunData = {
+			"system_name": _debug_name,
+			"frame_delta": delta,
+			"stepped": true,
+		}
+	if _has_subsystems_cached == -1:
+		_has_subsystems_cached = 1 if not sub_systems().is_empty() else 0
+	# CHANGE DETECTION: same clock advance as _handle (once per system run).
+	Archetype.global_change_tick += 1
+	var phases: Array = []
+	if _has_subsystems_cached == 1:
+		if _subsystems_cache.is_empty():
+			_subsystems_cache = sub_systems()
+			_subsystem_non_structural_cache.clear()
+			_subsystem_timers_cache.clear()
+			_subsystem_change_baselines.clear()
+			for subsystem_tuple in _subsystems_cache:
+				var sq := subsystem_tuple[0] as QueryBuilder
+				_subsystem_non_structural_cache.append(
+					1 if _query_has_non_structural_filters(sq) else 0
+				)
+				_subsystem_timers_cache.append(
+					subsystem_tuple[2] if subsystem_tuple.size() > 2 else null
+				)
+				_subsystem_change_baselines.append(0)
+		for i in _subsystems_cache.size():
+			phases.append(i)
+	else:
+		if not _query_cache:
+			_query_cache = query()
+			_uses_non_structural_cached = -1
+		if _component_keys.is_empty():
+			for comp_type in _query_cache._iterate_components:
+				_component_keys.append(
+					comp_type.get_instance_id()
+					if comp_type is Script
+					else comp_type.get_script().get_instance_id()
+				)
+		if _uses_non_structural_cached == -1:
+			_uses_non_structural_cached = (
+				1 if _query_has_non_structural_filters(_query_cache) else 0
+			)
+		phases.append(-1)
+	_step_ctx = {
+		"phases": phases,
+		"phase_i": -1,
+		"phase": {},
+		"arch_i": 0,
+		"processed_any": false,
+		"entered": [],
+	}
+	return true
+
+
+## Next batch to run: [code]{entities, components, callable, phase, archetype, fallback}[/code],
+## or an empty Dictionary when the run is exhausted. Batches are materialized
+## lazily, right before they run, so a batch sees every mutation made by the
+## batches (and subsystems) before it, exactly like the live loop.
+func _step_next_batch(delta: float) -> Dictionary:
+	while true:
+		var phase: Dictionary = _step_ctx.phase
+		if phase.is_empty() or phase.done:
+			_step_ctx.phase_i += 1
+			if _step_ctx.phase_i >= _step_ctx.phases.size():
+				return {}
+			phase = _step_enter_phase(_step_ctx.phases[_step_ctx.phase_i], delta)
+			_step_ctx.phase = phase
+			if phase.skip:
+				phase.done = true
+				continue
+			_step_ctx.entered.append(phase)
+			_step_ctx.arch_i = 0
+		if phase.non_structural:
+			phase.done = true
+			var batch := _step_materialize_filtered(phase)
+			if batch.is_empty():
+				continue
+			return batch
+		if _step_ctx.arch_i >= phase.archetypes.size():
+			phase.done = true
+			continue
+		var arch: Archetype = phase.archetypes[_step_ctx.arch_i]
+		_step_ctx.arch_i += 1
+		var batch := _step_materialize_archetype(phase, arch)
+		if batch.is_empty():
+			continue
+		return batch
+	return {}
+
+
+## Enter a phase: a subsystem index, or -1 for the main query. Subsystem timers
+## advance here, at phase entry, exactly once per system run (as live does).
+func _step_enter_phase(phase_index: int, delta: float) -> Dictionary:
+	var phase := {
+		"index": phase_index,
+		"skip": false,
+		"done": false,
+		"entity_count": 0,
+		"fallback": false,
+	}
+	if phase_index >= 0:
+		var tuple: Array = _subsystems_cache[phase_index]
+		var sub_timer: SystemTimer = _subsystem_timers_cache[phase_index]
+		if sub_timer:
+			sub_timer.advance(delta)
+			if not sub_timer.ticked:
+				phase.skip = true
+				return phase
+		phase.query = tuple[0] as QueryBuilder
+		phase.callable = tuple[1] as Callable
+		phase.non_structural = _subsystem_non_structural_cache[phase_index] == 1
+		phase.baseline = _subsystem_change_baselines[phase_index]
+	else:
+		phase.query = _query_cache
+		phase.callable = Callable(self, "process")
+		phase.non_structural = _uses_non_structural_cached == 1
+		phase.baseline = _last_change_baseline
+	var phase_query: QueryBuilder = phase.query
+	phase.iterate_comps = phase_query._iterate_components
+	phase.archetypes = phase_query.archetypes()
+	phase.enabled_filter = phase_query._enabled_filter
+	phase.changed_keys = phase_query.get_changed_keys()
+	phase.has_change_filter = not phase.changed_keys.is_empty()
+	return phase
+
+
+## Non-structural fallback: gather every structural match, post-filter once,
+## build columns from entities. One batch per phase.
+func _step_materialize_filtered(phase: Dictionary) -> Dictionary:
+	var all_entities: Array[Entity] = []
+	for arch in phase.archetypes:
+		if not arch.entities.is_empty():
+			all_entities.append_array(arch.entities)
+	var filtered: Array[Entity] = _filter_entities_global(phase.query, all_entities)
+	phase.entity_count = filtered.size()
+	phase.fallback = true
+	if filtered.is_empty():
+		return {}
+	var components := []
+	if not phase.iterate_comps.is_empty():
+		for comp_type in phase.iterate_comps:
+			components.append(_build_component_column_from_entities(filtered, comp_type))
+	_step_ctx.processed_any = true
+	return {
+		"entities": filtered,
+		"components": components,
+		"callable": phase.callable,
+		"phase": phase.index,
+		"archetype": null,
+		"fallback": true,
+	}
+
+
+## Structural fast path for one archetype: same change / enabled filtering,
+## snapshot rule and column sourcing as _run_process / _run_subsystems.
+func _step_materialize_archetype(phase: Dictionary, arch: Archetype) -> Dictionary:
+	if arch.entities.is_empty():
+		return {}
+	if phase.has_change_filter and not arch.has_changes_since(phase.changed_keys, phase.baseline):
+		return {}
+	var arch_entities: Array[Entity]
+	if phase.enabled_filter != null:
+		arch_entities = arch.get_entities_by_enabled_state(phase.enabled_filter)
+		if phase.has_change_filter:
+			arch_entities = _filter_changed_in_baseline(
+				arch, arch_entities, phase.changed_keys, phase.baseline
+			)
+	elif phase.has_change_filter:
+		arch_entities = arch.get_changed_entities(phase.changed_keys, phase.baseline)
+	else:
+		arch_entities = arch.entities.duplicate() if safe_iteration else arch.entities
+	if arch_entities.is_empty():
+		return {}
+	phase.entity_count += arch_entities.size()
+	var components := []
+	if not phase.iterate_comps.is_empty():
+		if phase.enabled_filter != null or phase.has_change_filter:
+			for comp_type in phase.iterate_comps:
+				components.append(_build_component_column_from_entities(arch_entities, comp_type))
+		else:
+			for comp_type in phase.iterate_comps:
+				var comp_key = (
+					comp_type.get_instance_id()
+					if comp_type is Script
+					else comp_type.get_script().get_instance_id()
+				)
+				components.append(arch.get_column(comp_key))
+	_step_ctx.processed_any = true
+	return {
+		"entities": arch_entities,
+		"components": components,
+		"callable": phase.callable,
+		"phase": phase.index,
+		"archetype": arch,
+		"fallback": false,
+	}
+
+
+## Run one unit (a whole batch, or a slice of it) through the phase callable.
+## Parallel processing is ignored while stepping: units run on the main thread.
+func _step_run(entities: Array[Entity], components: Array, callable: Callable, delta: float) -> void:
+	var track_iteration := not safe_iteration and _world != null
+	var start_usec := Time.get_ticks_usec()
+	if track_iteration:
+		_world._iteration_depth += 1
+	callable.call(entities, components, delta)
+	if track_iteration:
+		_world._iteration_depth -= 1
+	_step_elapsed_usec += Time.get_ticks_usec() - start_usec
+
+
+## Post-work of [method _handle], in the live order: change baselines, the
+## process_empty call, lastRunData, PER_SYSTEM flush, clock advance, timing.
+## Stepped runs do not feed the min/max/avg metrics (they would include pauses).
+func _step_end(delta: float) -> void:
+	var entered: Array = _step_ctx.get("entered", [])
+	for phase in entered:
+		if phase.has_change_filter:
+			if phase.index >= 0:
+				_subsystem_change_baselines[phase.index] = Archetype.global_change_tick
+			else:
+				_last_change_baseline = Archetype.global_change_tick
+	if _has_subsystems_cached != 1 and not _step_ctx.get("processed_any", false) and process_empty:
+		_step_run([], [], Callable(self, "process"), delta)
+	if ECS.debug:
+		if _has_subsystems_cached == 1:
+			for phase in entered:
+				lastRunData[phase.index] = {
+					"subsystem_index": phase.index,
+					"entity_count": phase.entity_count,
+					"fallback_execute": phase.fallback,
+				}
+		else:
+			var main_phase: Dictionary = entered[0] if not entered.is_empty() else {}
+			var total := 0
+			var arch_count := 0
+			if not main_phase.is_empty():
+				arch_count = main_phase.archetypes.size()
+				if main_phase.fallback:
+					total = main_phase.entity_count
+				else:
+					for arch in main_phase.archetypes:
+						total += arch.entities.size()
+			lastRunData["entity_count"] = total
+			lastRunData["archetype_count"] = arch_count
+			lastRunData["fallback_execute"] = main_phase.get("fallback", false)
+			lastRunData["parallel"] = false
+	if command_buffer_flush_mode == FlushMode.PER_SYSTEM and has_pending_commands():
+		cmd.execute()
+	Archetype.global_change_tick += 1
+	_last_execution_time_ms = _step_elapsed_usec / 1000.0
+	if ECS.debug:
+		lastRunData["execution_time_ms"] = _last_execution_time_ms
+		lastRunData["min_ms"] = _metric_min_ms
+		lastRunData["max_ms"] = _metric_max_ms
+		lastRunData["avg_ms"] = _metric_avg_ms
+		lastRunData["sample_count"] = _metric_sample_count
+	_step_ctx = {}
+
+#endregion Step debugger

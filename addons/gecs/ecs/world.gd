@@ -37,6 +37,11 @@ signal relationship_added(entity: Entity, relationship: Relationship)
 signal relationship_removed(entity: Entity, relationship: Relationship)
 ## Emitted when the queries are invalidated because of a component change
 signal cache_invalidated
+## Step debugger: emitted after every completed step (see [method debug_step]).
+## [param kind] is a [enum GECSStepper.Kind]; [param info] is the step log.
+signal step_completed(kind: int, info: Dictionary)
+## Step debugger: emitted when a breakpoint pauses a live world.
+signal step_break_hit(breakpoint_id: int, info: Dictionary)
 
 #endregion Signals
 
@@ -191,6 +196,17 @@ var _deferred_setup_systems: Array[System] = []
 var _group_timers: Dictionary = {}  # group_name -> Array[SystemTimer]
 ## True when systems have been added/removed and _group_timers needs rebuilding
 var _timers_dirty: bool = true
+## Step debugger (addons/gecs/docs/STEP_DEBUGGER.md). Created lazily by the
+## debug_* API or a debugger command. While absent every hook costs one bool;
+## GECSStepper._sync_world_flags keeps the three flags below in sync.
+var _stepper: GECSStepper = null
+## True while the step debugger holds the world paused (process() returns early).
+var _step_paused: bool = false
+## True while mutation funnels must report to the stepper (paused, or
+## component / entity breakpoints exist).
+var _step_hooks_active: bool = false
+## True while the live process() loop must consult the stepper (breakpoints).
+var _step_live_checks: bool = false
 
 
 ## Internal perf helper (debug only)
@@ -330,6 +346,13 @@ func finalize_system_setup() -> void:
 ## [param delta] The time elapsed since the last frame.
 ## [param group] The string for the group we should run. If empty runs all systems in default "" group.
 func process(delta: float, group: String = "") -> void:
+	# STEP DEBUGGER: while paused the stepper owns this call (runs pending steps
+	# for this group or returns immediately). One bool while not stepping.
+	if _step_paused:
+		_stepper._process_paused(delta, group)
+		return
+	if _step_live_checks and _stepper._live_process_entry(group):
+		return
 	# PERF: Reset frame metrics at start of processing step
 	perf_reset_frame()
 	# Decide once whether this frame emits a telemetry sample. Throttled to the
@@ -363,6 +386,8 @@ func process(delta: float, group: String = "") -> void:
 		while slot < group_systems.size():
 			var system = group_systems[slot]
 			if system.active:
+				if _step_live_checks and _stepper._live_before_system(system, group, slot, delta):
+					return
 				system._handle(delta)
 				if telemetry_due:
 					# Add execution order to last run data
@@ -376,6 +401,8 @@ func process(delta: float, group: String = "") -> void:
 			# before it shifted the next system into the slot.
 			if slot < group_systems.size() and group_systems[slot] == system:
 				slot += 1
+			if _step_live_checks and _stepper._live_after_system(group, slot, delta):
+				return
 
 		# Flush PER_GROUP command buffers after all systems in the group complete.
 		# Re-check the key: a system that removed itself above may have emptied the
@@ -393,6 +420,8 @@ func process(delta: float, group: String = "") -> void:
 					system.cmd.execute()
 				if flush_slot < flush_systems.size() and flush_systems[flush_slot] == system:
 					flush_slot += 1
+		if _step_live_checks and _stepper._live_after_flush(group):
+			return
 	if telemetry_due:
 		assert(GECSEditorDebuggerMessages.process_world(delta, group), "")
 
@@ -508,6 +537,8 @@ func add_entity(entity: Entity, components = null, add_to_tree = true) -> void:
 	# Track this entity: structural mutations notify the world via DIRECT calls
 	# (entity._world backref) — replaces six signal connects per entity.
 	entity._world = self
+	if _step_hooks_active:
+		_stepper._on_entity_added(entity)
 
 	#  Add the entity to the tree if it's not already there after hooking up tracking
 	# This ensures that any _ready methods on the entity or its components are called after setup
@@ -581,6 +612,8 @@ func remove_entity(entity: Entity) -> void:
 	if not is_instance_valid(entity):
 		return
 	entity = entity as Entity
+	if _step_hooks_active:
+		_stepper._on_entity_removed(entity)
 
 	for processor in ECS.entity_postprocessors:
 		processor.call(entity)
@@ -881,6 +914,8 @@ func remove_system_group(group: String, topo_sort: bool = false) -> void:
 ## [param should_free] Optionally frees the world node by default
 ## [param keep] A list of entities that should be kept in the world
 func purge(should_free = true, keep := []) -> void:
+	if _stepper != null:
+		_stepper.reset()
 	# Get rid of all entities
 	_worldLogger.debug("Purging Entities", entities)
 	for entity in entities.duplicate().filter(func(x): return not keep.has(x)):
@@ -991,6 +1026,8 @@ func _rebuild_group_timers() -> void:
 ## [param entity] The entity that had a component added.[br]
 ## [param component] The resource path of the added component.
 func _on_entity_component_added(entity: Entity, component: Resource) -> void:
+	if _step_hooks_active:
+		_stepper._on_component_added(entity, component)
 	# ARCHETYPE: Move entity to new archetype
 	if entity_to_archetype.has(entity):
 		if _defer_archetype_moves:
@@ -1039,6 +1076,8 @@ func _on_entity_component_property_change(
 	old_value: Variant,
 	new_value: Variant,
 ) -> void:
+	if _step_hooks_active:
+		_stepper._on_property_changed(entity, component, property_name, old_value, new_value)
 	# CHANGE DETECTION: stamp the row version (one dict check when unused)
 	if not _change_tracked_keys.is_empty():
 		_mark_component_changed(entity, component)
@@ -1076,6 +1115,8 @@ func _on_entity_component_property_change(
 ## [param entity] The entity that had a component removed.[br]
 ## [param component] The resource path of the removed component.
 func _on_entity_component_removed(entity, component: Resource) -> void:
+	if _step_hooks_active:
+		_stepper._on_component_removed(entity, component)
 	if entity_to_archetype.has(entity):
 		if _defer_archetype_moves:
 			_queue_deferred_move(entity)
@@ -1107,6 +1148,8 @@ func _on_entity_component_removed(entity, component: Resource) -> void:
 
 ## Update index when a relationship is added and move entity to new archetype.
 func _on_entity_relationship_added(entity: Entity, relationship: Relationship) -> void:
+	if _step_hooks_active:
+		_stepper._on_relationship_added(entity, relationship)
 	# Skip archetype move when called from batch handler re-emitting per-entity signals
 	if not _in_batch_relationship_emit:
 		# STRUCTURAL: Move entity to new archetype including the pair slot key
@@ -1134,6 +1177,8 @@ func _on_entity_relationship_added(entity: Entity, relationship: Relationship) -
 
 ## Update index when a relationship is removed and move entity to archetype without the pair slot key.
 func _on_entity_relationship_removed(entity: Entity, relationship: Relationship) -> void:
+	if _step_hooks_active:
+		_stepper._on_relationship_removed(entity, relationship)
 	# Dispatch observer RELATIONSHIP_REMOVED BEFORE archetype move so the entity still
 	# structurally satisfies match() queries that reference the relationship type.
 	_dispatch_observer_event(Observer.Event.RELATIONSHIP_REMOVED, entity, relationship)
@@ -1550,7 +1595,11 @@ func _dispatch_observer_event(event: Variant, entity: Entity, payload: Variant) 
 				continue
 		elif not _observer_entry_entity_matches(entry, entity):
 			continue
-		# Invoke the callable.
+		# Invoke the callable (and its PER_CALLBACK flush) under the observer's
+		# cause so the step journal attributes nested mutations to it.
+		var traced := _step_hooks_active
+		if traced:
+			_stepper.push_cause("observer:" + String(obs.name))
 		entry.callable.call(event, entity, payload)
 		# Flush command buffer if PER_CALLBACK mode
 		if (
@@ -1558,6 +1607,8 @@ func _dispatch_observer_event(event: Variant, entity: Entity, payload: Variant) 
 			and obs.command_buffer_flush_mode == Observer.FlushMode.PER_CALLBACK
 		):
 			obs.cmd.execute()
+		if traced:
+			_stepper.pop_cause()
 
 
 func _observer_entry_entity_matches(entry: Dictionary, entity: Entity) -> bool:
@@ -1913,6 +1964,10 @@ func _evaluate_monitors_for_entity(entity: Entity, touched_path: String = "") ->
 func _invoke_entry(entry: Dictionary, event: Variant, entity: Entity, payload: Variant) -> void:
 	var obs: Observer = entry.observer
 	var c: Callable = entry.callable
+	# Step journal: attribute the callback and its PER_CALLBACK flush to this observer.
+	var traced := _step_hooks_active
+	if traced:
+		_stepper.push_cause("observer:" + String(obs.name))
 	if c.is_valid():
 		c.call(event, entity, payload)
 	if (
@@ -1920,6 +1975,8 @@ func _invoke_entry(entry: Dictionary, event: Variant, entity: Entity, payload: V
 		and obs.command_buffer_flush_mode == Observer.FlushMode.PER_CALLBACK
 	):
 		obs.cmd.execute()
+	if traced:
+		_stepper.pop_cause()
 
 
 ## Emit a custom observer event. Observers whose [QueryBuilder] declared
@@ -1938,6 +1995,8 @@ func emit_event(event_name: StringName, entity: Entity = null, data: Variant = n
 	# an entity). Filtered int events still require a valid entity.
 	if entity != null and not is_instance_valid(entity):
 		return
+	if _step_hooks_active:
+		_stepper._on_event(event_name, entity, data)
 	_dispatch_observer_event(event_name, entity, data)
 
 
@@ -2489,6 +2548,9 @@ func _get_relationship_target_id(relationship: Relationship) -> int:
 
 ## Handle batch relationship additions — single archetype transition for N relationships.
 func _on_entity_relationships_batch_added(entity: Entity, _relationships: Array) -> void:
+	if _step_hooks_active:
+		for relationship in _relationships:
+			_stepper._on_relationship_added(entity, relationship)
 	_begin_suppress()
 	var moved := false
 
@@ -3018,7 +3080,132 @@ func _move_entity_to_new_archetype_fast(
 
 
 ## Handle messages from the editor debugger
+#region Step Debugger
+## Forward-only step debugger: pause the ECS and run it one frame / group /
+## system / archetype / entity at a time, with a per-step mutation log,
+## breakpoints and a relationship graph feed for the editor tab. The game keeps
+## calling [method process] every frame; while paused those calls return
+## immediately unless a step is pending for that group, so group order and delta
+## stay exactly what the game produces. See addons/gecs/docs/STEP_DEBUGGER.md.
+
+
+## The stepper instance (created on first use). Exposed for tests and tooling.
+func debug_stepper() -> GECSStepper:
+	return _get_stepper()
+
+
+## Pause ECS processing. Systems stop running until [method debug_resume] or a
+## [method debug_step] request. Only ECS processing pauses: the SceneTree,
+## physics, tweens and animation keep running.
+func debug_pause() -> void:
+	_get_stepper().pause()
+
+
+## Resume live processing. A partially stepped system is finished first.
+func debug_resume() -> void:
+	if _stepper != null:
+		_stepper.resume()
+
+
+func debug_is_paused() -> bool:
+	return _step_paused
+
+
+## Queue [param count] steps of [param kind] (a [enum GECSStepper.Kind]).
+## Pauses first when live. Steps run inside the game's next [method process]
+## call(s) for the cursor's group; [signal step_completed] fires after each one.
+func debug_step(kind: int, count: int = 1) -> void:
+	_get_stepper().step(kind, count)
+
+
+## The step set for [constant GECSStepper.Kind.ENTITY]: each listed entity
+## (instances or instance ids) runs as its own [method System.process] call,
+## the rest of each archetype runs in bulk. Empty set = archetype behaviour.
+func debug_set_step_entities(entities: Array) -> void:
+	_get_stepper().set_step_entities(entities)
+
+
+## Add a breakpoint. [param spec] shapes:[br]
+## [code]{kind: "system", system: System | system_id: int | system_name: String}[/code][br]
+## [code]{kind: "component_added" | "component_removed", component: Script | "C_Health" | "res://...gd"}[/code][br]
+## [code]{kind: "entity", entity: Entity | instance id}[/code][br]
+## Returns the breakpoint id, or 0 when the spec could not be resolved.
+func debug_add_breakpoint(spec: Dictionary) -> int:
+	return _get_stepper().add_breakpoint(spec)
+
+
+func debug_remove_breakpoint(breakpoint_id: int) -> void:
+	if _stepper != null:
+		_stepper.remove_breakpoint(breakpoint_id)
+
+
+func debug_set_breakpoint_enabled(breakpoint_id: int, enabled: bool) -> void:
+	if _stepper != null:
+		_stepper.set_breakpoint_enabled(breakpoint_id, enabled)
+
+
+func debug_clear_breakpoints() -> void:
+	if _stepper != null:
+		_stepper.clear_breakpoints()
+
+
+## Toggle the post-step diff sweep that reports component writes made without
+## an emitting setter (on by default; runs only while paused).
+func debug_set_sweep(enabled: bool) -> void:
+	_get_stepper().set_sweep(enabled)
+
+
+## Watch entities in the graph view: a fresh [GECSGraphState] payload is pushed
+## after every step. [param depth] expands the neighbourhood by that many hops.
+func debug_graph_watch(entities: Array, depth: int = 0) -> void:
+	_get_stepper().set_graph_watch(entities, depth)
+
+
+## Build the graph payload for the current watch set now.
+func debug_graph_state() -> Dictionary:
+	return _get_stepper().graph_state()
+
+
+## Current stepper state (paused flag, cursor, breakpoints, watch, counters).
+func debug_step_state() -> Dictionary:
+	return _get_stepper().state()
+
+
+func _get_stepper() -> GECSStepper:
+	if _stepper == null:
+		_stepper = GECSStepper.new(self)
+	return _stepper
+
+
+## Resolve a component class name or res:// path to its Script (breakpoints).
+func _debug_class_script(class_or_path: String) -> Script:
+	if class_or_path.begins_with("res://"):
+		var loaded = load(class_or_path)
+		return loaded if loaded is Script else null
+	if _debugger_class_paths.is_empty():
+		for entry in ProjectSettings.get_global_class_list():
+			var cname: String = entry.get("class", "")
+			var cpath: String = entry.get("path", "")
+			if cname != "" and cpath != "":
+				_debugger_class_paths[cname] = cpath
+	var path: String = _debugger_class_paths.get(class_or_path, "")
+	if path == "":
+		return null
+	var loaded = load(path)
+	return loaded if loaded is Script else null
+
+#endregion Step Debugger
+
+
 func _handle_debugger_message(message: String, data: Array) -> bool:
+	if (
+		message == "step"
+		or message.begins_with("step_")
+		or message.begins_with("breakpoint_")
+		or message.begins_with("graph_")
+	):
+		# Step debugger commands: pause / step / breakpoints / graph watch.
+		return _get_stepper().handle_command(message, data)
 	if message == "set_system_active":
 		# Editor requested to toggle a system's active state
 		var system_id = data[0]
@@ -3221,5 +3408,9 @@ func _send_debugger_snapshot() -> void:
 			for rel in entity.relationships:
 				if rel:
 					assert(GECSEditorDebuggerMessages.entity_relationship_added(entity, rel), "")
+	# Step debugger state (paused cursor, breakpoints, watch) so a re-subscribing
+	# tab picks up an in-progress session.
+	if _stepper != null:
+		GECSEditorDebuggerMessages.step_state(_stepper.state())
 
 #endregion Debugger Support

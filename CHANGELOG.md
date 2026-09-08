@@ -2,6 +2,43 @@
 
 ## [9.3.0] - Unreleased - Step debugger, entity graph view, relationship cleanup fixes
 
+### Added
+
+- **Step debugger (forward-only).** Pause the ECS and run it one frame, group,
+  system, archetype or entity at a time while the game keeps calling
+  `ECS.process()`: paused calls return immediately unless a step is pending for
+  that group, so group order and delta stay exactly what the game produces.
+  Every step reports a mutation log (component add/remove, emitted property
+  changes, relationships, entity add/remove/enable, custom events) attributed
+  to the system, CommandBuffer flush or observer that caused it, plus a diff
+  sweep that catches writes made without an emitting setter. Breakpoints pause
+  a live world before a system runs, or right after the system that added or
+  removed a component type or touched an entity. `Kind.ENTITY` takes a "step
+  set": each listed entity runs as its own `process()` call. Headless API on
+  `World`: `debug_pause()`, `debug_resume()`, `debug_step(kind, count)`,
+  `debug_set_step_entities()`, `debug_add_breakpoint()` (and remove / enable /
+  clear), `debug_set_sweep()`, `debug_graph_watch()`, `debug_step_state()`;
+  signals `step_completed(kind, info)` and `step_break_hit(id, info)`. New
+  classes `GECSStepper`, `GECSDiffSweep`, `GECSGraphState` under
+  `addons/gecs/debug/step/`; `System` gained a stepper-only resumable
+  execution path (`_step_begin` / `_step_next_batch` / `_step_run` /
+  `_step_end`) that mirrors `_handle` batch by batch and leaves the hot path
+  untouched. While no stepper is active the cost is one bool per mutation
+  funnel and per system per frame. Docs: `addons/gecs/docs/STEP_DEBUGGER.md`.
+- **Entity relationship graph feed.** `GECSGraphState.build(world, entities,
+  depth)` returns the watched entities (components inside), inbound and
+  outbound relationships as edges, and non-entity targets (archetype scripts,
+  component instances, wildcard) as nodes; the stepper pushes it to the editor
+  after every step for the watch set.
+- **Debugger messages** `gecs:step_state`, `gecs:step_log`, `gecs:graph_state`
+  and editor commands `step_pause`, `step_resume`, `step`, `step_set_entities`,
+  `step_set_sweep`, `step_pull_state`, `breakpoint_add/remove/set_enabled/clear`,
+  `graph_watch`, `graph_pull`. `GECSEditorDebuggerMessages.serialize_relationship()`
+  is now shared by the lifecycle message and the graph feed.
+- Test suites under `tests/debug/`: `test_stepper_pause`, `test_stepper_unit_steps`,
+  `test_stepper_frame_step`, `test_stepper_journal_and_sweep`,
+  `test_stepper_breakpoints`, `test_stepper_graph_and_commands`.
+
 ### Fixed
 
 - **Relationship read paths desynced the archetype index.** `Entity.get_relationship()`

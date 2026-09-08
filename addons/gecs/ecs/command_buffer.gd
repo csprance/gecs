@@ -163,6 +163,11 @@ func execute() -> void:
 	# bump — commands always mutate state, so caches must always be notified after execute().
 	_world._begin_suppress()
 	_world._pending_invalidation = true
+	# STEP DEBUGGER: attribute every op applied by this flush to the buffer
+	# ("cmd" cause). One bool while no stepper is active.
+	var traced: bool = _world._step_hooks_active
+	if traced:
+		_world._stepper.push_cause("cmd")
 	# Defer archetype moves: world handlers queue touched entities instead of moving
 	# them per-op. _end_deferred_moves() commits one transition per touched entity.
 	var owns_deferral := _world._begin_deferred_moves()
@@ -208,6 +213,8 @@ func execute() -> void:
 	if owns_deferral:
 		_world._end_deferred_moves()
 	_world._end_suppress()
+	if traced:
+		_world._stepper.pop_cause()
 
 	# Update statistics
 	_stats["commands_executed"] += to_run.size() / 4

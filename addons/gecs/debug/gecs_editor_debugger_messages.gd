@@ -28,6 +28,10 @@ const Msg = {
 	"ENTITY_QUERY_RESULT": "gecs:entity_query_result",
 	# Game -> editor bootstrap: announces the game has GECS so the tab subscribes.
 	"READY": "gecs:ready",
+	# Step debugger (game -> editor): stepper state, one step log entry, graph payload.
+	"STEP_STATE": "gecs:step_state",
+	"STEP_LOG": "gecs:step_log",
+	"GRAPH_STATE": "gecs:graph_state",
 }
 
 ## Base capability cache (editor build + live debugger transport): -1 = unresolved,
@@ -302,43 +306,48 @@ static func entity_component_property_changed(
 	return true
 
 
+## Serialize a relationship for the editor: relation type + data and a typed
+## target descriptor ("Freed" | "null" | "Entity" {id, path} | "Component"
+## {type, data} | "Archetype" {script_path}). Shared by the lifecycle message
+## and the step debugger's graph view.
+static func serialize_relationship(rel: Relationship) -> Dictionary:
+	var rel_data = {
+		"relation_type": _get_type_name_for_debugger(rel.relation) if rel.relation else "null",
+		"relation_data": rel.relation.serialize() if rel.relation else {},
+		"target_type": "",
+		"target_data": {},
+	}
+	# Format target based on type (freed checked first: a freed object
+	# compares == null and `is` errors on a freed operand)
+	if typeof(rel.target) == TYPE_OBJECT and not is_instance_valid(rel.target):
+		rel_data["target_type"] = "Freed"
+	elif rel.target == null:
+		rel_data["target_type"] = "null"
+	elif rel.target is Entity:
+		rel_data["target_type"] = "Entity"
+		rel_data["target_data"] = {
+			"id": rel.target.get_instance_id(),
+			"path": str(rel.target.get_path()) if rel.target.is_inside_tree() else String(rel.target.name),
+		}
+	elif rel.target is Component:
+		rel_data["target_type"] = "Component"
+		rel_data["target_data"] = {
+			"type": _get_type_name_for_debugger(rel.target),
+			"data": rel.target.serialize(),
+		}
+	elif rel.target is Script:
+		rel_data["target_type"] = "Archetype"
+		rel_data["target_data"] = {
+			"script_path": rel.target.resource_path,
+		}
+	return rel_data
+
+
 static func entity_relationship_added(ent: Entity, rel: Relationship) -> bool:
 	if can_send_message():
-		# Serialize relationship data for debugger display
-		var rel_data = {
-			"relation_type": _get_type_name_for_debugger(rel.relation) if rel.relation else "null",
-			"relation_data": rel.relation.serialize() if rel.relation else {},
-			"target_type": "",
-			"target_data": {},
-		}
-
-		# Format target based on type (freed checked first: a freed object
-		# compares == null and `is` errors on a freed operand)
-		if typeof(rel.target) == TYPE_OBJECT and not is_instance_valid(rel.target):
-			rel_data["target_type"] = "Freed"
-		elif rel.target == null:
-			rel_data["target_type"] = "null"
-		elif rel.target is Entity:
-			rel_data["target_type"] = "Entity"
-			rel_data["target_data"] = {
-				"id": rel.target.get_instance_id(),
-				"path": str(rel.target.get_path()),
-			}
-		elif rel.target is Component:
-			rel_data["target_type"] = "Component"
-			rel_data["target_data"] = {
-				"type": _get_type_name_for_debugger(rel.target),
-				"data": rel.target.serialize(),
-			}
-		elif rel.target is Script:
-			rel_data["target_type"] = "Archetype"
-			rel_data["target_data"] = {
-				"script_path": rel.target.resource_path,
-			}
-
 		_send(
 			Msg.ENTITY_RELATIONSHIP_ADDED,
-			[ent.get_instance_id(), rel.get_instance_id(), rel_data],
+			[ent.get_instance_id(), rel.get_instance_id(), serialize_relationship(rel)],
 		)
 	return true
 
@@ -346,4 +355,28 @@ static func entity_relationship_added(ent: Entity, rel: Relationship) -> bool:
 static func entity_relationship_removed(ent: Entity, rel: Relationship) -> bool:
 	if can_send_message():
 		_send(Msg.ENTITY_RELATIONSHIP_REMOVED, [ent.get_instance_id(), rel.get_instance_id()])
+	return true
+
+
+## Step debugger: full stepper state (paused flag, cursor, step set,
+## breakpoints, graph watch). Sent after every command and every completed
+## step; the tab can pull it with "step_pull_state".
+static func step_state(state: Dictionary) -> bool:
+	if can_send_message():
+		_send(Msg.STEP_STATE, [state])
+	return true
+
+
+## Step debugger: one completed step (or a breakpoint hit / external bucket)
+## with its journaled ops. See GECSStepper for the log and op record shapes.
+static func step_log(log: Dictionary) -> bool:
+	if can_send_message():
+		_send(Msg.STEP_LOG, [log])
+	return true
+
+
+## Graph view: nodes + edges for the watched entities (GECSGraphState.build).
+static func graph_state(step_id: int, graph: Dictionary) -> bool:
+	if can_send_message():
+		_send(Msg.GRAPH_STATE, [step_id, graph])
 	return true

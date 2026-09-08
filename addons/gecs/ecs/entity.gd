@@ -709,6 +709,9 @@ func _on_enabled_changed(old_value: bool, new_value: bool) -> void:
 	# This eliminates the need for separate enabled/disabled archetypes
 	var archetype = ECS.world.entity_to_archetype[self]
 	archetype.update_entity_enabled_state(self, new_value)
+	# STEP DEBUGGER: covers World.disable_entity/enable_entity and direct writes.
+	if ECS.world._step_hooks_active:
+		ECS.world._stepper._on_entity_enabled(self, new_value)
 
 	# Membership (as seen through enabled filters) changed — bump so cached
 	# execute() results go stale. Routed through _bump_membership so batch
