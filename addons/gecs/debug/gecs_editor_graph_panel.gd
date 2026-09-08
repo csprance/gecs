@@ -1,8 +1,10 @@
 @tool
-## Graph pane of the GECS debugger tab: watched entities as GraphNodes (their
-## components listed inside), relationships as connections, and non-entity
-## relationship targets (archetype scripts, component instances, the wildcard)
-## as small nodes. Fed by [code]gecs:graph_state[/code] (GECSGraphState.build).
+## Graph view of the GECS debugger tab, hosted by a [GECSEditorGraphWindow]:
+## watched entities as GraphNodes (their components listed inside),
+## relationships as connections, and non-entity relationship targets (archetype
+## scripts, component instances, the wildcard) as small nodes. Fed by
+## [code]gecs:graph_state[/code] payloads for its [member graph_id]
+## (GECSGraphState.build).
 ##
 ## "Show live" makes the tab pull a fresh payload at its poll rate while the
 ## game runs; while paused the stepper pushes one after every step, so the graph
@@ -24,6 +26,8 @@ const MAX_DATA_CHARS := 60
 var send: Callable = Callable()
 ## Returns the entity instance ids currently selected in the tab's entity tree.
 var selected_entities_provider: Callable = Callable()
+## Id of the game-side graph this view mirrors (GECSStepper.graphs key).
+var graph_id := 0
 
 ## Watched entity instance ids as reported by the last payload.
 var watch_ids: Array = []
@@ -34,8 +38,7 @@ var last_graph: Dictionary = {}
 
 var show_live_check: CheckButton
 var depth_spin: SpinBox
-var watch_selected_btn: Button
-var clear_btn: Button
+var add_selected_btn: Button
 var arrange_btn: Button
 var info_label: Label
 var graph: GraphEdit
@@ -73,22 +76,18 @@ func _build_ui() -> void:
 	depth_spin.tooltip_text = "Relationship hops to include around the watched entities (0 = watched entities plus stubs for their neighbours)."
 	depth_spin.value_changed.connect(_on_depth_changed)
 	bar.add_child(depth_spin)
-	watch_selected_btn = Button.new()
-	watch_selected_btn.text = "Watch selected"
-	watch_selected_btn.tooltip_text = "Watch the entities selected in the entity tree."
-	watch_selected_btn.pressed.connect(_on_watch_selected)
-	bar.add_child(watch_selected_btn)
-	clear_btn = Button.new()
-	clear_btn.text = "Clear"
-	clear_btn.pressed.connect(_on_clear)
-	bar.add_child(clear_btn)
+	add_selected_btn = Button.new()
+	add_selected_btn.text = "Add selected"
+	add_selected_btn.tooltip_text = "Add the entities selected in the entity tree to this graph."
+	add_selected_btn.pressed.connect(_on_add_selected)
+	bar.add_child(add_selected_btn)
 	arrange_btn = Button.new()
 	arrange_btn.text = "Arrange"
 	arrange_btn.tooltip_text = "Auto-layout the graph."
 	arrange_btn.pressed.connect(_on_arrange)
 	bar.add_child(arrange_btn)
 	info_label = Label.new()
-	info_label.text = "Watch an entity (right-click it in the entity tree) to see its relationships."
+	info_label.text = "Waiting for the game..."
 	info_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	info_label.clip_text = true
 	bar.add_child(info_label)
@@ -217,7 +216,7 @@ func clear() -> void:
 			gn.queue_free()
 	_nodes.clear()
 	if info_label:
-		info_label.text = "Watch an entity (right-click it in the entity tree) to see its relationships."
+		info_label.text = "Waiting for the game..."
 
 
 #endregion Incoming
@@ -234,14 +233,9 @@ func watch(entity_ids: Array) -> void:
 	_send_watch(ids)
 
 
-func _on_watch_selected() -> void:
+func _on_add_selected() -> void:
 	var ids: Array = selected_entities_provider.call() if selected_entities_provider.is_valid() else []
-	_send_watch(ids)
-
-
-func _on_clear() -> void:
-	clear()
-	_send_watch([])
+	watch(ids)
 
 
 func _on_depth_changed(_value: float) -> void:
@@ -256,7 +250,7 @@ func _on_arrange() -> void:
 
 func _send_watch(ids: Array) -> void:
 	if send.is_valid():
-		send.call("gecs:graph_watch", [ids, int(depth_spin.value) if depth_spin else 0])
+		send.call("gecs:graph_watch", [graph_id, ids, int(depth_spin.value) if depth_spin else 0])
 
 
 #endregion Outgoing

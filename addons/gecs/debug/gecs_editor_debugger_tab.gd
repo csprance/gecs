@@ -18,9 +18,11 @@ extends Control
 @onready var prop_changes_check_box: CheckBox = %PropChangesCheckBox
 @onready var metrics_check_box: CheckBox = %MetricsCheckBox
 @onready var metrics_hz_spin_box: SpinBox = %MetricsHzSpinBox
-# Step debugger + graph panes (their scripts build their own controls).
+# Step debugger pane (its script builds its own controls). Graph views are
+# floating GECSEditorGraphWindows, one per graph id (see open_graph_window()).
 @onready var step_panel: GECSEditorStepPanel = %StepPanel
-@onready var graph_panel: GECSEditorGraphPanel = %GraphPanel
+var _graph_windows: Dictionary = {}  # graph_id -> GECSEditorGraphWindow
+var _next_graph_id: int = 1
 
 var ecs_data: Dictionary = {}
 var default_system := {"path": "", "active": true, "metrics": {}, "group": ""}
@@ -263,16 +265,13 @@ func _ready() -> void:
 		_on_entities_query_submitted
 	):
 		entities_filter_line_edit.text_submitted.connect(_on_entities_query_submitted)
-	# Step debugger + graph panes: inject the game channel and the selection
-	# source, and mirror their state onto the entity / system trees.
+	# Step debugger pane: inject the game channel and the selection source, and
+	# mirror its state onto the entity / system trees.
 	if step_panel:
 		step_panel.send = send_to_game
 		step_panel.selected_entities_provider = get_selected_entity_ids
 		if not step_panel.state_applied.is_connected(_on_step_state_applied):
 			step_panel.state_applied.connect(_on_step_state_applied)
-	if graph_panel:
-		graph_panel.send = send_to_game
-		graph_panel.selected_entities_provider = get_selected_entity_ids
 	if system_tree and not system_tree.item_edited.is_connected(_on_system_tree_item_edited):
 		system_tree.item_edited.connect(_on_system_tree_item_edited)
 
@@ -288,9 +287,10 @@ func _process(delta: float) -> void:
 		return
 	_poll_elapsed = 0.0
 	_poll_expanded_entities()
-	# Graph view "Show live": pull a fresh payload at the same cadence.
-	if graph_panel and graph_panel.wants_live_pull():
-		send_to_game("gecs:graph_pull", [])
+	# Graph windows with "Show live" on: pull a fresh payload at the same cadence.
+	for window in _graph_windows.values():
+		if window.panel.wants_live_pull():
+			send_to_game("gecs:graph_pull", [window.graph_id])
 
 
 func _notification(what: int) -> void:
@@ -408,8 +408,7 @@ func clear_all_data():
 	_step_highlight_system = 0
 	if step_panel:
 		step_panel.clear()
-	if graph_panel:
-		graph_panel.clear()
+	_close_all_graph_windows(false)
 
 	# Clear system tree
 	if system_tree:
@@ -539,11 +538,15 @@ func _on_pop_out_pressed():
 	# Create a new window
 	_popup_window = Window.new()
 	_popup_window.title = "GECS Debug Viewer"
-	_popup_window.size = Vector2i(1200, 800)
 	_popup_window.initial_position = Window.WINDOW_INITIAL_POSITION_CENTER_SCREEN_WITH_MOUSE_FOCUS
 
-	# Move the main content to the window (not duplicate)
+	# Move the main content to the window (not duplicate). Size the window to
+	# at least the content's minimum so the toolbars are never cut off.
 	var hsplit = get_node("HSplit")
+	var content_min: Vector2 = hsplit.get_combined_minimum_size()
+	_popup_window.size = Vector2i(
+		maxi(1200, int(content_min.x) + 24), maxi(800, int(content_min.y) + 24)
+	)
 	remove_child(hsplit)
 	_popup_window.add_child(hsplit)
 
@@ -691,7 +694,7 @@ func _show_entity_context_menu(item: TreeItem, position: Vector2):
 	popup.add_separator()
 	popup.add_item("Add to step set", 1)
 	popup.add_item("Break when touched", 2)
-	popup.add_item("Watch in graph", 3)
+	popup.add_item("Open graph", 3)
 
 	# Position the popup at the mouse position (use get_screen_position for proper screen coords)
 	var screen_pos = entities_tree.get_screen_position() + position
@@ -711,8 +714,7 @@ func _show_entity_context_menu(item: TreeItem, position: Vector2):
 					if step_panel:
 						step_panel.add_breakpoint({"kind": "entity", "entity": entity_id})
 				3:
-					if graph_panel:
-						graph_panel.watch(_selected_entities_or([entity_id]))
+					open_graph_window(_selected_entities_or([entity_id]))
 			popup.queue_free()
 	)
 
@@ -2147,29 +2149,78 @@ func step_state(state: Dictionary) -> void:
 		if int(bp.get("kind", -1)) == GECSStepper.BpKind.SYSTEM:
 			_system_bp_ids[int(bp.get("system_id", 0))] = int(bp.get("id", 0))
 	_refresh_step_columns()
-	if graph_panel:
-		graph_panel.set_paused(bool(state.get("paused", false)))
+	for window in _graph_windows.values():
+		window.panel.set_paused(bool(state.get("paused", false)))
 	if step_panel:
 		step_panel.apply_state(state)
 
 
-## gecs:step_log -> append to the step pane, tint touched rows, mark the graph.
+## gecs:step_log -> append to the step pane, tint touched rows, mark the graphs.
 func step_log(log: Dictionary) -> void:
 	if step_panel:
 		step_panel.append_log(log)
 	_apply_step_highlights(log)
-	if graph_panel:
-		var added_edges: Array = []
-		for op in log.get("ops", []):
-			if op is Array and op.size() > 5 and int(op[0]) == GECSStepper.Op.REL_ADD:
-				added_edges.append("r:%d" % int(op[5]))
-		graph_panel.highlight(log.get("touched", []), added_edges)
+	if _graph_windows.is_empty():
+		return
+	var added_edges: Array = []
+	for op in log.get("ops", []):
+		if op is Array and op.size() > 5 and int(op[0]) == GECSStepper.Op.REL_ADD:
+			added_edges.append("r:%d" % int(op[5]))
+	for window in _graph_windows.values():
+		window.panel.highlight(log.get("touched", []), added_edges)
 
 
-## gecs:graph_state -> the graph pane.
-func graph_state(step_id: int, graph: Dictionary) -> void:
-	if graph_panel:
-		graph_panel.apply_graph(step_id, graph)
+## gecs:graph_state -> the window for that graph id. A payload for an id this
+## tab never opened (a watch started from game code, or a window lost to a
+## reload) gets a window of its own.
+func graph_state(graph_id: int, step_id: int, graph: Dictionary) -> void:
+	var window: GECSEditorGraphWindow = _graph_windows.get(graph_id)
+	if window == null:
+		window = _make_graph_window(graph_id)
+	window.apply_graph(step_id, graph)
+
+
+## Open a floating graph window watching [param entity_ids] (instance ids) and
+## ask the game for its first payload. Every call opens a new window with a
+## fresh graph id; any number can be open at once.
+func open_graph_window(entity_ids: Array, depth: int = 0) -> GECSEditorGraphWindow:
+	var graph_id := _next_graph_id
+	_next_graph_id += 1
+	var window := _make_graph_window(graph_id)
+	if window.panel.depth_spin:
+		window.panel.depth_spin.value = depth
+	send_to_game("gecs:graph_watch", [graph_id, entity_ids, depth])
+	return window
+
+
+## Close one graph window; [param notify_game] also drops the watch in the game.
+func close_graph_window(graph_id: int, notify_game: bool = true) -> void:
+	var window: GECSEditorGraphWindow = _graph_windows.get(graph_id)
+	if window == null:
+		return
+	_graph_windows.erase(graph_id)
+	if notify_game:
+		send_to_game("gecs:graph_close", [graph_id])
+	window.hide()
+	window.queue_free()
+
+
+func _make_graph_window(graph_id: int) -> GECSEditorGraphWindow:
+	var window := GECSEditorGraphWindow.new(graph_id)
+	window.panel.send = send_to_game
+	window.panel.selected_entities_provider = get_selected_entity_ids
+	window.panel.set_paused(step_panel.paused if step_panel else false)
+	window.close_requested.connect(close_graph_window.bind(graph_id, true))
+	_graph_windows[graph_id] = window
+	if graph_id >= _next_graph_id:
+		_next_graph_id = graph_id + 1
+	add_child(window)
+	return window
+
+
+func _close_all_graph_windows(notify_game: bool) -> void:
+	for graph_id in _graph_windows.keys():
+		close_graph_window(graph_id, notify_game)
 
 
 func _on_step_state_applied(_state: Dictionary) -> void:

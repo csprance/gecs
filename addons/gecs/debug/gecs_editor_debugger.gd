@@ -121,8 +121,8 @@ func _capture(message: String, data: Array, session_id: int) -> bool:
 		debugger_tab.step_log(data[0])
 		return true
 	elif message == Msg.GRAPH_STATE:
-		# data: [step_id, graph] (GECSGraphState.build)
-		debugger_tab.graph_state(data[0], data[1])
+		# data: [graph_id, step_id, graph] (GECSGraphState.build)
+		debugger_tab.graph_state(data[0], data[1], data[2])
 		return true
 	return false
 

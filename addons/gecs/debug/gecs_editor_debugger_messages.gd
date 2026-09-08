@@ -375,8 +375,9 @@ static func step_log(log: Dictionary) -> bool:
 	return true
 
 
-## Graph view: nodes + edges for the watched entities (GECSGraphState.build).
-static func graph_state(step_id: int, graph: Dictionary) -> bool:
+## Graph view: nodes + edges for one graph's watched entities
+## (GECSGraphState.build). [param graph_id] picks the editor window.
+static func graph_state(graph_id: int, step_id: int, graph: Dictionary) -> bool:
 	if can_send_message():
-		_send(Msg.GRAPH_STATE, [step_id, graph])
+		_send(Msg.GRAPH_STATE, [graph_id, step_id, graph])
 	return true

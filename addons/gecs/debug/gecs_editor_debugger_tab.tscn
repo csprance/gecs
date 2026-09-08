@@ -1,8 +1,7 @@
-[gd_scene load_steps=4 format=3 uid="uid://cbykprebt3jaa"]
+[gd_scene load_steps=3 format=3 uid="uid://cbykprebt3jaa"]
 
 [ext_resource type="Script" uid="uid://ca7erogu58fca" path="res://addons/gecs/debug/gecs_editor_debugger_tab.gd" id="1_8dl00"]
 [ext_resource type="Script" path="res://addons/gecs/debug/gecs_editor_step_panel.gd" id="2_step"]
-[ext_resource type="Script" path="res://addons/gecs/debug/gecs_editor_graph_panel.gd" id="3_graph"]
 
 [node name="GECSEditorDebuggerTab" type="Control"]
 layout_mode = 3
@@ -228,19 +227,9 @@ size_flags_horizontal = 3
 text = "Systems: 0 | Total ms: 0.000ms"
 editable = false
 
-[node name="StepVSplit" type="VSplitContainer" parent="HSplit"]
-custom_minimum_size = Vector2(360, 0)
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="StepPanel" type="VBoxContainer" parent="HSplit/StepVSplit"]
+[node name="StepPanel" type="VBoxContainer" parent="HSplit"]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(420, 0)
 layout_mode = 2
-size_flags_vertical = 3
+size_flags_horizontal = 1
 script = ExtResource("2_step")
-
-[node name="GraphPanel" type="VBoxContainer" parent="HSplit/StepVSplit"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_vertical = 3
-script = ExtResource("3_graph")

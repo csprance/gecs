@@ -66,19 +66,19 @@ While any component / entity breakpoint exists the journal also runs live (ops a
 
 ## The graph view
 
-The graph pane shows the **watched** entities as nodes with their components listed inside, and their relationships as connections: outgoing edges leave from the relationship rows of a node, incoming edges from other entities arrive at the header row. Entities outside the watch set that relate to a watched one appear as stubs; archetype (script) targets, component-instance targets and the wildcard target get small nodes of their own. *Depth* expands the neighbourhood by that many relationship hops.
+Right-click an entity row and pick *Open graph* (with several rows selected, one graph for all of them). A floating window opens showing the **watched** entities as nodes with their components listed inside, and their relationships as connections: outgoing edges leave from the relationship rows of a node, incoming edges from other entities arrive at the header row. Entities outside the watch set that relate to a watched one appear as stubs; archetype (script) targets, component-instance targets and the wildcard target get small nodes of their own. *Depth* expands the neighbourhood by that many relationship hops; *Add selected* merges the entity tree's selection into the window's watch set.
 
-Watch an entity from its context menu (*Watch in graph*) or with *Watch selected*. While paused the graph refreshes after every step and the entities the step touched (and relationships it added) are highlighted; with *Show live* on it refreshes at the entity poll rate while the game runs. Node positions persist across refreshes; *Arrange* re-runs the auto layout.
+Open as many graph windows as you like, one per entity or per group of entities; each has its own watch set, depth and *Show live* toggle. While paused every window refreshes after every step and the entities the step touched (and relationships it added) are highlighted; with *Show live* on it refreshes at the entity poll rate while the game runs. Node positions persist across refreshes; *Arrange* re-runs the auto layout. Closing the window drops its watch in the game. The windows are separate from the debugger tab, so they stay put when you switch editor tabs or pop the GECS tab out.
 
 ## Using the editor tab
 
-The step pane sits to the right of the entity / system trees (it pops out with the rest of the tab):
+The step pane sits to the right of the entity / system trees (drag the splitter to widen it; it pops out with the rest of the tab) and is kept short so the editor's bottom panel does not have to grow:
 
 - **Pause / Resume** and **Step Frame / Group / System / Archetype / Entity** with a count. Pressing a step button while live pauses first.
 - **Step set** row: *Use selected entities*, *Clear set*, and the *Sweep* toggle.
 - **Status line**: where the cursor is (`Paused in group 'physics' > next: MoveSystem`, unit progress inside a system, pending steps).
-- **Breakpoints** list with an enable checkbox, hit counts and a remove button.
-- **Step log** tree: one row per entry (`#`, label, kind, op count, ms) expanding to the ops.
+- **Step log** tab: one row per entry (`#`, label, kind, op count, ms) expanding to the ops.
+- **Breakpoints** tab: the list with an enable checkbox, hit counts and a remove button; the tab title carries the count.
 
 The systems tree shows the cursor in the **Step** column and a breakpoint checkbox in the **BP** column; the rows touched by the last step are tinted in both trees.
 
@@ -104,8 +104,10 @@ world.step_break_hit.connect(func(id, log): print("break ", id, " ", log.label))
 world.debug_set_breakpoint_enabled(bp, false)
 world.debug_remove_breakpoint(bp)
 
-world.debug_graph_watch([player], 1)
-var graph := world.debug_graph_state()             # {watched, nodes, edges}
+world.debug_graph_watch([player], 1)               # graph id 0 (the default)
+world.debug_graph_watch([boss], 0, 7)              # a second graph, id 7
+var graph := world.debug_graph_state()             # {watched, nodes, edges} of graph 0
+world.debug_graph_close(7)
 var state := world.debug_step_state()              # paused, cursor, breakpoints, ...
 world.debug_resume()
 ```
@@ -114,7 +116,7 @@ Op records are flat arrays: `[op, entity_instance_id, entity_name, a, b, c, d, c
 
 ## Debugger messages and commands
 
-Game -> editor: `gecs:step_state` (the stepper state), `gecs:step_log` (one entry), `gecs:graph_state` (the graph payload). Editor -> game: `gecs:step_pause`, `gecs:step_resume`, `gecs:step [kind, count]`, `gecs:step_set_entities [ids]`, `gecs:step_set_sweep [bool]`, `gecs:step_pull_state`, `gecs:breakpoint_add [spec]`, `gecs:breakpoint_remove [id]`, `gecs:breakpoint_set_enabled [id, bool]`, `gecs:breakpoint_clear`, `gecs:graph_watch [ids, depth]`, `gecs:graph_pull`. A re-subscribing tab receives the current step state with the snapshot.
+Game -> editor: `gecs:step_state` (the stepper state), `gecs:step_log` (one entry), `gecs:graph_state [graph_id, step_id, graph]` (one graph's payload; the editor opens a window per graph id, so a watch started from game code shows up in the editor too). Editor -> game: `gecs:step_pause`, `gecs:step_resume`, `gecs:step [kind, count]`, `gecs:step_set_entities [ids]`, `gecs:step_set_sweep [bool]`, `gecs:step_pull_state`, `gecs:breakpoint_add [spec]`, `gecs:breakpoint_remove [id]`, `gecs:breakpoint_set_enabled [id, bool]`, `gecs:breakpoint_clear`, `gecs:graph_watch [graph_id, ids, depth]`, `gecs:graph_pull [graph_id]` (no id pushes every open graph), `gecs:graph_close [graph_id]`. A re-subscribing tab receives the current step state with the snapshot.
 
 ## What stepping cannot reproduce exactly
 

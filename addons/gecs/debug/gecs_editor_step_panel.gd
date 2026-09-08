@@ -1,6 +1,7 @@
 @tool
 ## Step debugger pane of the GECS debugger tab: transport buttons, the step
-## set, the breakpoint list and the step log.
+## set, the status line, and a Step log / Breakpoints tab pair. Kept short so
+## the bottom panel's minimum height stays small.
 ##
 ## Talks to the game only through [member send] (injected by the tab, wraps
 ## [method GECSEditorDebuggerTab.send_to_game]) and reports incoming state and
@@ -47,6 +48,7 @@ var use_selected_btn: Button
 var clear_set_btn: Button
 var sweep_check: CheckBox
 var status_label: Label
+var tabs: TabContainer
 var breakpoints_tree: Tree
 var clear_breakpoints_btn: Button
 var log_tree: Tree
@@ -95,39 +97,24 @@ func _build_ui() -> void:
 
 	status_label = Label.new()
 	status_label.text = "Live"
-	status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	status_label.clip_text = true
+	status_label.mouse_filter = Control.MOUSE_FILTER_PASS
 	add_child(status_label)
 
-	var bp_header := HBoxContainer.new()
-	add_child(bp_header)
-	var bp_title := Label.new()
-	bp_title.text = "Breakpoints"
-	bp_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	bp_header.add_child(bp_title)
-	clear_breakpoints_btn = _button(bp_header, "Clear all", "Remove every breakpoint.", _on_clear_breakpoints)
-	breakpoints_tree = Tree.new()
-	breakpoints_tree.columns = 3
-	breakpoints_tree.hide_root = true
-	breakpoints_tree.column_titles_visible = true
-	breakpoints_tree.set_column_title(0, "On")
-	breakpoints_tree.set_column_title(1, "Breakpoint")
-	breakpoints_tree.set_column_title(2, "Hits")
-	breakpoints_tree.set_column_expand(0, false)
-	breakpoints_tree.set_column_custom_minimum_width(0, 36)
-	breakpoints_tree.set_column_expand(2, false)
-	breakpoints_tree.set_column_custom_minimum_width(2, 48)
-	breakpoints_tree.custom_minimum_size = Vector2(0, 88)
-	breakpoints_tree.create_item()
-	breakpoints_tree.item_edited.connect(_on_bp_item_edited)
-	breakpoints_tree.button_clicked.connect(_on_bp_button_clicked)
-	add_child(breakpoints_tree)
+	tabs = TabContainer.new()
+	tabs.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	add_child(tabs)
 
+	var log_box := VBoxContainer.new()
+	log_box.name = "Step log"
+	tabs.add_child(log_box)
 	var log_header := HBoxContainer.new()
-	add_child(log_header)
-	var log_title := Label.new()
-	log_title.text = "Step log"
-	log_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	log_header.add_child(log_title)
+	log_box.add_child(log_header)
+	var log_hint := Label.new()
+	log_hint.text = "One row per step, break or external change; expand it for the ops."
+	log_hint.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	log_hint.clip_text = true
+	log_header.add_child(log_hint)
 	clear_log_btn = _button(log_header, "Clear log", "Forget the retained step entries.", _on_clear_log)
 	log_tree = Tree.new()
 	log_tree.columns = 5
@@ -148,7 +135,35 @@ func _build_ui() -> void:
 		log_tree.set_column_clip_content(c, true)
 	log_tree.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	log_tree.create_item()
-	add_child(log_tree)
+	log_box.add_child(log_tree)
+
+	var bp_box := VBoxContainer.new()
+	bp_box.name = "Breakpoints"
+	tabs.add_child(bp_box)
+	var bp_header := HBoxContainer.new()
+	bp_box.add_child(bp_header)
+	var bp_hint := Label.new()
+	bp_hint.text = "Set from the entity, component and system context menus or the BP column."
+	bp_hint.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	bp_hint.clip_text = true
+	bp_header.add_child(bp_hint)
+	clear_breakpoints_btn = _button(bp_header, "Clear all", "Remove every breakpoint.", _on_clear_breakpoints)
+	breakpoints_tree = Tree.new()
+	breakpoints_tree.columns = 3
+	breakpoints_tree.hide_root = true
+	breakpoints_tree.column_titles_visible = true
+	breakpoints_tree.set_column_title(0, "On")
+	breakpoints_tree.set_column_title(1, "Breakpoint")
+	breakpoints_tree.set_column_title(2, "Hits")
+	breakpoints_tree.set_column_expand(0, false)
+	breakpoints_tree.set_column_custom_minimum_width(0, 36)
+	breakpoints_tree.set_column_expand(2, false)
+	breakpoints_tree.set_column_custom_minimum_width(2, 48)
+	breakpoints_tree.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	breakpoints_tree.create_item()
+	breakpoints_tree.item_edited.connect(_on_bp_item_edited)
+	breakpoints_tree.button_clicked.connect(_on_bp_button_clicked)
+	bp_box.add_child(breakpoints_tree)
 	_update_buttons()
 
 
@@ -174,6 +189,7 @@ func apply_state(new_state: Dictionary) -> void:
 		sweep_check.set_pressed_no_signal(bool(state.get("sweep_enabled", true)))
 	if status_label:
 		status_label.text = _status_text(state)
+		status_label.tooltip_text = status_label.text
 	_rebuild_breakpoints(state.get("breakpoints", []))
 	_update_buttons()
 	state_applied.emit(state)
@@ -261,6 +277,8 @@ func clear() -> void:
 		step_set_label.text = "Step set: 0"
 	if status_label:
 		status_label.text = "Live"
+		status_label.tooltip_text = ""
+	_set_breakpoints_title(0)
 	_update_buttons()
 
 
@@ -398,6 +416,12 @@ func _rebuild_breakpoints(bps: Array) -> void:
 		row.set_text(2, str(bp.get("hits", 0)))
 		if remove_icon != null:
 			row.add_button(2, remove_icon, 0, false, "Remove breakpoint")
+	_set_breakpoints_title(bps.size())
+
+
+func _set_breakpoints_title(count: int) -> void:
+	if tabs and tabs.get_tab_count() > 1:
+		tabs.set_tab_title(1, "Breakpoints (%d)" % count if count > 0 else "Breakpoints")
 
 
 ## Column texts (Step/op, Kind/target, Ops/detail, ms/cause) for one op record.

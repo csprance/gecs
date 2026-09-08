@@ -88,9 +88,9 @@ var frame_id_provider: Callable = Callable(Engine, "get_process_frames")
 var step_entities: Dictionary = {}
 ## Breakpoint id -> spec dictionary (see [method add_breakpoint]).
 var breakpoints: Dictionary = {}
-## Entity instance ids watched by the graph view.
-var graph_watch: Array = []
-var graph_depth := 0
+## Graph views keyed by graph id: [code]{id: {"watch": [entity instance ids], "depth": int}}[/code].
+## The editor opens one floating graph window per id; code users default to id 0.
+var graphs: Dictionary = {}
 ## Number of step / break / external log entries emitted so far.
 var step_counter := 0
 ## Set by a component / entity breakpoint hit; consumed at the next boundary.
@@ -277,32 +277,45 @@ func clear_breakpoints() -> void:
 	_send_state()
 
 
-## Replace the graph watch set (Entity instances or instance ids) and push a
-## graph payload right away.
-func set_graph_watch(entities: Array, depth: int = 0) -> void:
-	graph_watch = []
+## Replace the watch set of graph [param graph_id] (Entity instances or
+## instance ids) and push its payload right away. An empty set closes the graph.
+func set_graph_watch(entities: Array, depth: int = 0, graph_id: int = 0) -> void:
+	var watch: Array = []
 	for item in entities:
 		var iid := _to_instance_id(item)
-		if iid != 0 and not graph_watch.has(iid):
-			graph_watch.append(iid)
-	graph_depth = maxi(0, depth)
-	_send_state()
-	send_graph_state()
-
-
-## Build the graph payload for the current watch set.
-func graph_state() -> Dictionary:
-	return GECSGraphState.build(world, graph_watch, graph_depth)
-
-
-## Push the graph payload to the editor (no-op with an empty watch set).
-func send_graph_state() -> void:
-	if graph_watch.is_empty():
+		if iid != 0 and not watch.has(iid):
+			watch.append(iid)
+	if watch.is_empty():
+		close_graph(graph_id)
 		return
-	GECSEditorDebuggerMessages.graph_state(step_counter, graph_state())
+	graphs[graph_id] = {"watch": watch, "depth": maxi(0, depth)}
+	_send_state()
+	send_graph_state(graph_id)
 
 
-## Snapshot of the stepper: paused flag, cursor, step set, breakpoints, watch.
+## Drop graph [param graph_id]; nothing is pushed for it any more.
+func close_graph(graph_id: int = 0) -> void:
+	if graphs.erase(graph_id):
+		_send_state()
+
+
+## Build the payload of graph [param graph_id] (an empty graph for unknown ids).
+func graph_state(graph_id: int = 0) -> Dictionary:
+	var g: Dictionary = graphs.get(graph_id, {})
+	return GECSGraphState.build(world, g.get("watch", []), int(g.get("depth", 0)))
+
+
+## Push graph payloads to the editor: one graph, or every open graph when
+## [param graph_id] is -1. No-op for unknown ids.
+func send_graph_state(graph_id: int = -1) -> void:
+	if graph_id == -1:
+		for id in graphs.keys():
+			GECSEditorDebuggerMessages.graph_state(id, step_counter, graph_state(id))
+	elif graphs.has(graph_id):
+		GECSEditorDebuggerMessages.graph_state(graph_id, step_counter, graph_state(graph_id))
+
+
+## Snapshot of the stepper: paused flag, cursor, step set, breakpoints, graphs.
 func state() -> Dictionary:
 	var cursor := {
 		"has_group": _cursor.group != null,
@@ -339,8 +352,7 @@ func state() -> Dictionary:
 		"step_entities": step_entities.keys(),
 		"sweep_enabled": sweep_enabled,
 		"breakpoints": bps,
-		"graph_watch": graph_watch.duplicate(),
-		"graph_depth": graph_depth,
+		"graphs": graphs.duplicate(true),
 		"step_counter": step_counter,
 		"pending_requests": _requests.size(),
 		"frame_step_active": _frame_step_id != -1,
@@ -348,7 +360,7 @@ func state() -> Dictionary:
 	}
 
 
-## World teardown (purge): resume, drop the cursor, journal, step set and watch.
+## World teardown (purge): resume, drop the cursor, journal, step set and graphs.
 ## Breakpoints survive; entity breakpoints whose entity is gone are pruned.
 func reset() -> void:
 	paused = false
@@ -363,7 +375,7 @@ func reset() -> void:
 	_external_ops = []
 	_live_scratch = []
 	step_entities.clear()
-	graph_watch = []
+	graphs.clear()
 	_sweep.clear()
 	break_requested = false
 	_break_info = {}
@@ -371,7 +383,6 @@ func reset() -> void:
 	last_step_log = {}
 	step_counter = 0
 	sweep_enabled = true
-	graph_depth = 0
 	_pause_settled = false
 	_last_call_frame_id = -1
 	for bp_id in breakpoints.keys():
@@ -413,12 +424,15 @@ func handle_command(message: String, data: Array) -> bool:
 		"breakpoint_clear":
 			clear_breakpoints()
 		"graph_watch":
-			set_graph_watch(
-				data[0] if data.size() > 0 and data[0] is Array else [],
-				int(data[1]) if data.size() > 1 else 0
-			)
+			# [graph_id, ids, depth]
+			if data.size() > 1 and data[1] is Array:
+				set_graph_watch(data[1], int(data[2]) if data.size() > 2 else 0, int(data[0]))
 		"graph_pull":
-			send_graph_state()
+			# [graph_id]; no id pushes every open graph.
+			send_graph_state(int(data[0]) if data.size() > 0 else -1)
+		"graph_close":
+			if data.size() > 0:
+				close_graph(int(data[0]))
 		_:
 			return false
 	return true
@@ -1054,7 +1068,8 @@ func _on_entity_removed(entity: Entity) -> void:
 	_record(Op.ENTITY_REMOVE, entity, _entity_path(entity), _component_names(entity), null, null)
 	var iid := entity.get_instance_id()
 	step_entities.erase(iid)
-	graph_watch.erase(iid)
+	for g in graphs.values():
+		g.watch.erase(iid)
 
 
 func _on_entity_enabled(entity: Entity, enabled: bool) -> void:

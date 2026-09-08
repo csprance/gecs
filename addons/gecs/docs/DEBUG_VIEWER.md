@@ -175,9 +175,9 @@ Relationships show how entities are connected to each other.
 
 ### Stepping the ECS and the Entity Graph
 
-The pane to the right of the two trees is the **step debugger**: pause the ECS (the scene keeps running) and step it forward one frame, group, system, archetype or entity at a time. Every step lists what it changed (component adds / removes, property writes, relationships, entities, events) and who caused it (the system, a CommandBuffer flush, an observer). Breakpoints pause a live game before a system runs or right after a component type is added / removed or an entity is touched. Below the step log a graph shows watched entities with their components and relationships and refreshes after every step (or live at the poll rate).
+The pane to the right of the two trees is the **step debugger**: pause the ECS (the scene keeps running) and step it forward one frame, group, system, archetype or entity at a time. Every step lists what it changed (component adds / removes, property writes, relationships, entities, events) and who caused it (the system, a CommandBuffer flush, an observer). Breakpoints pause a live game before a system runs or right after a component type is added / removed or an entity is touched. *Open graph* on an entity row opens a floating window with that entity, its components and its relationships as a graph; open as many as you need, and each refreshes after every step (or live at the poll rate with *Show live*).
 
-Right-click an entity row for *Add to step set*, *Break when touched* and *Watch in graph*; a component row for *Break when added / removed*; a system row for *Break before run*. The systems tree shows the paused cursor in the **Step** column and a breakpoint checkbox in the **BP** column.
+Right-click an entity row for *Add to step set*, *Break when touched* and *Open graph*; a component row for *Break when added / removed*; a system row for *Break before run*. The systems tree shows the paused cursor in the **Step** column and a breakpoint checkbox in the **BP** column.
 
 See [Step Debugger](STEP_DEBUGGER.md) for the full guide, including the headless `World.debug_*` API.
 

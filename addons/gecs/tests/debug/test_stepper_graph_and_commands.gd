@@ -170,11 +170,47 @@ func test_graph_state_is_pushed_after_a_step_when_watching():
 
 	var graphs := _messages(GECSEditorDebuggerMessages.Msg.GRAPH_STATE)
 	assert_int(graphs.size()).is_equal(2)
-	var payload: Dictionary = graphs[1][1][1]
+	var payload: Dictionary = graphs[1][1][2]
 	assert_array(payload.watched).is_equal([a.get_instance_id()])
 	assert_int(_messages(GECSEditorDebuggerMessages.Msg.STEP_LOG).size()).is_equal(1)
 	var log: Dictionary = _messages(GECSEditorDebuggerMessages.Msg.STEP_LOG)[0][1][0]
 	assert_str(log.label).is_equal("S1")
+
+
+func test_every_open_graph_is_pushed_after_a_step_and_pruned_on_removal():
+	var system := CounterSystem.new()
+	system.name = "S1"
+	world.add_system(system)
+	var a := _entity("a", [C_TestA.new()])
+	var b := _entity("b", [C_TestA.new()])
+	world.debug_graph_watch([a], 0, 1)
+	world.debug_graph_watch([a, b], 1, 2)
+	assert_int(world.debug_step_state().graphs.size()).is_equal(2)
+	world.debug_pause()
+	world.process(0.016)
+	_captured = []
+
+	world.debug_step(GECSStepper.Kind.SYSTEM)
+	world.process(0.016)
+
+	var pushed := _messages(GECSEditorDebuggerMessages.Msg.GRAPH_STATE)
+	assert_int(pushed.size()).is_equal(2)
+	var ids: Array = [pushed[0][1][0], pushed[1][1][0]]
+	ids.sort()
+	assert_array(ids).is_equal([1, 2])
+	for msg in pushed:
+		if msg[1][0] == 2:
+			assert_array(msg[1][2].watched).is_equal([a.get_instance_id(), b.get_instance_id()])
+
+	world.remove_entity(b)
+	assert_array(world.debug_step_state().graphs[2].watch).is_equal([a.get_instance_id()])
+	world.debug_graph_close(2)
+	assert_bool(world.debug_step_state().graphs.has(2)).is_false()
+	assert_bool(world.debug_step_state().graphs.has(1)).is_true()
+	# An empty watch set closes the graph too.
+	world.debug_graph_watch([], 0, 1)
+	assert_bool(world.debug_step_state().graphs.is_empty()).is_true()
+	assert_array(world.debug_graph_state(1).nodes).is_empty()
 
 
 func test_commands_drive_the_stepper():
@@ -213,11 +249,15 @@ func test_commands_drive_the_stepper():
 	assert_array(world.debug_step_state().breakpoints).is_empty()
 
 	var graphs_before := _messages(GECSEditorDebuggerMessages.Msg.GRAPH_STATE).size()
-	assert_bool(ECS._on_debugger_message("graph_watch", [[iid], 1])).is_true()
-	assert_array(world.debug_step_state().graph_watch).is_equal([iid])
-	assert_int(world.debug_step_state().graph_depth).is_equal(1)
-	assert_bool(ECS._on_debugger_message("graph_pull", [])).is_true()
-	assert_int(_messages(GECSEditorDebuggerMessages.Msg.GRAPH_STATE).size()).is_equal(graphs_before + 2)
+	assert_bool(ECS._on_debugger_message("graph_watch", [5, [iid], 1])).is_true()
+	assert_array(world.debug_step_state().graphs[5].watch).is_equal([iid])
+	assert_int(world.debug_step_state().graphs[5].depth).is_equal(1)
+	assert_bool(ECS._on_debugger_message("graph_pull", [5])).is_true()
+	var graph_msgs := _messages(GECSEditorDebuggerMessages.Msg.GRAPH_STATE)
+	assert_int(graph_msgs.size()).is_equal(graphs_before + 2)
+	assert_int(graph_msgs[graph_msgs.size() - 1][1][0]).is_equal(5)
+	assert_bool(ECS._on_debugger_message("graph_close", [5])).is_true()
+	assert_bool(world.debug_step_state().graphs.has(5)).is_false()
 
 	var states_before := _messages(GECSEditorDebuggerMessages.Msg.STEP_STATE).size()
 	assert_bool(ECS._on_debugger_message("step_pull_state", [])).is_true()
@@ -240,8 +280,7 @@ func test_step_state_payload_shape():
 		"step_entities",
 		"sweep_enabled",
 		"breakpoints",
-		"graph_watch",
-		"graph_depth",
+		"graphs",
 		"step_counter",
 		"pending_requests",
 		"frame_step_active",

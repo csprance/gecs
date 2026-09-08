@@ -689,7 +689,7 @@ The project provides script templates in `script_templates/Node/` for:
 - `addons/gecs/relationship.gd` - Entity relationship system
 - `addons/gecs/observer.gd` - Reactive systems for component changes
 - `addons/gecs/debug/step/gecs_stepper.gd` - Step debugger: pause / step / breakpoints / mutation journal (`gecs_diff_sweep.gd`, `gecs_graph_state.gd` alongside)
-- `addons/gecs/debug/gecs_editor_step_panel.gd`, `gecs_editor_graph_panel.gd` - The editor tab's step and graph panes
+- `addons/gecs/debug/gecs_editor_step_panel.gd`, `gecs_editor_graph_panel.gd`, `gecs_editor_graph_window.gd` - The editor tab's step pane and the floating graph windows (one per graph id)
 - `addons/gecs/array_extensions.gd` - Optimized set operations for queries
 
 ## Relationships System

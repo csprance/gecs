@@ -3155,15 +3155,22 @@ func debug_set_sweep(enabled: bool) -> void:
 	_get_stepper().set_sweep(enabled)
 
 
-## Watch entities in the graph view: a fresh [GECSGraphState] payload is pushed
-## after every step. [param depth] expands the neighbourhood by that many hops.
-func debug_graph_watch(entities: Array, depth: int = 0) -> void:
-	_get_stepper().set_graph_watch(entities, depth)
+## Watch entities in graph [param graph_id]: a fresh [GECSGraphState] payload is
+## pushed after every step (the editor shows one floating window per graph id).
+## [param depth] expands the neighbourhood by that many hops. An empty list
+## closes the graph.
+func debug_graph_watch(entities: Array, depth: int = 0, graph_id: int = 0) -> void:
+	_get_stepper().set_graph_watch(entities, depth, graph_id)
 
 
-## Build the graph payload for the current watch set now.
-func debug_graph_state() -> Dictionary:
-	return _get_stepper().graph_state()
+## Drop graph [param graph_id].
+func debug_graph_close(graph_id: int = 0) -> void:
+	_get_stepper().close_graph(graph_id)
+
+
+## Build the payload of graph [param graph_id] now.
+func debug_graph_state(graph_id: int = 0) -> Dictionary:
+	return _get_stepper().graph_state(graph_id)
 
 
 ## Current stepper state (paused flag, cursor, breakpoints, watch, counters).
