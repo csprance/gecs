@@ -129,21 +129,13 @@ func test_predicate_can_free_later_candidate():
 	var a := _entity([C_TestA.new()])
 	var b := Entity.new()
 	b.add_component(C_TestA.new())
+	# Bound to a local first: Godot 4.6 can't parse a multiline lambda nested
+	# inside a dictionary literal (4.7 can), and CI runs 4.6.
+	var free_b := func(_v):
+		b.free()
+		return true
 	var query := QueryBuilder.new().from([a, b]).with_all(
-		[
-			{
-				C_TestA:
-				{
-					"value":
-					{
-						"func":
-						func(_v):
-							b.free()
-							return true
-					}
-				}
-			}
-		]
+		[{C_TestA: {"value": {"func": free_b}}}]
 	)
 	assert_array(query.execute()).contains_exactly([a])
 

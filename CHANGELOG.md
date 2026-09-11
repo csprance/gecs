@@ -1,6 +1,6 @@
 # GECS Changelog
 
-## [9.3.0] - Unreleased - Step debugger, entity graph windows, relationship cleanup fixes
+## [9.3.0] - 2026-09-11 - Explorer, step debugger, QueryBuilder.from(), relationship cleanup fixes
 
 ### Added
 
@@ -18,11 +18,29 @@
   samples, p95 and execution-mode metadata; the performance report adds a Lifecycle
   category and run-label filter. See `addons/gecs/docs/ENTITY_LIFECYCLE_PERFORMANCE.md`.
 
-- **Persistent Explorer companion window.** The Explorer now opens beside the
-  running game as soon as a debugger session starts instead of occupying a
-  Godot main-screen tab that hides the game. Closing it hides (rather than
-  destroys or docks) the window, preserving entity tabs, drafts, watches, and
-  session history; **Show Explorer** in the debugger brings it back.
+- **GECS Explorer companion window.** A floating workspace that opens beside the
+  running game as soon as a debugger session starts, so the game stays visible
+  (or move it to another monitor). Closing it only hides it: entity tabs, drafts,
+  watches and session history survive, and **Show Explorer** in the debugger
+  brings it back. It includes:
+  - **World overview**: entity, component, relationship, system, observer,
+    archetype and cached-query counts, with selectable population and
+    system-time charts. Sampling only runs while the tab is visible.
+  - **Entity tabs**: components, relationships in both directions (incoming
+    links show which entity owns the pair), up to 16 live property charts, a
+    relationship map, and staged edits sent to the running game with
+    **Apply to game** or **Apply & Step**.
+  - **Queries**: an All / Any / None filter builder with property comparisons
+    that shows the generated QueryBuilder code, plus saved queries and history.
+  - **Scratchpad**, **Watches** (entity subscriptions and live query
+    membership), **Systems** timings, and **Changes** (before/after capture
+    comparison plus live activity).
+  - **ECS snapshot files**: while paused, export component values to
+    `.gecs-state.json` and restore them onto matching entities after a preview.
+    This is a debugging aid, not a save system; it does not recreate entities
+    or modify relationships.
+
+  See `addons/gecs/docs/DEBUG_VIEWER.md`.
 
 - **Step debugger (forward-only).** Pause the ECS and run it one frame, group,
   system, archetype or entity at a time while the game keeps calling
