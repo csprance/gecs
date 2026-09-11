@@ -14,6 +14,9 @@
 class_name GECSEditorGraphPanel
 extends VBoxContainer
 
+## Activation is separate from GraphEdit selection and dragging.
+signal entity_activated(entity: Dictionary)
+
 const ICON_ENTITY := "📦"
 const ICON_COMPONENT := "🔧"
 const ICON_RELATIONSHIP := "🔗"
@@ -152,6 +155,7 @@ func apply_graph(step_id: int, payload: Dictionary) -> void:
 			gn = GraphNode.new()
 			gn.name = _node_name(key)
 			gn.set_meta("key", key)
+			gn.gui_input.connect(_node_input.bind(key))
 			gn.resizable = false
 			graph.add_child(gn)
 			_nodes[key] = gn
@@ -275,6 +279,14 @@ func _initial_position(key: String, edges: Array) -> Vector2:
 				return other.position_offset + Vector2(NODE_SPACING.x, NODE_SPACING.y * (_nodes.size() % 5))
 	var count := _nodes.size() - 1
 	return Vector2(40 + (count % 3) * NODE_SPACING.x, 40 + (count / 3) * 220)
+
+
+func _node_input(event: InputEvent, key: String) -> void:
+	if not event is InputEventMouseButton or event.button_index != MOUSE_BUTTON_LEFT or not event.pressed or not event.double_click: return
+	for node in last_graph.get("nodes", []):
+		if node.get("key") == key and node.get("kind", "entity") == "entity":
+			entity_activated.emit(node.duplicate(true))
+			return
 
 
 func _fill_node(gn: GraphNode, node: Dictionary, out_edges: Array) -> void:

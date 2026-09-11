@@ -1,7 +1,6 @@
 @tool
-## Step debugger pane of the GECS debugger tab: transport buttons, the step
-## set, the status line, and a Step log / Breakpoints tab pair. Kept short so
-## the bottom panel's minimum height stays small.
+## Shared debugger transport, step options, status and tabbed workspace.
+## The parent tab adds Entities and Systems before Step log / Breakpoints.
 ##
 ## Talks to the game only through [member send] (injected by the tab, wraps
 ## [method GECSEditorDebuggerTab.send_to_game]) and reports incoming state and
@@ -41,7 +40,13 @@ var logs: Array = []
 
 var pause_btn: Button
 var resume_btn: Button
-var step_buttons: Array = []
+var step_kind: OptionButton
+var step_btn: Button
+var transport: HBoxContainer
+var options_popup: PopupPanel
+var follow_check: CheckBox
+var log_hint: Label
+var bp_box: VBoxContainer
 var count_spin: SpinBox
 var step_set_label: Label
 var use_selected_btn: Button
@@ -62,26 +67,55 @@ func _ready() -> void:
 func _build_ui() -> void:
 	if pause_btn != null:
 		return
-	var transport := HBoxContainer.new()
+	transport = HBoxContainer.new()
 	add_child(transport)
 	pause_btn = _button(transport, "Pause", "Pause ECS processing. The scene keeps running; only systems stop.", _on_pause)
 	resume_btn = _button(transport, "Resume", "Resume live processing (a partially stepped system is finished first).", _on_resume)
 	transport.add_child(VSeparator.new())
 	var step_label := Label.new()
-	step_label.text = "Step:"
+	step_label.text = "Step by"
 	transport.add_child(step_label)
+	step_kind = OptionButton.new()
 	for kind in KIND_LABELS.size():
-		step_buttons.append(_button(transport, KIND_LABELS[kind], KIND_TOOLTIPS[kind], _on_step.bind(kind)))
+		step_kind.add_item(KIND_LABELS[kind], kind)
+		step_kind.get_popup().set_item_tooltip(kind, KIND_TOOLTIPS[kind])
+	step_kind.select(GECSStepper.Kind.SYSTEM)
+	step_kind.item_selected.connect(func(_index: int): _update_step_action())
+	transport.add_child(step_kind)
+	step_btn = _button(transport, "Step", "Run the selected step. Pauses ECS first if it is live.", func(): _on_step(step_kind.get_selected_id()))
+	var options_btn := _button(transport, "Step options", "Step count, entity step set and property sweep.", func():
+		options_popup.position = Vector2i(transport.get_screen_position() + Vector2(0, transport.size.y))
+		use_selected_btn.disabled = not selected_entities_provider.is_valid() or selected_entities_provider.call().is_empty()
+		options_popup.popup()
+	)
+	options_btn.name = "StepOptions"
+	var spacer := Control.new()
+	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	transport.add_child(spacer)
+	options_popup = PopupPanel.new()
+	add_child(options_popup)
+	var margin := MarginContainer.new()
+	for side in ["left", "top", "right", "bottom"]:
+		margin.add_theme_constant_override("margin_" + side, 12)
+	options_popup.add_child(margin)
+	var options := VBoxContainer.new()
+	margin.add_child(options)
+	var count_row := HBoxContainer.new()
+	options.add_child(count_row)
+	var count_label := Label.new()
+	count_label.text = "Steps per click"
+	count_row.add_child(count_label)
 	count_spin = SpinBox.new()
 	count_spin.min_value = 1
 	count_spin.max_value = 1000
 	count_spin.value = 1
 	count_spin.custom_minimum_size = Vector2(64, 0)
 	count_spin.tooltip_text = "Steps per click."
-	transport.add_child(count_spin)
+	count_spin.value_changed.connect(func(_value: float): _update_step_action())
+	count_row.add_child(count_spin)
 
 	var set_row := HBoxContainer.new()
-	add_child(set_row)
+	options.add_child(set_row)
 	step_set_label = Label.new()
 	step_set_label.text = "Step set: 0"
 	step_set_label.tooltip_text = "Entities that run as their own process() call under Entity stepping."
@@ -89,11 +123,11 @@ func _build_ui() -> void:
 	use_selected_btn = _button(set_row, "Use selected entities", "Step through the entities selected in the entity tree.", _on_use_selected)
 	clear_set_btn = _button(set_row, "Clear set", "Empty the step set (Entity stepping then behaves like Archetype).", _on_clear_set)
 	sweep_check = CheckBox.new()
-	sweep_check.text = "Sweep"
+	sweep_check.text = "Detect unreported property changes"
 	sweep_check.button_pressed = true
 	sweep_check.tooltip_text = "After every step, diff every component property to catch writes made without an emitting setter (sweep_set ops)."
 	sweep_check.toggled.connect(_on_sweep_toggled)
-	set_row.add_child(sweep_check)
+	options.add_child(sweep_check)
 
 	status_label = Label.new()
 	status_label.text = "Live"
@@ -102,6 +136,7 @@ func _build_ui() -> void:
 	add_child(status_label)
 
 	tabs = TabContainer.new()
+	tabs.use_hidden_tabs_for_min_size = false
 	tabs.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	add_child(tabs)
 
@@ -110,11 +145,16 @@ func _build_ui() -> void:
 	tabs.add_child(log_box)
 	var log_header := HBoxContainer.new()
 	log_box.add_child(log_header)
-	var log_hint := Label.new()
-	log_hint.text = "One row per step, break or external change; expand it for the ops."
+	log_hint = Label.new()
+	log_hint.text = "No steps yet. Choose a step size above, then press Step."
 	log_hint.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	log_hint.clip_text = true
 	log_header.add_child(log_hint)
+	follow_check = CheckBox.new()
+	follow_check.text = "Follow latest"
+	follow_check.button_pressed = true
+	follow_check.tooltip_text = "Scroll to new entries. Turn off to inspect earlier steps."
+	log_header.add_child(follow_check)
 	clear_log_btn = _button(log_header, "Clear log", "Forget the retained step entries.", _on_clear_log)
 	log_tree = Tree.new()
 	log_tree.columns = 5
@@ -137,7 +177,7 @@ func _build_ui() -> void:
 	log_tree.create_item()
 	log_box.add_child(log_tree)
 
-	var bp_box := VBoxContainer.new()
+	bp_box = VBoxContainer.new()
 	bp_box.name = "Breakpoints"
 	tabs.add_child(bp_box)
 	var bp_header := HBoxContainer.new()
@@ -165,6 +205,7 @@ func _build_ui() -> void:
 	breakpoints_tree.button_clicked.connect(_on_bp_button_clicked)
 	bp_box.add_child(breakpoints_tree)
 	_update_buttons()
+	_update_step_action()
 
 
 func _button(parent: Control, text: String, tooltip: String, handler: Callable) -> Button:
@@ -256,20 +297,20 @@ func append_log(log: Dictionary) -> void:
 			for c in cells.size():
 				op_row.set_text(c + 1, cells[c])
 				op_row.set_tooltip_text(c + 1, cells[c])
-			if op[0] == GECSStepper.Op.SWEEP_SET:
+			if not op.is_empty() and op[0] == GECSStepper.Op.SWEEP_SET:
 				for c in 5:
 					op_row.set_custom_color(c, COLOR_SWEEP)
-		log_tree.scroll_to_item(row)
+		log_hint.text = "%d entries · Expand a step to inspect its changes" % logs.size()
+		clear_log_btn.disabled = false
+		if follow_check.button_pressed:
+			log_tree.scroll_to_item(row)
 	log_appended.emit(log)
 
 
 func clear() -> void:
 	state = {}
 	paused = false
-	logs = []
-	if log_tree:
-		log_tree.clear()
-		log_tree.create_item()
+	_on_clear_log()
 	if breakpoints_tree:
 		breakpoints_tree.clear()
 		breakpoints_tree.create_item()
@@ -278,6 +319,8 @@ func clear() -> void:
 	if status_label:
 		status_label.text = "Live"
 		status_label.tooltip_text = ""
+	if sweep_check:
+		sweep_check.set_pressed_no_signal(true)
 	_set_breakpoints_title(0)
 	_update_buttons()
 
@@ -348,6 +391,10 @@ func _on_clear_log() -> void:
 	if log_tree:
 		log_tree.clear()
 		log_tree.create_item()
+	if log_hint:
+		log_hint.text = "No steps yet. Choose a step size above, then press Step."
+	if clear_log_btn:
+		clear_log_btn.disabled = true
 
 
 func _send(message: String, data: Array) -> bool:
@@ -364,8 +411,30 @@ func _send(message: String, data: Array) -> bool:
 func _update_buttons() -> void:
 	if pause_btn:
 		pause_btn.disabled = paused
+		pause_btn.visible = not paused
 	if resume_btn:
 		resume_btn.disabled = not paused
+		resume_btn.visible = paused
+	if clear_set_btn:
+		clear_set_btn.disabled = state.get("step_entities", []).is_empty()
+	if clear_log_btn:
+		clear_log_btn.disabled = logs.is_empty()
+	if clear_breakpoints_btn:
+		clear_breakpoints_btn.disabled = state.get("breakpoints", []).is_empty()
+	_update_step_action()
+
+
+func _update_step_action() -> void:
+	if not step_btn or not count_spin:
+		return
+	var count := int(count_spin.value)
+	step_btn.text = "Step" if count == 1 else "Step ×%d" % count
+	step_btn.tooltip_text = KIND_TOOLTIPS[step_kind.get_selected_id()] + " Pauses ECS first if live."
+	step_kind.tooltip_text = step_btn.tooltip_text
+	if step_kind.get_selected_id() == GECSStepper.Kind.ENTITY:
+		step_kind.tooltip_text += " Step set: %d entities." % state.get("step_entities", []).size()
+		if state.get("step_entities", []).is_empty():
+			step_kind.tooltip_text += " Empty set: behaves like Archetype. Select entities and use Step options to set them."
 
 
 func _status_text(s: Dictionary) -> String:
@@ -420,8 +489,8 @@ func _rebuild_breakpoints(bps: Array) -> void:
 
 
 func _set_breakpoints_title(count: int) -> void:
-	if tabs and tabs.get_tab_count() > 1:
-		tabs.set_tab_title(1, "Breakpoints (%d)" % count if count > 0 else "Breakpoints")
+	if tabs and bp_box:
+		tabs.set_tab_title(tabs.get_tab_idx_from_control(bp_box), "Breakpoints (%d)" % count if count > 0 else "Breakpoints")
 
 
 ## Column texts (Step/op, Kind/target, Ops/detail, ms/cause) for one op record.

@@ -10,6 +10,7 @@ Usage:
     python tools/perf_report.py --category Query       # filter to one category
     python tools/perf_report.py --scale 1000           # only show scale=1000 results
     python tools/perf_report.py --all                  # show all tests (not just major categories)
+    python tools/perf_report.py --category Lifecycle --label baseline
 """
 
 import json, glob, sys, argparse
@@ -65,6 +66,16 @@ CATEGORIES = {
 }
 
 PREFER_LOWER = True  # lower time_ms = better
+
+CATEGORIES["Lifecycle"] = [
+    f"lifecycle_{kind}_{profile}_{mode}_{phase}"
+    for kind in ("phases", "churn", "resident_churn")
+    for profile in ("nodes", "empty", "components", "resources")
+    for mode in ("loop", "batch", "commands")
+    for phase in ("create", "add", "remove", "drain", "cycle")
+] + ["lifecycle_pool_enable_disable"] + [
+    f"lifecycle_unrelated_removal_relationships_{count}" for count in (0, 100, 1000)
+]
 
 
 def parse_ts(ts: str) -> datetime:
@@ -237,6 +248,8 @@ def main():
                         help="Only show results for this scale (100, 1000, 10000)")
     parser.add_argument("--all", dest="show_all", action="store_true",
                         help="Show all tests including uncategorized")
+    parser.add_argument("--label", default=None,
+                        help="Only include results with this GECS_PERF_LABEL")
     parser.add_argument("--min-diff", type=float, default=0.0,
                         help="Only show tests with >= this %% change (default: 0 = show all)")
     parser.add_argument("--perf-dir", type=str, default="reports/perf",
@@ -254,6 +267,10 @@ def main():
     cmp_label = str(cmp_date) if args.cmp_date else f"-{args.days}d"
 
     data = load_data(args.perf_dir)
+    if args.label is not None:
+        data = {name: [row for row in rows if row.get("run_label") == args.label]
+                for name, rows in data.items()}
+        data = {name: rows for name, rows in data.items() if rows}
     if not data:
         print(f"No data found in {args.perf_dir}/ — run performance tests first.")
         sys.exit(1)
@@ -273,6 +290,8 @@ def main():
     print(f"  Compare   : {cmp_label}  ({cmp_date})")
     print(f"  Scale pref: {args.scale or 'auto (10000 > 1000 > 100)'}")
     print(f"  Data dir  : {args.perf_dir}/")
+    if args.label is not None:
+        print(f"  Run label : {args.label}")
 
     print_report(results, ref_label, cmp_label, cats, args.show_all, args.min_diff)
     print()

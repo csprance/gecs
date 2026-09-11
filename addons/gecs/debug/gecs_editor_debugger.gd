@@ -4,9 +4,13 @@ extends EditorDebuggerPlugin
 ## The Debugger session for the current game
 var session: EditorDebuggerSession
 ## The tab that will be added to the debugger window
-var debugger_tab: GECSEditorDebuggerTab = (
-	preload("res://addons/gecs/debug/gecs_editor_debugger_tab.tscn").instantiate()
-)
+var debugger_tab: GECSEditorDebuggerTab
+var session_tabs: Dictionary = {}
+var models: Dictionary = {}
+var workspaces: Dictionary = {}
+var main_screen: TabContainer
+var open_explorer: Callable
+
 
 ## The debugger messages that will be sent to the editor debugger
 var Msg := GECSEditorDebuggerMessages.Msg
@@ -20,6 +24,37 @@ func _has_capture(capture):
 
 
 func _capture(message: String, data: Array, session_id: int) -> bool:
+	var tab: GECSEditorDebuggerTab = session_tabs.get(session_id)
+	var model: GECSExplorerModel = models.get(session_id)
+	if tab == null or model == null: return false
+	if message == "gecs:explorer_response":
+		model.accept(data[0])
+		return true
+	if message == "gecs:explorer_event":
+		model.event(data[0])
+		return true
+	if message == Msg.GRAPH_STATE and model.graph_ids.has(int(data[0])):
+		model.updated.emit("graph", {"id": data[0], "step": data[1], "graph": data[2]})
+		return true
+	var captured := _capture_legacy(message, data, tab)
+	if message in [Msg.WORLD_INIT, Msg.SET_WORLD]:
+		if not data.is_empty(): model.request("hello")
+		else: model.invalidate_world()
+	elif message == Msg.EXIT_WORLD:
+		model.invalidate_world()
+	elif message == Msg.STEP_STATE:
+		var preferred: int = model.step_state.get("preferred_kind", 2)
+		model.step_state = data[0].duplicate(true)
+		model.step_state["preferred_kind"] = preferred
+		model.updated.emit("step", model.step_state)
+	elif message == Msg.STEP_LOG:
+		model.updated.emit("log", data[0])
+	elif message in [Msg.SYSTEM_ADDED, Msg.SYSTEM_REMOVED, Msg.SYSTEM_LAST_RUN_DATA]:
+		model.updated.emit("systems", tab.ecs_data.get("systems", {}))
+	return captured
+
+
+func _capture_legacy(message: String, data: Array, debugger_tab: GECSEditorDebuggerTab) -> bool:
 	if message == Msg.WORLD_INIT:
 		# data: [World.get_path()]
 		var world = data[0]
@@ -128,30 +163,72 @@ func _capture(message: String, data: Array, session_id: int) -> bool:
 
 
 func _setup_session(session_id):
-	# Add a new tab in the debugger session UI containing a label.
-	debugger_tab.name = "GECS"  # Will be used as the tab title.
-	session = get_session(session_id)
-	# Pass session reference to the tab for sending messages
-	debugger_tab.set_debugger_session(session)
-	# Pass editor interface to the tab for selecting nodes
-	debugger_tab.set_editor_interface(editor_interface)
-	# Listens to the session started and stopped signals.
-	if not session.started.is_connected(_on_session_started):
-		session.started.connect(_on_session_started)
-	if not session.stopped.is_connected(_on_session_stopped):
-		session.stopped.connect(_on_session_stopped)
-	session.add_session_tab(debugger_tab)
+	var session := get_session(session_id)
+	var tab: GECSEditorDebuggerTab = preload("res://addons/gecs/debug/gecs_editor_debugger_tab.tscn").instantiate()
+	tab.name = "GECS"
+	tab.set_debugger_session(session)
+	tab.set_editor_interface(editor_interface)
+	session_tabs[session_id] = tab
+	debugger_tab = tab
+	var model := GECSExplorerModel.new()
+	model.session_id = session_id
+	model.sender = tab.send_to_game
+	models[session_id] = model
+	session.started.connect(_on_session_started.bind(session_id))
+	session.stopped.connect(_on_session_stopped.bind(session_id))
+	session.breaked.connect(func(_debuggable: bool):
+		model.script_breaked = true
+		model.updated.emit("step", model.step_state)
+	)
+	session.continued.connect(func():
+		model.script_breaked = false
+		model.updated.emit("step", model.step_state)
+	)
+	session.add_session_tab(tab)
+	if main_screen != null:
+		var workspace := GECSExplorerWorkspace.new()
+		workspace.name = "Session %d" % (session_id + 1)
+		workspace.configure(model)
+		main_screen.add_child(workspace)
+		workspaces[session_id] = workspace
+		main_screen.current_tab = workspace.get_index()
+		if main_screen.get_child(0).name == "Welcome": main_screen.set_tab_hidden(0, true)
+		# The debugger remains a compact transport/log surface.
+		tab.step_panel.tabs.set_tab_hidden(0, true)
+		tab.step_panel.tabs.set_tab_hidden(1, true)
+		tab.step_panel.tabs.current_tab = 2
+		var explorer_button := Button.new()
+		explorer_button.text = "Show Explorer"
+		explorer_button.tooltip_text = "Show the GECS companion window beside the running game."
+		explorer_button.pressed.connect(func():
+			if is_instance_valid(main_screen): main_screen.current_tab = workspace.get_index()
+			if open_explorer.is_valid(): open_explorer.call()
+		)
+		tab.step_panel.transport.add_child(explorer_button)
 
 
-func _on_session_started():
-	print("GECS Debug Session started")
-	debugger_tab.clear_all_data()
-	debugger_tab.active = true
-	# Fallback subscribe: if the game already emitted its READY before this session
-	# was wired up, subscribe now anyway (the game handles it idempotently).
-	debugger_tab.on_game_ready()
+func _on_session_started(session_id := 0):
+	var tab: GECSEditorDebuggerTab = session_tabs.get(session_id)
+	var model: GECSExplorerModel = models.get(session_id)
+	if tab == null: return
+	tab.clear_all_data()
+	tab.active = true
+	model.connected = true
+	model.script_breaked = false
+	tab.on_game_ready()
+	model.request("hello")
+	# Godot reuses debugger sessions across runs. Open on every start, not
+	# during setup (which also runs when the editor first loads the plugin).
+	var workspace: GECSExplorerWorkspace = workspaces.get(session_id)
+	if is_instance_valid(main_screen) and is_instance_valid(workspace):
+		main_screen.current_tab = workspace.get_index()
+	if open_explorer.is_valid(): open_explorer.call_deferred()
 
 
-func _on_session_stopped():
-	print("GECS Debug Session stopped")
-	debugger_tab.active = false
+func _on_session_stopped(session_id := 0):
+	var tab: GECSEditorDebuggerTab = session_tabs.get(session_id)
+	if tab != null:
+		tab.active = false
+		tab._close_all_graph_windows(false)
+	var model: GECSExplorerModel = models.get(session_id)
+	if model != null: model.disconnect_session()

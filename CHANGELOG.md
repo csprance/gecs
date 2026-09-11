@@ -4,6 +4,26 @@
 
 ### Added
 
+- **Explicit queries over entity arrays with `QueryBuilder.from(entities)`.**
+  Chain normal filters and call `execute()` or `execute_one()` on a fresh snapshot
+  of a retained array. Supports live bucket edits, skips stale references, and
+  accepts entities outside the query's world. System/observer declarations and
+  direct archetype iteration reject this source. Thanks to **TheWightOne** for
+  the idea. See the query guide in `addons/gecs/docs/CORE_CONCEPTS.md`.
+
+- **Entity lifecycle benchmarks and batch correctness coverage.** Comparable loop,
+  batch and command-buffer timings separate allocation, registration, removal and
+  elapsed time through deferred deletion. Includes sustained churn with residents,
+  pool activation and relationship-scaling probes. Repeated results retain raw
+  samples, p95 and execution-mode metadata; the performance report adds a Lifecycle
+  category and run-label filter. See `addons/gecs/docs/ENTITY_LIFECYCLE_PERFORMANCE.md`.
+
+- **Persistent Explorer companion window.** The Explorer now opens beside the
+  running game as soon as a debugger session starts instead of occupying a
+  Godot main-screen tab that hides the game. Closing it hides (rather than
+  destroys or docks) the window, preserving entity tabs, drafts, watches, and
+  session history; **Show Explorer** in the debugger brings it back.
+
 - **Step debugger (forward-only).** Pause the ECS and run it one frame, group,
   system, archetype or entity at a time while the game keeps calling
   `ECS.process()`: paused calls return immediately unless a step is pending for

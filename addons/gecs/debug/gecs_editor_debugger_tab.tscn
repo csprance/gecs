@@ -55,7 +55,7 @@ layout_mode = 2
 text = "Project Settings > General > GECS > Settings > Debug Mode"
 horizontal_alignment = 1
 
-[node name="HSplit" type="HSplitContainer" parent="."]
+[node name="Workspace" type="VBoxContainer" parent="."]
 process_mode = 3
 layout_mode = 1
 anchors_preset = 15
@@ -66,60 +66,150 @@ grow_vertical = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
-[node name="HSplitContainer" type="HSplitContainer" parent="HSplit"]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="EntitiesVBox" type="VBoxContainer" parent="HSplit/HSplitContainer"]
+[node name="EntitiesVBox" type="VBoxContainer" parent="Workspace"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
-[node name="HBoxContainer" type="HBoxContainer" parent="HSplit/HSplitContainer/EntitiesVBox"]
+[node name="HBoxContainer" type="HBoxContainer" parent="Workspace/EntitiesVBox"]
 layout_mode = 2
 
-[node name="EntitiesQueryLineEdit" type="LineEdit" parent="HSplit/HSplitContainer/EntitiesVBox/HBoxContainer"]
+[node name="EntitiesQueryLineEdit" type="LineEdit" parent="Workspace/EntitiesVBox/HBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-placeholder_text = "Entities filter....."
+placeholder_text = "Filter entities by name"
 
-[node name="CollapseAllBtn" type="Button" parent="HSplit/HSplitContainer/EntitiesVBox/HBoxContainer"]
+[node name="CollapseAllBtn" type="Button" parent="Workspace/EntitiesVBox/HBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
-text = "Collapse All"
+text = "Collapse"
 
-[node name="ExpandAllBtn" type="Button" parent="HSplit/HSplitContainer/EntitiesVBox/HBoxContainer"]
+[node name="ExpandAllBtn" type="Button" parent="Workspace/EntitiesVBox/HBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
-text = "Expand All"
+text = "Expand"
 
-[node name="QueryBuilderCheckBox" type="CheckBox" parent="HSplit/HSplitContainer/EntitiesVBox/HBoxContainer"]
+[node name="QueryBuilderCheckBox" type="CheckBox" parent="Workspace/EntitiesVBox/HBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 tooltip_text = "Query mode: type a QueryBuilder expression (e.g. q.with_all([C_Health]).with_none([C_Dead])) and press Enter to filter the tree to matching entities."
 text = "Query"
 
-[node name="LifecycleCheckBox" type="CheckBox" parent="HSplit/HSplitContainer/EntitiesVBox/HBoxContainer"]
+[node name="EntitiesTree" type="Tree" parent="Workspace/EntitiesVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+columns = 4
+column_titles_visible = true
+allow_rmb_select = true
+hide_root = true
+select_mode = 2
+
+[node name="HBoxContainerEntitiesStatus" type="HBoxContainer" parent="Workspace/EntitiesVBox"]
+layout_mode = 2
+
+[node name="EntityStatusBar" type="Label" parent="Workspace/EntitiesVBox/HBoxContainerEntitiesStatus"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Entities: 0 | Components: 0 | Relationships: 0"
+clip_text = true
+
+[node name="SystemsVBox" type="VBoxContainer" parent="Workspace"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="HBoxContainer" type="HBoxContainer" parent="Workspace/SystemsVBox"]
+layout_mode = 2
+
+[node name="SystemsQueryLineEdit" type="LineEdit" parent="Workspace/SystemsVBox/HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "Filter systems by name"
+
+[node name="SystemsCollapseAllBtn" type="Button" parent="Workspace/SystemsVBox/HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Collapse"
+
+[node name="SystemsExpandAllBtn" type="Button" parent="Workspace/SystemsVBox/HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Expand"
+
+[node name="SystemsResetMetricsBtn" type="Button" parent="Workspace/SystemsVBox/HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Reset Metrics"
+tooltip_text = "Clear min/max/avg history for all systems. Useful after a one-time spike (e.g. scene load) has polluted the max."
+
+[node name="SystemsTree" type="Tree" parent="Workspace/SystemsVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+columns = 10
+column_titles_visible = true
+hide_root = true
+select_mode = 2
+
+[node name="HBoxContainerSystemsStatus" type="HBoxContainer" parent="Workspace/SystemsVBox"]
+layout_mode = 2
+
+[node name="SystemsStatusBar" type="Label" parent="Workspace/SystemsVBox/HBoxContainerSystemsStatus"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Systems: 0 | Total ms: 0.000ms"
+clip_text = true
+
+[node name="StepPanel" type="VBoxContainer" parent="Workspace"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 1
+script = ExtResource("2_step")
+
+[node name="PopOutBtn" type="Button" parent="Workspace"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Pop Out"
+
+[node name="CaptureSettings" type="PopupPanel" parent="."]
+unique_name_in_owner = true
+
+[node name="Margin" type="MarginContainer" parent="CaptureSettings"]
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 12
+
+[node name="Settings" type="VBoxContainer" parent="CaptureSettings/Margin"]
+
+[node name="Title" type="Label" parent="CaptureSettings/Margin/Settings"]
+text = "Capture settings"
+
+[node name="LifecycleCheckBox" type="CheckBox" parent="CaptureSettings/Margin/Settings"]
 unique_name_in_owner = true
 layout_mode = 2
 button_pressed = true
-text = "Lifecycle"
+text = "Entity lifecycle events"
 tooltip_text = "Stream entity/component/relationship add & remove events from the game."
 
-[node name="PropChangesCheckBox" type="CheckBox" parent="HSplit/HSplitContainer/EntitiesVBox/HBoxContainer"]
+[node name="PropChangesCheckBox" type="CheckBox" parent="CaptureSettings/Margin/Settings"]
 unique_name_in_owner = true
 layout_mode = 2
 button_pressed = true
-text = "Props"
+text = "Component property changes"
 tooltip_text = "Stream component property-change events (only components that emit property_changed)."
 
-[node name="PollRateLabel" type="Label" parent="HSplit/HSplitContainer/EntitiesVBox/HBoxContainer"]
+[node name="PollRateLabel" type="Label" parent="CaptureSettings/Margin/Settings"]
 layout_mode = 2
-text = "Poll Hz:"
+text = "Entity refresh rate (Hz)"
 tooltip_text = "How often to refresh component data for expanded entities (0 = disabled)"
 
-[node name="PollRateSpinBox" type="SpinBox" parent="HSplit/HSplitContainer/EntitiesVBox/HBoxContainer"]
+[node name="PollRateSpinBox" type="SpinBox" parent="CaptureSettings/Margin/Settings"]
 unique_name_in_owner = true
 layout_mode = 2
 custom_minimum_size = Vector2(70, 0)
@@ -130,69 +220,18 @@ value = 10.0
 suffix = ""
 tooltip_text = "How often to refresh component data for expanded entities (0 = disabled)"
 
-[node name="EntitiesTree" type="Tree" parent="HSplit/HSplitContainer/EntitiesVBox"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_vertical = 3
-columns = 4
-column_titles_visible = true
-allow_rmb_select = true
-hide_root = true
-select_mode = 2
-
-[node name="HBoxContainerEntitiesStatus" type="HBoxContainer" parent="HSplit/HSplitContainer/EntitiesVBox"]
-custom_minimum_size = Vector2(0, 33)
-layout_mode = 2
-
-[node name="EntityStatusBar" type="TextEdit" parent="HSplit/HSplitContainer/EntitiesVBox/HBoxContainerEntitiesStatus"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 3
-text = "Entities: 0 | Components: 0 | Relationships: 0"
-editable = false
-
-[node name="SystemsVBox" type="VBoxContainer" parent="HSplit/HSplitContainer"]
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 3
-
-[node name="HBoxContainer" type="HBoxContainer" parent="HSplit/HSplitContainer/SystemsVBox"]
-layout_mode = 2
-
-[node name="SystemsQueryLineEdit" type="LineEdit" parent="HSplit/HSplitContainer/SystemsVBox/HBoxContainer"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 3
-placeholder_text = "Systems filter...."
-
-[node name="SystemsCollapseAllBtn" type="Button" parent="HSplit/HSplitContainer/SystemsVBox/HBoxContainer"]
-unique_name_in_owner = true
-layout_mode = 2
-text = "Collapse All"
-
-[node name="SystemsExpandAllBtn" type="Button" parent="HSplit/HSplitContainer/SystemsVBox/HBoxContainer"]
-unique_name_in_owner = true
-layout_mode = 2
-text = "Expand All"
-
-[node name="SystemsResetMetricsBtn" type="Button" parent="HSplit/HSplitContainer/SystemsVBox/HBoxContainer"]
-unique_name_in_owner = true
-layout_mode = 2
-text = "Reset Metrics"
-tooltip_text = "Clear min/max/avg history for all systems. Useful after a one-time spike (e.g. scene load) has polluted the max."
-
-[node name="MetricsCheckBox" type="CheckBox" parent="HSplit/HSplitContainer/SystemsVBox/HBoxContainer"]
+[node name="MetricsCheckBox" type="CheckBox" parent="CaptureSettings/Margin/Settings"]
 unique_name_in_owner = true
 layout_mode = 2
 button_pressed = true
-text = "Metrics"
+text = "System timing metrics"
 tooltip_text = "Stream per-system timing telemetry from the game (sampled at the rate below)."
 
-[node name="MetricsHzLabel" type="Label" parent="HSplit/HSplitContainer/SystemsVBox/HBoxContainer"]
+[node name="MetricsHzLabel" type="Label" parent="CaptureSettings/Margin/Settings"]
 layout_mode = 2
-text = "Hz:"
+text = "System sampling rate (Hz)"
 
-[node name="MetricsHzSpinBox" type="SpinBox" parent="HSplit/HSplitContainer/SystemsVBox/HBoxContainer"]
+[node name="MetricsHzSpinBox" type="SpinBox" parent="CaptureSettings/Margin/Settings"]
 unique_name_in_owner = true
 layout_mode = 2
 custom_minimum_size = Vector2(60, 0)
@@ -201,35 +240,3 @@ max_value = 60.0
 step = 1.0
 value = 10.0
 tooltip_text = "How often per second the game samples system timing while Metrics is on."
-
-[node name="PopOutBtn" type="Button" parent="HSplit/HSplitContainer/SystemsVBox/HBoxContainer"]
-unique_name_in_owner = true
-layout_mode = 2
-text = "Pop Out"
-
-[node name="SystemsTree" type="Tree" parent="HSplit/HSplitContainer/SystemsVBox"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_vertical = 3
-columns = 10
-column_titles_visible = true
-hide_root = true
-select_mode = 2
-
-[node name="HBoxContainerSystemsStatus" type="HBoxContainer" parent="HSplit/HSplitContainer/SystemsVBox"]
-custom_minimum_size = Vector2(0, 33)
-layout_mode = 2
-
-[node name="SystemsStatusBar" type="TextEdit" parent="HSplit/HSplitContainer/SystemsVBox/HBoxContainerSystemsStatus"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 3
-text = "Systems: 0 | Total ms: 0.000ms"
-editable = false
-
-[node name="StepPanel" type="VBoxContainer" parent="HSplit"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(420, 0)
-layout_mode = 2
-size_flags_horizontal = 1
-script = ExtResource("2_step")

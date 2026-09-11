@@ -11,6 +11,7 @@ extends Control
 @onready var systems_expand_all_btn: Button = %SystemsExpandAllBtn
 @onready var systems_reset_metrics_btn: Button = %SystemsResetMetricsBtn
 @onready var pop_out_btn: Button = %PopOutBtn
+@onready var capture_popup: PopupPanel = %CaptureSettings
 @onready var poll_rate_spin_box: SpinBox = %PollRateSpinBox
 # Capture-category toggles — each re-sends the subscription so the game only
 # produces the categories currently being viewed.
@@ -18,10 +19,12 @@ extends Control
 @onready var prop_changes_check_box: CheckBox = %PropChangesCheckBox
 @onready var metrics_check_box: CheckBox = %MetricsCheckBox
 @onready var metrics_hz_spin_box: SpinBox = %MetricsHzSpinBox
-# Step debugger pane (its script builds its own controls). Graph views are
+# Shared debugger workspace (its script builds the transport and log tabs). Graphs are
 # floating GECSEditorGraphWindows, one per graph id (see open_graph_window()).
 @onready var step_panel: GECSEditorStepPanel = %StepPanel
 var _graph_windows: Dictionary = {}  # graph_id -> GECSEditorGraphWindow
+var _closed_graph_ids: Dictionary = {}
+var graph_selected_btn: Button
 var _next_graph_id: int = 1
 
 var ecs_data: Dictionary = {}
@@ -35,8 +38,8 @@ var _debugger_session: EditorDebuggerSession = null
 
 @onready var system_tree: Tree = %SystemsTree
 @onready var entities_tree: Tree = %EntitiesTree
-@onready var entity_status_bar: TextEdit = %EntityStatusBar
-@onready var systems_status_bar: TextEdit = %SystemsStatusBar
+@onready var entity_status_bar: Label = %EntityStatusBar
+@onready var systems_status_bar: Label = %SystemsStatusBar
 @onready var debug_mode_overlay: Panel = %DebugModeOverlay
 
 # Sorting state
@@ -107,13 +110,13 @@ func _ready() -> void:
 		system_tree.set_column_expand(9, false)  # Breakpoint toggle
 
 		# Set column widths
-		system_tree.set_column_custom_minimum_width(1, 100)  # Group: 100px min
-		system_tree.set_column_custom_minimum_width(2, 90)  # Time: 90px min
-		system_tree.set_column_custom_minimum_width(3, 90)  # Min: 90px min
-		system_tree.set_column_custom_minimum_width(4, 90)  # Max: 90px min
-		system_tree.set_column_custom_minimum_width(5, 90)  # Avg: 90px min
-		system_tree.set_column_custom_minimum_width(6, 100)  # Status: 100px min
-		system_tree.set_column_custom_minimum_width(7, 60)  # Order: 60px min
+		system_tree.set_column_custom_minimum_width(1, 80)  # Group
+		system_tree.set_column_custom_minimum_width(2, 75)  # Time
+		system_tree.set_column_custom_minimum_width(3, 65)  # Min
+		system_tree.set_column_custom_minimum_width(4, 65)  # Max
+		system_tree.set_column_custom_minimum_width(5, 65)  # Avg
+		system_tree.set_column_custom_minimum_width(6, 75)  # Status
+		system_tree.set_column_custom_minimum_width(7, 50)  # Order
 		system_tree.set_column_custom_minimum_width(8, 44)  # Step: cursor marker
 		system_tree.set_column_custom_minimum_width(9, 36)  # BP: breakpoint toggle
 
@@ -154,9 +157,9 @@ func _ready() -> void:
 		entities_tree.set_column_expand(3, false)  # Nodes count resizable
 
 		# Set column widths
-		entities_tree.set_column_custom_minimum_width(1, 80)  # Components: 80px min
-		entities_tree.set_column_custom_minimum_width(2, 80)  # Relationships: 80px min
-		entities_tree.set_column_custom_minimum_width(3, 80)  # Nodes: 80px min
+		entities_tree.set_column_custom_minimum_width(1, 80)  # Components
+		entities_tree.set_column_custom_minimum_width(2, 80)  # Relationships
+		entities_tree.set_column_custom_minimum_width(3, 80)  # Nodes
 
 		# Enable column resizing (clip content allows manual resizing)
 		entities_tree.set_column_clip_content(0, true)
@@ -274,6 +277,43 @@ func _ready() -> void:
 			step_panel.state_applied.connect(_on_step_state_applied)
 	if system_tree and not system_tree.item_edited.is_connected(_on_system_tree_item_edited):
 		system_tree.item_edited.connect(_on_system_tree_item_edited)
+	_build_workspace()
+
+
+## One full-width working surface, with transport shared across all four tabs.
+func _build_workspace() -> void:
+	var entities_box: Control = $Workspace/EntitiesVBox
+	var systems_box: Control = $Workspace/SystemsVBox
+	entities_box.reparent(step_panel.tabs)
+	systems_box.reparent(step_panel.tabs)
+	step_panel.tabs.move_child(entities_box, 0)
+	step_panel.tabs.move_child(systems_box, 1)
+	step_panel.tabs.set_tab_title(0, "Entities")
+	step_panel.tabs.set_tab_title(1, "Systems")
+	step_panel.tabs.current_tab = 0
+	step_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	step_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	pop_out_btn.reparent(step_panel.transport)
+	capture_popup.reparent(step_panel)
+	var capture_btn := Button.new()
+	capture_btn.text = "Capture settings"
+	capture_btn.pressed.connect(func():
+		capture_popup.position = Vector2i(capture_btn.get_screen_position() + Vector2(0, capture_btn.size.y))
+		capture_popup.popup()
+	)
+	step_panel.transport.add_child(capture_btn)
+	step_panel.transport.move_child(capture_btn, pop_out_btn.get_index())
+	graph_selected_btn = Button.new()
+	graph_selected_btn.text = "Graph selected"
+	graph_selected_btn.tooltip_text = "Select entities to open their relationship graph in a separate window."
+	graph_selected_btn.disabled = true
+	graph_selected_btn.pressed.connect(func(): open_graph_window(get_selected_entity_ids()))
+	entities_filter_line_edit.get_parent().add_child(graph_selected_btn)
+	entities_tree.multi_selected.connect(func(_item: TreeItem, _column: int, _selected: bool):
+		graph_selected_btn.disabled = get_selected_entity_ids().is_empty()
+	)
+	# The disabled-debug overlay must be above the workspace in draw order.
+	move_child(debug_mode_overlay, get_child_count() - 1)
 
 
 func _process(delta: float) -> void:
@@ -409,6 +449,9 @@ func clear_all_data():
 	if step_panel:
 		step_panel.clear()
 	_close_all_graph_windows(false)
+	_closed_graph_ids.clear()
+	if graph_selected_btn:
+		graph_selected_btn.disabled = true
 
 	# Clear system tree
 	if system_tree:
@@ -443,7 +486,7 @@ func _on_query_mode_toggled(pressed: bool) -> void:
 		entities_filter_line_edit.placeholder_text = (
 			"q.with_all([C_A]).with_none([C_B])  (Enter to run)"
 			if pressed
-			else "Entities filter....."
+			else "Filter entities by name"
 		)
 	if pressed:
 		# Leaving text-filter: show everything until a query runs.
@@ -542,7 +585,7 @@ func _on_pop_out_pressed():
 
 	# Move the main content to the window (not duplicate). Size the window to
 	# at least the content's minimum so the toolbars are never cut off.
-	var hsplit = get_node("HSplit")
+	var hsplit = get_node("Workspace")
 	var content_min: Vector2 = hsplit.get_combined_minimum_size()
 	_popup_window.size = Vector2i(
 		maxi(1200, int(content_min.x) + 24), maxi(800, int(content_min.y) + 24)
@@ -566,7 +609,7 @@ func _on_pop_out_pressed():
 func _on_popup_window_closed():
 	if _popup_window != null:
 		# Move content back to main tab
-		var hsplit = _popup_window.get_node("HSplit")
+		var hsplit = _popup_window.get_node("Workspace")
 		_popup_window.remove_child(hsplit)
 		add_child(hsplit)
 		move_child(hsplit, 0)  # Move to beginning
@@ -877,7 +920,7 @@ func _on_system_tree_column_clicked(column: int, mouse_button_index: int):
 
 
 func _update_system_column_indicators():
-	# Keep this in sync with the 8-column layout set in _ready().
+	# Keep this in sync with the 10-column layout set in _ready().
 	const TITLES := [
 		"Name",
 		"Group",
@@ -1425,6 +1468,8 @@ func entity_removed(ent: int, path: NodePath) -> void:
 
 	# Clean up pinned state
 	_pinned_entities.erase(ent)
+	if graph_selected_btn:
+		graph_selected_btn.disabled = get_selected_entity_ids().is_empty()
 
 	_update_entity_status_bar()
 
@@ -2049,6 +2094,7 @@ func _update_entity_status_bar():
 	if _query_status_text != "":
 		status += " | " + _query_status_text
 	entity_status_bar.text = status
+	entity_status_bar.tooltip_text = status
 
 
 ## Update the systems status bar with execution metrics
@@ -2115,6 +2161,7 @@ func _update_systems_status_bar():
 				total_time_ms,
 			]
 		)
+	systems_status_bar.tooltip_text = systems_status_bar.text
 
 
 # ---- Step debugger + graph view ----
@@ -2174,8 +2221,13 @@ func step_log(log: Dictionary) -> void:
 ## tab never opened (a watch started from game code, or a window lost to a
 ## reload) gets a window of its own.
 func graph_state(graph_id: int, step_id: int, graph: Dictionary) -> void:
+	# Messages already in flight must not resurrect a window the user closed.
+	if _closed_graph_ids.has(graph_id):
+		return
 	var window: GECSEditorGraphWindow = _graph_windows.get(graph_id)
 	if window == null:
+		if graph.get("watched", []).is_empty():
+			return
 		window = _make_graph_window(graph_id)
 	window.apply_graph(step_id, graph)
 
@@ -2184,11 +2236,14 @@ func graph_state(graph_id: int, step_id: int, graph: Dictionary) -> void:
 ## ask the game for its first payload. Every call opens a new window with a
 ## fresh graph id; any number can be open at once.
 func open_graph_window(entity_ids: Array, depth: int = 0) -> GECSEditorGraphWindow:
+	if entity_ids.is_empty():
+		return null
 	var graph_id := _next_graph_id
 	_next_graph_id += 1
 	var window := _make_graph_window(graph_id)
+	window.panel.watch_ids = entity_ids.duplicate()
 	if window.panel.depth_spin:
-		window.panel.depth_spin.value = depth
+		window.panel.depth_spin.set_value_no_signal(depth)
 	send_to_game("gecs:graph_watch", [graph_id, entity_ids, depth])
 	return window
 
@@ -2199,6 +2254,7 @@ func close_graph_window(graph_id: int, notify_game: bool = true) -> void:
 	if window == null:
 		return
 	_graph_windows.erase(graph_id)
+	_closed_graph_ids[graph_id] = true
 	if notify_game:
 		send_to_game("gecs:graph_close", [graph_id])
 	window.hide()

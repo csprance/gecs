@@ -200,6 +200,7 @@ var _timers_dirty: bool = true
 ## debug_* API or a debugger command. While absent every hook costs one bool;
 ## GECSStepper._sync_world_flags keeps the three flags below in sync.
 var _stepper: GECSStepper = null
+var _explorer: GECSExplorerService = null
 ## True while the step debugger holds the world paused (process() returns early).
 var _step_paused: bool = false
 ## True while mutation funnels must report to the stepper (paused, or
@@ -346,6 +347,8 @@ func finalize_system_setup() -> void:
 ## [param delta] The time elapsed since the last frame.
 ## [param group] The string for the group we should run. If empty runs all systems in default "" group.
 func process(delta: float, group: String = "") -> void:
+	if _explorer != null:
+		_explorer.pump()
 	# STEP DEBUGGER: while paused the stepper owns this call (runs pending steps
 	# for this group or returns immediately). One bool while not stepping.
 	if _step_paused:
@@ -914,6 +917,8 @@ func remove_system_group(group: String, topo_sort: bool = false) -> void:
 ## [param should_free] Optionally frees the world node by default
 ## [param keep] A list of entities that should be kept in the world
 func purge(should_free = true, keep := []) -> void:
+	if _explorer != null:
+		_explorer.reset()
 	if _stepper != null:
 		_stepper.reset()
 	# Get rid of all entities
@@ -1322,6 +1327,8 @@ func _register_observer_entries(_observer: Observer) -> void:
 	var entries: Array = []
 
 	var top_query: QueryBuilder = _observer.query()
+	if top_query != null and top_query._reject_source("Observer.query()"):
+		top_query = null
 
 	if top_query != null and top_query.has_observer_events():
 		# Watched paths for component ADDED/REMOVED/CHANGED events are the union of
@@ -1375,6 +1382,8 @@ func _register_observer_entries(_observer: Observer) -> void:
 			)
 			continue
 		var sub_q: QueryBuilder = tuple[0]
+		if sub_q._reject_source("Observer.sub_observers()"):
+			continue
 		var sub_callable: Callable = tuple[1] as Callable
 		if not sub_callable.is_valid():
 			_worldLogger.warning("sub_observers invalid callable: ", tuple)
@@ -3094,6 +3103,17 @@ func debug_stepper() -> GECSStepper:
 	return _get_stepper()
 
 
+## Lazy, headless-testable explorer for this world. No polling until requested.
+func debug_explorer() -> GECSExplorerService:
+	if _explorer == null:
+		_explorer = GECSExplorerService.new(self)
+	return _explorer
+
+
+func debug_run_until(condition: Dictionary, kind := GECSStepper.Kind.SYSTEM, max_steps := 1000) -> Dictionary:
+	return debug_explorer().run_until({"condition": condition, "kind": kind, "limit": max_steps})
+
+
 ## Pause ECS processing. Systems stop running until [method debug_resume] or a
 ## [method debug_step] request. Only ECS processing pauses: the SceneTree,
 ## physics, tweens and animation keep running.
@@ -3205,6 +3225,10 @@ func _debug_class_script(class_or_path: String) -> Script:
 
 
 func _handle_debugger_message(message: String, data: Array) -> bool:
+	if message == "explorer_request":
+		if ECS.debug and OS.has_feature("editor") and GECSEditorDebuggerMessages.attached and not data.is_empty() and data[0] is Dictionary:
+			debug_explorer().handle_request(data[0])
+		return true
 	if (
 		message == "step"
 		or message.begins_with("step_")
@@ -3242,50 +3266,7 @@ func _handle_debugger_message(message: String, data: Array) -> bool:
 		# Editor typed an ad-hoc QueryBuilder expression; evaluate and reply.
 		_run_debugger_query(data[0] if data.size() > 0 else "")
 		return true
-	elif message == "select_entity":
-		# Editor requested to select an entity in the scene tree
-		var entity_path = data[0]
-		# Get the actual node to get its ObjectID
-		var node = get_node_or_null(entity_path)
-		if node:
-			var obj_id = node.get_instance_id()
-			var _class_name = node.get_class()
 
-			if GECSEditorDebuggerMessages.can_send_message():
-				# The scene:inspect_object format per Godot source code:
-				# [object_id (uint64), class_name (STRING), properties_array (ARRAY)]
-				# NO path_array! Just 3 elements total
-				# properties_array contains arrays of 6 elements each:
-				# [name (STRING), type (INT), hint (INT), hint_string (STRING), usage (INT), value (VARIANT)]
-				# Get actual properties from the node
-				var properties: Array = []
-				var prop_list = node.get_property_list()
-				# Add properties (limit to avoid huge payload)
-				for i in range(min(20, prop_list.size())):
-					var prop = prop_list[i]
-					var prop_name: String = prop.name
-					var prop_type: int = prop.type
-					var prop_hint: int = prop.get("hint", 0)
-					var prop_hint_string: String = prop.get("hint_string", "")
-					var prop_usage: int = prop.usage
-					var prop_value = node.get(prop_name)
-
-					var prop_info: Array = [
-						prop_name,
-						prop_type,
-						prop_hint,
-						prop_hint_string,
-						prop_usage,
-						prop_value,
-					]
-					properties.append(prop_info)
-
-				# Message format: [object_id, class_name, properties] - only 3 elements!
-				var msg_data: Array = [obj_id, _class_name, properties]
-				EngineDebugger.send_message("scene:inspect_object", msg_data)
-		else:
-			push_error("GECS: select_entity could not find node at path: ", entity_path)
-		return true
 	return false
 
 
@@ -3322,63 +3303,8 @@ func _poll_entity_for_debugger(entity_id: int) -> void:
 ## Editor/dev-only (gated by ECS.debug + editor build). The expression can call methods
 ## on the injected objects, which is acceptable for a developer inspecting their own game.
 func _run_debugger_query(query_text: String) -> void:
-	query_text = query_text.strip_edges()
-	if query_text == "":
-		GECSEditorDebuggerMessages.entity_query_result([], "Empty query")
-		return
-	# Build the name -> path map once (cheap; no scripts loaded here).
-	if _debugger_class_paths.is_empty():
-		for entry in ProjectSettings.get_global_class_list():
-			var cname: String = entry.get("class", "")
-			var cpath: String = entry.get("path", "")
-			if cname != "" and cpath != "":
-				_debugger_class_paths[cname] = cpath
-	# Resolve ONLY the identifiers the query text actually references — avoids
-	# loading unrelated (possibly broken or editor-only) global scripts.
-	var ident_re := RegEx.new()
-	ident_re.compile("[A-Za-z_][A-Za-z0-9_]*")
-	var input_names := PackedStringArray(["q"])
-	var inputs: Array = [query]
-	var seen := {"q": true}
-	for m in ident_re.search_all(query_text):
-		var ident := m.get_string()
-		if seen.has(ident) or not _debugger_class_paths.has(ident):
-			continue
-		seen[ident] = true
-		var scr = _debugger_class_scripts.get(ident, null)
-		if scr == null:
-			scr = load(_debugger_class_paths[ident])
-			if scr != null:
-				_debugger_class_scripts[ident] = scr
-		if scr != null:
-			input_names.append(ident)
-			inputs.append(scr)
-
-	var expr := Expression.new()
-	var perr := expr.parse(query_text, input_names)
-	if perr != OK:
-		GECSEditorDebuggerMessages.entity_query_result([], "Parse error: " + expr.get_error_text())
-		return
-	var result = expr.execute(inputs, null, false)
-	if expr.has_execute_failed():
-		GECSEditorDebuggerMessages.entity_query_result([], "Eval error: " + expr.get_error_text())
-		return
-	# Accept either a QueryBuilder (call execute()) or an already-executed Array.
-	var entities: Array = []
-	if result is QueryBuilder:
-		entities = result.execute()
-	elif result is Array:
-		entities = result
-	else:
-		GECSEditorDebuggerMessages.entity_query_result(
-			[], "Query must return a QueryBuilder or an Array of entities"
-		)
-		return
-	var ids: Array = []
-	for e in entities:
-		if is_instance_valid(e) and e is Entity:
-			ids.append(e.get_instance_id())
-	GECSEditorDebuggerMessages.entity_query_result(ids, "")
+	var result := debug_explorer().query({"text": query_text})
+	GECSEditorDebuggerMessages.entity_query_result(result.get("ids", []), result.get("error", ""))
 
 
 ## Replay the full current world state to a tab that just subscribed. Without this,

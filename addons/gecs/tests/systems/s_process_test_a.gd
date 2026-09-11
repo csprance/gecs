@@ -27,7 +27,6 @@ func process(entities: Array[Entity], components: Array, delta: float):
 			# Simulates a task/action execution system, it clears some task-specific
 			# components after completing the task for better performance.
 			entities[i].remove_component(C_TestA)
-	return true
 
 
 func reset_count():

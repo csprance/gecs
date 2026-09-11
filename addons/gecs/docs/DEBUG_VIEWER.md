@@ -14,9 +14,31 @@ The GECS Debug Viewer provides live inspection of entities, components, systems,
 
 ### Opening the Debug Viewer
 
-1. **Run your game** from the Godot editor (F5 for current scene, F6 for main scene)
-2. **Open the debugger panel** (bottom of editor, usually appears automatically)
-3. **Click the "GECS" tab** next to "Debugger", "Errors", and "Profiler"
+1. **Run your game** from the Godot editor (F5 for main scene, F6 for current scene).
+2. The **GECS Explorer** companion window opens beside the editor, leaving the running game visible.
+3. Arrange the Explorer beside the game or move it to another monitor. The floating window contains all sessions, queries, entity tabs, watches, changes, and step controls.
+
+Closing the companion window only hides it. Use **Show Explorer** in the bottom debugger's GECS transport to bring the same workspace back with its drafts, selection, watches, and history intact. **Always on top** is optional; the window does not block game/editor input.
+
+### Finding your way around the Explorer
+
+The **Entities** browser expands each row to show its components and relationships. Double-click to open an entity in a persistent, reorderable tab. The active tab has a close button; a dot marks unapplied edits. Right-click tabs to detach them, reveal their remote nodes, or choose whether they are included in captures and saved setups. Closing a tab with drafts requires applying or discarding them first.
+
+The **Components** table and **Property Inspector** work together. Select a property, change its native Godot editor, then use **Apply to game** to save the value in the running session. **Apply & Step** applies all staged changes before advancing one unit while ECS is paused. Drafts and conflict controls appear beside the property editor. Authoritative values, including setter clamping, return after applying. These actions do not save project scenes or resources.
+
+Choose **+ Add chart** for each property you want to plot. Use **Focus** in the charts header to give several plots the full sidebar height; select a property to return to editing. Up to 16 charts can coexist in an entity tab, each with its own close button, using one shared entity subscription. Charts retain up to 600 samples at 10 Hz; numeric values, vector channels, booleans, and enums are supported. **Views** hides or shows the charts and the optional relationship map independently. The **Relationships** table is always available: double-click a target to open it, or right-click to stage removal. Live refresh preserves its rows and selection. Drag the visible horizontal divider between **Components** and **Relationships** to resize the table; its divider position is included in saved layouts. In the relationship graph, a single click selects a node and dragging moves it; double-click opens an entity. Drag the **Drag to resize graph** handle below the map to change its height, and the divider beside the component table to change its width. **Open in window** moves the same graph into a freely resizable window; **Dock graph** or closing the window returns it without losing node positions or subscriptions. The embedded graph height is included in saved layouts. Use **+ Add** to stage components or relationships.
+
+In **Queries**, results include component and relationship columns alongside optional property columns. **Build query** opens a bounded, scrollable filter builder with **All / Any / None** groups. Click a component to select it for additional property comparisons; remove components or individual comparisons with their × buttons. All and Any support property comparisons; None excludes component types, matching QueryBuilder's semantics. The generated code remains visible in the workbench. **Saved queries** contains named queries and history.
+
+**Scratchpad** has syntax highlighting, binding/component completion, a saved-snippet picker, and a separate returned-value panel. Loading snippets never runs them. **Watches** shows shared entity subscriptions and declarative queries; selecting a watch displays live property values or query membership, and double-clicking those details opens the entity/property. Removing an entity watch closes its tab after drafts have been resolved.
+
+**Systems** shows sortable last, minimum, maximum, and average timings, entity/archetype counts, execution order, and enabled state. The summary identifies the fastest and slowest active systems in the last run. Right-click for script navigation, enable/disable, and break-before actions; hover a system for additional recorded metrics.
+
+**Changes** separates **Capture comparison** from **Live activity**. Capture the investigation before and after an experiment, choose the two captures, then Compare. Selecting a row shows full before/after values in adjacent panes with changed lines highlighted. Repeating Compare replaces the comparison instead of appending duplicate rows. Double-click a property to return to its entity inspector.
+
+The compact header distinguishes **Live**, **ECS paused**, and **Godot break**; hover the state for execution details. Context menus are available on entities, properties, relationships, systems, watches, and changes.
+
+Secondary actions use compact, quiet buttons; Apply and Step retain primary emphasis. Header actions keep their natural height instead of stretching to match helper text. Resize grips remain visible. The Explorer's colors, spacing, typography, and primary-action styling are scoped to its own workspace and detached windows. They follow the editor's UI scale without changing the rest of Godot's theme.
 
 > 💡 **Debug Mode Required**: If you see an overlay saying "Debug mode is disabled", go to `Project > Project Settings > GECS` and enable "Debug Mode"
 
@@ -175,7 +197,7 @@ Relationships show how entities are connected to each other.
 
 ### Stepping the ECS and the Entity Graph
 
-The pane to the right of the two trees is the **step debugger**: pause the ECS (the scene keeps running) and step it forward one frame, group, system, archetype or entity at a time. Every step lists what it changed (component adds / removes, property writes, relationships, entities, events) and who caused it (the system, a CommandBuffer flush, an observer). Breakpoints pause a live game before a system runs or right after a component type is added / removed or an entity is touched. *Open graph* on an entity row opens a floating window with that entity, its components and its relationships as a graph; open as many as you need, and each refreshes after every step (or live at the poll rate with *Show live*).
+The debugger has full-width **Entities**, **Systems**, **Step log**, and **Breakpoints** tabs with a shared stepping toolbar: pause the ECS (the scene keeps running) and step it forward one frame, group, system, archetype or entity at a time. Every step lists what it changed (component adds / removes, property writes, relationships, entities, events) and who caused it (the system, a CommandBuffer flush, an observer). Breakpoints pause a live game before a system runs or right after a component type is added / removed or an entity is touched. *Graph selected* in the Entities tab (or *Open graph* on an entity row) opens a floating window with that entity, its components and its relationships as a graph; open as many as you need, and each refreshes after every step (or live at the poll rate with *Show live*).
 
 Right-click an entity row for *Add to step set*, *Break when touched* and *Open graph*; a component row for *Break when added / removed*; a system row for *Break before run*. The systems tree shows the paused cursor in the **Step** column and a breakpoint checkbox in the **BP** column.
 
@@ -364,3 +386,52 @@ The Debug Viewer is your window into the ECS runtime. Use it to:
 - Learn about [Performance Optimization](PERFORMANCE_OPTIMIZATION.md) to fix bottlenecks you discover
 - Explore [Relationships](RELATIONSHIPS.md) to understand entity connections better
 - Check [Troubleshooting](TROUBLESHOOTING.md) if you encounter issues
+
+
+## Connection and activity status
+
+Explorer keeps connection state in its top toolbar: **Connected · Live**, **ECS paused**, **Godot break**, or **Session ended**. The last world path remains visible after stopping the game. Entity tables show **Frozen data**, drafts remain local, and runtime actions stop sending commands. Starting another game establishes a new world identity; previous session IDs are never reused for edits.
+
+The compact activity line below the toolbar reports the latest action or error. **Activity** opens the last 50 messages with timestamps. There is no separate bottom status row. The persistent connection badge stays visible even when another action replaces the activity message.
+
+## ECS snapshot files
+
+1. **Pause ECS**, then choose **State → Export ECS snapshot…** to write a `.gecs-state.json` file.
+2. Change supported component values or entity enabled states through normal gameplay or Explorer edits.
+3. Pause ECS again and choose **State → Restore component values…**. Select the file to see a preview; opening the file changes nothing.
+4. Review the preview, then choose **Restore values**. ECS stays paused so you can inspect the result or step forward.
+
+The file contains entity identities, aliases, node paths, component metadata and typed values, plus relationship descriptions. Typed values retain their exact Variant types; reference fields remain inspection data. Import parses JSON and never executes snippets or loads resource scripts from the file.
+
+Restore matches existing entities by unique alias, falling back to node path. The world must have matching entity, component and relationship membership, entity scripts, and component property schemas. Missing entities and structural differences are reported before mutation. Resolve local drafts before restoring. Values and identities are checked again when you confirm; a conflicting change requires a fresh preview.
+
+This is a debugging aid, **not a full-game save system**. Restore changes supported component properties and entity enabled states only. It does not recreate entities or components, modify relationships, restore shared resources, rewind system timers, or restore physics, random generators, arbitrary nodes or scene state. Project scenes and resources are not saved. Restoring values uses normal setters and observer notifications. Observer side effects can produce a partial restore; the result reports the number of applied operations and the failure instead of claiming rollback.
+
+Exports and imports are limited to 1,000 entities and 8 MiB, with at most 128 changed fields per entity in a restore. Snapshot capture only scans on explicit request; it adds no idle recording. For a complete save/load feature, use game-specific serialization that explicitly covers the state your game needs.
+
+
+## World overview
+
+The permanent **World** tab in Explore replaces the getting-started page. It shows total and enabled entities, component instances and types, relationships and relation types, systems and observers, populated archetypes, and cached queries. Counts cover the whole selected world, including disabled entities, rather than the current browser page.
+
+Two charts default to population and the sum of active systems' latest execution times. Each chart's selector can also show enabled entities, component instances, relationships, archetypes, active systems, cached queries, or observers. Readouts show the current value and window min/max; hover over a chart to inspect a sample. Count cards show the net change across the selected window. System time is sampled from the existing profiler: runs can come from different frames, so this is not total frame time. Unmeasured timings display a dash. The timing table includes latest and average durations; open **Systems** for the full min/max/average breakdown.
+
+Double-click a component or relationship type to run a matching query. The overview remains available beside entity tabs and cannot be closed. By default it refreshes once per second only while visible, with one outstanding request. **Options** offers 0.5, 1, or 2-second refreshes, a 30, 60, or 120-second chart window, and top 12, 24, or 48 summary rows. History retains at most two minutes and 240 samples. Column headers sort the displayed rows; refreshing preserves row identity and selection. Returning after a sampling gap starts a fresh chart segment; reconnecting to a new world clears its history. Stopping the game preserves the last overview with a frozen-data notice.
+
+Overview requests read archetype membership, entity enabled states, relationships, and cached system timings. They do not inspect component property values or enable recording. Hover over the dashboard status line to see collection time and timing caveats.
+
+
+**Freeze view** holds only the dashboard; it never pauses ECS or the game. The refresh icon collects one new overview even while frozen. A response already in flight when you freeze is ignored unless it came from an explicit manual refresh. Use Options to hide charts or clear their history.
+
+Refresh rate, chart selections, history window, row limit, and chart visibility are saved locally per project and included in workspace setup export/import. Importing settings does not issue a query, run a snippet, apply an edit, or request an immediate refresh. Freeze is a temporary view state, not a saved pause command.
+
+**Copy overview as JSON** copies the last collected world summary and samples from the selected window. **Copy chart samples as CSV** copies timestamped numeric world metrics (unmeasured values are blank). Right-click a summary table to copy its displayed rows. These are aggregate analysis exports; use **State → Export ECS snapshot** for component property data.
+
+
+## Incoming and outgoing relationships
+
+An entity's **Relationships** table shows both directions. **Outgoing** links are owned by the inspected entity and point to the entity named in the row. **Incoming** links are owned by the named source entity and point to the inspected entity. For example, if `Coin` owns a `C_OwnedBy → Hero` relationship, inspecting Hero shows `Incoming · C_OwnedBy · Coin`. No reciprocal component or relationship is added to Hero.
+
+Double-click either direction to open the other entity, or right-click to reveal its Remote Scene Tree node. Incoming links must be edited or removed on their source entity; the target view does not offer a misleading removal action. Disabled sources are included. Refresh preserves row selection and double-click behavior; self-links appear once in each direction.
+
+Incoming links update with normal entity inspection and watches and are included in focused comparisons. They are derived from the world's relationship-bearing archetypes only when inspection is requested; no background index or world-wide recording is introduced. At most 256 incoming rows are returned per inspected entity, with a visible `256+ incoming` count when truncated. Whole-world snapshot files retain each owned outgoing link once, rather than duplicating it as an incoming link on its target.

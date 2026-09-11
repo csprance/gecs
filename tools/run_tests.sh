@@ -81,6 +81,16 @@ fi
 SUMMARY="$(strip_ansi | grep -E '^Overall Summary' | tail -1)"
 FAILED_TESTS="$(strip_ansi | grep ' FAILED' | sed 's/^[[:space:]]*//' | sort -u | head -25)"
 
+# A failed script load can silently omit an entire suite from discovery while
+# the runner still prints a passing summary for the remaining suites.
+LOAD_ERRORS="$(strip_ansi | grep -E 'SCRIPT ERROR: (Parse|Compile) Error|contains invalid unicode|Failed loading resource:.*test_.*gd' | head -8)"
+if [[ -n "$LOAD_ERRORS" ]]; then
+	echo "RESULT: BROKEN RUN (script discovery/compilation failed)"
+	echo "$LOAD_ERRORS"
+	echo "Full log: $LOG"
+	exit 2
+fi
+
 if [[ -z "$SUMMARY" ]]; then
 	echo "RESULT: BROKEN RUN (exit=$STATUS, no summary) — first errors:"
 	strip_ansi | grep -m 5 -iE "error|not found|No such file" | sed 's/^[[:space:]]*//'

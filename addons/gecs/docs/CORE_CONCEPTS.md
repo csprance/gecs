@@ -479,6 +479,48 @@ var filtered = query.matches(entity_list)         # Filter existing list
 var combined = query.combine(another_query)       # Combine queries
 ```
 
+### Query an Existing Entity Array
+
+Use `.from(entities)` to build an explicitly executed query over a pre-narrowed
+array, such as an observer-maintained state bucket:
+
+```gdscript
+var idle_query = ECS.world.query.from(C_Collector_State.state_dict[States.IDLE])
+var collectors = idle_query.with_all([C_Collector_State]).execute()
+var first_collector = idle_query.execute_one()  # null when no entities match
+```
+
+All entity filters apply: components and their property predicates, relationships,
+groups, `.enabled()` / `.disabled()`, and `.changed()` / `.since()`. The source is
+the array, so entities need not belong to the query's world. Change detection uses
+that world's tracking information when available; entities without tracking
+information count as changed. A builder created with `QueryBuilder.new()` can
+also execute an array query without a world.
+
+The builder retains the array and takes a shallow snapshot on each execution.
+Appending, erasing, or clearing entries is visible on the next execution. Replacing
+the dictionary bucket with a new array requires calling `.from(new_array)` again.
+Edits during filtering do not change the current snapshot. Results are separate
+arrays, preserve order and duplicates, and skip null, freed, and queued-for-deletion
+entities. Other non-Entity entries report an error and are skipped.
+
+`.from([])` returns no matches; it never falls back to the world. Results are
+filtered afresh on every execution. `.clear()` removes the source as well as query
+criteria. `.combine(other_query)` retains the receiver's source and merges filter
+criteria; it does not import or merge the other query's source. `.matches(array)`
+keeps its existing immediate-filter behavior and uses its own argument.
+
+This API supports `.execute()` and `.execute_one()` only. Do not return a query
+using `.from()` from `System.query()`, `sub_systems()`, `Observer.query()`, or
+`sub_observers()`: the declaration reports an error and is skipped. Calling
+`.archetypes()` also reports an error and returns an empty array. Explicit execution
+inside a system callback is supported.
+
+Array edits emit no reactive membership notifications. Dependency tracking still
+records query execution and component reads, but callers must arrange their own
+refresh when the source array changes. Performance relative to indexed world
+queries depends on the workload; `.from()` is intended for pre-narrowed arrays.
+
 ### Query Types Explained
 
 **with_all** - Entities must have ALL specified components:

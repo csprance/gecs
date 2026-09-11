@@ -134,15 +134,15 @@ func test_tab_scene_loads_with_step_pane_and_no_graph_windows() -> void:
 	assert_int(tab.entities_tree.select_mode).is_equal(Tree.SELECT_MULTI)
 	assert_object(tab.step_panel.log_tree).is_not_null()
 	assert_object(tab.step_panel.breakpoints_tree).is_not_null()
-	assert_int(tab.step_panel.step_buttons.size()).is_equal(5)
-	assert_int(tab.step_panel.tabs.get_tab_count()).is_equal(2)
-	assert_str(tab.step_panel.tabs.get_tab_title(0)).is_equal("Step log")
+	assert_int(tab.step_panel.step_kind.item_count).is_equal(5)
+	assert_int(tab.step_panel.step_kind.get_selected_id()).is_equal(GECSStepper.Kind.SYSTEM)
+	assert_int(tab.step_panel.tabs.get_tab_count()).is_equal(4)
+	assert_str(tab.step_panel.tabs.get_tab_title(0)).is_equal("Entities")
+	assert_str(tab.step_panel.tabs.get_tab_title(2)).is_equal("Step log")
 	assert_bool(tab.step_panel.pause_btn.disabled).is_false()
 	assert_bool(tab.step_panel.resume_btn.disabled).is_true()
 	assert_bool(tab._graph_windows.is_empty()).is_true()
-	# The graph no longer lives in the tab, so the pane stays short enough for
-	# the editor's bottom panel (about 210 px: three rows, a tab bar, a header
-	# row and two trees with no custom minimum height).
+	# Hidden tabs and option popups must not inflate the bottom panel minimum.
 	assert_bool(tab.step_panel.get_combined_minimum_size().y < 260.0).override_failure_message(
 		"step pane min height %s" % tab.step_panel.get_combined_minimum_size()
 	).is_true()
@@ -403,3 +403,69 @@ func test_selected_entity_ids_reads_multi_selection() -> void:
 	e1.get_first_child().select(0)  # component row must be ignored
 
 	assert_array(tab.get_selected_entity_ids()).contains_exactly_in_any_order([1, 2])
+
+
+func test_closed_graph_ignores_late_payload_and_empty_watch_does_not_open() -> void:
+	var tab := _make_tab()
+	tab.graph_state(1, 1, _graph([1], []))
+	tab.close_graph_window(1, false)
+	tab.graph_state(1, 2, _graph([1], []))
+	tab.graph_state(2, 2, {"watched": [], "nodes": [], "edges": []})
+	assert_bool(tab._graph_windows.is_empty()).is_true()
+	assert_object(tab.open_graph_window([])).is_null()
+
+
+func test_selected_step_kind_and_count_are_sent() -> void:
+	var tab := _make_tab()
+	var sent: Array = []
+	tab.step_panel.send = func(message: String, data: Array):
+		sent.append([message, data])
+		return true
+	tab.step_panel.step_kind.select(GECSStepper.Kind.ENTITY)
+	tab.step_panel.count_spin.value = 3
+	assert_str(tab.step_panel.step_btn.text).is_equal("Step ×3")
+	tab.step_panel.step_btn.pressed.emit()
+	assert_array(sent).is_equal([["gecs:step", [GECSStepper.Kind.ENTITY, 3]]])
+
+
+func test_workspace_fits_compact_panel_and_preserves_tab_state() -> void:
+	var tab := _make_tab()
+	tab.size = Vector2(900, 300)
+	await get_tree().process_frame
+	for index in 4:
+		tab.step_panel.tabs.current_tab = index
+		await get_tree().process_frame
+		var minimum: Vector2 = tab.get_node("Workspace").get_combined_minimum_size()
+		assert_bool(minimum.x <= 900 and minimum.y <= 300).override_failure_message(
+			"Tab %d minimum %s exceeds 900x300" % [index, minimum]
+		).is_true()
+	tab.entity_added(1, NodePath("/root/e1"))
+	tab._find_entity_item(1).select(0)
+	tab.step_panel.tabs.current_tab = 0
+	assert_array(tab.get_selected_entity_ids()).is_equal([1])
+	assert_bool(tab._graph_windows.is_empty()).is_true()
+
+
+func test_reset_restores_sweep_and_empty_log_and_breakpoint_tab_title() -> void:
+	var tab := _make_tab()
+	tab.step_state(_state({"sweep_enabled": false, "breakpoints": [
+		{"id": 1, "kind_name": "entity", "label": "e1", "enabled": true}
+	]}))
+	assert_str(tab.step_panel.tabs.get_tab_title(3)).is_equal("Breakpoints (1)")
+	tab.step_log(_log())
+	assert_bool(tab.step_panel.clear_log_btn.disabled).is_false()
+	tab.clear_all_data()
+	assert_bool(tab.step_panel.sweep_check.button_pressed).is_true()
+	assert_bool(tab.step_panel.clear_log_btn.disabled).is_true()
+	assert_str(tab.step_panel.tabs.get_tab_title(3)).is_equal("Breakpoints")
+	assert_str(tab.step_panel.log_hint.text).contains("No steps yet")
+
+
+func test_pop_out_and_back_preserves_workspace_and_selected_tab() -> void:
+	var tab := _make_tab()
+	tab.step_panel.tabs.current_tab = 2
+	tab._on_pop_out_pressed()
+	assert_bool(tab._popup_window.has_node("Workspace")).is_true()
+	tab._on_popup_window_closed()
+	assert_bool(tab.has_node("Workspace")).is_true()
+	assert_int(tab.step_panel.tabs.current_tab).is_equal(2)

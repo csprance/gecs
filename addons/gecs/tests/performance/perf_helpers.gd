@@ -34,6 +34,7 @@ static func bench(
 	teardown: Callable = Callable(),
 	warmup: int = 2,
 	runs: int = 7,
+	metadata: Dictionary = {},
 ) -> Dictionary:
 	var times: Array[float] = []
 	for i in range(warmup + runs):
@@ -46,11 +47,23 @@ static func bench(
 			teardown.call()
 		if i >= warmup:
 			times.append(elapsed)
+	return record_samples(test_name, scale, times, warmup, metadata)
+
+
+## Record externally timed samples (including async frame-boundary measurements).
+## Metadata describes the workload; raw samples allow later percentile analysis.
+static func record_samples(
+	test_name: String,
+	scale: int,
+	samples: Array[float],
+	warmup: int = 0,
+	metadata: Dictionary = {},
+) -> Dictionary:
+	assert(not samples.is_empty(), "A benchmark needs at least one measured sample")
+	var times: Array[float] = samples.duplicate()
 	times.sort()
 	var n := times.size()
-	var median: float = (
-		times[n / 2] if n % 2 == 1 else (times[n / 2 - 1] + times[n / 2]) / 2.0
-	)
+	var median: float = times[n / 2] if n % 2 == 1 else (times[n / 2 - 1] + times[n / 2]) / 2.0
 	var mean := 0.0
 	for t in times:
 		mean += t
@@ -65,10 +78,17 @@ static func bench(
 		"min_ms": times[0],
 		"max_ms": times[n - 1],
 		"mean_ms": mean,
+		"p95_ms": times[ceili(n * 0.95) - 1],
+		"samples_ms": samples.duplicate(),
 		"runs": n,
 		"warmup": warmup,
 		"godot_version": Engine.get_version_info().string,
 		"git_sha": _git_sha(),
+		"gecs_debug": ECS.debug,
+		"debug_build": OS.is_debug_build(),
+		"headless": DisplayServer.get_name() == "headless",
+		"run_label": OS.get_environment("GECS_PERF_LABEL"),
+		"workload": metadata,
 	}
 	_append_jsonl(test_name, result)
 	prints(

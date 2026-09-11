@@ -527,6 +527,9 @@ func _run_subsystems(delta: float) -> void:
 	var subsystem_index := 0
 	for subsystem_tuple in _subsystems_cache:
 		var subsystem_query := subsystem_tuple[0] as QueryBuilder
+		if subsystem_query._reject_source("System.sub_systems()"):
+			subsystem_index += 1
+			continue
 		var subsystem_callable := subsystem_tuple[1] as Callable
 		# Subsystem timer gate: advance and skip if not ticked
 		var sub_timer: SystemTimer = _subsystem_timers_cache[subsystem_index]
@@ -629,6 +632,8 @@ func _run_process(delta: float) -> void:
 	if not _query_cache:
 		_query_cache = query()
 		_uses_non_structural_cached = -1
+	if _query_cache._reject_source("System.query()"):
+		return
 	if _component_keys.is_empty():
 		var iterate_comps = _query_cache._iterate_components
 		for comp_type in iterate_comps:
@@ -1016,6 +1021,10 @@ func _step_enter_phase(phase_index: int, delta: float) -> Dictionary:
 		phase.non_structural = _uses_non_structural_cached == 1
 		phase.baseline = _last_change_baseline
 	var phase_query: QueryBuilder = phase.query
+	var context := "System.sub_systems()" if phase_index >= 0 else "System.query()"
+	if phase_query._reject_source(context):
+		phase.skip = true
+		return phase
 	phase.iterate_comps = phase_query._iterate_components
 	phase.archetypes = phase_query.archetypes()
 	phase.enabled_filter = phase_query._enabled_filter
@@ -1120,7 +1129,12 @@ func _step_end(delta: float) -> void:
 				_subsystem_change_baselines[phase.index] = Archetype.global_change_tick
 			else:
 				_last_change_baseline = Archetype.global_change_tick
-	if _has_subsystems_cached != 1 and not _step_ctx.get("processed_any", false) and process_empty:
+	if (
+		_has_subsystems_cached != 1
+		and not _step_ctx.get("processed_any", false)
+		and process_empty
+		and not _query_cache._has_source
+	):
 		_step_run([], [], Callable(self, "process"), delta)
 	if ECS.debug:
 		if _has_subsystems_cached == 1:

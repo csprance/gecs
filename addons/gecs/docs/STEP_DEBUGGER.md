@@ -6,6 +6,8 @@ The step debugger is a forward-only debugger for the GECS world. It does not rew
 
 It works from the editor's GECS debugger tab and from code / headless tests through the `World.debug_*` API.
 
+The Explorer also provides explicit **State → Export ECS snapshot…** and **Restore component values…** actions. These restore selected kinds of data from a file; they do not rewind the stepper or restore the full game. See [ECS snapshot files](DEBUG_VIEWER.md#ecs-snapshot-files).
+
 ## How pausing works
 
 Only ECS processing pauses. The game keeps running `_process` / `_physics_process` and keeps calling `ECS.process(delta, group)` every frame; while paused those calls return immediately unless a step is pending for that group. The SceneTree, physics, tweens and animation are not paused.
@@ -26,7 +28,7 @@ A pause requested from the editor (or `debug_pause()`) may land mid-frame. The f
 
 Inactive, paused and timer-gated systems are skipped and listed in the step log.
 
-The **step set** ("Step through these entities") is a set of entities you pick in the entity tree (multi-select, right-click, *Add to step set*, or *Use selected entities* in the pane) or set from code with `debug_set_step_entities([...])`. Entities that are removed leave the set on their own.
+The **step set** ("Step through these entities") is a set of entities you pick in the entity tree (multi-select, right-click, *Add to step set*, or *Use selected entities* under *Step options*) or set from code with `debug_set_step_entities([...])`. Entities that are removed leave the set on their own.
 
 ## The step log
 
@@ -50,7 +52,7 @@ The pane keeps the last 200 entries; each entry holds at most 2000 ops (marked `
 
 Components that assign fields directly (`health.hp -= 10` with a plain `@export var hp`) do not emit `property_changed`, so nothing journals them. While paused, the stepper diffs every script variable of every component against the previous step after each step and reports the differences as `sweep_set` ops. Writes that did go through an emitting setter are not reported twice.
 
-The sweep costs O(entities x properties) per step, which is fine because the world is paused. It is on by default; the *Sweep* checkbox (or `debug_set_sweep(false)`) turns it off. It never runs while the game is live.
+The sweep costs O(entities x properties) per step, which is fine because the world is paused. It is on by default; the *Detect unreported property changes* checkbox under *Step options* (or `debug_set_sweep(false)`) turns it off. It never runs while the game is live.
 
 ## Breakpoints
 
@@ -72,13 +74,17 @@ Open as many graph windows as you like, one per entity or per group of entities;
 
 ## Using the editor tab
 
-The step pane sits to the right of the entity / system trees (drag the splitter to widen it; it pops out with the rest of the tab) and is kept short so the editor's bottom panel does not have to grow:
+The debugger uses one full-width workspace with **Entities**, **Systems**, **Step log**, and **Breakpoints** tabs. Switching tabs preserves filters, selection, and log history. The shared toolbar stays available on every tab:
 
-- **Pause / Resume** and **Step Frame / Group / System / Archetype / Entity** with a count. Pressing a step button while live pauses first.
-- **Step set** row: *Use selected entities*, *Clear set*, and the *Sweep* toggle.
-- **Status line**: where the cursor is (`Paused in group 'physics' > next: MoveSystem`, unit progress inside a system, pending steps).
-- **Step log** tab: one row per entry (`#`, label, kind, op count, ms) expanding to the ops.
-- **Breakpoints** tab: the list with an enable checkbox, hit counts and a remove button; the tab title carries the count.
+- **Pause / Resume**: only the action relevant to the current state is shown. ECS pausing leaves the rest of the scene running.
+- **Step by**: choose Frame, Group, System (the default), Archetype, or Entity, then press **Step**. Stepping while live pauses ECS first.
+- **Step options**: set the number of steps per click, use selected entities as the step set, clear the set, or toggle the property sweep. The Step button shows the count when greater than one.
+- **Capture settings**: entity lifecycle events, component property changes, system timing, and refresh rates. Closing this popup keeps the capture configuration active.
+- **Pop Out / Pop In**: move the whole workspace into a separate window and back without losing the selected tab.
+
+The status line shows the paused cursor, unit progress, and pending steps. **Step log** entries expand to show their operations; turn off **Follow latest** to inspect earlier entries without scrolling to every new step. **Breakpoints** lists enable toggles, hit counts, and removal actions; its tab title shows the count.
+
+Graphs occupy no space in this workspace. Select one or more entities and click **Graph selected**, or right-click an entity and choose **Open graph**. Every request opens a separate graph window. Empty selections do nothing, and late updates cannot reopen a window after you close it. Explicit watches started from game code also open a graph window; use a fresh graph ID to reopen one closed in the editor during the same session.
 
 The systems tree shows the cursor in the **Step** column and a breakpoint checkbox in the **BP** column; the rows touched by the last step are tinted in both trees.
 

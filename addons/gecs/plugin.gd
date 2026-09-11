@@ -4,8 +4,41 @@ extends EditorPlugin
 var gecs_editor_debugger = preload("res://addons/gecs/debug/gecs_editor_debugger.gd").new()
 
 
+var explorer_screen: Control
+
+
+func _has_main_screen() -> bool:
+	return false
+
+
+func _get_plugin_name() -> String:
+	return "GECS"
+
+
+func _get_plugin_icon() -> Texture2D:
+	return get_editor_interface().get_base_control().get_theme_icon("Search", "EditorIcons")
+
+
+func _make_visible(visible: bool) -> void:
+	if visible and explorer_screen != null: explorer_screen.open_window()
+
+
 func _enter_tree():
 	add_autoload_singleton("ECS", "res://addons/gecs/ecs/ecs.gd")
+	explorer_screen = preload("res://addons/gecs/debug/explorer/gecs_explorer_host.gd").new()
+	explorer_screen.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	explorer_screen.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	# The Explorer is a companion to the game, not an editor main screen. Keep a
+	# hidden owner under the editor while its content lives in a native window.
+	get_editor_interface().get_base_control().add_child(explorer_screen)
+	var welcome := Label.new()
+	welcome.name = "Welcome"
+	welcome.text = "GECS Explorer\n\nRun a scene with an ECS World to begin.\nFind entities, inspect component data, pin watches, edit, and step."
+	welcome.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	explorer_screen.sessions.add_child(welcome)
+	explorer_screen.hide()
+	gecs_editor_debugger.main_screen = explorer_screen.sessions
+	gecs_editor_debugger.open_explorer = explorer_screen.open_window
 	# Pass editor interface to debugger so it can select nodes
 	gecs_editor_debugger.editor_interface = get_editor_interface()
 	add_debugger_plugin(gecs_editor_debugger)
@@ -15,6 +48,7 @@ func _enter_tree():
 func _exit_tree():
 	remove_autoload_singleton("ECS")
 	remove_debugger_plugin(gecs_editor_debugger)
+	if explorer_screen != null: explorer_screen.queue_free()
 	# remove_gecs_project_setings()
 
 

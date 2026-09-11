@@ -1,5 +1,9 @@
 # GECS Performance Testing Guide
 
+For comparable entity creation/removal and frame-based churn measurements, see
+[Entity lifecycle performance](ENTITY_LIFECYCLE_PERFORMANCE.md), including the current
+hang-safe runner commands, timing boundaries and interpretation guidance.
+
 > **Framework-level performance testing for GECS developers**
 
 This document explains how to run and interpret the GECS performance tests. This is primarily for framework developers and contributors who need to ensure GECS maintains high performance.

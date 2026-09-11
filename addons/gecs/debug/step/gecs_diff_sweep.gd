@@ -157,3 +157,12 @@ static func _deep_copy(value: Variant) -> Variant:
 		TYPE_ARRAY, TYPE_DICTIONARY:
 			return value.duplicate(true)
 	return value
+
+## Accept explicit editor/setter writes before a subsequent step. This visits
+## only reported properties, so a later silent system write is still visible.
+func commit_noted() -> void:
+	for iid in _noted:
+		var entry: Dictionary = _cache.get(iid, {})
+		if entry.is_empty() or not is_instance_valid(entry.component): continue
+		for property in _noted[iid]: entry.values[property] = _deep_copy(entry.component.get(property))
+	_noted.clear()

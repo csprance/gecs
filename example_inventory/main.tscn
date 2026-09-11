@@ -16,10 +16,10 @@
 [ext_resource type="PackedScene" path="res://example_inventory/entities/e_hero.tscn" id="14_hero"]
 [ext_resource type="PackedScene" path="res://example_inventory/entities/e_pickup.tscn" id="15_pickup"]
 [ext_resource type="PackedScene" path="res://example_inventory/entities/e_door.tscn" id="16_door"]
-[ext_resource type="Resource" path="res://example_inventory/items/i_health_kit.tres" id="17_healthkit"]
-[ext_resource type="Resource" path="res://example_inventory/items/i_speed_boots.tres" id="18_boots"]
+[ext_resource type="Resource" uid="uid://brxl1xm2qqklu" path="res://example_inventory/items/i_health_kit.tres" id="17_healthkit"]
+[ext_resource type="Resource" uid="uid://de25j6wbvk0lq" path="res://example_inventory/items/i_speed_boots.tres" id="18_boots"]
 [ext_resource type="Resource" path="res://example_inventory/items/i_coin.tres" id="19_coin"]
-[ext_resource type="Resource" path="res://example_inventory/items/i_key.tres" id="20_key"]
+[ext_resource type="Resource" uid="uid://cihbeul5bdj06" path="res://example_inventory/items/i_key.tres" id="20_key"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_top"]
 size = Vector2(1152, 24)

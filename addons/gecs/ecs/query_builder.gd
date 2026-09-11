@@ -21,6 +21,10 @@ extends RefCounted
 
 # The world instance to query against.
 var _world: World
+# Explicit candidate source. Presence is separate so from([]) never queries the world.
+var _has_source: bool = false
+var _source_entities: Array = []
+var _source_rejections: Dictionary = {}
 # Components that an entity must have all of.
 var _all_components: Array = []
 # Components that an entity must have at least one of.
@@ -98,6 +102,9 @@ func set_world(world: World):
 ## Clears the query criteria, resetting all filters. Mostly used in testing
 ## [param returns] -  The current instance of the QueryBuilder for chaining.
 func clear():
+	_has_source = false
+	_source_entities = []
+	_source_rejections.clear()
 	_all_components = []
 	_any_components = []
 	_exclude_components = []
@@ -123,6 +130,35 @@ func clear():
 	_cache_valid = false
 	_cache_key_valid = false
 	return self
+
+
+## Use [param entities] as the candidate source for explicit [method execute] or
+## [method execute_one] calls. Retains the array; each execution filters a shallow
+## snapshot with all query filters. Array edits are visible next time; replacing
+## the array requires calling from() again. Empty sources return no matches.
+## Order and duplicates are preserved. Null, freed and queued-for-deletion entries
+## are skipped. Other non-Entity entries report an error and are skipped.
+## Entities need not belong to this world. Without world tracking information,
+## entities count as changed. Source membership edits emit no reactive events.
+## Intended for pre-narrowed arrays; performance relative to world queries depends
+## on the workload. Not supported in System/Observer declarations or archetypes().
+func from(entities: Array) -> QueryBuilder:
+	_has_source = true
+	_source_entities = entities
+	_cache_valid = false
+	return self
+
+
+# Reject unsupported consumers once per query/context, including in release builds.
+func _reject_source(context: String) -> bool:
+	if not _has_source:
+		return false
+	if not _source_rejections.has(context):
+		_source_rejections[context] = true
+		push_error(
+			"QueryBuilder.from() is not supported in %s; use execute() or execute_one()." % context
+		)
+	return true
 
 
 ## Finds entities with all of the provided components.[br]
@@ -489,6 +525,8 @@ func has_relationship_filters() -> bool:
 func execute() -> Array:
 	if _execute_tracking:
 		_execute_tracker.call(self)
+	if _has_source:
+		return _execute_source()
 	# For relationship or group filters we need fresh filtering every call (no stale cached filtered result)
 	# Only post-filter relationships and groups prevent caching
 	var has_post_filter_rels := (
@@ -549,7 +587,7 @@ func get_changed_keys() -> Array:
 
 func _filter_changed_entities(entities_in: Array, baseline: int) -> Array:
 	var keys := get_changed_keys()
-	if keys.is_empty():
+	if keys.is_empty() or not is_instance_valid(_world):
 		return entities_in
 	var out: Array[Entity] = []
 	for e in entities_in:
@@ -564,6 +602,71 @@ func _filter_changed_entities(entities_in: Array, baseline: int) -> Array:
 				out.append(e)
 				break
 	return out
+
+
+# Fully filter only the supplied candidates; never consult world query indexes.
+func _execute_source() -> Array:
+	var result: Array[Entity] = []
+	for candidate in _source_entities.duplicate():
+		if candidate == null:
+			continue
+		if typeof(candidate) == TYPE_OBJECT and not is_instance_valid(candidate):
+			continue
+		if not candidate is Entity:
+			push_error("QueryBuilder.from() expects Entity entries; invalid entry skipped.")
+			continue
+		var entity: Entity = candidate
+		if entity.is_queued_for_deletion():
+			continue
+		if _source_entity_matches(entity):
+			# User property predicates may free or queue the current entity.
+			if is_instance_valid(entity) and not entity.is_queued_for_deletion():
+				result.append(entity)
+	# A later predicate can also free a previously matched candidate.
+	result = result.filter(func(e): return is_instance_valid(e) and not e.is_queued_for_deletion())
+	if _uses_change_filter and _since_tick > 0:
+		return _filter_changed_entities(result, _since_tick)
+	return result
+
+
+func _source_entity_matches(entity: Entity) -> bool:
+	if _enabled_filter != null and entity.enabled != _enabled_filter:
+		return false
+	for group in _groups:
+		if not entity.is_in_group(group):
+			return false
+	for group in _exclude_groups:
+		if entity.is_in_group(group):
+			return false
+	for component in _exclude_components:
+		if entity.has_component(component):
+			return false
+	for relationship in _relationships:
+		if not entity.has_relationship(relationship):
+			return false
+	for relationship in _exclude_relationships:
+		if entity.has_relationship(relationship):
+			return false
+	for i in _all_components.size():
+		if not is_instance_valid(entity) or entity.is_queued_for_deletion():
+			return false
+		var component = entity.get_component(_all_components[i])
+		if component == null:
+			return false
+		if not ComponentQueryMatcher.matches_query(component, _all_components_queries[i]):
+			return false
+	if not _any_components.is_empty():
+		for i in _any_components.size():
+			if not is_instance_valid(entity) or entity.is_queued_for_deletion():
+				return false
+			var component = entity.get_component(_any_components[i])
+			if (
+				component != null
+				and ComponentQueryMatcher.matches_query(component, _any_components_queries[i])
+			):
+				return true
+		return false
+	return true
 
 
 func _internal_execute() -> Array:
@@ -779,6 +882,8 @@ func matches(entities: Array) -> Array:
 	return result
 
 
+## Merge filter criteria, retaining this query's source. The other query's
+## from() source is not imported; combine() does not combine candidate arrays.
 func combine(other: QueryBuilder) -> QueryBuilder:
 	_all_components += other._all_components
 	_all_components_queries += other._all_components_queries
@@ -825,6 +930,8 @@ func is_empty() -> bool:
 
 func _to_string() -> String:
 	var parts = []
+	if _has_source:
+		parts.append("from(<%d candidates>)" % _source_entities.size())
 
 	if not _all_components.is_empty():
 		parts.append("with_all(" + _format_components(_all_components) + ")")
@@ -964,4 +1071,6 @@ func get_cache_key() -> int:
 ##             # Process transform directly from packed array
 ## [/codeblock]
 func archetypes() -> Array[Archetype]:
+	if _reject_source("archetypes()"):
+		return []
 	return _world.get_matching_archetypes(self)

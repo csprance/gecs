@@ -152,7 +152,7 @@ static func system_last_run_data(system: System, last_run_data: Dictionary) -> b
 		# duplicate so the caller's dictionary isn't mutated before the peer encodes it
 		_send(
 			Msg.SYSTEM_LAST_RUN_DATA,
-			[system.get_instance_id(), system.name, last_run_data.duplicate()],
+			[system.get_instance_id(), system.name, last_run_data.merged({"script_path": system.get_script().resource_path})],
 		)
 	return true
 

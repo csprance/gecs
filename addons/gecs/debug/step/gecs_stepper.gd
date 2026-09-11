@@ -51,7 +51,7 @@ enum Op {
 }
 
 ## Breakpoint kinds.
-enum BpKind { SYSTEM, COMPONENT_ADDED, COMPONENT_REMOVED, ENTITY }
+enum BpKind { SYSTEM, COMPONENT_ADDED, COMPONENT_REMOVED, ENTITY, PROPERTY, QUERY }
 
 const KIND_NAMES := ["frame", "group", "system", "archetype", "entity"]
 const OP_NAMES := [
@@ -66,7 +66,7 @@ const OP_NAMES := [
 	"entity_enabled",
 	"event",
 ]
-const BP_KIND_NAMES := ["system", "component_added", "component_removed", "entity"]
+const BP_KIND_NAMES := ["system", "component_added", "component_removed", "entity", "property", "query"]
 ## Ops kept per step log before it is marked truncated.
 const MAX_OPS_PER_STEP := 2000
 const MAX_STRING := 256
@@ -101,6 +101,7 @@ var last_step_log: Dictionary = {}
 var step_logs: Array = []
 
 var _next_bp_id := 1
+var _condition_ids: Array = []
 var _bp_system_ids: Dictionary = {}
 var _bp_comp_add_keys: Dictionary = {}
 var _bp_comp_remove_keys: Dictionary = {}
@@ -246,6 +247,17 @@ func add_breakpoint(spec: Dictionary) -> int:
 			bp.entity_id = iid
 			var entity = instance_from_id(iid)
 			bp.label = "entity %s touched" % (String(entity.name) if entity else str(iid))
+		BpKind.PROPERTY, BpKind.QUERY:
+			var service := world.debug_explorer()
+			var condition := spec.duplicate(true)
+			condition["kind"] = "property" if kind == BpKind.PROPERTY else "query"
+			var initial := service.condition_value(condition)
+			if initial.has("error"): return 0
+			bp["condition"] = condition
+			bp["previous"] = initial.value
+			bp["matched"] = service.condition_matches(condition, initial.value, null)
+			bp.label = str(spec.get("label", "%s %s" % [condition.kind, condition.get("op", "changed")]))
+
 	_next_bp_id += 1
 	breakpoints[bp.id] = bp
 	_rebuild_bp_sets()
@@ -695,6 +707,7 @@ func _run_group_flush() -> void:
 		if i < fs.size() and fs[i] == system:
 			i += 1
 		fs = _group_systems()
+	_check_conditions()
 	_current_system_name = ""
 
 
@@ -725,6 +738,7 @@ func _run_system_full(system: System) -> void:
 	_current_system_name = _system_label(system)
 	_step_systems.append(system)
 	system._handle(_cursor.delta)
+	_check_conditions()
 	_current_system_name = ""
 	_advance_slot(_group_systems(), system)
 
@@ -790,6 +804,7 @@ func _run_unit(unit: Dictionary) -> void:
 			components = cols
 	_current_system_name = _system_label(system)
 	system._step_run(entities, components, unit.callable, _cursor.delta)
+	_check_conditions()
 
 
 func _end_system_units() -> void:
@@ -797,6 +812,7 @@ func _end_system_units() -> void:
 	if is_instance_valid(system):
 		_current_system_name = _system_label(system)
 		system._step_end(_cursor.delta)
+		_check_conditions()
 	_current_system_name = ""
 	_cursor.in_system = false
 	_cursor.units = []
@@ -954,6 +970,7 @@ func _live_before_system(system: System, group: String, slot: int, delta: float)
 ## After a system ran live. A component / entity breakpoint hit inside it
 ## pauses here, with the system's ops as the log entry.
 func _live_after_system(group: String, slot: int, delta: float) -> bool:
+	_check_conditions()
 	var label := _current_system_name
 	_current_system_name = ""
 	if break_requested:
@@ -964,6 +981,7 @@ func _live_after_system(group: String, slot: int, delta: float) -> bool:
 
 
 func _live_after_flush(_group: String) -> bool:
+	_check_conditions()
 	if break_requested:
 		_pause_from_live(null, 0, 0.0, "(group flush)")
 		return true
@@ -1261,7 +1279,7 @@ func _send_state() -> void:
 
 func _sync_world_flags() -> void:
 	var bp_hooks := not (
-		_bp_comp_add_keys.is_empty() and _bp_comp_remove_keys.is_empty() and _bp_entity_ids.is_empty()
+		_bp_comp_add_keys.is_empty() and _bp_comp_remove_keys.is_empty() and _bp_entity_ids.is_empty() and _condition_ids.is_empty()
 	)
 	world._step_paused = paused
 	world._step_hooks_active = paused or bp_hooks
@@ -1271,6 +1289,7 @@ func _sync_world_flags() -> void:
 
 
 func _rebuild_bp_sets() -> void:
+	_condition_ids.clear()
 	_bp_system_ids.clear()
 	_bp_comp_add_keys.clear()
 	_bp_comp_remove_keys.clear()
@@ -1287,6 +1306,32 @@ func _rebuild_bp_sets() -> void:
 				_bp_comp_remove_keys[bp.comp_key] = bp.id
 			BpKind.ENTITY:
 				_bp_entity_ids[bp.entity_id] = bp.id
+			BpKind.PROPERTY, BpKind.QUERY:
+				_condition_ids.append(bp.id)
+
+
+func _check_conditions() -> void:
+	if world._explorer != null and not break_requested: world._explorer.check_run_boundary()
+	if _condition_ids.is_empty() or break_requested: return
+	var service := world.debug_explorer()
+	for id in _condition_ids.duplicate():
+		var bp: Dictionary = breakpoints.get(id, {})
+		if bp.is_empty(): continue
+		var current := service.condition_value(bp.condition)
+		if current.has("error"):
+			bp.enabled = false
+			bp["error"] = current.error
+			continue
+		var matches := service.condition_matches(bp.condition, current.value, bp.previous)
+		var transition := str(bp.condition.get("op", "changed")) in ["changed", "entered", "left"]
+		if matches and (transition or not bp.matched):
+			bp.hits += 1
+			break_requested = true
+			_break_info = {"breakpoint_id": id, "label": bp.label, "system": _current_system_name, "op": "condition"}
+		bp.previous = current.value.duplicate(true) if current.value is Array or current.value is Dictionary else current.value
+		bp.matched = matches
+	_rebuild_bp_sets()
+	_sync_world_flags()
 
 
 #endregion Step bookkeeping
