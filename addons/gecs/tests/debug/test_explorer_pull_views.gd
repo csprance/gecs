@@ -57,3 +57,61 @@ func test_browser_response_reconciles_removed_entities_without_losing_selection(
 	workspace._finished("query", {"rows": [first], "total": 1, "page": 0}, {"key": "browser"})
 	assert_int(workspace.browser.get_selected().get_metadata(0).iid).is_equal(1)
 	assert_bool(model.entities.has(2)).is_false()
+
+func test_native_windows_poll_only_displayed_content_after_focus_loss() -> void:
+	var model := GECSExplorerModel.new()
+	model.connected = true
+	model.world_id = 10
+	model.epoch = 1
+	model.sender = func(_message, _args): return true
+	var host = auto_free(preload("res://addons/gecs/debug/explorer/gecs_explorer_host.gd").new())
+	add_child(host)
+	host.hide() # The real editor keeps this owner hidden.
+	var workspace := GECSExplorerWorkspace.new()
+	workspace.configure(model)
+	host.sessions.add_child(workspace)
+	host.open_window()
+	workspace.open_entity({"world": 10, "epoch": 1, "id": 1, "iid": 100})
+	var first: GECSExplorerEntityView = workspace.active_view()
+	workspace.open_entity({"world": 10, "epoch": 1, "id": 2, "iid": 200})
+	var second: GECSExplorerEntityView = workspace.active_view()
+	host.window.notification(NOTIFICATION_WM_WINDOW_FOCUS_OUT)
+	var polls: Array = workspace._poll_requests()
+	var samples: Array = polls.filter(func(poll): return poll.op == "sample")
+	assert_int(samples.size()).is_equal(1)
+	assert_array(samples[0].args.keys).contains_exactly([second._watch_key])
+	assert_bool(polls.any(func(poll): return poll.op in ["systems", "overview", "graph"])).is_false()
+	# A detached window continues consuming even when its original tab and
+	# the companion window are hidden. Other entity tabs remain idle.
+	workspace._detach(second)
+	host.hide_window()
+	var detached_window: Window = second.get_window()
+	assert_bool(detached_window.force_native).is_true()
+	detached_window.notification(NOTIFICATION_WM_WINDOW_FOCUS_OUT)
+	polls = workspace._poll_requests()
+	assert_int(polls.size()).is_equal(1)
+	assert_array(polls[0].args.keys).contains_exactly([second._watch_key])
+	assert_bool(GECSExplorerWorkspace._visible(first)).is_false()
+	detached_window.hide()
+	assert_array(workspace._poll_requests()).is_empty()
+	# A graph can be displayed independently of its hidden entity inspector.
+	first.graph_toggle.button_pressed = true
+	first.graph_panel.show_live_check.button_pressed = true
+	first._open_graph_window()
+	first._graph_window.notification(NOTIFICATION_WM_WINDOW_FOCUS_OUT)
+	polls = workspace._poll_requests()
+	assert_int(polls.size()).is_equal(1)
+	assert_str(polls[0].op).is_equal("graph")
+	assert_int(polls[0].args.id).is_equal(first.graph_id)
+	first.graph_panel.show_live_check.button_pressed = false
+	assert_array(workspace._poll_requests()).is_empty()
+
+func test_hidden_tabs_do_not_poll_but_selected_systems_do() -> void:
+	var model := GECSExplorerModel.new()
+	var workspace = auto_free(GECSExplorerWorkspace.new())
+	workspace.configure(model)
+	add_child(workspace)
+	workspace.nav.current_tab = 3 # Systems
+	assert_array(workspace._poll_requests()).contains_exactly([{"op": "systems"}])
+	workspace.nav.current_tab = 1 # One-shot queries
+	assert_array(workspace._poll_requests()).is_empty()

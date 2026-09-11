@@ -13,9 +13,6 @@ func _ready() -> void:
 	debug_mode_overlay.visible = not ProjectSettings.get_setting(GecsSettings.SETTINGS_DEBUG_MODE, false)
 	move_child(debug_mode_overlay, get_child_count() - 1)
 
-func _process(_delta: float) -> void:
-	if model != null: model.tick()
-
 func set_debugger_session(session: EditorDebuggerSession) -> void:
 	_debugger_session = session
 

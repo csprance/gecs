@@ -6,7 +6,7 @@ Explorer is the entity/system inspection surface. The compact GECS debugger tab 
 
 Visible systems, entity lists, watches, and live relationship graphs refresh at up to 2 Hz. The overview retains its own refresh setting (1 second by default). Detached visible views count as consumers. Closing or hiding views stops their automatic reads; watch charts retain their last 600 samples and show gaps when sampling resumes. Arbitrary query expressions remain one-shot unless explicitly watched.
 
-Each session permits four outstanding automatic reads, with one per polling key. The scheduler serves overdue views fairly. It runs from the compact tab even when Explorer is hidden, sending a state/health read every 2 seconds. Godot script breaks suspend automatic requests and timeout accounting; ECS-only pauses still allow reads.
+Each session permits four outstanding automatic reads, with one per polling key. The scheduler serves overdue views fairly. It runs from the editor plugin independently of the debugger dock and window focus, sending a state/health read every 2 seconds even when Explorer is hidden. Open native windows keep polling their displayed content when focus returns to the game; hidden tabs and closed windows generate no automatic data reads. Godot script breaks suspend automatic requests and timeout accounting; ECS-only pauses still allow reads.
 
 Requests time out after 3 seconds. Automatic reads resume through the scheduler, and attachment retries back off from 1 to 5 seconds. Late replies are ignored. Mutations are never retried automatically: a lost edit, restore, scratchpad, or command reply can mean the action executed, so the UI reports an unknown outcome and refreshes current state. Do not infer that a timed-out action failed to execute.
 

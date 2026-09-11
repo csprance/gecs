@@ -99,7 +99,7 @@ func _cancel_pending(reason: String) -> void:
 func refresh() -> void:
 	_poll_times.clear()
 
-## Called by the compact debugger tab even when every Explorer view is hidden.
+## Called by the editor plugin even when the debugger dock is inactive.
 ## Clock injection makes loss, timeout and pause behavior deterministic in tests.
 func tick() -> void:
 	var now := _now()

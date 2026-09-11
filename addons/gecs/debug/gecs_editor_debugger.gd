@@ -18,6 +18,11 @@ var Msg := GECSEditorDebuggerMessages.Msg
 var editor_interface: EditorInterface = null
 
 
+func tick_sessions() -> void:
+	for model: GECSExplorerModel in models.values():
+		model.tick()
+
+
 func _has_capture(capture):
 	# Return true if you wish to handle messages with the prefix "gecs:".
 	return capture == "gecs"

@@ -24,6 +24,10 @@ func _make_visible(visible: bool) -> void:
 
 
 func _enter_tree():
+	# Poll independently of the debugger dock and native-window focus. Each
+	# workspace supplies only the content displayed in its open windows.
+	process_mode = Node.PROCESS_MODE_ALWAYS
+	set_process(true)
 	add_autoload_singleton("ECS", "res://addons/gecs/ecs/ecs.gd")
 	explorer_screen = preload("res://addons/gecs/debug/explorer/gecs_explorer_host.gd").new()
 	explorer_screen.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -45,7 +49,12 @@ func _enter_tree():
 	add_gecs_project_settings()
 
 
+func _process(_delta: float) -> void:
+	gecs_editor_debugger.tick_sessions()
+
+
 func _exit_tree():
+	set_process(false)
 	remove_autoload_singleton("ECS")
 	remove_debugger_plugin(gecs_editor_debugger)
 	if explorer_screen != null: explorer_screen.queue_free()

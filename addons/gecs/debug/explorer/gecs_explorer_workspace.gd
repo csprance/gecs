@@ -1248,8 +1248,11 @@ func _close_active() -> void:
 func _detach(view: Control) -> void:
 	if view.get_parent() != entity_tabs: return
 	var window := Window.new()
+	window.visible = false
 	window.title = "GECS · " + view.name
 	window.force_native = true
+	window.transient = false
+	window.exclusive = false
 	window.theme = UI.make_theme()
 	window.size = Vector2i(1100, 650)
 	window.min_size = Vector2i(700, 400)
@@ -1435,7 +1438,17 @@ func _poll_requests() -> Array:
 	return polls
 
 static func _visible(control: Control) -> bool:
-	return is_instance_valid(control) and control.is_visible_in_tree() and control.get_window() != null and control.get_window().visible
+	if not is_instance_valid(control) or not control.is_inside_tree(): return false
+	# A native window has its own visibility, independent of its hidden owner
+	# in the editor. Follow local tab visibility up to that window, never focus.
+	var node: Node = control
+	while node != null:
+		if node is CanvasItem and not node.visible: return false
+		if node is Window:
+			if not node.visible: return false
+			if node.force_native or not node.is_embedded(): return true
+		node = node.get_parent()
+	return true
 
 func _request_overview(manual: bool) -> void:
 	if model == null or not model.connected or model.world_id == 0 or model.script_breaked: return
