@@ -185,7 +185,7 @@ func test_mutations_wait_for_boundary_and_apply_before_step() -> void:
 	var system := Increment.new()
 	world.add_system(system)
 	world.debug_pause()
-	service.handle_request({"version": 1, "request_id": 1, "op": "apply", "world": world.get_instance_id(), "epoch": service.epoch, "args": {"entity": service.identity(entity), "operations": [_edit(10)], "step": GECSStepper.Kind.SYSTEM}})
+	service.handle_request({"version": GECSExplorerService.VERSION, "request_id": 1, "op": "apply", "world": world.get_instance_id(), "epoch": service.epoch, "args": {"entity": service.identity(entity), "operations": [_edit(10)], "step": GECSStepper.Kind.SYSTEM}})
 	assert_int(comp.value).is_equal(1)
 	world.process(0.016)
 	assert_int(comp.value).is_equal(11)
@@ -283,8 +283,8 @@ func test_no_watch_means_no_sample_work() -> void:
 	var events: Array = []
 	service.changed.connect(func(event): events.append(event))
 	service.pump()
-	service.sample()
-	assert_array(events).is_empty()
+	assert_dict(service.sample().get("samples", {})).is_empty()
+	assert_bool(events.any(func(event): return event.kind == "sample")).is_false()
 
 func test_world_overview_counts_disabled_entities_components_and_relationships() -> void:
 	var target := Entity.new()
@@ -374,8 +374,9 @@ func test_incoming_links_refresh_on_watch_and_focused_capture_and_source_removal
 	var events: Array = []
 	service.changed.connect(func(event): events.append(event))
 	entity.add_relationship(Relationship.new(C_TestB.new(), target))
-	service.sample()
-	assert_int(events.back().data.samples.target.incoming_relationships.size()).is_equal(1)
+	var sample := service.sample(["target"])
+	assert_int(sample.samples.target.incoming_relationships.size()).is_equal(1)
+	assert_array(events).is_empty()
 	var after := service.capture({})
 	var changes := GECSExplorerModel.compare(before, after)
 	assert_bool(changes.any(func(row): return str(row.field).begins_with("Incoming relationship"))).is_true()
@@ -413,9 +414,86 @@ func test_hello_includes_authoritative_pause_state() -> void:
 	var callback := func(payload): replies.append(payload)
 	service.response.connect(callback)
 	world.debug_pause()
-	service.handle_request({"version": 1, "request_id": 901, "op": "hello"})
+	service.handle_request({"version": GECSExplorerService.VERSION, "request_id": 901, "op": "hello"})
 	assert_bool(replies.back().result.step_state.paused).is_true()
 	world.debug_resume()
-	service.handle_request({"version": 1, "request_id": 902, "op": "hello"})
+	service.handle_request({"version": GECSExplorerService.VERSION, "request_id": 902, "op": "hello"})
 	assert_bool(replies.back().result.step_state.paused).is_false()
 	service.response.disconnect(callback)
+
+
+func test_pull_protocol_returns_systems_samples_graphs_and_bounded_history() -> void:
+	var system := Increment.new()
+	system.name = "Increment"
+	world.add_system(system)
+	world.process(0.016)
+	var digest: Dictionary = service.systems().systems
+	assert_bool(digest.has(system.get_instance_id())).is_true()
+	assert_int(digest[system.get_instance_id()].last_run_data.execution_order).is_equal(0)
+	assert_int(digest[system.get_instance_id()].last_run_data.sample_count).is_greater(0)
+	service.set_watch({"key": "subject", "entity": service.identity(entity)})
+	comp.value = 42 # silent write, visible without property_changed
+	assert_int(Codec.decode(service.sample(["subject"]).samples.subject.components[0].fields[0].value)).is_equal(42)
+	var stepper := world.debug_stepper()
+	for i in 100: stepper._publish_log({"step_id": 0, "ops": [], "label": str(i)})
+	var page := service.debugger_state({"after": 0})
+	assert_bool(page.gap).is_true()
+	assert_int(page.logs.size()).is_equal(service.LOG_PAGE_ENTRIES)
+	assert_bool(page.more).is_true()
+	var next := service.debugger_state({"after": page.after})
+	assert_bool(next.gap).is_false()
+	assert_int(next.logs[0].step_id).is_greater(page.after)
+	assert_bool(next.more).is_false()
+	stepper._publish_log({"step_id": 0, "ops": [], "label": "x".repeat(service.LOG_PAGE_BYTES + 1)})
+	var oversized := service.debugger_state({"after": next.after})
+	assert_int(oversized.omitted.size()).is_equal(1)
+	assert_array(oversized.logs).is_empty()
+	assert_int(oversized.after).is_equal(stepper.step_counter)
+	var system_id := system.get_instance_id()
+	world.remove_system(system)
+	assert_bool(service.systems().systems.has(system_id)).is_false()
+
+func test_large_world_event_volume_does_not_change_message_count() -> void:
+	var old_sink := GECSEditorDebuggerMessages._test_sink
+	var old_attached := GECSEditorDebuggerMessages.attached
+	var messages: Array = []
+	GECSEditorDebuggerMessages._test_sink = func(message, _data): messages.append(message)
+	GECSEditorDebuggerMessages.attached = true
+	for i in 100:
+		var system := Increment.new()
+		system.name = "System%d" % i
+		world.add_system(system)
+	for i in 9999:
+		var e := Entity.new()
+		e.add_component(C_TestA.new())
+		world.add_entity(e, null, false)
+	assert_int(world.entities.size()).is_equal(10000)
+	for i in 3:
+		for e in world.entities:
+			var component: C_TestA = e.get_component(C_TestA)
+			component.value += 1
+			component.property_changed.emit(component, "value", component.value - 1, component.value)
+	for i in 100:
+		var e := Entity.new()
+		e.add_component(C_TestA.new())
+		world.add_entity(e, null, false)
+		world.remove_entity(e)
+	for i in 3: ECS._on_debugger_message("subscribe", [])
+	assert_array(messages).is_empty()
+	var replies: Array = []
+	service.response.connect(func(reply): replies.append(reply))
+	service.handle_request({"version": 2, "request_id": 1, "op": "systems", "world": world.get_instance_id(), "epoch": service.epoch})
+	service.pump()
+	assert_int(replies.size()).is_equal(1)
+	assert_int(replies[0].result.systems.size()).is_equal(100)
+	assert_int(messages.count("gecs:explorer_response")).is_equal(1)
+	GECSEditorDebuggerMessages._test_sink = old_sink
+	GECSEditorDebuggerMessages.attached = old_attached
+
+func test_authoritative_watch_definitions_recover_lost_registration_and_removal() -> void:
+	var definition := {"key": "subject", "entity": service.identity(entity)}
+	assert_dict(service._sync_watches([definition])).is_empty()
+	assert_bool(service.watches.has("subject")).is_true()
+	assert_bool(service.sample(["subject"]).samples.subject.has("identity")).is_true()
+	service._sync_watches([])
+	assert_dict(service.watches).is_empty()

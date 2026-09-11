@@ -102,9 +102,6 @@ func _on_debugger_message(message: String, data: Array) -> bool:
 			)
 			var hz: float = float(data[1]) if data.size() > 1 else 10.0
 			GECSEditorDebuggerMessages.apply_subscription(categories, hz)
-			# Replay current state so the tab is populated immediately.
-			if is_instance_valid(world):
-				world._send_debugger_snapshot()
 			return true
 		"unsubscribe":
 			GECSEditorDebuggerMessages.clear_subscription()

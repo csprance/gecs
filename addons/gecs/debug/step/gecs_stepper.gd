@@ -302,7 +302,6 @@ func set_graph_watch(entities: Array, depth: int = 0, graph_id: int = 0) -> void
 		return
 	graphs[graph_id] = {"watch": watch, "depth": maxi(0, depth)}
 	_send_state()
-	send_graph_state(graph_id)
 
 
 ## Drop graph [param graph_id]; nothing is pushed for it any more.
@@ -319,12 +318,10 @@ func graph_state(graph_id: int = 0) -> Dictionary:
 
 ## Push graph payloads to the editor: one graph, or every open graph when
 ## [param graph_id] is -1. No-op for unknown ids.
-func send_graph_state(graph_id: int = -1) -> void:
-	if graph_id == -1:
-		for id in graphs.keys():
-			GECSEditorDebuggerMessages.graph_state(id, step_counter, graph_state(id))
-	elif graphs.has(graph_id):
-		GECSEditorDebuggerMessages.graph_state(graph_id, step_counter, graph_state(graph_id))
+func send_graph_state(_graph_id: int = -1) -> void:
+	# Graph payloads are only built by Explorer's correlated graph request.
+	_send_state()
+
 
 
 ## Snapshot of the stepper: paused flag, cursor, step set, breakpoints, graphs.
@@ -1016,7 +1013,6 @@ func _pause_from_live(group, slot: int, delta: float, label: String) -> void:
 	_sync_world_flags()
 	_publish_log(log)
 	_send_state()
-	send_graph_state()
 	world.step_break_hit.emit(int(info.get("breakpoint_id", 0)), log)
 
 
@@ -1222,11 +1218,6 @@ func _finish_step() -> void:
 	_sync_world_flags()
 	_publish_log(log)
 	_send_state()
-	send_graph_state()
-	if ECS.debug and GECSEditorDebuggerMessages.attached and GECSEditorDebuggerMessages.telemetry_active:
-		for system in systems_run:
-			if is_instance_valid(system):
-				GECSEditorDebuggerMessages.system_last_run_data(system, system.lastRunData)
 	world.step_completed.emit(kind, log)
 
 
@@ -1270,11 +1261,11 @@ func _publish_log(log: Dictionary) -> void:
 	step_logs.append(log)
 	if step_logs.size() > HISTORY:
 		step_logs.pop_front()
-	GECSEditorDebuggerMessages.step_log(log)
 
 
 func _send_state() -> void:
-	GECSEditorDebuggerMessages.step_state(state())
+	if world._explorer != null:
+		world._explorer.state_dirty = true
 
 
 func _sync_world_flags() -> void:

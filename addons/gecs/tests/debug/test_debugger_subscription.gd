@@ -67,22 +67,15 @@ func _subscribe(cats: Dictionary, hz: float = 10.0) -> void:
 	ECS._on_debugger_message("subscribe", [cats, hz])
 
 
-func test_subscribe_sets_flags_and_replays_snapshot() -> void:
-	# Entity exists BEFORE the tab subscribes — it must arrive via the snapshot,
-	# not a live entity_added (which already fired while unattached).
+func test_subscribe_attaches_without_replaying_existing_world() -> void:
 	var e := Entity.new()
 	e.add_component(C_TestA.new())
 	world.add_entity(e, null, false)
-
 	_install_sink()
-	_subscribe({"system_metrics": true, "entity_lifecycle": true, "property_changes": true})
-
+	for i in 10: _subscribe({"system_metrics": true, "entity_lifecycle": true, "property_changes": true})
 	assert_bool(GECSEditorDebuggerMessages.attached).is_true()
-	assert_bool(GECSEditorDebuggerMessages.lifecycle_active).is_true()
-	# The snapshot re-establishes world context and replays existing entity state.
-	assert_bool(_msgs.has(GECSEditorDebuggerMessages.Msg.WORLD_INIT)).is_true()
-	assert_bool(_msgs.has(GECSEditorDebuggerMessages.Msg.ENTITY_ADDED)).is_true()
-	assert_bool(_msgs.has(GECSEditorDebuggerMessages.Msg.ENTITY_COMPONENT_ADDED)).is_true()
+	assert_bool(GECSEditorDebuggerMessages.lifecycle_active).is_false()
+	assert_array(_msgs).is_empty()
 
 
 func test_unsubscribe_silences_everything() -> void:
@@ -103,7 +96,7 @@ func test_unsubscribe_silences_everything() -> void:
 	assert_int(_msgs.size()).is_equal(0)
 
 
-func test_property_changes_category_can_be_disabled() -> void:
+func test_structural_and_property_changes_never_push() -> void:
 	# Lifecycle on, property changes off: adding a component still reports, but a
 	# subsequent property write does not.
 	_install_sink()
@@ -113,7 +106,7 @@ func test_property_changes_category_can_be_disabled() -> void:
 	var comp := C_TestA.new()
 	e.add_component(comp)
 	world.add_entity(e, null, false)
-	assert_bool(_msgs.has(GECSEditorDebuggerMessages.Msg.ENTITY_COMPONENT_ADDED)).is_true()
+	assert_array(_msgs).is_empty()
 
 	_msgs.clear()
 	# Trigger a property change through the world callback path.
@@ -122,7 +115,7 @@ func test_property_changes_category_can_be_disabled() -> void:
 	assert_bool(_msgs.has(GECSEditorDebuggerMessages.Msg.COMPONENT_PROPERTY_CHANGED)).is_false()
 
 
-func test_telemetry_is_sampled_not_every_frame() -> void:
+func test_metrics_aggregate_without_pushes() -> void:
 	var system := MetricSystem.new()
 	world.add_system(system)
 	var e := Entity.new()
@@ -131,7 +124,6 @@ func test_telemetry_is_sampled_not_every_frame() -> void:
 
 	_install_sink()
 	_subscribe({"system_metrics": true, "entity_lifecycle": true, "property_changes": true}, 10.0)
-	world._telemetry_accum.clear()
 	_msgs.clear()
 
 	# 10 frames of 0.03s = 0.3s of sim time. At the subscribed 10 Hz (0.1s) that is
@@ -140,8 +132,8 @@ func test_telemetry_is_sampled_not_every_frame() -> void:
 		world.process(0.03)
 
 	var samples := _msgs.count(GECSEditorDebuggerMessages.Msg.PROCESS_WORLD)
-	assert_int(samples).is_greater(0)
-	assert_int(samples).is_less(10)
+	assert_int(samples).is_equal(0)
+	assert_int(system._metric_sample_count).is_greater(0)
 
 
 func test_reset_system_metrics_is_forwarded_to_world() -> void:

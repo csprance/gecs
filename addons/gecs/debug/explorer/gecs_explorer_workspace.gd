@@ -60,6 +60,8 @@ var _query_builder_popup: PopupPanel
 var _query_library_popup: PopupPanel
 var _builder_error: Label
 var _systems_data: Dictionary = {}
+var _system_items: Dictionary = {}
+var _run_status: Dictionary = {}
 var _system_sort := 4
 var _system_descending := true
 var _system_summary: Label
@@ -97,6 +99,7 @@ var _snapshot_menu: MenuButton
 
 func configure(session: GECSExplorerModel) -> void:
 	model = session
+	model.poll_provider = _poll_requests
 	model.updated.connect(_updated)
 	model.request_finished.connect(_finished)
 
@@ -1055,6 +1058,14 @@ func _finished(op: String, result: Dictionary, context: Dictionary) -> void:
 				_restore_results(result)
 				return
 			var tree := browser if key == "browser" else query_results
+			var selected_iid: int = int(tree.get_selected().get_metadata(0).get("iid", 0)) if tree.get_selected() else 0
+			var expanded := {}
+			var scroll := tree.get_scroll().y
+			if key == "browser" and tree.get_root():
+				for row in tree.get_root().get_children():
+					var iid := int(row.get_metadata(0).get("iid", 0))
+					expanded[iid] = not row.collapsed
+					model.entities.erase(iid)
 			tree.clear()
 			var columns: Array = [] if key == "browser" else _columns()
 			tree.columns = 2 if key == "browser" else 3 + columns.size()
@@ -1070,10 +1081,11 @@ func _finished(op: String, result: Dictionary, context: Dictionary) -> void:
 				var row := tree.create_item(root)
 				row.set_text(0, entity.name)
 				row.set_metadata(0, entity.identity)
+				if int(entity.identity.iid) == selected_iid: row.select(0)
 				if key == "browser":
 					row.set_text(1, "On" if entity.enabled else "Off")
 					row.set_custom_color(1, UI.ACCENT if entity.enabled else UI.MUTED)
-					row.collapsed = true
+					row.collapsed = not expanded.get(int(entity.identity.iid), false)
 					for group in ["component_names", "relationship_names"]:
 						for title in entity.get(group, []):
 							var detail := tree.create_item(row)
@@ -1085,6 +1097,8 @@ func _finished(op: String, result: Dictionary, context: Dictionary) -> void:
 					row.set_text(2, ", ".join(entity.get("relationship_names", [])))
 					for col in [1, 2]: row.set_tooltip_text(col, row.get_text(col))
 				for i in columns.size(): row.set_text(i + 3, entity.values.get(columns[i], {}).get("display", "—"))
+			for child in tree.get_children(true):
+				if child is VScrollBar: child.value = scroll
 			if key == "browser": _browser_status.text = "%d matches · page %d" % [result.total, int(result.page) + 1]
 			else: _query_rows = result.get("rows", [])
 			if key != "browser": query_status.text = "%d matches · page %d · 100 rows per page" % [result.total, int(result.page) + 1]
@@ -1111,12 +1125,18 @@ func _updated(kind: String, data: Dictionary) -> void:
 			_refresh_browser()
 		"step":
 			_refresh_transport()
+			model.refresh()
 		"sample":
 			for key in data.get("samples", {}): _latest_watches[key] = data.samples[key]
 			_refresh_watches()
 		"run":
-			status.text = data.get("reason", "Run complete")
-			_cancel_run.hide()
+			if data != _run_status and not str(data.get("reason", "")).is_empty(): status.text = data.reason
+			_run_status = data.duplicate(true)
+			_cancel_run.visible = data.get("running", false)
+		"connection_error":
+			status.text = data.error
+			overview.set_state(data.error)
+		"history_gap": status.text = "Some step history expired or exceeded the payload limit. Latest state is current."
 		"edit", "scratchpad": _append_change(kind, data)
 		"log": _append_log(data)
 		"systems": _systems(data)
@@ -1343,8 +1363,12 @@ func _append_log(log: Dictionary) -> void:
 func _systems(data: Dictionary) -> void:
 	_systems_data = data
 	var selected_id: int = systems_tree.get_selected().get_metadata(0).id if systems_tree.get_selected() else 0
-	systems_tree.clear()
-	var root := systems_tree.create_item()
+	var root := systems_tree.get_root()
+	if root == null: root = systems_tree.create_item()
+	for id in _system_items.keys():
+		if not data.has(id):
+			_system_items[id].free()
+			_system_items.erase(id)
 	var rows: Array = []
 	var total := 0.0
 	for id in data:
@@ -1352,7 +1376,7 @@ func _systems(data: Dictionary) -> void:
 		var metrics: Dictionary = system.get("last_run_data", {})
 		var last: float = metrics.get("execution_time_ms", 0.0)
 		var title := str(metrics.get("system_name", system.get("path", "")))
-		var values := [title, str(system.get("group", "")), last, metrics.get("min_ms", last), metrics.get("max_ms", last), metrics.get("avg_ms", last), metrics.get("entity_count", 0), metrics.get("archetype_count", 0), metrics.get("execution_order", 0), "Active" if system.get("active", true) else "Disabled"]
+		var values := [title, str(system.get("group", "")), last, metrics.get("min_ms", last), metrics.get("max_ms", last), metrics.get("avg_ms", last), metrics.get("entity_count", 0), metrics.get("archetype_count", 0), metrics.get("execution_order", 0), "Paused" if system.get("paused", false) else "Active" if system.get("active", true) else "Disabled"]
 		rows.append({"id": id, "values": values, "active": system.get("active", true), "script": metrics.get("script_path", ""), "metrics": metrics})
 		if system.get("active", true): total += last
 	rows.sort_custom(func(a, b): return a.values[_system_sort] > b.values[_system_sort] if _system_descending else a.values[_system_sort] < b.values[_system_sort])
@@ -1362,7 +1386,10 @@ func _systems(data: Dictionary) -> void:
 		if entry.active and not entry.metrics.is_empty():
 			if fastest.is_empty() or entry.values[2] < fastest.values[2]: fastest = entry
 			if slowest.is_empty() or entry.values[2] > slowest.values[2]: slowest = entry
-		var row := systems_tree.create_item(root)
+		var row: TreeItem = _system_items.get(entry.id)
+		if row == null:
+			row = systems_tree.create_item(root)
+			_system_items[entry.id] = row
 		if int(entry.id) == selected_id: row.select(0)
 		row.set_metadata(0, entry)
 		for i in 10:
@@ -1370,6 +1397,10 @@ func _systems(data: Dictionary) -> void:
 			row.set_tooltip_text(i, row.get_text(i))
 		row.set_custom_color(9, UI.ACCENT if entry.active else UI.MUTED)
 		row.set_tooltip_text(0, entry.script + "\n" + JSON.stringify(entry.metrics, "  "))
+	# Move existing rows once after applying the digest; retain selection and scroll.
+	for i in range(rows.size() - 1, -1, -1):
+		var row: TreeItem = _system_items[rows[i].id]
+		if root.get_first_child() != row: row.move_before(root.get_first_child())
 	_system_summary.text = "%d systems · total last run %.4f ms" % [rows.size(), total]
 	if not slowest.is_empty(): _system_summary.text += " · Slowest: %s (%.4f ms) · Fastest: %s (%.4f ms)" % [slowest.values[0], slowest.values[2], fastest.values[0], fastest.values[2]]
 	_system_summary.clip_text = true
@@ -1381,18 +1412,34 @@ func _process(_delta: float) -> void:
 		status.tooltip_text = status.text
 		_status_history.push_front(Time.get_time_string_from_system() + "  " + status.text)
 		if _status_history.size() > 50: _status_history.pop_back()
-	if model == null or not model.connected or model.script_breaked: return
-	var now := Time.get_ticks_msec()
-	if model.world_id != 0 and nav.current_tab == 0 and entity_tabs.get_current_tab_control() == overview and overview.is_visible_in_tree() and not overview.frozen and _overview_pending == 0 and now - _overview_last_pull >= overview.interval_ms:
-		_request_overview(false)
-	if now - _last_sample_pull >= 100:
-		_last_sample_pull = now
-		for view in views:
-			if view.graph_toggle and view.graph_toggle.button_pressed and view.graph_panel.show_live_check.button_pressed and not model.step_state.get("paused", false): model.sender.call("gecs:graph_pull", [view.graph_id])
+
+## Called by the session scheduler, not by individual panels' timers.
+func _poll_requests() -> Array:
+	var polls: Array = []
+	if nav == null: return polls
+	if _visible(systems_tree): polls.append({"op": "systems"})
+	if _visible(browser): polls.append({"op": "query", "args": {"spec": {}, "filter": entity_filter.text, "page": _browser_page}, "context": {"key": "browser"}})
+	if _visible(overview) and not overview.frozen:
+		polls.append({"op": "overview", "args": {"limit": overview.row_limit}, "interval": overview.interval_ms})
+	var keys := {}
+	if _visible(watch_tree):
+		for key in model.watches: keys[key] = true
+	for view in views:
+		if not is_instance_valid(view) or view.ref.get("world") != model.world_id or view.ref.get("epoch") != model.epoch: continue
+		if _visible(view): keys[view._watch_key] = true
+		if view.graph_toggle and view.graph_toggle.button_pressed and _visible(view.graph_panel) and view.graph_panel.show_live_check.button_pressed:
+			polls.append({"op": "graph", "args": {"id": view.graph_id}, "context": {"key": "graph:%d" % view.graph_id}})
+	for key in keys.keys():
+		if not model.watches.has(key): keys.erase(key)
+	if not keys.is_empty(): polls.append({"op": "sample", "args": {"keys": keys.keys()}})
+	return polls
+
+static func _visible(control: Control) -> bool:
+	return is_instance_valid(control) and control.is_visible_in_tree() and control.get_window() != null and control.get_window().visible
 
 func _request_overview(manual: bool) -> void:
 	if model == null or not model.connected or model.world_id == 0 or model.script_breaked: return
-	if _overview_pending != 0: return
+	if _overview_pending != 0 or model.has_pending("overview"): return
 	_overview_last_pull = Time.get_ticks_msec()
 	_overview_manual_pending = manual
 	_overview_pending = model.request("overview", {"limit": overview.row_limit})

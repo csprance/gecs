@@ -330,7 +330,10 @@ func _ready() -> void:
 	_build_structure_dialog()
 	if model != null:
 		_setup_catalogue()
-		graph_panel.send = model.sender
+		graph_panel.send = func(message: String, args: Array):
+			var sent = model.sender.call(message, args)
+			if message == "gecs:graph_watch": model.request("graph", {"id": graph_id}, {"key": "graph:%d" % graph_id})
+			return sent
 		graph_panel.selected_entities_provider = func(): return [ref.iid]
 		graph_panel.entity_activated.connect(_graph_activated)
 		_connect_watch()
@@ -722,6 +725,7 @@ func _toggle_graph(enabled: bool) -> void:
 			graph_panel.graph_id = graph_id
 		graph_panel.watch_ids = [ref.iid]
 		model.sender.call("gecs:graph_watch", [graph_id, [ref.iid], 0])
+		model.request("graph", {"id": graph_id}, {"key": "graph:%d" % graph_id})
 	else:
 		model.sender.call("gecs:graph_close", [graph_id])
 

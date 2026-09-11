@@ -121,10 +121,13 @@ attached**:
   ~0.3 ms per 100 calls of debug-off. The gate is a single static-bool read
   (`GECSEditorDebuggerMessages.attached`) inside the existing `if ECS.debug:`
   release-strip guards.
-- **Attached**: per-system telemetry is throttled to the tab's subscribed rate
-  (default 10 Hz) rather than every frame; runtime-side min/max/avg aggregation
-  still runs every frame so peaks are never lost. Lifecycle/property categories can
-  be turned off from the tab to shed more cost.
+- **Attached**: Explorer pulls system digests, entity pages, and visible watches at
+  up to 2 Hz. Min/max/avg aggregation stays in the runtime; property and lifecycle
+  churn sends no individual messages. A session has at most four outstanding
+  automatic reads. Hidden views stop polling, while a lightweight heartbeat keeps
+  the connection current. See [Debugger transport](DEBUGGER_TRANSPORT.md) for
+  timeout recovery, protocol limits, and the large-world soak fixture.
+
 
 Query-timing instrumentation (`world.perf_mark`, the `query_*`/`archetypes_*`
 aggregates) is **opt-in** and off by default even with debug on — nothing in the

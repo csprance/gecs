@@ -5,7 +5,7 @@ signal response(payload: Dictionary)
 signal changed(event: Dictionary)
 
 const Snapshot = preload("res://addons/gecs/debug/explorer/gecs_explorer_snapshot.gd")
-const VERSION := 1
+const VERSION := 2
 const PAGE_SIZE := 100
 const MAX_WATCHES := 64
 const MAX_INCOMING_RELATIONSHIPS := 256
@@ -17,6 +17,11 @@ var epoch := 1
 var watches: Dictionary = {}
 var run: Dictionary = {}
 var _pending: Array = []
+var state_dirty := false
+var _last_state_notice := 0
+var _last_run_result: Dictionary = {}
+const LOG_PAGE_ENTRIES := 32
+const LOG_PAGE_BYTES := 1048576
 var _pumping := false
 var _last_sample := 0
 var _sequence := 0
@@ -48,17 +53,19 @@ func reset() -> void:
 	epoch += 1
 	watches.clear()
 	run.clear()
+	_last_run_result.clear()
+	state_dirty = true
 	_pending.clear()
 
 func handle_request(request: Dictionary) -> void:
 	if int(request.get("version", 0)) != VERSION:
-		_reply(request, {"error": "Unsupported explorer protocol"})
+		_reply(request, {"error": "Incompatible GECS Explorer protocol; update the editor and game together", "code": "protocol_mismatch", "expected_version": VERSION})
 		return
 	if request.get("op") == "hello":
 		_reply(request, {"step_state": world.debug_stepper().state(), "catalogue": catalogue(), "world_path": str(world.get_path()) if world.is_inside_tree() else world.name})
 		return
 	if request.get("world", 0) != world.get_instance_id() or request.get("epoch", 0) != epoch:
-		_reply(request, {"error": "World changed; reconnect before issuing commands"})
+		_reply(request, {"error": "World changed; reconnect before issuing commands", "code": "world_changed"})
 		return
 	if _pending.size() >= 128:
 		_reply(request, {"error": "Explorer request queue is full"})
@@ -69,16 +76,28 @@ func pump() -> void:
 	if _pumping:
 		return
 	_pumping = true
-	var pending := _pending
-	_pending = []
+	# Bound responses per boundary; preserve command ordering and queued work.
+	var pending := _pending.slice(0, 4)
+	_pending = _pending.slice(4)
 	for request in pending:
 		if request.get("epoch") != epoch:
 			_reply(request, {"error": "World changed"})
 			continue
 		var args: Dictionary = request.get("args", {})
 		var result: Dictionary
+		if args.has("watch_definitions"):
+			var sync := _sync_watches(args.watch_definitions)
+			if sync.has("error"):
+				_reply(request, sync)
+				continue
 		match str(request.get("op", "")):
 			"overview": result = overview(args)
+			"systems": result = systems()
+			"sample": result = sample(args.get("keys", []))
+			"graph":
+				var id := int(args.get("id", 0))
+				result = {"id": id, "step": world.debug_stepper().step_counter, "graph": world.debug_graph_state(id)}
+			"debugger_state": result = debugger_state(args)
 			"_continue_run":
 				if not run.is_empty(): world.debug_step(run.kind)
 				continue
@@ -104,8 +123,10 @@ func pump() -> void:
 				result = {"id": id, "error": "" if id else "Invalid condition"}
 			_: result = {"error": "Unknown explorer operation"}
 		_reply(request, result)
-	if not watches.is_empty() and Time.get_ticks_msec() - _last_sample >= 100 and not world.debug_is_paused():
-		sample()
+	if state_dirty and Time.get_ticks_msec() - _last_state_notice >= 500:
+		state_dirty = false
+		_last_state_notice = Time.get_ticks_msec()
+		_event("state_changed", {})
 	_pumping = false
 
 func _reply(request: Dictionary, result: Dictionary) -> void:
@@ -446,21 +467,21 @@ func set_watch(args: Dictionary) -> Dictionary:
 		if built.has("error"): return built
 	elif resolve(args.get("entity", {})) == null: return {"error": "Stale entity identity"}
 	watches[key] = args.duplicate(true)
-	sample()
 	return {"key": key}
 
-func sample() -> void:
-	if watches.is_empty(): return
+func sample(keys: Array = []) -> Dictionary:
+	if keys.is_empty(): return {"samples": {}}
 	_last_sample = Time.get_ticks_msec()
 	_watch_sequence += 1
 	var values: Dictionary = {}
 	var bytes := 0
-	for key in watches:
+	for key in keys.slice(0, MAX_WATCHES):
+		if not watches.has(key): continue
 		var watch: Dictionary = watches[key]
 		var value := query({"spec": watch.spec}) if watch.has("spec") else inspect(watch.get("entity", {}))
 		bytes += var_to_bytes(value).size()
 		values[key] = value if bytes <= MAX_PAYLOAD_BYTES / 2 else {"error": "Sample budget exceeded; reduce active watches"}
-	_event("sample", {"samples": values, "time": _last_sample, "step": world.debug_stepper().step_counter, "sample": _watch_sequence})
+	return {"samples": values, "time": _last_sample, "step": world.debug_stepper().step_counter, "sample": _watch_sequence}
 
 func capture(args: Dictionary) -> Dictionary:
 	var entities: Dictionary = {}
@@ -548,10 +569,10 @@ func _stop_run(reason: String) -> void:
 	var count: int = run.count
 	run.clear()
 	if not world.debug_stepper()._servicing: world.debug_stepper()._requests.clear()
-	_event("run", {"reason": reason, "count": count})
+	_last_run_result = {"reason": reason, "count": count}
+	_event("run", _last_run_result)
 
 func _after_step(_kind: int, log: Dictionary) -> void:
-	sample()
 	if run.is_empty(): return
 	run.count += 1
 	run.remaining -= 1
@@ -678,3 +699,63 @@ func restore_snapshot(token: int) -> Dictionary:
 	_restore_token += 1
 	if topology.has("error"): return topology
 	return Snapshot.restore(self, plan)
+
+
+## One authoritative digest; metrics remain locally aggregated by System._handle.
+func systems() -> Dictionary:
+	var result := {}
+	for group in world.systems_by_group:
+		var order := 0
+		for system in world.systems_by_group[group]:
+			if not is_instance_valid(system): continue
+			var metrics: Dictionary = system.lastRunData.duplicate(true)
+			metrics["execution_order"] = order
+			metrics["script_path"] = system.get_script().resource_path
+			result[system.get_instance_id()] = {"path": str(system.get_path()) if system.is_inside_tree() else str(system.name), "group": group, "active": system.active, "paused": system.paused, "last_run_data": metrics}
+			order += 1
+	return {"systems": result}
+
+
+## Logs already live in the stepper's bounded ring. Never build a second history.
+func debugger_state(args: Dictionary = {}) -> Dictionary:
+	var stepper := world.debug_stepper()
+	var after := int(args.get("after", 0))
+	var oldest := int(stepper.step_logs[0].step_id) if not stepper.step_logs.is_empty() else stepper.step_counter + 1
+	var result := {"step_state": stepper.state(), "run": run.duplicate(true), "run_result": _last_run_result.duplicate(true), "logs": [], "after": after, "gap": after < oldest - 1, "omitted": [], "more": false}
+	var bytes := 0
+	for log in stepper.step_logs:
+		if int(log.step_id) <= after: continue
+		if result.logs.size() + result.omitted.size() >= LOG_PAGE_ENTRIES:
+			result.more = true
+			break
+		var size := var_to_bytes(log).size()
+		if size > LOG_PAGE_BYTES:
+			result.omitted.append(int(log.step_id))
+		elif bytes + size > LOG_PAGE_BYTES:
+			result.more = true
+			break
+		else:
+			result.logs.append(log.duplicate(true))
+			bytes += size
+		result.after = int(log.step_id)
+	return result
+
+
+## Definition reconciliation is cheap when unchanged and never samples values.
+## Keeping it in ordinary reads also repairs a lost unwatch when all views hide.
+func _sync_watches(definitions: Array) -> Dictionary:
+	if definitions.size() > MAX_WATCHES: return {"error": "Maximum 64 active watches; close unused watches"}
+	var desired := {}
+	for definition in definitions:
+		if not definition is Dictionary or str(definition.get("key", "")).is_empty(): return {"error": "Invalid watch definition"}
+		desired[str(definition.key)] = definition
+	for key in watches.keys():
+		if not desired.has(key): watches.erase(key)
+	for key in desired:
+		if watches.get(key) != desired[key]:
+			# Stale entities remain inspectable as an error sample, rather than
+			# blocking the health response and every other valid watch.
+			var result := set_watch(desired[key])
+			if result.has("error"):
+				watches[key] = desired[key].duplicate(true)
+	return {}

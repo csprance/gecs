@@ -44,172 +44,33 @@ Secondary actions use compact, quiet buttons; Apply and Step retain primary emph
 
 ## 🔍 Features Overview
 
-The debug viewer is split into two main panels:
+Explorer owns entity and system inspection; the bottom GECS debugger tab contains transport controls, step logs, breakpoints, and **Show Explorer**.
 
-### Systems Panel (Right)
+### Systems
 
-Monitor system execution and performance in real-time.
+Use the **Systems** page to compare last, minimum, maximum, and average execution times, entity/archetype counts, order, and status. Click a column heading to sort. Select a system and use **Enable / disable**, **Break before**, **Open script**, or **Reset timings**. Rows preserve selection while the authoritative digest reconciles additions and removals.
 
-**Features:**
+### Entities and relationships
 
-- **System execution time** - See how long each system takes to process (milliseconds)
-- **Entity count** - Number of entities processed per system
-- **Active/Inactive status** - Toggle systems on/off at runtime
-- **Sortable columns** - Click column headers to sort by name, time, or status
-- **Performance metrics** - Archetype count, parallel processing info
+The paged entity browser filters by entity name. Open an entity to inspect its component fields, relationships, and incoming links, stage edits, or add charts. Query expressions and the query builder handle more specific searches. Open the entity graph to explore relationship neighborhoods, and detach a view or graph when you need it on another monitor.
 
-**Status Bar:**
+### Refresh and connection behavior
 
-- Total system count
-- Combined execution time
-- Most expensive system highlighted
+Visible entity lists, systems, watches, and live graphs refresh at up to **2 Hz**. The overview defaults to **1 second** and retains its own rate and freeze controls. Hidden views stop automatic reads; existing chart history is retained with gaps when sampling resumes. Explicit one-shot queries run only on request.
 
-### Entities Panel (Left)
+Missing replies time out after **3 seconds**, allowing refreshes to resume. Attachment retries automatically, and a lightweight heartbeat recovers missed state changes. Edits and other mutations are not retried: if a reply is lost, the UI reports an unknown outcome and reads current state. Godot script breaks suspend polling; an ECS-only pause still permits inspection.
 
-Inspect individual entities and their components.
+The old **Entities / Systems** debugger-tab trees, capture-category checkboxes, and whole-tab **Pop Out / Pop In** controls have been retired. Use Explorer's companion window and detached entity/graph views instead. No Godot queue-limit increase is required.
 
-**Features:**
-
-- **Entity hierarchy** - See all entities in your world
-- **Component data** - View component properties in real-time (WIP)
-- **Relationships** - Visualize entity connections and associations
-- **Search/filter** - Find entities or components by name
-
-## 🎮 Using the Debug Viewer
-
-### Monitoring System Performance
-
-**Sort by execution time:**
-
-1. Click the **"Time (ms)"** column header in the Systems panel
-2. Systems are now sorted by performance (slowest first by default)
-3. Click again to reverse the sort order
-
-**Identify bottlenecks:**
-
-- Look for systems with high execution times (> 5ms)
-- Check the entity count - more entities = more processing
-- Consider optimization strategies from [Performance Optimization](PERFORMANCE_OPTIMIZATION.md)
-
-**Example:**
-
-```
-Name                    Time (ms)    Status
-PhysicsSystem          8.234 ms     ACTIVE   ← Bottleneck!
-RenderSystem           2.156 ms     ACTIVE
-AISystem               0.892 ms     ACTIVE
-```
-
-### Toggling Systems On/Off
-
-**Disable a system at runtime:**
-
-1. Locate the system in the Systems panel
-2. Click on the **Status** column (shows "ACTIVE" or "INACTIVE")
-3. System immediately stops processing entities
-4. Click again to re-enable
-
-**Use cases:**
-
-- Test game behavior without specific systems
-- Isolate bugs by disabling systems one at a time
-- Temporarily disable expensive systems during debugging
-- Verify system dependencies
-
-> ⚠️ **Important**: System state resets when you restart the game. This is a debugging tool, not a save/load feature.
-
-### Inspecting Entities
-
-**View entity components:**
-
-1. Expand an entity in the Entities panel
-2. See all attached components (e.g., `C_Health`, `C_Transform`)
-3. Expand a component to view its properties
-4. Values update in real-time as your game runs
-
-**Example entity structure:**
-
-```
-Entity #123 : /root/World/Player
-├── C_Health
-│   ├── current: 87.5
-│   └── maximum: 100.0
-├── C_Transform
-│   └── position: (15.2, 0.0, 23.8)
-└── C_Velocity
-    └── velocity: (2.5, 0.0, 1.3)
-```
-
-### Viewing Relationships
-
-Relationships show how entities are connected to each other.
-
-**Relationship types displayed:**
-
-- **Entity → Entity**: `Relationship: C_ChildOf -> Entity /root/World/Parent`
-- **Entity → Component**: `Relationship: C_Damaged -> C_FireDamage`
-- **Entity → Archetype**: `Relationship: C_Buff -> Archetype Player`
-- **Entity → Wildcard**: `Relationship: C_Damage -> Wildcard`
-
-**Expand relationships to see:**
-
-- Relation component properties
-- Target component properties (for component relationships)
-- Full relationship metadata
-
-> 💡 **Learn More**: See [Relationships](RELATIONSHIPS.md) for details on creating and querying entity relationships
-
-### Using Search and Filters
-
-**Systems panel:**
-
-- Type in the "Filter Systems" box to find systems by name
-- Only matching systems remain visible
-
-**Entities panel:**
-
-- Type in the "Filter Entities" box to search
-- Searches entity names, component names, and property names
-- Useful for finding specific entities in large worlds
-
-### Multi-Monitor Setup
-
-**Pop-out window:**
-
-1. Click **"Pop Out"** button at the top of the debug viewer
-2. Debug viewer moves to a separate window
-3. Position on second monitor for permanent visibility
-4. Click **"Pop In"** to return to the editor tab
-
-**Benefits:**
-
-- Keep debug info visible while editing scenes
-- Monitor performance during gameplay
-- Track entity changes without switching panels
-
-### Collapse/Expand Controls
-
-**Quick controls:**
-
-- **Collapse All** / **Expand All** - Manage all entities at once
-- **Systems Collapse All** / **Systems Expand All** - Manage all systems at once
-- Individual items can be collapsed/expanded by clicking
-
-### Stepping the ECS and the Entity Graph
-
-The debugger has full-width **Entities**, **Systems**, **Step log**, and **Breakpoints** tabs with a shared stepping toolbar: pause the ECS (the scene keeps running) and step it forward one frame, group, system, archetype or entity at a time. Every step lists what it changed (component adds / removes, property writes, relationships, entities, events) and who caused it (the system, a CommandBuffer flush, an observer). Breakpoints pause a live game before a system runs or right after a component type is added / removed or an entity is touched. *Graph selected* in the Entities tab (or *Open graph* on an entity row) opens a floating window with that entity, its components and its relationships as a graph; open as many as you need, and each refreshes after every step (or live at the poll rate with *Show live*).
-
-Right-click an entity row for *Add to step set*, *Break when touched* and *Open graph*; a component row for *Break when added / removed*; a system row for *Break before run*. The systems tree shows the paused cursor in the **Step** column and a breakpoint checkbox in the **BP** column.
-
-See [Step Debugger](STEP_DEBUGGER.md) for the full guide, including the headless `World.debug_*` API.
+See [Debugger transport](DEBUGGER_TRANSPORT.md) for protocol details and validation, and [Step Debugger](STEP_DEBUGGER.md) for stepping and the `World.debug_*` APIs.
 
 ## 🔧 Common Workflows
 
 ### Performance Optimization Workflow
 
-1. **Sort systems by execution time** (click "Time (ms)" header)
+1. **Sort systems by execution time** (click "Last ms" header)
 2. **Identify slowest system** (top of sorted list)
-3. **Expand system details** to see entity count and archetype count
+3. **Read system columns and tooltips** for entity count, archetype count, and detailed metrics
 4. **Review system implementation** for optimization opportunities
 5. **Apply optimizations** from [Performance Optimization](PERFORMANCE_OPTIMIZATION.md)
 6. **Re-run and compare** execution times
@@ -217,7 +78,7 @@ See [Step Debugger](STEP_DEBUGGER.md) for the full guide, including the headless
 ### Debugging Workflow
 
 1. **Identify the problematic entity** using search/filter
-2. **Expand entity** to view all components
+2. **Open the entity** to view all components
 3. **Watch component values** update in real-time
 4. **Toggle related systems off/on** to isolate the issue
 5. **Check relationships** if entity interactions are involved
@@ -226,14 +87,14 @@ See [Step Debugger](STEP_DEBUGGER.md) for the full guide, including the headless
 ### Testing System Dependencies
 
 1. **Run your game** from the editor
-2. **Disable systems one at a time** using the Status column
+2. **Disable systems one at a time** using **Enable / disable**
 3. **Observe game behavior** for each disabled system
 4. **Document dependencies** you discover
 5. **Design systems to be more independent** if needed
 
 ## 📊 Understanding System Metrics
 
-When you expand a system in the Systems panel, you'll see detailed metrics:
+The Systems page exposes metrics in columns and row tooltips:
 
 **Execution Time (ms):**
 

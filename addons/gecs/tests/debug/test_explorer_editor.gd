@@ -112,23 +112,12 @@ func test_overview_stays_available_and_only_polls_when_visible() -> void:
 	workspace.set_process(false)
 	await get_tree().process_frame
 	assert_bool(workspace.overview.is_visible_in_tree()).is_true()
-	var requests: Array = []
-	model.sender = func(_message, args): requests.append(args[0].op); return true
-	workspace._overview_last_pull = -10000
-	workspace._process(0.0)
-	workspace._process(0.0)
-	assert_array(requests).contains_exactly(["overview"])
+	assert_bool(workspace._poll_requests().any(func(poll): return poll.op == "overview")).is_true()
 	workspace.open_entity({"world": 10, "epoch": 1, "id": 1, "iid": 100})
 	assert_bool(workspace.entity_tabs.is_tab_hidden(0)).is_false()
-	workspace._overview_pending = 0
-	workspace._overview_last_pull = -10000
-	requests.clear()
-	workspace._process(0.0)
-	assert_array(requests).is_empty()
+	assert_bool(workspace._poll_requests().any(func(poll): return poll.op == "overview")).is_false()
 	workspace.entity_tabs.current_tab = 0
-	workspace._overview_last_pull = -10000
-	workspace._process(0.0)
-	assert_array(requests).contains_exactly(["overview"])
+	assert_bool(workspace._poll_requests().any(func(poll): return poll.op == "overview")).is_true()
 	assert_int(workspace.entity_tabs.get_tab_bar().tab_close_display_policy).is_equal(TabBar.CLOSE_BUTTON_SHOW_NEVER)
 	model.disconnect_session()
 	assert_str(workspace.overview._note.text).contains("Session ended")
@@ -266,14 +255,17 @@ func test_session_models_discard_stale_and_out_of_order_replies() -> void:
 	assert_int(replies[0].total).is_equal(2)
 	var stale := model.request("inspect")
 	model.accept({"request_id": stale, "world": 11, "epoch": 1, "result": {}})
-	assert_int(replies.size()).is_equal(1)
+	assert_int(replies.size()).is_equal(2)
+	assert_bool(replies.back().has("error")).is_true()
+	assert_int(model.world_id).is_equal(0)
 
 func test_charts_retain_at_most_600_samples_and_reject_old_events() -> void:
 	var model := _model()
 	model.world_id = 1
 	model.epoch = 1
+	model.watches["x"] = {}
 	for i in 650:
-		model.event({"world": 1, "epoch": 1, "sequence": i + 1, "kind": "sample", "data": {"samples": {"x": {}}, "time": i, "step": i}})
+		model._accept_sample({"samples": {"x": {}}, "time": i, "step": i})
 	assert_int(model.series.x.size()).is_equal(600)
 	model.event({"world": 1, "epoch": 1, "sequence": 1, "kind": "sample", "data": {}})
 	assert_int(model.series.x.size()).is_equal(600)

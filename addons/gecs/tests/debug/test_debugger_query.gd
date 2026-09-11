@@ -36,11 +36,12 @@ func after_test():
 
 
 ## Return the payload [ids, error] of the most recent ENTITY_QUERY_RESULT send.
+var _result: Dictionary = {}
+func _query(text: String) -> void:
+	_result = world.debug_explorer().query({"text": text})
+
 func _last_result() -> Array:
-	for i in range(_captured.size() - 1, -1, -1):
-		if _captured[i][0] == GECSEditorDebuggerMessages.Msg.ENTITY_QUERY_RESULT:
-			return _captured[i][1]
-	return []
+	return [_result.get("ids", []), _result.get("error", "")]
 
 
 func _spawn(components: Array) -> Entity:
@@ -54,7 +55,7 @@ func _spawn(components: Array) -> Entity:
 func test_with_all_returns_only_matching() -> void:
 	var a := _spawn([C_TestA.new()])
 	var b := _spawn([C_TestB.new()])
-	world._run_debugger_query("q.with_all([C_TestA])")
+	_query("q.with_all([C_TestA])")
 	var res := _last_result()
 	assert_bool(res.is_empty()).is_false()
 	assert_str(res[1]).is_equal("")
@@ -66,7 +67,7 @@ func test_with_all_returns_only_matching() -> void:
 func test_with_none_excludes() -> void:
 	var only_a := _spawn([C_TestA.new()])
 	var a_and_b := _spawn([C_TestA.new(), C_TestB.new()])
-	world._run_debugger_query("q.with_all([C_TestA]).with_none([C_TestB])")
+	_query("q.with_all([C_TestA]).with_none([C_TestB])")
 	var ids: Array = _last_result()[0]
 	assert_bool(ids.has(only_a.get_instance_id())).is_true()
 	assert_bool(ids.has(a_and_b.get_instance_id())).is_false()
@@ -74,21 +75,21 @@ func test_with_none_excludes() -> void:
 
 func test_trailing_execute_is_accepted() -> void:
 	var a := _spawn([C_TestA.new()])
-	world._run_debugger_query("q.with_all([C_TestA]).execute()")
+	_query("q.with_all([C_TestA]).execute()")
 	var res := _last_result()
 	assert_str(res[1]).is_equal("")
 	assert_bool((res[0] as Array).has(a.get_instance_id())).is_true()
 
 
 func test_parse_error_is_reported() -> void:
-	world._run_debugger_query("q.with_all([C_TestA]")  # missing bracket + paren
+	_query("q.with_all([C_TestA]")  # missing bracket + paren
 	var res := _last_result()
 	assert_str(res[1]).is_not_equal("")
 	assert_bool((res[0] as Array).is_empty()).is_true()
 
 
 func test_empty_query_reports_error() -> void:
-	world._run_debugger_query("   ")
+	_query("   ")
 	var res := _last_result()
 	assert_str(res[1]).is_not_equal("")
 	assert_bool((res[0] as Array).is_empty()).is_true()

@@ -28,7 +28,9 @@ func _ready() -> void:
 
 func set_samples(samples: Array, component: int, property: String) -> void:
 	values.clear()
+	sample_times.clear()
 	for sample in samples:
+		sample_times.append(sample.time)
 		var point: Variant = null
 		for comp in sample.data.get("components", []):
 			if comp.iid != component: continue

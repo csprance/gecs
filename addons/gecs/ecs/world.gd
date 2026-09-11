@@ -185,11 +185,6 @@ var perf_instrumentation: bool = false
 ## editor-only global scripts are never touched.
 var _debugger_class_paths: Dictionary = {}
 var _debugger_class_scripts: Dictionary = {}
-## Per-group accumulated seconds since the last telemetry sample. Telemetry to the
-## debugger is throttled to the subscribed rate (GECSEditorDebuggerMessages
-## .telemetry_interval) instead of firing every frame — peaks are preserved by the
-## runtime-side min/max/avg aggregation in System, which runs every frame regardless.
-var _telemetry_accum: Dictionary = {}
 ## Queue of systems waiting for setup after ECS.world is assigned
 var _deferred_setup_systems: Array[System] = []
 ## Per-group unique SystemTimers to advance each frame (rebuilt lazily when _timers_dirty)
@@ -358,20 +353,6 @@ func process(delta: float, group: String = "") -> void:
 		return
 	# PERF: Reset frame metrics at start of processing step
 	perf_reset_frame()
-	# Decide once whether this frame emits a telemetry sample. Throttled to the
-	# subscribed rate so an attached tab doesn't cost a full per-system message set
-	# every frame (min/max/avg still aggregate every frame inside System._handle).
-	var telemetry_due := false
-	if (
-		ECS.debug
-		and GECSEditorDebuggerMessages.attached
-		and GECSEditorDebuggerMessages.telemetry_active
-	):
-		var acc: float = _telemetry_accum.get(group, 0.0) + delta
-		if acc >= GECSEditorDebuggerMessages.telemetry_interval:
-			telemetry_due = true
-			acc = 0.0
-		_telemetry_accum[group] = acc
 	if systems_by_group.has(group):
 		# Advance all unique timers for this group BEFORE running systems
 		if _timers_dirty:
@@ -392,13 +373,8 @@ func process(delta: float, group: String = "") -> void:
 				if _step_live_checks and _stepper._live_before_system(system, group, slot, delta):
 					return
 				system._handle(delta)
-				if telemetry_due:
-					# Add execution order to last run data
+				if ECS.debug:
 					system.lastRunData["execution_order"] = system_index
-					assert(
-						GECSEditorDebuggerMessages.system_last_run_data(system, system.lastRunData),
-						"",
-					)
 					system_index += 1
 			# Advance only if the slot still holds this system; an erase at or
 			# before it shifted the next system into the slot.
@@ -425,8 +401,6 @@ func process(delta: float, group: String = "") -> void:
 					flush_slot += 1
 		if _step_live_checks and _stepper._live_after_flush(group):
 			return
-	if telemetry_due:
-		assert(GECSEditorDebuggerMessages.process_world(delta, group), "")
 
 
 ## Manually flush all command buffers with MANUAL flush mode.[br]
@@ -3305,45 +3279,5 @@ func _poll_entity_for_debugger(entity_id: int) -> void:
 func _run_debugger_query(query_text: String) -> void:
 	var result := debug_explorer().query({"text": query_text})
 	GECSEditorDebuggerMessages.entity_query_result(result.get("ids", []), result.get("error", ""))
-
-
-## Replay the full current world state to a tab that just subscribed. Without this,
-## a tab attaching after entities already exist would only ever see entities added
-## later (lifecycle events are edge-triggered). Called from ECS._on_debugger_message
-## when a subscription enables the lifecycle category.
-## NOTE: sends one message per system + per entity + per component/relationship. On a
-## very large world this can approach the debugger's queued-message cap
-## (project setting network/limits/debugger/max_queued_messages, default 2048);
-## Phase 3 can chunk this across frames if that becomes a problem in practice.
-func _send_debugger_snapshot() -> void:
-	if not (ECS.debug and GECSEditorDebuggerMessages.attached):
-		return
-	# Re-establish the world context on the freshly-cleared tab.
-	assert(GECSEditorDebuggerMessages.world_init(self), "")
-	# Systems always accompany a snapshot (the systems panel keys off system_added).
-	for system in systems:
-		if is_instance_valid(system):
-			assert(GECSEditorDebuggerMessages.system_added(system), "")
-	# Entity/component/relationship state only when the lifecycle category is on.
-	if GECSEditorDebuggerMessages.lifecycle_active:
-		for entity in entities:
-			if not is_instance_valid(entity):
-				continue
-			assert(GECSEditorDebuggerMessages.entity_added(entity, entity.is_inside_tree()), "")
-			# Lifecycle events are edge-triggered, so a late-attaching tab needs the
-			# current disabled state replayed alongside the add.
-			if not entity.enabled:
-				assert(GECSEditorDebuggerMessages.entity_disabled(entity), "")
-			for comp_key in entity.components.keys():
-				var comp = entity.components[comp_key]
-				if comp and comp is Resource:
-					assert(GECSEditorDebuggerMessages.entity_component_added(entity, comp), "")
-			for rel in entity.relationships:
-				if rel:
-					assert(GECSEditorDebuggerMessages.entity_relationship_added(entity, rel), "")
-	# Step debugger state (paused cursor, breakpoints, watch) so a re-subscribing
-	# tab picks up an in-progress session.
-	if _stepper != null:
-		GECSEditorDebuggerMessages.step_state(_stepper.state())
 
 #endregion Debugger Support

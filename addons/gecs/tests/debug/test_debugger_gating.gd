@@ -81,7 +81,7 @@ func test_unattached_builds_and_sends_nothing() -> void:
 	assert_bool(system.lastRunData.is_empty()).is_false()
 
 
-func test_attached_produces_messages() -> void:
+func test_attached_churn_produces_no_unsolicited_messages() -> void:
 	var seen := {}
 	GECSEditorDebuggerMessages._test_sink = func(m, _d): seen[m] = true
 	GECSEditorDebuggerMessages.refresh_attached()  # sink valid -> attached == true
@@ -91,10 +91,5 @@ func test_attached_produces_messages() -> void:
 	var system := NoMatchSystem.new()
 	_churn(system)
 
-	# Per-frame telemetry + structural lifecycle messages all flow when attached.
-	assert_bool(seen.has(GECSEditorDebuggerMessages.Msg.SYSTEM_LAST_RUN_DATA)).is_true()
-	assert_bool(seen.has(GECSEditorDebuggerMessages.Msg.PROCESS_WORLD)).is_true()
-	assert_bool(seen.has(GECSEditorDebuggerMessages.Msg.ENTITY_ADDED)).is_true()
-	assert_bool(seen.has(GECSEditorDebuggerMessages.Msg.ENTITY_COMPONENT_ADDED)).is_true()
-	# lastRunData is built while attached.
+	assert_dict(seen).is_empty()
 	assert_bool(system.lastRunData.is_empty()).is_false()

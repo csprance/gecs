@@ -154,30 +154,29 @@ func test_freed_target_edge_is_skipped_and_counted():
 	assert_int(_node(graph, "e:%d" % a.get_instance_id()).dangling).is_equal(1)
 
 
-func test_graph_state_is_pushed_after_a_step_when_watching():
+func test_graph_and_log_are_pulled_after_a_step():
 	var system := CounterSystem.new()
 	system.name = "S1"
 	world.add_system(system)
 	var a := _entity("a", [C_TestA.new()])
 	world.debug_graph_watch([a])
 	var pushed_on_watch := _messages(GECSEditorDebuggerMessages.Msg.GRAPH_STATE).size()
-	assert_int(pushed_on_watch).is_equal(1)
+	assert_int(pushed_on_watch).is_equal(0)
 	world.debug_pause()
 	world.process(0.016)
 
 	world.debug_step(GECSStepper.Kind.SYSTEM)
 	world.process(0.016)
 
-	var graphs := _messages(GECSEditorDebuggerMessages.Msg.GRAPH_STATE)
-	assert_int(graphs.size()).is_equal(2)
-	var payload: Dictionary = graphs[1][1][2]
+	assert_array(_messages(GECSEditorDebuggerMessages.Msg.GRAPH_STATE)).is_empty()
+	var payload := world.debug_graph_state()
 	assert_array(payload.watched).is_equal([a.get_instance_id()])
-	assert_int(_messages(GECSEditorDebuggerMessages.Msg.STEP_LOG).size()).is_equal(1)
-	var log: Dictionary = _messages(GECSEditorDebuggerMessages.Msg.STEP_LOG)[0][1][0]
+	assert_array(_messages(GECSEditorDebuggerMessages.Msg.STEP_LOG)).is_empty()
+	var log: Dictionary = world.debug_explorer().debugger_state().logs[0]
 	assert_str(log.label).is_equal("S1")
 
 
-func test_every_open_graph_is_pushed_after_a_step_and_pruned_on_removal():
+func test_open_graphs_are_pulled_and_pruned_on_removal():
 	var system := CounterSystem.new()
 	system.name = "S1"
 	world.add_system(system)
@@ -193,14 +192,8 @@ func test_every_open_graph_is_pushed_after_a_step_and_pruned_on_removal():
 	world.debug_step(GECSStepper.Kind.SYSTEM)
 	world.process(0.016)
 
-	var pushed := _messages(GECSEditorDebuggerMessages.Msg.GRAPH_STATE)
-	assert_int(pushed.size()).is_equal(2)
-	var ids: Array = [pushed[0][1][0], pushed[1][1][0]]
-	ids.sort()
-	assert_array(ids).is_equal([1, 2])
-	for msg in pushed:
-		if msg[1][0] == 2:
-			assert_array(msg[1][2].watched).is_equal([a.get_instance_id(), b.get_instance_id()])
+	assert_array(_messages(GECSEditorDebuggerMessages.Msg.GRAPH_STATE)).is_empty()
+	assert_array(world.debug_graph_state(2).watched).is_equal([a.get_instance_id(), b.get_instance_id()])
 
 	world.remove_entity(b)
 	assert_array(world.debug_step_state().graphs[2].watch).is_equal([a.get_instance_id()])
@@ -254,14 +247,14 @@ func test_commands_drive_the_stepper():
 	assert_int(world.debug_step_state().graphs[5].depth).is_equal(1)
 	assert_bool(ECS._on_debugger_message("graph_pull", [5])).is_true()
 	var graph_msgs := _messages(GECSEditorDebuggerMessages.Msg.GRAPH_STATE)
-	assert_int(graph_msgs.size()).is_equal(graphs_before + 2)
-	assert_int(graph_msgs[graph_msgs.size() - 1][1][0]).is_equal(5)
+	assert_int(graph_msgs.size()).is_equal(graphs_before)
+	assert_array(world.debug_graph_state(5).watched).is_equal([iid])
 	assert_bool(ECS._on_debugger_message("graph_close", [5])).is_true()
 	assert_bool(world.debug_step_state().graphs.has(5)).is_false()
 
 	var states_before := _messages(GECSEditorDebuggerMessages.Msg.STEP_STATE).size()
 	assert_bool(ECS._on_debugger_message("step_pull_state", [])).is_true()
-	assert_int(_messages(GECSEditorDebuggerMessages.Msg.STEP_STATE).size()).is_equal(states_before + 1)
+	assert_int(_messages(GECSEditorDebuggerMessages.Msg.STEP_STATE).size()).is_equal(states_before)
 
 	assert_bool(ECS._on_debugger_message("step_resume", [])).is_true()
 	assert_bool(world.debug_is_paused()).is_false()
@@ -290,15 +283,15 @@ func test_step_state_payload_shape():
 	for key in ["has_group", "group", "slot", "system_id", "system_name", "in_system", "unit_index", "unit_count", "unit_label", "next_label"]:
 		assert_bool(state.cursor.has(key)).override_failure_message("missing cursor key " + key).is_true()
 	var sent := _messages(GECSEditorDebuggerMessages.Msg.STEP_STATE)
-	assert_bool(sent.size() >= 1).is_true()
-	assert_bool(sent[sent.size() - 1][1][0].paused).is_true()
+	assert_array(sent).is_empty()
+	assert_bool(world.debug_explorer().debugger_state().step_state.paused).is_true()
 
 
-func test_snapshot_replays_step_state_when_a_stepper_exists():
+func test_subscription_does_not_replay_step_state():
 	world.debug_pause()
 	_captured = []
 
 	ECS._on_debugger_message("subscribe", [{}, 10.0])
 
-	assert_int(_messages(GECSEditorDebuggerMessages.Msg.STEP_STATE).size()).is_equal(1)
-	assert_int(_messages(GECSEditorDebuggerMessages.Msg.WORLD_INIT).size()).is_equal(1)
+	assert_int(_messages(GECSEditorDebuggerMessages.Msg.STEP_STATE).size()).is_equal(0)
+	assert_int(_messages(GECSEditorDebuggerMessages.Msg.WORLD_INIT).size()).is_equal(0)

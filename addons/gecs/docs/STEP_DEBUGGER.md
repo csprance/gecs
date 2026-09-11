@@ -28,7 +28,7 @@ A pause requested from the editor (or `debug_pause()`) may land mid-frame. The f
 
 Inactive, paused and timer-gated systems are skipped and listed in the step log.
 
-The **step set** ("Step through these entities") is a set of entities you pick in the entity tree (multi-select, right-click, *Add to step set*, or *Use selected entities* under *Step options*) or set from code with `debug_set_step_entities([...])`. Entities that are removed leave the set on their own.
+The **step set** ("Step through these entities") is selected through Explorer and *Use selected entities* under *Step options*, or set from code with `debug_set_step_entities([...])`. Entities that are removed leave the set on their own.
 
 ## The step log
 
@@ -46,7 +46,7 @@ Every step (and every breakpoint hit, and every batch of mutations made outside 
 
 The **cause** column says who made the change: empty for a direct write inside the system, `cmd` inside a CommandBuffer flush, `observer:<name>` inside an observer callback (nested causes are joined with `>`, e.g. `cmd>observer:HealthObserver>cmd`), `(sweep)` for sweep hits and `(external)` for changes made outside any step. The system column names the system that was running.
 
-The pane keeps the last 200 entries; each entry holds at most 2000 ops (marked `+` when truncated). Values are rendered for transport: objects become labels, containers are capped, strings are truncated.
+The runtime retains 64 entries, which the editor retrieves in bounded pages; expired or oversized entries are reported as gaps. The pane keeps the last 200 received entries; each entry holds at most 2000 ops (marked `+` when truncated). Values are rendered for transport: objects become labels, containers are capped, strings are truncated.
 
 ## The diff sweep
 
@@ -58,7 +58,7 @@ The sweep costs O(entities x properties) per step, which is fine because the wor
 
 Breakpoints pause a live world:
 
-- **System**: pause *before* the system runs (the cursor points at it; *Step System* runs it). Set from the BP column checkbox in the systems tree or its context menu.
+- **System**: pause *before* the system runs (the cursor points at it; *Step System* runs it). Use **Break before** on an Explorer system row.
 - **Component added / removed**: pause right after the system whose flush or direct call added / removed a component of that type. Set from a component row's context menu.
 - **Entity touched**: pause right after the system that journaled any op on that entity. Set from an entity row's context menu (*Break when touched*).
 
@@ -68,25 +68,22 @@ While any component / entity breakpoint exists the journal also runs live (ops a
 
 ## The graph view
 
-Right-click an entity row and pick *Open graph* (with several rows selected, one graph for all of them). A floating window opens showing the **watched** entities as nodes with their components listed inside, and their relationships as connections: outgoing edges leave from the relationship rows of a node, incoming edges from other entities arrive at the header row. Entities outside the watch set that relate to a watched one appear as stubs; archetype (script) targets, component-instance targets and the wildcard target get small nodes of their own. *Depth* expands the neighbourhood by that many relationship hops; *Add selected* merges the entity tree's selection into the window's watch set.
+Open an entity in Explorer and enable its graph. Relationships connect entities and their components; **Depth** expands the neighborhood. The graph can stay beside the component table or move into its own window. Node positions persist across refreshes; **Arrange** runs the layout again.
 
-Open as many graph windows as you like, one per entity or per group of entities; each has its own watch set, depth and *Show live* toggle. While paused every window refreshes after every step and the entities the step touched (and relationships it added) are highlighted; with *Show live* on it refreshes at the entity poll rate while the game runs. Node positions persist across refreshes; *Arrange* re-runs the auto layout. Closing the window drops its watch in the game. The windows are separate from the debugger tab, so they stay put when you switch editor tabs or pop the GECS tab out.
+Visible graphs with **Show live** enabled refresh at up to 2 Hz, including during an ECS pause. Stepping schedules fresh visible data; the runtime does not broadcast one graph per step. Hidden views stop polling. There is one outstanding request per graph, shared through the session scheduler.
 
 ## Using the editor tab
 
-The debugger uses one full-width workspace with **Entities**, **Systems**, **Step log**, and **Breakpoints** tabs. Switching tabs preserves filters, selection, and log history. The shared toolbar stays available on every tab:
+The compact GECS debugger tab contains **Step log** and **Breakpoints**, plus a shared toolbar:
 
-- **Pause / Resume**: only the action relevant to the current state is shown. ECS pausing leaves the rest of the scene running.
-- **Step by**: choose Frame, Group, System (the default), Archetype, or Entity, then press **Step**. Stepping while live pauses ECS first.
-- **Step options**: set the number of steps per click, use selected entities as the step set, clear the set, or toggle the property sweep. The Step button shows the count when greater than one.
-- **Capture settings**: entity lifecycle events, component property changes, system timing, and refresh rates. Closing this popup keeps the capture configuration active.
-- **Pop Out / Pop In**: move the whole workspace into a separate window and back without losing the selected tab.
+- **Pause / Resume** controls ECS processing while the rest of the scene runs.
+- **Step by** selects Frame, Group, System, Archetype, or Entity.
+- **Step options** sets the step count, selected entity set, and property sweep.
+- **Show Explorer** opens the companion window for entity/system inspection, watches, editing, and graphs.
 
-The status line shows the paused cursor, unit progress, and pending steps. **Step log** entries expand to show their operations; turn off **Follow latest** to inspect earlier entries without scrolling to every new step. **Breakpoints** lists enable toggles, hit counts, and removal actions; its tab title shows the count.
+The old entity/system trees, capture-category settings, and whole-tab pop-out controls are retired. Explorer's companion and detached windows provide those inspection surfaces. The status line shows the paused cursor and pending steps. Disable **Follow latest** to inspect earlier logs; use **Breakpoints** to enable, disable, or remove conditions.
 
-Graphs occupy no space in this workspace. Select one or more entities and click **Graph selected**, or right-click an entity and choose **Open graph**. Every request opens a separate graph window. Empty selections do nothing, and late updates cannot reopen a window after you close it. Explicit watches started from game code also open a graph window; use a fresh graph ID to reopen one closed in the editor during the same session.
-
-The systems tree shows the cursor in the **Step** column and a breakpoint checkbox in the **BP** column; the rows touched by the last step are tinted in both trees.
+See [Debugger transport](DEBUGGER_TRANSPORT.md) for refresh rates, history limits, and dropped-reply recovery. The code APIs below remain available independently of the editor UI.
 
 ## Headless / code API
 
