@@ -1,6 +1,0 @@
-[gd_scene load_steps=2 format=3 uid="uid://bcardgame00player"]
-
-[ext_resource type="Script" path="res://example_card_game/entities/e_player.gd" id="1_player"]
-
-[node name="EPlayer" type="Node2D"]
-script = ExtResource("1_player")
