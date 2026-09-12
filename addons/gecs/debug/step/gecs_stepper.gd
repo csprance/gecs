@@ -107,6 +107,8 @@ var _bp_comp_add_keys: Dictionary = {}
 var _bp_comp_remove_keys: Dictionary = {}
 var _bp_entity_ids: Dictionary = {}
 var _break_info: Dictionary = {}
+## Retain the reason for the current pause independently of pending journal hits.
+var _pause_break_info: Dictionary = {}
 var _requests: Array = []
 var _servicing := false
 var _pause_settled := false
@@ -165,6 +167,7 @@ func resume() -> void:
 		_finish_step()
 	paused = false
 	_requests.clear()
+	_pause_break_info = {}
 	_frame_step_id = -1
 	_reset_cursor()
 	_external_ops = []
@@ -365,7 +368,7 @@ func state() -> Dictionary:
 		"step_counter": step_counter,
 		"pending_requests": _requests.size(),
 		"frame_step_active": _frame_step_id != -1,
-		"break_info": _break_info.duplicate(),
+		"break_info": _pause_break_info.duplicate() if paused else {},
 	}
 
 
@@ -388,6 +391,7 @@ func reset() -> void:
 	_sweep.clear()
 	break_requested = false
 	_break_info = {}
+	_pause_break_info = {}
 	step_logs = []
 	last_step_log = {}
 	step_counter = 0
@@ -1005,6 +1009,7 @@ func _pause_from_live(group, slot: int, delta: float, label: String) -> void:
 	if sweep_enabled:
 		_sweep.rebase(world)
 	var info := _break_info
+	_pause_break_info = info.duplicate()
 	var log := _make_log(-1, "break: " + label, _live_scratch, [], [], 0.0, false, info)
 	log["kind_name"] = "break"
 	_live_scratch = []
@@ -1162,6 +1167,7 @@ func _request_break(bp_id: int, op: int, entity) -> void:
 
 
 func _begin_step(kind: int, label: String) -> void:
+	_pause_break_info = {}
 	_in_step = true
 	_step_kind = kind
 	_step_label = label
@@ -1208,6 +1214,7 @@ func _finish_step() -> void:
 		_break_info
 	)
 	var systems_run: Array = _step_systems
+	_pause_break_info = _break_info.duplicate()
 	var kind := _step_kind
 	_step_ops = []
 	_step_skipped = []

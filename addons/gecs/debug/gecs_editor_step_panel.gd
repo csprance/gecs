@@ -1,10 +1,9 @@
 @tool
-## Shared debugger transport, step options, status and tabbed workspace.
-## The parent tab adds Entities and Systems before Step log / Breakpoints.
+## Shared debugger transport, step options, pause reason and breakpoint controls.
 ##
 ## Talks to the game only through [member send] (injected by the tab, wraps
 ## [method GECSEditorDebuggerTab.send_to_game]) and reports incoming state and
-## logs through signals so the tab can mark its own entity / system trees.
+## logs through signals to the surrounding workspace.
 ## Builds its controls in code so the debugger scene stays small.
 class_name GECSEditorStepPanel
 extends VBoxContainer
@@ -58,6 +57,12 @@ var breakpoints_tree: Tree
 var clear_breakpoints_btn: Button
 var log_tree: Tree
 var clear_log_btn: Button
+var break_notice: VBoxContainer
+var break_reason: Label
+var disable_break_btn: Button
+var manage_breakpoints_btn: Button
+var breakpoints_popup: PopupPanel
+var remove_breakpoint_btn: Button
 
 
 func _ready() -> void:
@@ -89,6 +94,7 @@ func _build_ui() -> void:
 		options_popup.popup()
 	)
 	options_btn.name = "StepOptions"
+	manage_breakpoints_btn = _button(transport, "Breakpoints", "View, disable or remove breakpoints.", _show_breakpoints)
 	var spacer := Control.new()
 	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	transport.add_child(spacer)
@@ -134,6 +140,15 @@ func _build_ui() -> void:
 	status_label.clip_text = true
 	status_label.mouse_filter = Control.MOUSE_FILTER_PASS
 	add_child(status_label)
+	break_notice = VBoxContainer.new()
+	add_child(break_notice)
+	break_reason = Label.new()
+	break_reason.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	break_reason.add_theme_color_override("font_color", COLOR_BREAK)
+	break_notice.add_child(break_reason)
+	disable_break_btn = _button(break_notice, "Disable this breakpoint", "Disable the breakpoint that caused this pause, then use Resume to continue.", _disable_current_breakpoint)
+	disable_break_btn.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	break_notice.hide()
 
 	tabs = TabContainer.new()
 	tabs.use_hidden_tabs_for_min_size = false
@@ -183,10 +198,16 @@ func _build_ui() -> void:
 	var bp_header := HBoxContainer.new()
 	bp_box.add_child(bp_header)
 	var bp_hint := Label.new()
-	bp_hint.text = "Set from the entity, component and system context menus or the BP column."
+	bp_hint.text = "Uncheck On to disable."
+	bp_hint.tooltip_text = "Disable a breakpoint without deleting it. Press Resume to continue ECS after a pause."
 	bp_hint.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	bp_hint.clip_text = true
 	bp_header.add_child(bp_hint)
+	remove_breakpoint_btn = _button(bp_header, "Remove selected", "Remove the selected breakpoint.", func():
+		var row := breakpoints_tree.get_selected()
+		if row != null: _send("gecs:breakpoint_remove", [row.get_meta("bp_id", 0)])
+	)
+	remove_breakpoint_btn.disabled = true
 	clear_breakpoints_btn = _button(bp_header, "Clear all", "Remove every breakpoint.", _on_clear_breakpoints)
 	breakpoints_tree = Tree.new()
 	breakpoints_tree.columns = 3
@@ -202,6 +223,7 @@ func _build_ui() -> void:
 	breakpoints_tree.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	breakpoints_tree.create_item()
 	breakpoints_tree.item_edited.connect(_on_bp_item_edited)
+	breakpoints_tree.item_selected.connect(func(): remove_breakpoint_btn.disabled = false)
 	breakpoints_tree.button_clicked.connect(_on_bp_button_clicked)
 	bp_box.add_child(breakpoints_tree)
 	_update_buttons()
@@ -314,6 +336,7 @@ func clear() -> void:
 	if breakpoints_tree:
 		breakpoints_tree.clear()
 		breakpoints_tree.create_item()
+		remove_breakpoint_btn.disabled = true
 	if step_set_label:
 		step_set_label.text = "Step set: 0"
 	if status_label:
@@ -373,6 +396,46 @@ func _on_clear_breakpoints() -> void:
 	_send("gecs:breakpoint_clear", [])
 
 
+## Explorer hides the log tabs; keep breakpoint management in its own popup.
+func use_breakpoint_popup() -> void:
+	if breakpoints_popup != null: return
+	breakpoints_popup = PopupPanel.new()
+	add_child(breakpoints_popup)
+	bp_box.reparent(breakpoints_popup)
+	bp_box.custom_minimum_size = Vector2(600, 280)
+	bp_box.show()
+
+
+func _show_breakpoints() -> void:
+	if breakpoints_popup != null:
+		breakpoints_popup.popup_centered()
+	else:
+		tabs.current_tab = tabs.get_tab_idx_from_control(bp_box)
+
+
+func _disable_current_breakpoint() -> void:
+	var id := int(state.get("break_info", {}).get("breakpoint_id", 0))
+	if paused and id > 0: _send("gecs:breakpoint_set_enabled", [id, false])
+
+
+func _update_break_notice() -> void:
+	if break_notice == null: return
+	var info: Dictionary = state.get("break_info", {})
+	break_notice.visible = paused and not info.is_empty()
+	if not break_notice.visible: return
+	var id := int(info.get("breakpoint_id", 0))
+	var armed := false
+	var exists := false
+	for bp in state.get("breakpoints", []):
+		if int(bp.get("id", 0)) == id:
+			exists = true
+			armed = bp.get("enabled", true)
+	break_reason.text = "Paused: breakpoint #%d — %s" % [id, info.get("label", "Breakpoint hit")]
+	if not str(info.get("system", "")).is_empty(): break_reason.text += "\nSystem: " + str(info.system)
+	break_reason.text += "\nResume keeps this breakpoint armed and can pause here again. Disable it to stop these breaks." if armed else "\nThis breakpoint is %s. Press Resume to continue ECS." % ("disabled" if exists else "removed")
+	disable_break_btn.visible = armed
+
+
 func _on_bp_item_edited() -> void:
 	if not breakpoints_tree or breakpoints_tree.get_edited_column() != 0:
 		return
@@ -409,6 +472,7 @@ func _send(message: String, data: Array) -> bool:
 
 
 func _update_buttons() -> void:
+	_update_break_notice()
 	if pause_btn:
 		pause_btn.disabled = paused
 		pause_btn.visible = not paused
@@ -469,6 +533,8 @@ func _status_text(s: Dictionary) -> String:
 func _rebuild_breakpoints(bps: Array) -> void:
 	if not breakpoints_tree:
 		return
+	var selected_id := int(breakpoints_tree.get_selected().get_meta("bp_id", 0)) if breakpoints_tree.get_selected() != null else 0
+	remove_breakpoint_btn.disabled = true
 	breakpoints_tree.clear()
 	var root := breakpoints_tree.create_item()
 	var remove_icon: Texture2D = null
@@ -477,6 +543,7 @@ func _rebuild_breakpoints(bps: Array) -> void:
 	for bp in bps:
 		var row := breakpoints_tree.create_item(root)
 		row.set_meta("bp_id", int(bp.get("id", 0)))
+		if int(bp.get("id", 0)) == selected_id: row.select(0)
 		row.set_cell_mode(0, TreeItem.CELL_MODE_CHECK)
 		row.set_checked(0, bool(bp.get("enabled", true)))
 		row.set_editable(0, true)
@@ -489,7 +556,9 @@ func _rebuild_breakpoints(bps: Array) -> void:
 
 
 func _set_breakpoints_title(count: int) -> void:
-	if tabs and bp_box:
+	if manage_breakpoints_btn:
+		manage_breakpoints_btn.text = "Breakpoints (%d)" % count if count > 0 else "Breakpoints"
+	if tabs and bp_box and bp_box.get_parent() == tabs:
 		tabs.set_tab_title(tabs.get_tab_idx_from_control(bp_box), "Breakpoints (%d)" % count if count > 0 else "Breakpoints")
 
 

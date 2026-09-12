@@ -62,6 +62,10 @@ Breakpoints pause a live world:
 - **Component added / removed**: pause right after the system whose flush or direct call added / removed a component of that type. Set from a component row's context menu.
 - **Entity touched**: pause right after the system that journaled any op on that entity. Set from an entity row's context menu (*Break when touched*).
 
+When a breakpoint fires, the pause notice names the system and the breakpoint that caused it. **Resume** leaves the breakpoint armed, so it can pause again. To stop those breaks, choose **Disable this breakpoint**, then **Resume**.
+
+The **Breakpoints** button beside the stepping controls opens the complete list in Explorer. Uncheck **On** to disable one, use **Remove selected** to delete it, or **Clear all** to remove every breakpoint. System rows show **Breakpoint armed** or **Breakpoint disabled**; their right-click menu also lets you enable, disable or remove that system's breakpoint.
+
 A component / entity breakpoint hit inside a PER_GROUP flush pauses after the flush; one hit outside `process()` (game code between frames) pauses at the next `process()` call. The log entry for a hit is tagged `break:` and shows the ops that led to it. During a `GROUP` or `FRAME` step a breakpoint hit stops the step early.
 
 While any component / entity breakpoint exists the journal also runs live (ops are kept per system and dropped when no breakpoint fires), so the tab can show what happened right before the hit. Systems with no breakpoints pay nothing beyond one boolean check.

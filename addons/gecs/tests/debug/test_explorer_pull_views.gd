@@ -115,3 +115,39 @@ func test_hidden_tabs_do_not_poll_but_selected_systems_do() -> void:
 	assert_array(workspace._poll_requests()).contains_exactly([{"op": "systems"}])
 	workspace.nav.current_tab = 1 # One-shot queries
 	assert_array(workspace._poll_requests()).is_empty()
+
+func test_explorer_exposes_breakpoint_management_and_system_toggle_actions() -> void:
+	var model := GECSExplorerModel.new()
+	var sent: Array = []
+	model.sender = func(message, data): sent.append([message, data]); return true
+	var workspace = auto_free(GECSExplorerWorkspace.new())
+	workspace.configure(model)
+	add_child(workspace)
+	var panel: GECSEditorStepPanel = workspace.transport
+	assert_bool(panel.tabs.visible).is_false()
+	panel.manage_breakpoints_btn.pressed.emit()
+	assert_bool(panel.breakpoints_popup.visible).is_true()
+	assert_bool(panel.bp_box.is_visible_in_tree()).is_true()
+	panel.breakpoints_popup.hide()
+	workspace._systems({42: {"path": "Movement"}})
+	workspace._system_items[42].select(0)
+	assert_bool(workspace._system_context_actions().has("Break before system")).is_true()
+	workspace._system_action("break")
+	assert_array(sent).contains_exactly([["gecs:breakpoint_add", [{"kind": "system", "system_id": 42}]]])
+	sent.clear()
+	model.step_state = {"breakpoints": [{"id": 7, "system_id": 42, "enabled": true}, {"id": 8, "system_id": 42, "enabled": true}]}
+	workspace._refresh_transport()
+	assert_bool(workspace._system_context_actions().has("Disable system breakpoint")).is_true()
+	assert_str(workspace._system_items[42].get_text(9)).contains("Breakpoint armed")
+	workspace._system_action("break")
+	assert_array(sent).contains_exactly([["gecs:breakpoint_set_enabled", [7, false]], ["gecs:breakpoint_set_enabled", [8, false]]])
+	for bp in model.step_state.breakpoints: bp.enabled = false
+	workspace._refresh_transport()
+	assert_str(workspace._system_break_button.text).is_equal("Enable system breakpoint")
+	assert_str(workspace._system_items[42].get_text(9)).contains("Breakpoint disabled")
+	sent.clear()
+	workspace._system_action("break")
+	assert_array(sent).contains_exactly([["gecs:breakpoint_set_enabled", [7, true]]])
+	sent.clear()
+	workspace._system_action("remove_break")
+	assert_array(sent).contains_exactly([["gecs:breakpoint_remove", [7]], ["gecs:breakpoint_remove", [8]]])

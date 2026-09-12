@@ -1,5 +1,25 @@
 # GECS Changelog
 
+## [9.3.3] - 2026-09-11 - Explorer polling and breakpoint controls
+
+### Fixed
+
+- Open Explorer and detached windows keep polling their displayed content when
+  focus returns to the game. Polling runs independently of the debugger dock;
+  hidden tabs and closed views stop automatic data reads.
+- Detached entity windows now initialize correctly as independent native windows.
+- Breakpoint pauses retain and display the triggering system and reason across
+  state refreshes. The pause notice explains repeated breaks and offers
+  **Disable this breakpoint**, followed by **Resume** to continue processing.
+- Explorer exposes breakpoint management beside the stepping controls, including
+  enable/disable, **Remove selected**, and **Clear all**. System rows show their
+  breakpoint status and offer enable, disable, and remove actions in the context menu.
+
+### Validation
+
+- All 656 debugger and core tests passed. Native-window focus/polling checks and
+  breakpoint UI layout checks also passed.
+
 ## [9.3.0] - 2026-09-11 - Explorer, step debugger, QueryBuilder.from(), relationship cleanup fixes
 
 ### Added

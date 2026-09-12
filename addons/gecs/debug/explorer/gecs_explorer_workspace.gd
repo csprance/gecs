@@ -65,6 +65,7 @@ var _run_status: Dictionary = {}
 var _system_sort := 4
 var _system_descending := true
 var _system_summary: Label
+var _system_break_button: Button
 var _watch_detail: Tree
 var _watch_help: Label
 var _latest_watches: Dictionary = {}
@@ -119,6 +120,7 @@ func _ready() -> void:
 	transport = GECSEditorStepPanel.new()
 	execution.add_child(transport)
 	transport.tabs.hide()
+	transport.use_breakpoint_popup()
 	# The shared panel's spacer competes with the world path for width here.
 	# The connection group itself fills all remaining toolbar space.
 	for child in transport.transport.get_children():
@@ -780,10 +782,11 @@ func _build_systems() -> void:
 	box.add_child(bar)
 	_button(bar, "Open script", func(): _system_action("script"))
 	_button(bar, "Enable / disable", func(): _system_action("toggle"))
-	_button(bar, "Break before", func(): _system_action("break"))
+	_system_break_button = _button(bar, "Break before system", func(): _system_action("break"))
 	_button(bar, "Reset timings", func(): model.sender.call("gecs:reset_system_metrics", []))
 	systems_tree = _tree(box, ["System", "Group", "Last ms", "Min ms", "Max ms", "Avg ms", "Entities", "Archetypes", "Order", "State"])
 	systems_tree.set_column_expand_ratio(0, 3)
+	systems_tree.set_column_custom_minimum_width(9, UI.px(220))
 	systems_tree.column_title_clicked.connect(func(index: int, button: int):
 		if button != MOUSE_BUTTON_LEFT: return
 		_system_descending = not _system_descending if _system_sort == index else index >= 2
@@ -791,11 +794,41 @@ func _build_systems() -> void:
 		_systems(_systems_data)
 	)
 	systems_tree.item_activated.connect(func(): _system_action("script"))
-	UI.context_menu(systems_tree, func(): return {
+	systems_tree.item_selected.connect(_refresh_system_breakpoints)
+	UI.context_menu(systems_tree, _system_context_actions)
+
+func _system_breakpoints(system_id: int) -> Array:
+	return model.step_state.get("breakpoints", []).filter(func(bp): return int(bp.get("system_id", 0)) == system_id)
+
+func _system_break_action_label(system_id: int) -> String:
+	var bps := _system_breakpoints(system_id)
+	if bps.is_empty(): return "Break before system"
+	return "Disable system breakpoint" if bps.any(func(bp): return bp.get("enabled", true)) else "Enable system breakpoint"
+
+func _system_context_actions() -> Dictionary:
+	var row := systems_tree.get_selected()
+	if row == null: return {}
+	var system_id := int(row.get_metadata(0).id)
+	var actions := {
 		"Open system script": func(): _system_action("script"),
 		"Enable / disable system": func(): _system_action("toggle"),
-		"Break before system": func(): _system_action("break")
-	})
+		_system_break_action_label(system_id): func(): _system_action("break")
+	}
+	if not _system_breakpoints(system_id).is_empty():
+		actions["Remove system breakpoint"] = func(): _system_action("remove_break")
+	return actions
+
+func _refresh_system_breakpoints() -> void:
+	var selected := systems_tree.get_selected()
+	_system_break_button.disabled = selected == null
+	_system_break_button.text = _system_break_action_label(int(selected.get_metadata(0).id)) if selected != null else "Break before system"
+	for system_id in _system_items:
+		var row: TreeItem = _system_items[system_id]
+		var bps := _system_breakpoints(int(system_id))
+		var text := str(row.get_metadata(0).values[9])
+		if not bps.is_empty(): text += " · Breakpoint armed" if bps.any(func(bp): return bp.get("enabled", true)) else " · Breakpoint disabled"
+		row.set_text(9, text)
+		row.set_tooltip_text(9, text + "\nRight-click to enable, disable or remove the system breakpoint.")
 
 func _system_action(action: String) -> void:
 	var row := systems_tree.get_selected()
@@ -805,7 +838,18 @@ func _system_action(action: String) -> void:
 		"script":
 			if Engine.is_editor_hint() and not str(data.script).is_empty(): EditorInterface.edit_script(load(data.script))
 		"toggle": model.sender.call("gecs:set_system_active", [data.id, not data.get("active", true)])
-		"break": model.sender.call("gecs:breakpoint_add", [{"kind": "system", "system_id": data.id}])
+		"break":
+			var bps := _system_breakpoints(int(data.id))
+			if bps.is_empty():
+				model.sender.call("gecs:breakpoint_add", [{"kind": "system", "system_id": data.id}])
+			elif bps.any(func(bp): return bp.get("enabled", true)):
+				for bp in bps:
+					if bp.get("enabled", true): model.sender.call("gecs:breakpoint_set_enabled", [bp.id, false])
+			else:
+				model.sender.call("gecs:breakpoint_set_enabled", [bps[0].id, true])
+		"remove_break":
+			for bp in _system_breakpoints(int(data.id)): model.sender.call("gecs:breakpoint_remove", [bp.id])
+	model.refresh()
 
 func _build_changes() -> void:
 	var page := _box("Changes")
@@ -1154,6 +1198,7 @@ func _updated(kind: String, data: Dictionary) -> void:
 			transport.step_btn.disabled = true
 			transport.pause_btn.disabled = true
 			transport.resume_btn.disabled = true
+			transport.disable_break_btn.disabled = true
 			_update_connection_badge()
 
 func _refresh_transport() -> void:
@@ -1162,6 +1207,8 @@ func _refresh_transport() -> void:
 	transport.pause_btn.disabled = not available or transport.paused
 	transport.resume_btn.disabled = not available or not transport.paused
 	transport.step_btn.disabled = not available
+	transport.disable_break_btn.disabled = not available
+	_refresh_system_breakpoints()
 	_update_connection_badge()
 	if overview != null and model.connected:
 		overview.set_state("Godot debugger break" if model.script_breaked else "ECS paused" if model.step_state.get("paused", false) else "Live")
@@ -1405,6 +1452,7 @@ func _systems(data: Dictionary) -> void:
 		var row: TreeItem = _system_items[rows[i].id]
 		if root.get_first_child() != row: row.move_before(root.get_first_child())
 	_system_summary.text = "%d systems · total last run %.4f ms" % [rows.size(), total]
+	_refresh_system_breakpoints()
 	if not slowest.is_empty(): _system_summary.text += " · Slowest: %s (%.4f ms) · Fastest: %s (%.4f ms)" % [slowest.values[0], slowest.values[2], fastest.values[0], fastest.values[2]]
 	_system_summary.clip_text = true
 	_system_summary.tooltip_text = _system_summary.text

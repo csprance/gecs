@@ -148,11 +148,35 @@ func test_system_breakpoint_pauses_before_the_system_without_running_it():
 	assert_int(state.cursor.system_id).is_equal(s2.get_instance_id())
 	assert_str(state.cursor.system_name).is_equal("S2")
 	assert_int(state.breakpoints[0].hits).is_equal(1)
+	assert_int(state.break_info.breakpoint_id).is_equal(bp_id)
+	assert_str(state.break_info.system).is_equal("S2")
+	assert_str(state.break_info.label).contains("before S2")
+	# Reading again must retain the cause even after its log has been published.
+	assert_dict(world.debug_step_state().break_info).is_equal(state.break_info)
 
 	# The pause is settled at a live break: the very next call services the step.
 	world.debug_step(GECSStepper.Kind.SYSTEM)
 	world.process(0.016)
 	assert_array([s1.runs, s2.runs]).is_equal([1, 1])
+	assert_dict(world.debug_step_state().break_info).is_empty()
+
+
+func test_disabling_hit_breakpoint_preserves_reason_until_resume_and_stops_rebreaking():
+	var system: CounterSystem = _add(CounterSystem.new(), "Movement")
+	var bp_id := world.debug_add_breakpoint({"kind": "system", "system": system})
+	world.process(0.016)
+	assert_bool(world.debug_is_paused()).is_true()
+	world.debug_set_breakpoint_enabled(bp_id, false)
+	var state := world.debug_step_state()
+	assert_int(state.break_info.breakpoint_id).is_equal(bp_id)
+	assert_bool(state.breakpoints[0].enabled).is_false()
+	world.debug_resume()
+	for i in 3: world.process(0.016)
+	assert_bool(world.debug_is_paused()).is_false()
+	assert_int(system.runs).is_equal(3)
+	assert_dict(world.debug_step_state().break_info).is_empty()
+	world.debug_pause()
+	assert_dict(world.debug_step_state().break_info).is_empty()
 
 
 func test_component_added_breakpoint_pauses_after_the_triggering_system():

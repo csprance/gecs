@@ -111,6 +111,42 @@ func test_step_log_appends_rows_with_op_children_and_caps() -> void:
 	assert_int(tab.step_panel.logs.size()).is_equal(GECSEditorStepPanel.MAX_LOG_ENTRIES)
 
 
+func test_break_notice_names_cause_and_disables_only_the_hit_breakpoint() -> void:
+	var tab := _make_tab()
+	var panel := tab.step_panel
+	var sent: Array = []
+	panel.send = func(message, data): sent.append([message, data]); return true
+	var state := _state({
+		"break_info": {"breakpoint_id": 7, "label": "before Movement", "system": "Movement"},
+		"breakpoints": [{"id": 7, "enabled": true, "label": "before Movement"}, {"id": 8, "enabled": true, "label": "before Render"}]
+	})
+	panel.apply_state(state)
+	assert_bool(panel.break_notice.visible).is_true()
+	assert_str(panel.break_reason.text).contains("System: Movement")
+	assert_str(panel.break_reason.text).contains("breakpoint #7")
+	assert_str(panel.break_reason.text).contains("Resume keeps this breakpoint armed")
+	panel.breakpoints_tree.get_root().get_first_child().select(0)
+	panel.apply_state(state)
+	assert_int(panel.breakpoints_tree.get_selected().get_meta("bp_id")).is_equal(7)
+	panel.remove_breakpoint_btn.pressed.emit()
+	assert_array(sent).contains_exactly([["gecs:breakpoint_remove", [7]]])
+	sent.clear()
+	panel.disable_break_btn.pressed.emit()
+	assert_array(sent).contains_exactly([["gecs:breakpoint_set_enabled", [7, false]]])
+	state.breakpoints[0].enabled = false
+	panel.apply_state(state)
+	assert_bool(panel.disable_break_btn.visible).is_false()
+	assert_str(panel.break_reason.text).contains("disabled. Press Resume")
+	state.breakpoints.remove_at(0)
+	panel.apply_state(state)
+	assert_str(panel.break_reason.text).contains("removed. Press Resume")
+	state.paused = false
+	panel.apply_state(state)
+	assert_bool(panel.break_notice.visible).is_false()
+	panel.clear()
+	assert_bool(panel.break_notice.visible).is_false()
+
+
 func test_break_and_external_entries_are_rendered() -> void:
 	var tab := _make_tab()
 	tab.step_log(
