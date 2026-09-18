@@ -42,7 +42,9 @@ signal relationship_added(entity: Entity, relationship: Relationship)
 signal relationship_removed(entity: Entity, relationship: Relationship)
 ## Emitted when multiple [Relationship]s are added in a batch via [method add_relationships]
 signal relationships_batch_added(entity: Entity, _relationships: Array)
-## Emitted when multiple [Relationship]s are removed in a batch via [method remove_relationships]
+## NOT EMITTED by the framework since v8.0.0: [method remove_relationships] emits
+## [signal relationship_removed] once per removed [Relationship] instead. Kept for API
+## stability; connect to [signal relationship_removed] to react to removals.
 signal relationships_batch_removed(entity: Entity, _relationships: Array)
 
 #endregion Signals

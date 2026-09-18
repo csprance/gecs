@@ -42,6 +42,10 @@ class MockNetAdapter:
 class MockNetworkSync:
 	extends RefCounted
 
+	# Mirrors NetworkSync's public spawn signals (emitted by SpawnManager)
+	signal entity_spawned(entity: Entity)
+	signal local_player_spawned(entity: Entity)
+
 	# NOTE: NO sync_config field — removed in v2
 	var _world: World
 	var _applying_network_data: bool = false
@@ -361,3 +365,74 @@ func test_handle_spawn_entity_applies_relationships():
 
 	# Entity must have been added to the world
 	assert_bool(mock_ns._world.entity_id_registry.has(801)).is_true()
+
+
+# ============================================================================
+# SPAWN SIGNALS: entity_spawned / local_player_spawned
+# ============================================================================
+
+
+## Build a spawn payload for a fresh entity owned by [param peer_id].
+func _make_spawn_payload(entity_id: int, peer_id: int) -> Dictionary:
+	var source = Entity.new()
+	source.name = "SignalEntity%d" % entity_id
+	source.add_component(CN_NetworkIdentity.new(peer_id))
+	var data = manager.serialize_entity(source)
+	source.free()
+	data["id"] = entity_id
+	return data
+
+
+func test_handle_spawn_entity_emits_entity_spawned():
+	# A fresh spawn must emit entity_spawned exactly once, with the component
+	# data already applied. A remote peer's entity must NOT emit local_player_spawned.
+	manager = SpawnManager.new(mock_ns)
+	mock_ns.net_adapter._is_server = false
+	mock_ns.net_adapter._my_peer_id = 2
+
+	var spawned: Array = []
+	var local_spawned: Array = []
+	mock_ns.entity_spawned.connect(func(e): spawned.append(e))
+	mock_ns.local_player_spawned.connect(func(e): local_spawned.append(e))
+
+	manager.handle_spawn_entity(_make_spawn_payload(901, 3))
+
+	assert_int(spawned.size()).is_equal(1)
+	assert_int(spawned[0].id).is_equal(901)
+	assert_bool(spawned[0].has_component(CN_NetworkIdentity)).is_true()
+	assert_int(local_spawned.size()).is_equal(0)
+
+
+func test_handle_spawn_entity_emits_local_player_spawned():
+	# An entity owned by the local peer emits both signals, with
+	# CN_LocalAuthority already injected.
+	manager = SpawnManager.new(mock_ns)
+	mock_ns.net_adapter._is_server = false
+	mock_ns.net_adapter._my_peer_id = 2
+
+	var spawned: Array = []
+	var local_spawned: Array = []
+	mock_ns.entity_spawned.connect(func(e): spawned.append(e))
+	mock_ns.local_player_spawned.connect(func(e): local_spawned.append(e))
+
+	manager.handle_spawn_entity(_make_spawn_payload(902, 2))
+
+	assert_int(spawned.size()).is_equal(1)
+	assert_int(local_spawned.size()).is_equal(1)
+	assert_bool(local_spawned[0].has_component(CN_LocalAuthority)).is_true()
+
+
+func test_handle_spawn_entity_update_does_not_re_emit():
+	# A second payload for an already-registered entity is an update, not a spawn.
+	manager = SpawnManager.new(mock_ns)
+	mock_ns.net_adapter._is_server = false
+	mock_ns.net_adapter._my_peer_id = 2
+
+	var spawned: Array = []
+	mock_ns.entity_spawned.connect(func(e): spawned.append(e))
+
+	var data = _make_spawn_payload(903, 3)
+	manager.handle_spawn_entity(data)
+	manager.handle_spawn_entity(data)
+
+	assert_int(spawned.size()).is_equal(1)

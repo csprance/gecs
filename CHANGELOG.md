@@ -1,5 +1,27 @@
 # GECS Changelog
 
+## [9.3.4] - 2026-09-18 - Network spawn signals
+
+### Fixed
+
+- `NetworkSync.entity_spawned` and `NetworkSync.local_player_spawned` now fire.
+  Both signals were declared, documented, and used by the network example, but the
+  emit calls were lost in the Network v2 rewrite, so connecting to them did nothing.
+  Clients get them after a spawn payload or late-join world state is applied. The
+  host gets them right before it broadcasts the spawn, so the same
+  `network_sync.entity_spawned.connect(...)` code works on every peer.
+  `local_player_spawned` fires only for player entities owned by the local peer.
+  Updates to an entity that already exists, stale-session payloads, and spawns
+  cancelled in the same frame do not emit. Thanks to raydenuni for the report.
+- Corrected the `Entity.relationships_batch_removed` doc comment. The signal has not
+  been emitted since v8.0.0; connect to `relationship_removed` instead.
+
+### Validation
+
+- New `test_network_sync_signals.gd` drives a real `NetworkSync` as both client and
+  host, and adds a source scan that fails when any signal under `addons/gecs` is
+  declared but never emitted.
+
 ## [9.3.3] - 2026-09-11 - Explorer polling and breakpoint controls
 
 ### Fixed

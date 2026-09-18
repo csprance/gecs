@@ -25,10 +25,13 @@ extends Node
 ##   var net_sync = NetworkSync.new()
 ##   world.add_child(net_sync)
 
-## Emitted when any entity is spawned on a client (after component data is applied)
+## Emitted on EVERY peer when a networked entity finishes spawning: on clients
+## after the spawn payload (or late-join world state) is applied, on the host
+## right before the spawn is broadcast. Authority markers are already in place.
 signal entity_spawned(entity: Entity)
 
-## Emitted when the local player's entity is spawned (clients use for UI setup)
+## Emitted right after [signal entity_spawned] when the entity is a player owned
+## by the local peer (host included). Use for camera / UI setup.
 signal local_player_spawned(entity: Entity)
 
 # ============================================================================
@@ -343,6 +346,8 @@ func _deferred_broadcast(entity: Entity, entity_id: int) -> void:
 		net_sync.scan_entity_components(entity)
 	var data = _spawn_manager.serialize_entity(entity)
 	_spawn_entity.rpc(data)
+	# The host never receives its own spawn RPC, so notify game code here.
+	_spawn_manager.notify_spawned(entity)
 
 
 ## Called directly by SpawnManager.on_entity_removed to broadcast a despawn.

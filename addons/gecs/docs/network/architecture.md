@@ -104,14 +104,16 @@ set via ProjectSettings).
 ## Signals
 
 ```gdscript
-# Emitted on clients when any entity spawns via network (after component data applied)
+# Emitted on every peer when a networked entity finishes spawning. Clients get it after the
+# spawn payload (or late-join world state) is applied; the host gets it right before it
+# broadcasts the spawn. Authority markers are already on the entity either way.
 _network_sync.entity_spawned.connect(_on_entity_spawned)
 
 func _on_entity_spawned(entity: Entity) -> void:
     # Apply visual properties, spawn effects, etc.
     pass
 
-# Emitted on clients when the local player's entity spawns
+# Emitted right after entity_spawned when the entity is a player owned by this peer (host included)
 _network_sync.local_player_spawned.connect(_on_local_player_spawned)
 
 func _on_local_player_spawned(entity: Entity) -> void:

@@ -166,6 +166,26 @@ func handle_spawn_entity(data: Dictionary) -> void:
 
 	_ns._spawn_counter += 1
 
+	# Only for fresh spawns, after component data, authority markers and
+	# relationships are all in place.
+	notify_spawned(entity)
+
+
+## Emit NetworkSync.entity_spawned, plus local_player_spawned when the entity is
+## a player owned by the local peer. Called from handle_spawn_entity() on
+## clients and from NetworkSync._deferred_broadcast() on the host.
+func notify_spawned(entity: Entity) -> void:
+	if _ns.has_signal("entity_spawned"):
+		_ns.entity_spawned.emit(entity)
+	var net_id: CN_NetworkIdentity = entity.get_component(CN_NetworkIdentity)
+	if (
+		net_id
+		and net_id.is_player()
+		and net_id.is_local(_ns.net_adapter)
+		and _ns.has_signal("local_player_spawned")
+	):
+		_ns.local_player_spawned.emit(entity)
+
 
 ## Handle an incoming despawn payload.
 ## Rejects silently if session_id != _ns._game_session_id.
