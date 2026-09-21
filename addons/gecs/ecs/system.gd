@@ -188,7 +188,7 @@ func deps() -> Dictionary[int, Array]:
 ## You can use [code]q[/code] or [code]ECS.world.query[/code] - both are equivalent.
 func query() -> QueryBuilder:
 	process_empty = true
-	return _world.query if _world else ECS.world.query
+	return null
 
 
 ## Override this method to define any sub-systems that should be processed by this system.[br]
@@ -632,6 +632,10 @@ func _run_process(delta: float) -> void:
 	if not _query_cache:
 		_query_cache = query()
 		_uses_non_structural_cached = -1
+	if _query_cache == null:
+		if process_empty:
+			process([], [], delta)
+		return
 	if _query_cache._reject_source("System.query()"):
 		return
 	if _component_keys.is_empty():
@@ -934,17 +938,18 @@ func _step_begin(delta: float) -> bool:
 		if not _query_cache:
 			_query_cache = query()
 			_uses_non_structural_cached = -1
-		if _component_keys.is_empty():
-			for comp_type in _query_cache._iterate_components:
-				_component_keys.append(
-					comp_type.get_instance_id()
-					if comp_type is Script
-					else comp_type.get_script().get_instance_id()
+		if _query_cache != null:
+			if _component_keys.is_empty():
+				for comp_type in _query_cache._iterate_components:
+					_component_keys.append(
+						comp_type.get_instance_id()
+						if comp_type is Script
+						else comp_type.get_script().get_instance_id()
+					)
+			if _uses_non_structural_cached == -1:
+				_uses_non_structural_cached = (
+					1 if _query_has_non_structural_filters(_query_cache) else 0
 				)
-		if _uses_non_structural_cached == -1:
-			_uses_non_structural_cached = (
-				1 if _query_has_non_structural_filters(_query_cache) else 0
-			)
 		phases.append(-1)
 	_step_ctx = {
 		"phases": phases,
@@ -1021,6 +1026,9 @@ func _step_enter_phase(phase_index: int, delta: float) -> Dictionary:
 		phase.non_structural = _uses_non_structural_cached == 1
 		phase.baseline = _last_change_baseline
 	var phase_query: QueryBuilder = phase.query
+	if phase_query == null:
+		phase.skip = true
+		return phase
 	var context := "System.sub_systems()" if phase_index >= 0 else "System.query()"
 	if phase_query._reject_source(context):
 		phase.skip = true
@@ -1133,7 +1141,7 @@ func _step_end(delta: float) -> void:
 		_has_subsystems_cached != 1
 		and not _step_ctx.get("processed_any", false)
 		and process_empty
-		and not _query_cache._has_source
+		and (_query_cache == null or not _query_cache._has_source)
 	):
 		_step_run([], [], Callable(self, "process"), delta)
 	if ECS.debug:

@@ -26,6 +26,14 @@ class RecordingSystem:
 		calls.append(names)
 
 
+class NoQuerySystem:
+	extends System
+	var runs := 0
+
+	func process(_entities: Array[Entity], _components: Array, _delta: float) -> void:
+		runs += 1
+
+
 class IncrementSystem:
 	extends System
 
@@ -219,6 +227,22 @@ func test_zero_unit_system_with_process_empty_calls_process_once():
 
 	assert_int(system.runs).is_equal(1)
 	assert_array(system.calls[0]).is_empty()
+	assert_str(_completed[0].label).contains("no matching entities")
+	assert_bool(world.debug_step_state().cursor.in_system).is_false()
+
+
+func test_no_query_system_step_calls_process_once():
+	var system := NoQuerySystem.new()
+	system.name = "NoQuery"
+	world.add_system(system)
+	_entity("only_a", [C_TestA.new()])
+	_entity("only_b", [C_TestB.new()])
+	world.debug_pause()
+	_settle()
+
+	_step(GECSStepper.Kind.ARCHETYPE)
+
+	assert_int(system.runs).is_equal(1)
 	assert_str(_completed[0].label).contains("no matching entities")
 	assert_bool(world.debug_step_state().cursor.in_system).is_false()
 
