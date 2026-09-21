@@ -131,6 +131,18 @@ func test_system_with_timer_skips_non_tick_frames():
 	assert_int(sys.run_count).is_equal(1)
 
 
+func test_system_without_query_runs_once_per_timer_tick():
+	var sys = NoQueryTimerTest.new()
+	sys.set_tick_rate(1.0)
+	world.add_entity(_entity_with_component(C_TestA.new()))
+	world.add_entity(_entity_with_component(C_TestB.new()))
+	world.add_system(sys)
+
+	world.process(1.0)
+
+	assert_int(sys.run_count).is_equal(1)
+
+
 func test_shared_timer_synchronizes_systems():
 	var sys_a = STimerTest.new()
 	var sys_b = STimerTest.new()
@@ -245,6 +257,20 @@ func test_subsystem_timer_gates_execution():
 #endregion System + Timer Integration Tests
 
 #region Subsystem Timer Test Helper
+
+
+func _entity_with_component(component: Component) -> Entity:
+	var entity := Entity.new()
+	entity.add_component(component)
+	return entity
+
+
+class NoQueryTimerTest:
+	extends System
+	var run_count: int = 0
+
+	func process(_entities: Array[Entity], _components: Array, _delta: float):
+		run_count += 1
 
 
 class SubsystemTimerTestSystem:
